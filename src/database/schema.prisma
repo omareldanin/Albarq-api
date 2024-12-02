@@ -1,0 +1,1048 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AdminRole {
+  ADMIN
+  ADMIN_ASSISTANT
+}
+
+enum EmployeeRole {
+  COMPANY_MANAGER
+  ACCOUNT_MANAGER
+  ACCOUNTANT
+  DELIVERY_AGENT
+  RECEIVING_AGENT
+  BRANCH_MANAGER
+  EMERGENCY_EMPLOYEE
+  DATA_ENTRY
+  REPOSITORIY_EMPLOYEE
+  INQUIRY_EMPLOYEE
+  CLIENT_ASSISTANT
+}
+
+enum ClientRole {
+  CLIENT
+}
+
+enum Permission {
+  ADD_STORE
+  ADD_CLIENT
+  ADD_LOCATION
+  ADD_DELIVERY_AGENT
+  ADD_ORDER
+  DELETE_ORDER
+  CONFIRM_ORDER
+  CHANGE_ORDER_DATA
+  LOCK_ORDER_STATUS
+  CHANGE_ORDER_STATUS
+  CHANGE_CLOSED_ORDER_STATUS
+  CHANGE_ORDER_TOTAL_AMOUNT
+  CHANGE_ORDER_DELIVERY_AGENT
+  CHANGE_ORDER_PAID_AMOUNT
+  CHANGE_ORDER_RECEIPT_NUMBER
+  CHANGE_ORDER_RECEPIENT_NUMBER
+  CHANGE_ORDER_BRANCH
+  CHANGE_ORDER_CLIENT
+  CHANGE_ORDER_COMPANY
+  CREATE_DELIVERY_AGENT_REPORT
+  CREATE_CLIENT_REPORT
+  CREATE_REPOSITORY_REPORT
+  CREATE_COMPANY_REPORT
+  CREATE_GOVERNMENT_REPORT
+  CREATE_BRANCH_REPORT
+  DELETE_COMPANY_REPORT
+  DELETE_REPOSITORY_REPORT
+  DELETE_GOVERNMENT_REPORT
+  DELETE_DELIVERY_AGENT_REPORT
+  DELETE_CLIENT_REPORT
+  DELETE_BRANCH_REPORT
+}
+
+enum Governorate {
+  AL_ANBAR
+  BABIL
+  BABIL_COMPANIES
+  BAGHDAD
+  BASRA
+  DHI_QAR
+  AL_QADISIYYAH
+  DIYALA
+  DUHOK
+  ERBIL
+  KARBALA
+  KIRKUK
+  MAYSAN
+  MUTHANNA
+  NAJAF
+  NINAWA
+  SALAH_AL_DIN
+  SULAYMANIYAH
+  WASIT
+}
+
+enum OrderStatus {
+  REGISTERED
+  READY_TO_SEND
+  WITH_DELIVERY_AGENT
+  DELIVERED
+  REPLACED
+  PARTIALLY_RETURNED
+  RETURNED
+  POSTPONED
+  CHANGE_ADDRESS
+  RESEND
+  WITH_RECEIVING_AGENT
+  PROCESSING
+}
+
+enum AutomaticUpdateReturnCondition {
+  WITH_AGENT
+  IN_REPOSITORY
+}
+
+enum SecondaryStatus {
+  WITH_CLIENT
+  WITH_AGENT
+  IN_REPOSITORY
+}
+
+enum DeliveryType {
+  NORMAL
+  REPLACEMENT
+}
+
+enum ReportStatus {
+  UNPAID
+  PAID
+}
+
+enum ReportType {
+  COMPANY
+  REPOSITORY
+  GOVERNORATE
+  DELIVERY_AGENT
+  BRANCH
+  CLIENT
+}
+
+enum SecondaryReportType {
+  DELIVERED
+  RETURNED
+}
+
+enum OrderTimelineType {
+  // ID & NAME
+  DELIVERY_AGENT_CHANGE
+  CLIENT_CHANGE
+  REPOSITORY_CHANGE
+  BRANCH_CHANGE
+  COMPANY_CHANGE
+  // VALUE (INT)
+  PAID_AMOUNT_CHANGE
+  // VALUE (STRING)
+  STATUS_CHANGE
+  CURRENT_LOCATION_CHANGE
+  // ID & TYPE
+  REPORT_CREATE
+  REPORT_DELETE
+  // OTHER
+  ORDER_CREATION
+  ORDER_CONFIRMATION
+  ORDER_DELIVERY
+  ORDER_PROCESS
+  OTHER
+}
+
+// enum LoginType {
+//   LOGIN
+//   LOGOUT
+// }
+
+model User {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id               Int                 @id @default(autoincrement())
+  username         String              @unique
+  phone            String              @unique
+  // --- DETAILS --------------------------------------------------------------------------- //
+  avatar           String              @default("https://w7.pngwing.com/pngs/627/693/png-transparent-computer-icons-user-user-icon.png")
+  name             String
+  password         String
+  fcm              String              @default("")
+  refreshTokens    String[]
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  admin            Admin?
+  employee         Employee?
+  client           Client?
+  notifications    Notification[]
+  deletedReports   Report[]            @relation("deletedBy")
+  deletedOrders    Order[]             @relation("deletedBy")
+  deletedClients   Client[]            @relation("deletedBy")
+  deletedStores    Store[]             @relation("deletedBy")
+  deletedEmployees Employee[]          @relation("deletedBy")
+  createdEmployees Employee[]          @relation("createdBy")
+  createdClients   Client[]            @relation("createdBy")
+  loginHistory     UsersLoginHistory[]
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  @@index([name])
+  @@index([phone])
+}
+
+model Admin {
+  id   Int       @id
+  role AdminRole
+  user User      @relation(fields: [id], references: [id])
+}
+
+model Employee {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id                      Int                              @id
+  // --- DETAILS --------------------------------------------------------------------------- //
+  permissions             Permission[]
+  salary                  Float                            @default(0) // TODO: remove this field
+  deliveryCost            Float                            @default(0)
+  role                    EmployeeRole
+  idCard                  String                           @default("https://w7.pngwing.com/pngs/627/693/png-transparent-computer-icons-user-user-icon.png")
+  residencyCard           String                           @default("https://w7.pngwing.com/pngs/627/693/png-transparent-computer-icons-user-user-icon.png")
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  branchId                Int?
+  repositoryId            Int?
+  createdById             Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  orders                  Order[]
+  managedStores           Store[]
+  reports                 Report[]
+  deliveryAgentReports    DeliveryAgentReport[]
+  deliveryAgentsLocations DeliveryAgentsLocations[]
+  ordersInquiryEmployees  OrdersInquiryEmployees[]
+  forwardedOrders         Order[]                          @relation("forwardedBy")
+  processedOrders         Order[]                          @relation("processedBy")
+  user                    User                             @relation(fields: [id], references: [id])
+  repository              Repository?                      @relation(fields: [repositoryId], references: [id])
+  branch                  Branch?                          @relation(fields: [branchId], references: [id])
+  createdBy               User                             @relation("createdBy", fields: [createdById], references: [id])
+  // -- INQUIRY EMPLOYEE --------------------------------------------------------------------- //
+  inquiryBranches         InquiryEmployeesBranches[]
+  inquiryLocations        InquiryEmployeesLocations[]
+  inquiryStores           InquiryEmployeesStores[]
+  inquiryCompanies        InquiryEmployeesCompanies[]
+  inquiryDeliveryAgents   InquiryEmployeesDeliveryAgents[] @relation("inquiryDeliveryAgents")
+  inquiryGovernorates     Governorate[]
+  inquiryStatuses         OrderStatus[]
+  // --- INQUIRY EMPLOYEE (DELIVERY AGENTS) --------------------------------------------------------------------- //
+  inquiryEmployees        InquiryEmployeesDeliveryAgents[] @relation("inquiryEmployees")
+  // --- TENANT --------------------------------------------------------------------- //
+  companyId               Int
+  company                 Company                          @relation(fields: [companyId], references: [id])
+  // --- DELETED --------------------------------------------------------------------------- //
+  deleted                 Boolean                          @default(false)
+  deletedAt               DateTime?
+  deletedById             Int?
+  deletedBy               User?                            @relation("deletedBy", fields: [deletedById], references: [id])
+  // --- OTHER --------------------------------------------------------------------- //
+
+  @@index([companyId])
+  @@index([role])
+  @@index([permissions])
+  @@index([branchId])
+}
+
+model InquiryEmployeesDeliveryAgents {
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  inquiryEmployeeId Int
+  deliveryAgentId   Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  inquiryEmployee   Employee @relation("inquiryEmployees", fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
+  deliveryAgent     Employee @relation("inquiryDeliveryAgents", fields: [deliveryAgentId], references: [id], onDelete: Cascade)
+  // --- OTHER --------------------------------------------------------------------- //
+
+  @@id([inquiryEmployeeId, deliveryAgentId])
+}
+
+model Client {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id                        Int            @id
+  // --- DETAILS --------------------------------------------------------------------------- //
+  role                      ClientRole     @default(CLIENT)
+  token                     String         @default("")
+  governoratesDeliveryCosts Json           @default("[]")
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  deletedById               Int?
+  createdById               Int
+  repositoryId              Int?
+  branchId                  Int?
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  clientReports             ClientReport[]
+  products                  Product[]
+  orders                    Order[]
+  stores                    Store[]
+  // createdBy                 Employee       @relation(fields: [employeeId], references: [id])
+  createdBy                 User           @relation("createdBy", fields: [createdById], references: [id])
+  user                      User           @relation(fields: [id], references: [id])
+  repository                Repository?    @relation(fields: [repositoryId], references: [id])
+  branch                    Branch?        @relation(fields: [branchId], references: [id])
+  // --- TENANT --------------------------------------------------------------------- //
+  companyId                 Int
+  company                   Company        @relation(fields: [companyId], references: [id])
+  // --- DELETED --------------------------------------------------------------------------- //
+  deleted                   Boolean        @default(false)
+  deletedBy                 User?          @relation("deletedBy", fields: [deletedById], references: [id])
+  deletedAt                 DateTime?
+  // --- OTHER --------------------------------------------------------------------- //
+
+  @@index([companyId])
+}
+
+model Store {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id                Int                      @id @default(autoincrement())
+  // --- DETAILS --------------------------------------------------------------------------- //
+  name              String                   @unique
+  logo              String                   @default("https://w7.pngwing.com/pngs/307/22/png-transparent-computer-icons-business-company-corporation-company-angle-company-text.png")
+  notes             String                   @default("")
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  clientAssistantId Int?
+  clientId          Int
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  orders            Order[]
+  clientReports     ClientReport[]
+  products          Product[]
+  client            Client                   @relation(fields: [clientId], references: [id])
+  clientAssistant   Employee?                @relation(fields: [clientAssistantId], references: [id])
+  // --- INQUIRY EMPLOYEE --------------------------------------------------------------------- //
+  // inquiryEmployee   Employee?      @relation("inquiryStores", fields: [inquiryEmployeeId], references: [id])
+  // inquiryEmployeeId Int?
+  inquiryEmployees  InquiryEmployeesStores[]
+  // --- TENANT --------------------------------------------------------------------- //
+  companyId         Int
+  company           Company                  @relation(fields: [companyId], references: [id])
+  // --- DELETED --------------------------------------------------------------------------- //
+  deleted           Boolean                  @default(false)
+  deletedById       Int?
+  deletedAt         DateTime?
+  deletedBy         User?                    @relation("deletedBy", fields: [deletedById], references: [id])
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+
+  @@index([companyId])
+  @@index([clientId])
+}
+
+model InquiryEmployeesStores {
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  inquiryEmployeeId Int
+  storeId           Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  inquiryEmployee   Employee @relation(fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
+  store             Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  // --- OTHER --------------------------------------------------------------------- //
+
+  @@id([inquiryEmployeeId, storeId])
+}
+
+model Branch {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id               Int                        @id @default(autoincrement())
+  // --- DETAILS --------------------------------------------------------------------------- //
+  name             String
+  // TODO: Governorate should be mandatory
+  governorate      Governorate?
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  repositories     Repository[]
+  employees        Employee[]
+  locations        Location[]
+  branchReports    BranchReport[]
+  orders           Order[]
+  clients          Client[]
+  automaticUpdate  AutomaticUpdate[]
+  // --- INQUIRY EMPLOYEE --------------------------------------------------------------------- //
+  // inquiryEmployee   Employee?         @relation("inquiryBranches", fields: [inquiryEmployeeId], references: [id])
+  // inquiryEmployeeId Int?
+  inquiryEmployees InquiryEmployeesBranches[]
+  // --- TENANT --------------------------------------------------------------------- //
+  companyId        Int
+  company          Company                    @relation(fields: [companyId], references: [id])
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+
+  @@unique([name, companyId])
+}
+
+model InquiryEmployeesBranches {
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  inquiryEmployeeId Int
+  branchId          Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  inquiryEmployee   Employee @relation(fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
+  branch            Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  // --- OTHER --------------------------------------------------------------------- //
+
+  @@id([inquiryEmployeeId, branchId])
+}
+
+model Repository {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id                Int                @id @default(autoincrement())
+  // --- DETAILS --------------------------------------------------------------------------- //
+  name              String             @unique
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  branchId          Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  branch            Branch             @relation(fields: [branchId], references: [id])
+  employees         Employee[]
+  clients           Client[]
+  repositoryReports RepositoryReport[]
+  Order             Order[]
+  // --- TENANT --------------------------------------------------------------------- //
+  company           Company            @relation(fields: [companyId], references: [id])
+  companyId         Int
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model Location {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id                      Int                         @id @default(autoincrement())
+  // --- DETAILS --------------------------------------------------------------------------- //
+  name                    String
+  governorate             Governorate
+  remote                  Boolean                     @default(false)
+  // --- INQUIRY EMPLOYEE --------------------------------------------------------------------- //
+  // inquiryEmployee         Employee?                 @relation("inquiryLocations", fields: [inquiryEmployeeId], references: [id])
+  // inquiryEmployeeId       Int?
+  inquiryEmployees        InquiryEmployeesLocations[]
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  // TODO: Remove
+  branchId                Int?
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  // TODO: Remove
+  branch                  Branch?                     @relation(fields: [branchId], references: [id])
+  orders                  Order[]
+  deliveryAgentsLocations DeliveryAgentsLocations[]
+  // --- TENANT --------------------------------------------------------------------- //
+  // TODO: Remove
+  company                 Company?                    @relation(fields: [companyId], references: [id])
+  companyId               Int?
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt               DateTime                    @default(now())
+  updatedAt               DateTime                    @updatedAt
+
+  // @@unique([name, governorate])
+}
+
+model InquiryEmployeesLocations {
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  inquiryEmployeeId Int
+  locationId        Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  inquiryEmployee   Employee @relation(fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
+  location          Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  // --- OTHER --------------------------------------------------------------------- //
+
+  @@id([inquiryEmployeeId, locationId])
+}
+
+model DeliveryAgentsLocations {
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  deliveryAgentId Int
+  locationId      Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  deliveryAgent   Employee @relation(fields: [deliveryAgentId], references: [id], onDelete: Cascade)
+  location        Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  // --- TENANT --------------------------------------------------------------------- //
+  // TODO: Make mandatory
+  company         Company  @relation(fields: [companyId], references: [id])
+  companyId       Int
+  // --- OTHER --------------------------------------------------------------------- //
+
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  @@id([deliveryAgentId, locationId])
+}
+
+model Company {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id                                      Int                         @id @default(autoincrement())
+  // --- DETAILS --------------------------------------------------------------------------- //
+  name                                    String                      @unique
+  treasury                                Float                       @default(0)
+  phone                                   String                      @default("")
+  website                                 String                      @default("")
+  logo                                    String                      @default("https://w7.pngwing.com/pngs/307/22/png-transparent-computer-icons-business-company-corporation-company-angle-company-text.png")
+  color                                   String                      @default("FF0000")
+  registrationText                        String                      @default("")
+  orderStatusAutomaticUpdate              Boolean                     @default(false)
+  mainCompany                             Boolean                     @default(false)
+  // --- INQUIRY EMPLOYEE --------------------------------------------------------------------- //
+  // inquiryEmployee                         Employee?         @relation("inquiryCompanies", fields: [inquiryEmployeeId], references: [id])
+  // inquiryEmployeeId                       Int?
+  inquiryEmployees                        InquiryEmployeesCompanies[]
+  // --- COSTS ----------------------------------------------------------------------------- //
+  governoratePrice                        Float                       @default(0)
+  deliveryAgentFee                        Float                       @default(0)
+  baghdadPrice                            Float                       @default(0)
+  additionalPriceForEvery500000IraqiDinar Float                       @default(0)
+  additionalPriceForEveryKilogram         Float                       @default(0)
+  additionalPriceForRemoteAreas           Float                       @default(0)
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  employees                               Employee[]
+  clients                                 Client[]
+  stores                                  Store[]
+  branches                                Branch[]
+  repositories                            Repository[]
+  locations                               Location[]
+  orders                                  Order[]
+  reports                                 Report[]
+  products                                Product[]
+  // categories                              Category[]
+  // sizes                                   Size[]
+  // colors                                  Color[]
+  banners                                 Banner[]
+  CompanyReport                           CompanyReport[]
+  automaticUpdates                        AutomaticUpdate[]
+  forwardedOrders                         Order[]                     @relation("forwardedFrom")
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt                               DateTime                    @default(now())
+  updatedAt                               DateTime                    @updatedAt
+  DeliveryAgentsLocations                 DeliveryAgentsLocations[]
+  usersLoginHistory                       UsersLoginHistory[]
+}
+
+model InquiryEmployeesCompanies {
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  inquiryEmployeeId Int
+  companyId         Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  inquiryEmployee   Employee @relation(fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
+  company           Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  // --- OTHER --------------------------------------------------------------------- //
+
+  @@id([inquiryEmployeeId, companyId])
+}
+
+model Order {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id                     Int                      @id @default(autoincrement())
+  receiptNumber          Int                      @default(autoincrement()) // TODO
+  // --- DETAILS --------------------------------------------------------------------------- //
+  quantity               Int                      @default(0)
+  weight                 Float                    @default(0)
+  recipientName          String                   @default("غير معرف")
+  recipientPhones        String[]
+  recipientAddress       String
+  details                String                   @default("")
+  notes                  String                   @default("")
+  deliveryType           DeliveryType             @default(NORMAL)
+  governorate            Governorate
+  timeline               OrderTimeline[]
+  currentLocation        String                   @default("")
+  deliveryDate           DateTime?
+  // --- COSTS ----------------------------------------------------------------------------- //
+  totalCost              Float                    @default(0)
+  paidAmount             Float                    @default(0)
+  deliveryCost           Float                    @default(0)
+  clientNet              Float                    @default(0)
+  deliveryAgentNet       Float                    @default(0) // TODO: remove this field
+  companyNet             Float                    @default(0)
+  discount               Float                    @default(0)
+  // --- STATUS --------------------------------------------------------------------------- //
+  status                 OrderStatus              @default(REGISTERED)
+  secondaryStatus        SecondaryStatus?
+  confirmed              Boolean                  @default(false)
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  clientId               Int
+  deliveryAgentId        Int?
+  oldDeliveryAgentId     Int? // For when relinking the order to the old delivery agent
+  locationId             Int
+  storeId                Int
+  repositoryId           Int?
+  branchId               Int?
+  automaticUpdateId      Int?
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  orderProducts          OrderProducts[]
+  ordersInquiryEmployees OrdersInquiryEmployees[]
+  deliveryAgent          Employee?                @relation(fields: [deliveryAgentId], references: [id], onDelete: SetNull)
+  location               Location                 @relation(fields: [locationId], references: [id])
+  client                 Client                   @relation(fields: [clientId], references: [id])
+  store                  Store                    @relation(fields: [storeId], references: [id])
+  repository             Repository?              @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
+  branch                 Branch?                  @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  automaticUpdate        AutomaticUpdate?         @relation(fields: [automaticUpdateId], references: [id], onDelete: SetNull)
+  // --- DELETED --------------------------------------------------------------------------- //
+  deleted                Boolean                  @default(false)
+  deletedAt              DateTime?
+  deletedBy              User?                    @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+  deletedById            Int?
+  // --- PROCESSING  --------------------------------------------------------------------------- //
+  processed              Boolean                  @default(false)
+  processedAt            DateTime?
+  processedBy            Employee?                @relation("processedBy", fields: [processedById], references: [id], onDelete: SetNull)
+  processedById          Int?
+  // --- FORWARDED --------------------------------------------------------------------------- //
+  forwarded              Boolean                  @default(false)
+  forwardedAt            DateTime?
+  forwardedBy            Employee?                @relation("forwardedBy", fields: [forwardedById], references: [id], onDelete: SetNull)
+  forwardedById          Int?
+  forwardedFrom          Company?                 @relation("forwardedFrom", fields: [forwardedFromId], references: [id], onDelete: SetNull)
+  forwardedFromId        Int?
+  // --- REPORTS --------------------------------------------------------------------------- //
+  clientReport           ClientReport?            @relation(fields: [clientReportId], references: [id], onDelete: SetNull)
+  clientReportId         Int?
+  repositoryReport       RepositoryReport?        @relation(fields: [repositoryReportId], references: [id], onDelete: SetNull)
+  repositoryReportId     Int?
+  branchReport           BranchReport?            @relation(fields: [branchReportId], references: [id], onDelete: SetNull)
+  branchReportId         Int?
+  deliveryAgentReport    DeliveryAgentReport?     @relation(fields: [deliveryAgentReportId], references: [id], onDelete: SetNull)
+  deliveryAgentReportId  Int?
+  governorateReport      GovernorateReport?       @relation(fields: [governorateReportId], references: [id], onDelete: SetNull)
+  governorateReportId    Int?
+  companyReport          CompanyReport?           @relation(fields: [companyReportId], references: [id], onDelete: SetNull)
+  companyReportId        Int?
+  // --- TENANT --------------------------------------------------------------------- //
+  company                Company                  @relation(fields: [companyId], references: [id])
+  companyId              Int
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+
+  // @@index([automaticUpdateId])
+  // @@index([deleted, deletedById])
+  // @@index([processed, processedById])
+  // @@index([forwarded, forwardedById])
+  // @@index([forwarded, forwardedFromId])
+  // @@index([clientReportId])
+  // @@index([repositoryReportId])
+  // @@index([branchReportId])
+  // @@index([deliveryAgentReportId])
+  // @@index([governorateReportId])
+  // @@index([companyReportId])
+  @@index([receiptNumber])
+  // @@index([recipientName])
+  // @@index([recipientAddress])
+  // @@index([recipientPhones])
+  @@index([status])
+  @@index([secondaryStatus])
+  @@index([clientId])
+  @@index([deliveryAgentId])
+  @@index([governorate])
+  // @@index([locationId])
+  @@index([storeId])
+  // @@index([repositoryId])
+  @@index([branchId])
+  @@index([companyId])
+}
+
+model OrderTimeline {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id        Int               @id @default(autoincrement())
+  // --- DETAILS --------------------------------------------------------------------------- //
+  type      OrderTimelineType
+  old       Json?
+  new       Json?
+  message   String
+  by        Json
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  orderId   Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  order     Order             @relation(fields: [orderId], references: [id])
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt DateTime          @default(now())
+}
+
+model OrdersInquiryEmployees {
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  inquiryEmployeeId Int
+  orderId           Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  inquiryEmployee   Employee @relation(fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
+  // --- OTHER --------------------------------------------------------------------- //
+
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  @@id([orderId, inquiryEmployeeId])
+}
+
+model Report {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id                      Int                  @id @default(autoincrement())
+  // --- DETAILS --------------------------------------------------------------------------- //
+  type                    ReportType
+  baghdadOrdersCount      Int                  @default(0)
+  governoratesOrdersCount Int                  @default(0)
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  employeeId              Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  createdBy               Employee             @relation(fields: [employeeId], references: [id])
+  clientReport            ClientReport?
+  repositoryReport        RepositoryReport?
+  branchReport            BranchReport?
+  deliveryAgentReport     DeliveryAgentReport?
+  governorateReport       GovernorateReport?
+  companyReport           CompanyReport?
+  // --- TENANT --------------------------------------------------------------------- //
+  company                 Company              @relation(fields: [companyId], references: [id])
+  companyId               Int
+  // --- STATUS --------------------------------------------------------------------------- //
+  status                  ReportStatus         @default(UNPAID)
+  confirmed               Boolean              @default(false)
+  // --- DELETED --------------------------------------------------------------------------- //
+  deleted                 Boolean              @default(false)
+  deletedAt               DateTime?
+  deletedBy               User?                @relation("deletedBy", fields: [deletedById], references: [id])
+  deletedById             Int?
+  // --- COSTS ----------------------------------------------------------------------------- //
+  totalCost               Float                @default(0)
+  paidAmount              Float                @default(0)
+  deliveryCost            Float                @default(0)
+  clientNet               Float                @default(0)
+  deliveryAgentNet        Float                @default(0)
+  companyNet              Float                @default(0)
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+
+  @@index([type])
+  @@index([employeeId])
+  @@index([companyId])
+}
+
+model CompanyReport {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id                       Int                 @id
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  companyId                Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  report                   Report              @relation(fields: [id], references: [id], onDelete: Cascade)
+  orders                   Order[]
+  company                  Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  // --- OTHER --------------------------------------------------------------------- //
+  baghdadDeliveryCost      Float               @default(0)
+  governoratesDeliveryCost Float               @default(0)
+  secondaryType            SecondaryReportType @default(DELIVERED)
+
+  @@index([companyId])
+}
+
+model ClientReport {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id                       Int                 @id
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  clientId                 Int
+  storeId                  Int?
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  client                   Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  report                   Report              @relation(fields: [id], references: [id], onDelete: Cascade)
+  store                    Store?              @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  orders                   Order[]
+  // --- OTHER --------------------------------------------------------------------- //
+  baghdadDeliveryCost      Float               @default(0)
+  governoratesDeliveryCost Float               @default(0)
+  secondaryType            SecondaryReportType @default(DELIVERED)
+
+  @@index([clientId])
+  @@index([storeId])
+}
+
+model RepositoryReport {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id            Int                 @id
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  repositoryId  Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  report        Report              @relation(fields: [id], references: [id], onDelete: Cascade)
+  repository    Repository          @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  orders        Order[]
+  // --- OTHER --------------------------------------------------------------------- //
+  secondaryType SecondaryReportType @default(DELIVERED)
+
+  @@index([repositoryId])
+}
+
+model BranchReport {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id                        Int     @id
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  branchId                  Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  branch                    Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  report                    Report  @relation(fields: [id], references: [id], onDelete: Cascade)
+  orders                    Order[]
+  // --- OTHER --------------------------------------------------------------------- //
+  deliveryAgentDeliveryCost Float   @default(0)
+
+  @@index([branchId])
+}
+
+model DeliveryAgentReport {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id                        Int      @id
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  deliveryAgentId           Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  deliveryAgent             Employee @relation(fields: [deliveryAgentId], references: [id], onDelete: Cascade)
+  report                    Report   @relation(fields: [id], references: [id], onDelete: Cascade)
+  orders                    Order[]
+  // --- OTHER --------------------------------------------------------------------- //
+  deliveryAgentDeliveryCost Float    @default(0)
+
+  @@index([deliveryAgentId])
+}
+
+model GovernorateReport {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id                        Int         @id
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  governorate               Governorate
+  report                    Report      @relation(fields: [id], references: [id], onDelete: Cascade)
+  orders                    Order[]
+  // --- OTHER --------------------------------------------------------------------- //
+  deliveryAgentDeliveryCost Float       @default(0)
+
+  @@index([governorate])
+}
+
+model Product {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id            Int             @id @default(autoincrement())
+  // --- DETAILS --------------------------------------------------------------------------- //
+  title         String
+  price         Float
+  image         String          @default("https://w7.pngwing.com/pngs/436/721/png-transparent-package-delivery-box-freight-transport-computer-icons-shipping-miscellaneous-angle-freight-transport.png")
+  stock         Int             @default(0)
+  weight        Float           @default(0)
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  storeId       Int
+  categoryId    Int
+  clientId      Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  store         Store           @relation(fields: [storeId], references: [id])
+  category      Category        @relation(fields: [categoryId], references: [id])
+  orderProducts OrderProducts[]
+  productColors ProductColors[]
+  productSizes  ProductSizes[]
+  client        Client          @relation(fields: [clientId], references: [id])
+  // --- TENANT --------------------------------------------------------------------- //
+  company       Company         @relation(fields: [companyId], references: [id])
+  companyId     Int
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([companyId])
+  @@index([clientId])
+  @@index([categoryId])
+  @@index([storeId])
+}
+
+model Category {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id        Int       @id @default(autoincrement())
+  // --- DETAILS --------------------------------------------------------------------------- //
+  title     String    @unique
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  products  Product[]
+  // --- TENANT --------------------------------------------------------------------- //
+  // company   Company?  @relation(fields: [companyId], references: [id])
+  // companyId Int?
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model OrderProducts {
+  // --- DETAILS --------------------------------------------------------------------------- //
+  quantity  Int
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  productId Int
+  orderId   Int
+  colorId   Int?
+  sizeId    Int?
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  product   Product @relation(fields: [productId], references: [id])
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  color     Color?  @relation(fields: [colorId], references: [id])
+  size      Size?   @relation(fields: [sizeId], references: [id])
+  // --- OTHER --------------------------------------------------------------------- //
+
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  @@id([productId, orderId])
+}
+
+model Size {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id            Int             @id @default(autoincrement())
+  // --- DETAILS --------------------------------------------------------------------------- //
+  title         String          @unique
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  productSizes  ProductSizes[]
+  orderProducts OrderProducts[]
+  // --- TENANT --------------------------------------------------------------------- //
+  // company       Company?        @relation(fields: [companyId], references: [id])
+  // companyId     Int?
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Color {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id            Int             @id @default(autoincrement())
+  // --- DETAILS --------------------------------------------------------------------------- //
+  title         String          @unique
+  code          String          @unique
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  productColors ProductColors[]
+  orderProducts OrderProducts[]
+  // --- TENANT --------------------------------------------------------------------- //
+  // company       Company?        @relation(fields: [companyId], references: [id])
+  // companyId     Int?
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model ProductColors {
+  // --- DETAILS --------------------------------------------------------------------------- //
+  quantity  Int
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  productId Int
+  colorId   Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color     Color   @relation(fields: [colorId], references: [id])
+  // --- OTHER --------------------------------------------------------------------- //
+
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  @@id([productId, colorId])
+}
+
+model ProductSizes {
+  // --- DETAILS --------------------------------------------------------------------------- //
+  quantity  Int
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  productId Int
+  sizeId    Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size      Size    @relation(fields: [sizeId], references: [id])
+  // --- OTHER --------------------------------------------------------------------- //
+
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  @@id([productId, sizeId])
+}
+
+model Notification {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id        Int      @id @default(autoincrement())
+  // --- DETAILS --------------------------------------------------------------------------- //
+  title     String
+  content   String   @default("")
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  userId    Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // --- STATUS --------------------------------------------------------------------------- //
+  seen      Boolean  @default(false)
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Banner {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id        Int      @id @default(autoincrement())
+  // --- DETAILS --------------------------------------------------------------------------- //
+  title     String
+  content   String   @default("")
+  image     String   @default("https://w7.pngwing.com/pngs/819/548/png-transparent-photo-image-landscape-icon-images.png")
+  url       String   @default("")
+  // --- TENANT --------------------------------------------------------------------- //
+  company   Company  @relation(fields: [companyId], references: [id])
+  companyId Int
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AutomaticUpdate {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id              Int                             @id @default(autoincrement())
+  // --- DETAILS --------------------------------------------------------------------------- //
+  orderStatus     OrderStatus
+  newOrderStatus  OrderStatus                     @default(DELIVERED)
+  governorate     Governorate
+  returnCondition AutomaticUpdateReturnCondition?
+  updateAt        Int                             @default(22) // 0 -> 24
+  checkAfter      Int                             @default(24) // 0 -> infinity
+  // --- STATUS --------------------------------------------------------------------------- //
+  enabled         Boolean                         @default(true)
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  branchId        Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  orders          Order[]
+  branch          Branch                          @relation(fields: [branchId], references: [id])
+  // --- TENANT --------------------------------------------------------------------- //
+  company         Company                         @relation(fields: [companyId], references: [id])
+  companyId       Int
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt       DateTime                        @default(now())
+  updatedAt       DateTime                        @updatedAt
+
+  @@unique([orderStatus, governorate, branchId, companyId])
+}
+
+model UsersLoginHistory {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id        Int      @id @default(autoincrement())
+  // --- DETAILS --------------------------------------------------------------------------- //
+  // loginTime    DateTime
+  // logoutTime   DateTime?
+  ip        String   @default("")
+  device    String   @default("")
+  platform  String   @default("")
+  browser   String   @default("")
+  location  String   @default("")
+  // type      LoginType
+  // --- STATUS --------------------------------------------------------------------------- //
+  // loginStatus  Boolean   @default(true)
+  // logoutStatus Boolean   @default(false)
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  userId    Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  user      User     @relation(fields: [userId], references: [id])
+  // --- TENANT --------------------------------------------------------------------- //
+  company   Company  @relation(fields: [companyId], references: [id])
+  companyId Int
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([companyId])
+}
+
+// --- IDENTIFICATION --------------------------------------------------------------------- //
+// --- DETAILS --------------------------------------------------------------------------- //
+// --- FOREIGN KEYS --------------------------------------------------------------------------- //
+// --- RELATIONS --------------------------------------------------------------------------- //
+// --- TENANT --------------------------------------------------------------------- //
+// --- OTHER --------------------------------------------------------------------- //
+// --- DELETED --------------------------------------------------------------------------- //

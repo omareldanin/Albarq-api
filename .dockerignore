@@ -1,0 +1,14 @@
+.vscode
+build
+node_modules
+logs
+production
+uploads
+.git
+Dockerfile
+.dockerignore
+.gitignore
+.env.*
+.env
+docker-volume
+docker-compose.yml
