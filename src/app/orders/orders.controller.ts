@@ -218,7 +218,7 @@ export class OrdersController {
             clientID: req.query.client_id,
             deliveryAgentID: req.query.delivery_agent_id,
             companyID: req.query.company_id,
-            startDate: "2024-12-02",
+            startDate: req.query.start_date,
             endDate: req.query.end_date,
             governorate: req.query.governorate,
             statuses: req.query.statuses,
