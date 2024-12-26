@@ -354,12 +354,12 @@ export class OrdersService {
         orderData: OrderUpdateType;
     }) => {
         // Cant change order data unless you have the permission
-        // if (
-        //     data.loggedInUser.role !== "COMPANY_MANAGER" &&
-        //     data.loggedInUser.permissions?.includes("CHANGE_ORDER_DATA") !== true
-        // ) {
-        //     throw new AppError("ليس لديك صلاحية تعديل الطلب", 403);
-        // }
+        if (
+            data.loggedInUser.role !== "COMPANY_MANAGER" &&
+            data.loggedInUser.permissions?.includes("CHANGE_ORDER_DATA") !== true
+        ) {
+            throw new AppError("ليس لديك صلاحية تعديل الطلب", 403);
+        }
 
         if (data.orderData.confirmed && data.loggedInUser.role !== "COMPANY_MANAGER") {
             throw new AppError("ليس لديك صلاحية تأكيد الطلب", 403);
