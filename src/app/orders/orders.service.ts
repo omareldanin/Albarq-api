@@ -1158,7 +1158,8 @@ export class OrdersService {
                 inquiryCompaniesIDs
             }
         });
-
+        console.log(statistics);
+        
         return statistics;
     };
 
