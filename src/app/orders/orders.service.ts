@@ -354,7 +354,6 @@ export class OrdersService {
         orderData: OrderUpdateType;
     }) => {
         // Cant change order data unless you have the permission
-        console.log(data.loggedInUser.permissions);
         
         if (
             data.loggedInUser.role !== "COMPANY_MANAGER" &&
@@ -1160,7 +1159,6 @@ export class OrdersService {
                 inquiryCompaniesIDs
             }
         });
-        console.log(statistics);
         
         return statistics;
     };
