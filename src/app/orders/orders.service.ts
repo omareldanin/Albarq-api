@@ -127,6 +127,8 @@ export class OrdersService {
         const branch = await branchesRepository.getBranchByLocation({
             locationID: data.orderOrOrdersData.locationID
         });
+        console.log(data.orderOrOrdersData);
+        
         if (!branch) {
             throw new AppError("لا يوجد فرع مرتبط بالموقع", 500);
         }
