@@ -171,9 +171,13 @@ export class OrdersController {
         const ordersIDs = OrdersReceiptsCreateSchema.parse(req.body);
 
         const pdf = await ordersService.createOrdersReceipts({ ordersIDs });
+        const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
+        // Set headers for a PDF response
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=generated.pdf');
+        console.log('PDF size:', pdfBuffer.length);
 
-        res.contentType("application/pdf");
-        res.send(pdf);
+        res.send(pdfBuffer);
     });
 
     getOrdersReportPDF = catchAsync(async (req, res) => {
@@ -207,8 +211,12 @@ export class OrdersController {
             ordersFilters: filters
         });
 
-        res.contentType("application/pdf");
-        res.send(pdf);
+        const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
+        // Set headers for a PDF response
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=generated.pdf');
+
+        res.send(pdfBuffer);
     });
 
     getOrdersStatistics = catchAsync(async (req, res) => {
