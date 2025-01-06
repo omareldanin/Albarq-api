@@ -169,7 +169,7 @@ export class OrdersController {
 
     createOrdersReceipts = catchAsync(async (req, res) => {
         const ordersIDs = OrdersReceiptsCreateSchema.parse(req.body);
-
+        
         const pdf = await ordersService.createOrdersReceipts({ ordersIDs });
         const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
         // Set headers for a PDF response
@@ -245,7 +245,8 @@ export class OrdersController {
             loggedInUser: loggedInUser,
             filters: filters
         });
-
+        console.log(statistics);
+        
         res.status(200).json({
             status: "success",
             data: statistics
