@@ -88,6 +88,15 @@ export class OrdersController {
             loggedInUser: loggedInUser,
             filters: filters
         });
+        console.log({
+            status: "success",
+            page: page,
+            pagesCount: pagesCount,
+            data: {
+                orders: orders,
+                ordersMetaData: ordersMetaData
+            }
+        });
         
         res.status(200).json({
             status: "success",
