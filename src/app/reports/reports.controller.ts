@@ -158,13 +158,14 @@ export class ReportController {
             params: params
         });
 
-            // Set headers for a PDF response
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=generated.pdf');
+        // Ensure PDF data is received as a Buffer or convert it
+        const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
+        // Set headers for a PDF response
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=generated.pdf');
+        console.log('PDF size:', pdfBuffer.length);
 
-        console.log(pdf);
-        
-        res.send(pdf);
+        res.send(pdfBuffer);
 
         // const chunks: Uint8Array[] = [];
         // let result: Buffer;
