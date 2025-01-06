@@ -159,6 +159,9 @@ export class ReportController {
         });
 
         res.contentType("application/pdf");
+        
+        console.log(pdf);
+        
         res.send(pdf);
 
         // const chunks: Uint8Array[] = [];

@@ -18,10 +18,9 @@ export const generatePDF = async (
             headless: true,
             args: ["--no-sandbox", "--disable-setuid-sandbox"],
             ignoreDefaultArgs: ["--disable-extensions"],
-            executablePath:"/usr/bin/google-chrome-stable"
         });
         const page = await browser.newPage();
-
+ 
         await page.emulateMediaType("print");
         await page.setContent(html);
         css && (await page.addStyleTag({ content: css }));
