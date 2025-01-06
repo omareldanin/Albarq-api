@@ -158,8 +158,10 @@ export class ReportController {
             params: params
         });
 
-        res.contentType("application/pdf");
-        
+            // Set headers for a PDF response
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=generated.pdf');
+
         console.log(pdf);
         
         res.send(pdf);
