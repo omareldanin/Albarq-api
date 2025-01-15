@@ -58,7 +58,8 @@ export const userSelectReform = (
         phone: user.phone,
         role: user.employee?.role || user.client?.role || user.admin?.role || "",
         company: user.employee?.company || user.client?.company || null,
-        permissions: user.employee?.permissions || []
+        permissions: user.employee?.permissions || [],
+        orderStatus: user.employee?.orderStatus || []
     };
 };
 
