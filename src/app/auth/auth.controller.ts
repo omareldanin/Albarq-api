@@ -121,7 +121,7 @@ export class AuthController {
             const decoded = jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET as string) as {
                 id: number;
             };
-
+            
             // 2) Check if refresh token is in the database
             const refreshTokens = await usersRepository.getUserRefreshTokens(decoded.id);
             if (!refreshTokens || !refreshTokens.includes(refreshToken)) {
@@ -150,7 +150,8 @@ export class AuthController {
                 env.ACCESS_TOKEN_SECRET as string,
                 { expiresIn: env.ACCESS_TOKEN_EXPIRES_IN }
             );
-
+            
+            console.log(token);
             res.cookie("jwt", token, {
                 httpOnly: true,
                 secure: true
