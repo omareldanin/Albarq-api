@@ -17,6 +17,8 @@ export class EmployeesController {
             employeeData.residencyCard = files.residencyCard ? files.residencyCard[0].location : undefined;
         }
 
+        console.log(employeeData);
+        
         const createdEmployee = await employeesService.createEmployee({
             loggedInUser,
             employeeData: { ...employeeData }
@@ -78,7 +80,7 @@ export class EmployeesController {
         const params = {
             employeeID: +req.params.employeeID
         };
-
+        
         if (req.files) {
             const files = req.files as { [fieldname: string]: Express.MulterS3.File[] };
             employeeData.avatar = files.avatar ? files.avatar[0].location : undefined;

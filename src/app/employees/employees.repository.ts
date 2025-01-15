@@ -36,6 +36,11 @@ export class EmployeesRepository {
                           set: data.employeeData.permissions
                       }
                     : undefined,
+                orderStatus: data.employeeData.orderStatus
+                    ? {
+                          set: data.employeeData.orderStatus
+                      }
+                    : undefined,
                 branch: data.employeeData.branchID
                     ? {
                           connect: {
@@ -358,6 +363,7 @@ export class EmployeesRepository {
                 //       }
                 //     : undefined,
                 permissions: data.employeeData.permissions,
+                orderStatus: data.employeeData.orderStatus,
                 branch: data.employeeData.branchID
                     ? {
                           connect: {
