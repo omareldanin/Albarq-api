@@ -14,6 +14,7 @@ export const userSelect = {
         select: {
             role: true,
             permissions: true,
+            orderStatus: true,
             company: {
                 select: {
                     id: true,
@@ -59,6 +60,7 @@ export const userReform = (
             | AdminRole
             | EmployeeRole
             | ClientRole,
-        permissions: user.employee?.permissions || []
+        permissions: user.employee?.permissions || [],
+        orderStatus: user.employee?.orderStatus || []
     };
 };

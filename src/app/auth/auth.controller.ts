@@ -38,6 +38,7 @@ export class AuthController {
                 username: user.username,
                 role: returnedUser.role,
                 permissions: returnedUser.permissions,
+                orderStatus: returnedUser.orderStatus,
                 companyID: returnedUser.companyID,
                 companyName: returnedUser.companyName,
                 mainCompany: returnedUser.mainCompany
@@ -141,6 +142,7 @@ export class AuthController {
                     username: user.username,
                     role: user.role,
                     permissions: user.permissions,
+                    orderStatus: user.orderStatus,
                     companyID: user.companyID,
                     companyName: user.companyName,
                     mainCompany: user.mainCompany
