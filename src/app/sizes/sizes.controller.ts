@@ -3,15 +3,32 @@ import { catchAsync } from "../../lib/catchAsync";
 // import type { loggedInUserType } from "../../types/user";
 import { SizeCreateSchema, SizeUpdateSchema } from "./sizes.dto";
 import { SizesRepository } from "./sizes.repository";
+import { StoresRepository } from "../stores/stores.repository";
+import { AppError } from "../../lib/AppError";
+import { loggedInUserType } from "../../types/user";
 
+const storesRepository = new StoresRepository();
 const sizesRepository = new SizesRepository();
 
 export class SizesController {
     createSize = catchAsync(async (req, res) => {
         const sizeData = SizeCreateSchema.parse(req.body);
         // const companyID = +res.locals.user.companyID;
+       let clientId=0
+        let store=null
+        const { role , id } = res.locals.user as loggedInUserType;
 
-        const createdSize = await sizesRepository.createSize(sizeData);
+        if(role === "CLIENT"){
+            clientId = +id
+        }else if(role === "CLIENT_ASSISTANT"){
+            store=await storesRepository.getStoreByClientAssistantId(id)
+            clientId= store?.client?.id ?? 0
+        }else{
+            throw new AppError("لا يوجد فرع مرتبط بالموقع", 500);
+             
+        }
+
+        const createdSize = await sizesRepository.createSize(clientId,sizeData);
 
         res.status(200).json({
             status: "success",
@@ -40,11 +57,25 @@ export class SizesController {
             page = +req.query.page;
         }
 
+        let clientId=0
+        let store=null
+        const { role , id } = res.locals.user as loggedInUserType;
+
+        if(role === "CLIENT"){
+            clientId = +id
+        }else if(role === "CLIENT_ASSISTANT"){
+            store=await storesRepository.getStoreByClientAssistantId(id)
+            clientId= store?.client?.id ?? 0
+        }else{
+            throw new AppError("لا يوجد فرع مرتبط بالموقع", 500);
+             
+        }
+
         const { sizes, pagesCount } = await sizesRepository.getAllSizesPaginated({
             page: page,
             size: size,
-            // companyID: companyID,
-            minified: minified
+            minified: minified,
+            clientId
         });
 
         res.status(200).json({

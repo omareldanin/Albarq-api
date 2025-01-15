@@ -12,7 +12,7 @@ const colorsController = new ColorsController();
 
 router.route("/colors").post(
     isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER]),
+    isAutherized([EmployeeRole.CLIENT_ASSISTANT,ClientRole.CLIENT]),
     colorsController.createColor
     /*
         #swagger.tags = ['Colors Routes']
@@ -34,9 +34,7 @@ router.route("/colors").post(
 router.route("/colors").get(
     isLoggedIn,
     isAutherized([
-        EmployeeRole.COMPANY_MANAGER,
-        AdminRole.ADMIN,
-        AdminRole.ADMIN_ASSISTANT,
+        EmployeeRole.CLIENT_ASSISTANT,ClientRole.CLIENT,
         //TODO: Remove later
         ...Object.values(EmployeeRole),
         ...Object.values(ClientRole)
@@ -61,7 +59,7 @@ router.route("/colors").get(
 
 router.route("/colors/:colorID").get(
     isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
+    isAutherized([EmployeeRole.CLIENT_ASSISTANT,ClientRole.CLIENT,]),
     colorsController.getColor
     /*
         #swagger.tags = ['Colors Routes']
@@ -70,7 +68,7 @@ router.route("/colors/:colorID").get(
 
 router.route("/colors/:colorID").patch(
     isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
+    isAutherized([EmployeeRole.CLIENT_ASSISTANT,ClientRole.CLIENT,]),
     colorsController.updateColor
     /*
         #swagger.tags = ['Colors Routes']
@@ -91,7 +89,7 @@ router.route("/colors/:colorID").patch(
 
 router.route("/colors/:colorID").delete(
     isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
+    isAutherized([EmployeeRole.CLIENT_ASSISTANT,ClientRole.CLIENT,]),
     colorsController.deleteColor
     /*
         #swagger.tags = ['Colors Routes']

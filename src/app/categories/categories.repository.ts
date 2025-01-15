@@ -3,15 +3,15 @@ import type { CategoryCreateType, CategoryUpdateType } from "./categories.dto";
 import { categorySelect } from "./categories.responses";
 
 export class CategoriesRepository {
-    async createCategory(data: CategoryCreateType) {
+    async createCategory(clientId:number,data: CategoryCreateType) {
         const createdCategory = await prisma.category.create({
             data: {
-                title: data.title
-                // company: {
-                //     connect: {
-                //         id: companyID
-                //     }
-                // }
+                title: data.title,
+                client: {
+                    connect: {
+                        id: clientId
+                    }
+                }
             },
             select: categorySelect
         });
@@ -21,13 +21,13 @@ export class CategoriesRepository {
     async getAllCategoriesPaginated(filters: {
         page: number;
         size: number;
-        companyID?: number;
+        clientId?: number;
         minified?: boolean;
     }) {
         const where = {
-            // company: {
-            //     id: filters.companyID
-            // }
+            client: {
+                id: filters.clientId
+            }
         };
 
         if (filters.minified === true) {

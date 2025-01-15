@@ -1,16 +1,34 @@
 // import { AdminRole } from "@prisma/client";
+import { AppError } from "../../lib/AppError";
 import { catchAsync } from "../../lib/catchAsync";
+import { loggedInUserType } from "../../types/user";
+import { StoresRepository } from "../stores/stores.repository";
 // import type { loggedInUserType } from "../../types/user";
 import { ColorCreateSchema, ColorUpdateSchema } from "./colors.dto";
 import { ColorsRepository } from "./colors.repository";
 
 const colorsRepository = new ColorsRepository();
+const storesRepository = new StoresRepository();
+
 export class ColorsController {
     createColor = catchAsync(async (req, res) => {
         const colorData = ColorCreateSchema.parse(req.body);
         // const companyID = +res.locals.user.companyID;
+        let clientId=0
+        let store=null
+        const { role , id } = res.locals.user as loggedInUserType;
 
-        const createdColor = await colorsRepository.createColor(colorData);
+        if(role === "CLIENT"){
+            clientId = +id
+        }else if(role === "CLIENT_ASSISTANT"){
+            store=await storesRepository.getStoreByClientAssistantId(id)
+            clientId= store?.client?.id ?? 0
+        }else{
+            throw new AppError("لا يوجد فرع مرتبط بالموقع", 500);
+             
+        }
+
+        const createdColor = await colorsRepository.createColor(clientId,colorData);
 
         res.status(200).json({
             status: "success",
@@ -39,11 +57,25 @@ export class ColorsController {
             page = +req.query.page;
         }
 
+        let clientId=0
+        let store=null
+        const { role , id } = res.locals.user as loggedInUserType;
+
+        if(role === "CLIENT"){
+            clientId = +id
+        }else if(role === "CLIENT_ASSISTANT"){
+            store=await storesRepository.getStoreByClientAssistantId(id)
+            clientId= store?.client?.id ?? 0
+        }else{
+            throw new AppError("لا يوجد فرع مرتبط بالموقع", 500);
+             
+        }
+        
         const { colors, pagesCount } = await colorsRepository.getAllColorsPaginated({
             page: page,
             size: size,
-            // companyID: companyID,
-            minified: minified
+            minified: minified,
+            clientId:clientId
         });
 
         res.status(200).json({

@@ -10,6 +10,7 @@ export const userSelect = {
         select: {
             role: true,
             permissions: true,
+            orderStatus: true,
             company: {
                 select: {
                     id: true,

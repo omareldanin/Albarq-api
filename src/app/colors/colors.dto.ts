@@ -4,7 +4,7 @@ import { z } from "zod";
 
 export const ColorCreateSchema = z.object({
     title: z.string(),
-    code: z.string()
+    code: z.string(),
 });
 
 export type ColorCreateType = z.infer<typeof ColorCreateSchema>;

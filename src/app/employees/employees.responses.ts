@@ -1,9 +1,10 @@
-import type { Prisma } from "@prisma/client";
+import type { OrderStatus, Prisma } from "@prisma/client";
 
 export const employeeSelect = {
     salary: true,
     role: true,
     permissions: true,
+    orderStatus: true,
     branch: true,
     repository: true,
     deliveryCost: true,
@@ -146,6 +147,7 @@ export const employeeReform = (
         salary: employee.salary,
         role: employee.role,
         permissions: employee.permissions,
+        orderStatus: employee.orderStatus,
         deliveryCost: employee.deliveryCost,
         branch: employee.branch,
         repository: employee.repository,

@@ -29,6 +29,17 @@ export const EmployeeCreateSchema = z.object({
             z.array(z.nativeEnum(Permission))
         )
         .optional(),
+    orderStatus:z
+    .preprocess(
+        (data) => {
+            if (typeof data === "string") {
+                return JSON.parse(data);
+            }
+            return data;
+        },
+        z.array(z.nativeEnum(OrderStatus))
+    )
+    .optional(),
     fcm: z.string().optional(),
     avatar: z.string().optional(),
     idCard: z.string().optional(),

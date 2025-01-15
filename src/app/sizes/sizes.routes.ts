@@ -12,7 +12,7 @@ const sizesController = new SizesController();
 
 router.route("/sizes").post(
     isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER]),
+    isAutherized([EmployeeRole.CLIENT_ASSISTANT,ClientRole.CLIENT]),
     sizesController.createSize
     /*
         #swagger.tags = ['Sizes Routes']
@@ -34,9 +34,7 @@ router.route("/sizes").post(
 router.route("/sizes").get(
     isLoggedIn,
     isAutherized([
-        EmployeeRole.COMPANY_MANAGER,
-        AdminRole.ADMIN,
-        AdminRole.ADMIN_ASSISTANT,
+        EmployeeRole.CLIENT_ASSISTANT,ClientRole.CLIENT,
         //TODO: Remove later
         ...Object.values(EmployeeRole),
         ...Object.values(ClientRole)
@@ -61,7 +59,7 @@ router.route("/sizes").get(
 
 router.route("/sizes/:sizeID").get(
     isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
+    isAutherized([EmployeeRole.CLIENT_ASSISTANT,ClientRole.CLIENT]),
     sizesController.getSize
     /*
         #swagger.tags = ['Sizes Routes']
@@ -70,7 +68,7 @@ router.route("/sizes/:sizeID").get(
 
 router.route("/sizes/:sizeID").patch(
     isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
+    isAutherized([EmployeeRole.CLIENT_ASSISTANT,ClientRole.CLIENT]),
     sizesController.updateSize
     /*
         #swagger.tags = ['Sizes Routes']
@@ -91,7 +89,7 @@ router.route("/sizes/:sizeID").patch(
 
 router.route("/sizes/:sizeID").delete(
     isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
+    isAutherized([EmployeeRole.CLIENT_ASSISTANT,ClientRole.CLIENT]),
     sizesController.deleteSize
     /*
         #swagger.tags = ['Sizes Routes']

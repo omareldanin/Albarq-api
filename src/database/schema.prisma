@@ -209,6 +209,7 @@ model Employee {
   id                      Int                              @id
   // --- DETAILS --------------------------------------------------------------------------- //
   permissions             Permission[]
+  orderStatus             OrderStatus[]                    @default([REGISTERED,READY_TO_SEND,WITH_DELIVERY_AGENT,DELIVERED,REPLACED,PARTIALLY_RETURNED,RETURNED,POSTPONED,CHANGE_ADDRESS,RESEND,WITH_RECEIVING_AGENT,PROCESSING])
   salary                  Float                            @default(0) // TODO: remove this field
   deliveryCost            Float                            @default(0)
   role                    EmployeeRole
@@ -254,6 +255,7 @@ model Employee {
   @@index([companyId])
   @@index([role])
   @@index([permissions])
+  @@index([orderStatus])
   @@index([branchId])
 }
 
@@ -286,6 +288,9 @@ model Client {
   products                  Product[]
   orders                    Order[]
   stores                    Store[]
+  colors                    Color[]
+  categories                Category[]
+  sizes                     Size[]
   // createdBy                 Employee       @relation(fields: [employeeId], references: [id])
   createdBy                 User           @relation("createdBy", fields: [createdById], references: [id])
   user                      User           @relation(fields: [id], references: [id])
@@ -860,6 +865,8 @@ model Category {
   // --- TENANT --------------------------------------------------------------------- //
   // company   Company?  @relation(fields: [companyId], references: [id])
   // companyId Int?
+  client            Client          @relation(fields: [clientId],references: [id])
+  clientId        Int
   // --- OTHER --------------------------------------------------------------------- //
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -896,6 +903,8 @@ model Size {
   // --- TENANT --------------------------------------------------------------------- //
   // company       Company?        @relation(fields: [companyId], references: [id])
   // companyId     Int?
+  client            Client          @relation(fields: [clientId],references: [id])
+  clientId        Int
   // --- OTHER --------------------------------------------------------------------- //
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -914,6 +923,8 @@ model Color {
   // --- TENANT --------------------------------------------------------------------- //
   // company       Company?        @relation(fields: [companyId], references: [id])
   // companyId     Int?
+  client            Client          @relation(fields: [clientId],references: [id])
+  clientId        Int
   // --- OTHER --------------------------------------------------------------------- //
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt

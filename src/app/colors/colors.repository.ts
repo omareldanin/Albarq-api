@@ -3,16 +3,16 @@ import type { ColorCreateType, ColorUpdateType } from "./colors.dto";
 import { colorSelect } from "./colors.responses";
 
 export class ColorsRepository {
-    async createColor(data: ColorCreateType) {
+    async createColor(clientId:number,data: ColorCreateType) {
         const createdColor = await prisma.color.create({
             data: {
                 title: data.title,
-                code: data.code
-                // company: {
-                //     connect: {
-                //         id: companyID
-                //     }
-                // }
+                code: data.code,
+                client: {
+                    connect: {
+                        id: clientId
+                    }
+                }
             },
             select: colorSelect
         });
@@ -22,13 +22,13 @@ export class ColorsRepository {
     async getAllColorsPaginated(filters: {
         page: number;
         size: number;
-        companyID?: number;
+        clientId?: number;
         minified?: boolean;
     }) {
         const where = {
-            // company: {
-            //     id: filters.companyID
-            // }
+            client: {
+                id: filters.clientId
+            }
         };
 
         if (filters.minified === true) {

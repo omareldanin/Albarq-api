@@ -106,6 +106,16 @@ export class StoresRepository {
         return storeSelectReform(store);
     }
 
+    async getStoreByClientAssistantId(clientAssistantId: number) {
+        const store = await prisma.store.findFirst({
+            where: {
+                clientAssistantId: clientAssistantId
+            },
+            select: storeSelect
+        });
+        return storeSelectReform(store);
+    }
+
     async updateStore(data: { storeID: number; storeData: StoreUpdateType }) {
         const store = await prisma.store.update({
             where: {

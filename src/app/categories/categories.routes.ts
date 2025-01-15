@@ -12,7 +12,7 @@ const categoriesController = new CategoriesController();
 
 router.route("/categories").post(
     isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER]),
+    isAutherized([EmployeeRole.CLIENT_ASSISTANT,ClientRole.CLIENT]),
     categoriesController.createCategory
     /*
         #swagger.tags = ['Categories Routes']
@@ -34,9 +34,7 @@ router.route("/categories").post(
 router.route("/categories").get(
     isLoggedIn,
     isAutherized([
-        EmployeeRole.COMPANY_MANAGER,
-        AdminRole.ADMIN,
-        AdminRole.ADMIN_ASSISTANT,
+        EmployeeRole.CLIENT_ASSISTANT,ClientRole.CLIENT,
         //TODO: Remove later
         ...Object.values(EmployeeRole),
         ...Object.values(ClientRole)
@@ -61,7 +59,7 @@ router.route("/categories").get(
 
 router.route("/categories/:categoryID").get(
     isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
+    isAutherized([EmployeeRole.CLIENT_ASSISTANT,ClientRole.CLIENT]),
     categoriesController.getCategory
     /*
         #swagger.tags = ['Categories Routes']
@@ -70,7 +68,7 @@ router.route("/categories/:categoryID").get(
 
 router.route("/categories/:categoryID").patch(
     isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
+    isAutherized([EmployeeRole.CLIENT_ASSISTANT,ClientRole.CLIENT]),
     categoriesController.updateCategory
     /*
         #swagger.tags = ['Categories Routes']
@@ -91,7 +89,7 @@ router.route("/categories/:categoryID").patch(
 
 router.route("/categories/:categoryID").delete(
     isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
+    isAutherized([EmployeeRole.CLIENT_ASSISTANT,ClientRole.CLIENT]),
     categoriesController.deleteCategory
     /*
         #swagger.tags = ['Categories Routes']
