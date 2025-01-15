@@ -23,10 +23,30 @@ const app = express();
 
 // Middlewares
 
-app.set("trust proxy", true); // Enable if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
-app.use(helmet()); // Set security HTTP headers
+// Define allowed origins
+const allowedOrigins = ["https://albarqiq.net"];
+
+// Configure CORS middleware
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true); // Allow requests with matching origin or no origin (e.g., Postman)
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // Enable cookies and credentials
+  })
+);
+
+app.use(cors());
+app.use(helmet());
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
-app.use(cors()); // Enable CORS - Cross Origin Resource Sharing
+app.use(express.json());
+
+app.options("*", cors());
+
 
 // Rate Limiting
 
