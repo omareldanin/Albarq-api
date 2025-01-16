@@ -36,7 +36,8 @@ export const generateReport = async (
             path.join(__dirname, "../../../../static/styles/reportStyle.css"),
             "utf8"
         );
-
+        console.log(reportData);
+        
         const html = await generateHTML(template, { reportData, orders });
         const pdf = await generatePDF(html, css);
 
