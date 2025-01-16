@@ -225,7 +225,7 @@ export class OrdersService {
         // show orders/statistics without delivery agent reports to the delivery agent unless he searches for them
         let deliveryAgentReport = data.filters.deliveryAgentReport;
         if (
-            data.loggedInUser.role === "DELIVERY_AGENT" &&
+            data.loggedInUser.role !== "DELIVERY_AGENT" &&
             data.filters.deliveryAgentReport !== "true" &&
             data.filters.search === undefined
         ) {
