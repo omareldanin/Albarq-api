@@ -1559,6 +1559,20 @@ export class OrdersRepository {
             }
         });
 
+        const allOrdersStatisticsWithoutDeliveryReport = await prisma.order.aggregate({
+            _sum: {
+                totalCost: true
+            },
+            _count: {
+                id: true
+            },
+            where: {
+                ...filtersReformed,
+                deliveryAgentReport: {
+                    is: null
+                }
+            }
+        });
         const todayOrdersStatistics = await prisma.order.aggregate({
             _sum: {
                 totalCost: true
@@ -1580,7 +1594,8 @@ export class OrdersRepository {
             ordersStatisticsByGovernorate,
             allOrdersStatistics,
             allOrdersStatisticsWithoutClientReport,
-            todayOrdersStatistics
+            todayOrdersStatistics,
+            allOrdersStatisticsWithoutDeliveryReport
         });
     }
 

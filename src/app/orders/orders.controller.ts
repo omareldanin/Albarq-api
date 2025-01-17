@@ -254,7 +254,6 @@ export class OrdersController {
             loggedInUser: loggedInUser,
             filters: filters
         });
-        console.log(statistics);
         
         res.status(200).json({
             status: "success",
