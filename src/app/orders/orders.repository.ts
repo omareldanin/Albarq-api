@@ -1546,7 +1546,7 @@ export class OrdersRepository {
 
         const allOrdersStatisticsWithoutClientReport = await prisma.order.aggregate({
             _sum: {
-                totalCost: true
+                paidAmount: true
             },
             _count: {
                 id: true
@@ -1568,7 +1568,7 @@ export class OrdersRepository {
 
         const allOrdersStatisticsWithoutDeliveryReport = await prisma.order.aggregate({
             _sum: {
-                totalCost: true
+                paidAmount: true
             },
             _count: {
                 id: true
