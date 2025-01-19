@@ -1553,10 +1553,10 @@ export class OrdersRepository {
             },
             where: {
                 ...filtersReformed,
-                    AND:
+                    OR:
                          [
-                              { clientReport: { isNot: null } },
-                              { clientReport: { report: { deleted: false } } }
+                              { clientReport: { is: null } },
+                              { clientReport: { report: { deleted: true } } }
                           ]
             }
         });
@@ -1570,9 +1570,9 @@ export class OrdersRepository {
             },
             where: {
                 ...filtersReformed,
-                AND:
+                OR:
                 [
-                     { deliveryAgentReport: { isNot: null } },
+                     { deliveryAgentReport: { is: null } },
                      { deliveryAgentReport: { report: { deleted: false } } }
                 ]
             }
