@@ -1553,9 +1553,11 @@ export class OrdersRepository {
             },
             where: {
                 ...filtersReformed,
-                clientReport: {
-                    is: null
-                }
+                    AND:
+                         [
+                              { clientReport: { isNot: null } },
+                              { clientReport: { report: { deleted: false } } }
+                          ]
             }
         });
 
@@ -1568,9 +1570,11 @@ export class OrdersRepository {
             },
             where: {
                 ...filtersReformed,
-                deliveryAgentReport: {
-                    is: null
-                }
+                AND:
+                [
+                     { deliveryAgentReport: { isNot: null } },
+                     { deliveryAgentReport: { report: { deleted: false } } }
+                ]
             }
         });
         const todayOrdersStatistics = await prisma.order.aggregate({
