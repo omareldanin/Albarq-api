@@ -848,21 +848,21 @@ export class OrdersRepository {
         } satisfies Prisma.OrderWhereInput;
         
         
-        // if (data.filters.minified === true) {
-        //     const paginatedOrders = await prisma.order.findManyPaginated(
-        //         {
-        //             where: where,
-        //             select: {
-        //                 id: true
-        //             }
-        //         },
-        //         {
-        //             page: data.filters.page,
-        //             size: data.filters.size
-        //         }
-        //     );
-        //     return { orders: paginatedOrders.data, pagesCount: paginatedOrders.pagesCount };
-        // }
+        if (data.filters.minified === true) {
+            const paginatedOrders = await prisma.order.findManyPaginated(
+                {
+                    where: where,
+                    select: {
+                        id: true
+                    }
+                },
+                {
+                    page: data.filters.page,
+                    size: data.filters.size
+                }
+            );
+            return { orders: paginatedOrders.data, pagesCount: paginatedOrders.pagesCount };
+        }
         
         const paginatedOrders = await prisma.order.findManyPaginated(
             {
@@ -1579,7 +1579,7 @@ export class OrdersRepository {
                 OR:
                 [
                      { deliveryAgentReport: { is: null } },
-                     { deliveryAgentReport: { report: { deleted: false } } }
+                     { deliveryAgentReport: { report: { deleted: true } } }
                 ],
                 status:
                     {
