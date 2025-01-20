@@ -487,7 +487,7 @@ export class OrdersRepository {
                     ]
                 },
                 // Filter by companyID
-                {
+                    {
                     company: {
                         id: data.filters.forwardedFromID
                             ? undefined
@@ -529,10 +529,7 @@ export class OrdersRepository {
                           }
                         : undefined
                 },
-                // Filter by governorate
-                {
-                    governorate: data.filters.governorate
-                },
+           
                 // Filter by deliveryAgentID
                 {
                     deliveryAgent: {
@@ -549,12 +546,6 @@ export class OrdersRepository {
                 {
                     store: {
                         id: data.filters.storeID
-                    }
-                },
-                // Filter by repositoryID
-                {
-                    repository: {
-                        id: data.filters.repositoryID
                     }
                 },
                 {
@@ -763,16 +754,7 @@ export class OrdersRepository {
                         id: data.filters.automaticUpdateID
                     }
                 },
-                {
-                    branch: {
-                        id: data.filters.branchID
-                    }
-                },
-                {
-                    repository: {
-                        id: data.filters.repositoryID
-                    }
-                },
+            
                 {
                     forwarded: data.filters.forwarded
                 },
@@ -791,78 +773,96 @@ export class OrdersRepository {
                 },
                 // inquiry filters
                 {
-                    AND: [
+                    OR:[
                         {
-                            status: data.filters.inquiryStatuses
-                                ? {
-                                      in: data.filters.inquiryStatuses
-                                  }
-                                : undefined
+                            branch: {
+                                id: data.filters.branchID
+                            }
                         },
                         {
-                            governorate: data.filters.inquiryGovernorates
-                                ? {
-                                      in: data.filters.inquiryGovernorates
-                                  }
-                                : undefined
+                            repository: {
+                                id: data.filters.repositoryID
+                            }
+                        },
+                             // Filter by governorate
+                        {
+                            governorate: data.filters.governorate
                         },
                         {
-                            branch: data.filters.inquiryBranchesIDs
-                                ? {
-                                      id: {
-                                          in: data.filters.inquiryBranchesIDs
-                                      }
-                                  }
-                                : undefined
-                        },
-                        {
-                            store: data.filters.inquiryStoresIDs
-                                ? {
-                                      id: {
-                                          in: data.filters.inquiryStoresIDs
-                                      }
-                                  }
-                                : undefined
-                        },
-                        {
-                            company: data.filters.inquiryCompaniesIDs
-                                ? {
-                                      id: {
-                                          in: data.filters.inquiryCompaniesIDs
-                                      }
-                                  }
-                                : undefined
-                        },
-                        {
-                            location: data.filters.inquiryLocationsIDs
-                                ? {
-                                      id: {
-                                          in: data.filters.inquiryLocationsIDs
-                                      }
-                                  }
-                                : undefined
+                            AND: [
+                                {
+                                    status: data.filters.inquiryStatuses
+                                        ? {
+                                              in: data.filters.inquiryStatuses
+                                          }
+                                        : undefined
+                                },
+                                {
+                                    governorate: data.filters.inquiryGovernorates
+                                        ? {
+                                              in: data.filters.inquiryGovernorates
+                                          }
+                                        : undefined
+                                },
+                                {
+                                    branch: data.filters.inquiryBranchesIDs
+                                        ? {
+                                              id: {
+                                                  in: data.filters.inquiryBranchesIDs
+                                              }
+                                          }
+                                        : undefined
+                                },
+                                {
+                                    store: data.filters.inquiryStoresIDs
+                                        ? {
+                                              id: {
+                                                  in: data.filters.inquiryStoresIDs
+                                              }
+                                          }
+                                        : undefined
+                                },
+                                {
+                                    company: data.filters.inquiryCompaniesIDs
+                                        ? {
+                                              id: {
+                                                  in: data.filters.inquiryCompaniesIDs
+                                              }
+                                          }
+                                        : undefined
+                                },
+                                {
+                                    location: data.filters.inquiryLocationsIDs
+                                        ? {
+                                              id: {
+                                                  in: data.filters.inquiryLocationsIDs
+                                              }
+                                          }
+                                        : undefined
+                                }
+                            ]
                         }
-                    ]
+                    ],
                 }
             ]
         } satisfies Prisma.OrderWhereInput;
-        console.log(where);
         
-        if (data.filters.minified === true) {
-            const paginatedOrders = await prisma.order.findManyPaginated(
-                {
-                    where: where,
-                    select: {
-                        id: true
-                    }
-                },
-                {
-                    page: data.filters.page,
-                    size: data.filters.size
-                }
-            );
-            return { orders: paginatedOrders.data, pagesCount: paginatedOrders.pagesCount };
-        }
+        
+        // if (data.filters.minified === true) {
+        //     const paginatedOrders = await prisma.order.findManyPaginated(
+        //         {
+        //             where: where,
+        //             select: {
+        //                 id: true
+        //             }
+        //         },
+        //         {
+        //             page: data.filters.page,
+        //             size: data.filters.size
+        //         }
+        //     );
+        //     return { orders: paginatedOrders.data, pagesCount: paginatedOrders.pagesCount };
+        // }
         
         const paginatedOrders = await prisma.order.findManyPaginated(
             {
@@ -927,7 +927,8 @@ export class OrdersRepository {
             deliveryCost: ordersMetaDataAggregate._sum.deliveryCost || 0,
             countByStatus: ordersMetaDataGroupByStatusReformed
         };
-
+        console.log(where.AND);
+        
         return {
             orders: ordersReformed,
             ordersMetaData: ordersMetaDataReformed,

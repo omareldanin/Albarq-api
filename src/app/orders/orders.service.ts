@@ -305,7 +305,7 @@ export class OrdersService {
         if (size > 500 && data.filters.minified !== true) {
             size = 10;
         }
-
+        
         const { orders, ordersMetaData, pagesCount } = await ordersRepository.getAllOrdersPaginated({
             filters: {
                 ...data.filters,
