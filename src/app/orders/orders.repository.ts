@@ -1587,6 +1587,49 @@ export class OrdersRepository {
                     }
             }
         });
+
+        const allOrdersStatisticsWithoutBranchReport = await prisma.order.aggregate({
+            _sum: {
+                paidAmount: true
+            },
+            _count: {
+                id: true
+            },
+            where: {
+                ...filtersReformed,
+                OR:
+                [
+                     { deliveryAgentReport: { is: null } },
+                     { deliveryAgentReport: { report: { deleted: true } } }
+                ],
+                status:
+                    {
+                        in: ["DELIVERED","PARTIALLY_RETURNED","REPLACED"]
+                    }
+            }
+        });
+
+        const allOrdersStatisticsWithoutCompanyReport = await prisma.order.aggregate({
+            _sum: {
+                paidAmount: true
+            },
+            _count: {
+                id: true
+            },
+            where: {
+                ...filtersReformed,
+                OR:
+                [
+                     { deliveryAgentReport: { is: null } },
+                     { deliveryAgentReport: { report: { deleted: true } } }
+                ],
+                status:
+                    {
+                        in: ["DELIVERED","PARTIALLY_RETURNED","REPLACED"]
+                    }
+            }
+        });
+
         const todayOrdersStatistics = await prisma.order.aggregate({
             _sum: {
                 totalCost: true
@@ -1609,7 +1652,9 @@ export class OrdersRepository {
             allOrdersStatistics,
             allOrdersStatisticsWithoutClientReport,
             todayOrdersStatistics,
-            allOrdersStatisticsWithoutDeliveryReport
+            allOrdersStatisticsWithoutDeliveryReport,
+            allOrdersStatisticsWithoutBranchReport,
+            allOrdersStatisticsWithoutCompanyReport
         });
     }
 

@@ -320,6 +320,22 @@ export const statisticsReformed = (statistics: {
             paidAmount: number | null;
         };
     }
+    allOrdersStatisticsWithoutBranchReport:{
+        _count: {
+            id: number;
+        };
+        _sum: {
+            paidAmount: number | null;
+        };
+    }   
+    allOrdersStatisticsWithoutCompanyReport:{
+        _count: {
+            id: number;
+        };
+        _sum: {
+            paidAmount: number | null;
+        };
+    }
     todayOrdersStatistics: {
         _count: {
             id: number;
@@ -391,7 +407,14 @@ export const statisticsReformed = (statistics: {
             totalCost: statistics.allOrdersStatisticsWithoutDeliveryReport._sum.paidAmount || 0,
             count: statistics.allOrdersStatisticsWithoutDeliveryReport._count.id
         },
-
+        allOrdersStatisticsWithoutBranchReport: {
+            totalCost: statistics.allOrdersStatisticsWithoutDeliveryReport._sum.paidAmount || 0,
+            count: statistics.allOrdersStatisticsWithoutDeliveryReport._count.id
+        },
+        allOrdersStatisticsWithoutCompanyReport: {
+            totalCost: statistics.allOrdersStatisticsWithoutDeliveryReport._sum.paidAmount || 0,
+            count: statistics.allOrdersStatisticsWithoutDeliveryReport._count.id
+        },
         todayOrdersStatistics: {
             totalCost: statistics.todayOrdersStatistics._sum.totalCost || 0,
             count: statistics.todayOrdersStatistics._count.id
