@@ -1599,8 +1599,8 @@ export class OrdersRepository {
                 ...filtersReformed,
                 OR:
                 [
-                     { deliveryAgentReport: { is: null } },
-                     { deliveryAgentReport: { report: { deleted: true } } }
+                     { branchReport: { is: null } },
+                     { branchReport: { report: { deleted: true } } }
                 ],
                 status:
                     {
@@ -1620,8 +1620,8 @@ export class OrdersRepository {
                 ...filtersReformed,
                 OR:
                 [
-                     { deliveryAgentReport: { is: null } },
-                     { deliveryAgentReport: { report: { deleted: true } } }
+                     { companyReport: { is: null } },
+                     { companyReport: { report: { deleted: true } } }
                 ],
                 status:
                     {
