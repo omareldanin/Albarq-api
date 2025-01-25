@@ -927,7 +927,6 @@ export class OrdersRepository {
             deliveryCost: ordersMetaDataAggregate._sum.deliveryCost || 0,
             countByStatus: ordersMetaDataGroupByStatusReformed
         };
-        console.log(where.AND);
         
         return {
             orders: ordersReformed,

@@ -215,13 +215,12 @@ export class OrdersService {
 
         // show orders/statistics without client reports to the client unless he searches for them
         let clientReport = data.filters.clientReport;
-        if (
-            data.loggedInUser.role === "CLIENT" &&
-            data.filters.clientReport !== "true" &&
-            data.filters.search === undefined
-        ) {
-            clientReport = "false";
-        }
+        // if (
+        //     data.loggedInUser.role === "CLIENT" &&
+        //     data.filters.search !== undefined
+        // ) {
+        //     clientReport = "false";
+        // }
         // show orders/statistics without delivery agent reports to the delivery agent unless he searches for them
         let deliveryAgentReport = data.filters.deliveryAgentReport;
         // if (
