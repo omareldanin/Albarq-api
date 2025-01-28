@@ -3,6 +3,7 @@ import multer from "multer";
 import multerS3 from "multer-s3";
 import { env } from "../config";
 import { AppError } from "../lib/AppError";
+const path = require("path");
 
 export const upload = multer({
     storage: multerS3({
@@ -37,9 +38,11 @@ export const upload = multer({
     limits: { fileSize: 1024 * 1024 * 5 },
     fileFilter: (_req, file, cb) => {
         const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+        const fileExtension = path.extname(file.originalname).toLowerCase();
+        const allowedExtensions = [".jpeg", ".jpg", ".png"];
         console.log(file);
         
-        if (!allowedTypes.includes(file.mimetype)) {
+        if (!allowedTypes.includes(file.mimetype) && !allowedExtensions.includes(fileExtension)) {
             const error = new AppError("نوع الملف غير مدعوم", 400);
             return cb(error);
         }
