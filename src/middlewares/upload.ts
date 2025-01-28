@@ -37,6 +37,8 @@ export const upload = multer({
     limits: { fileSize: 1024 * 1024 * 5 },
     fileFilter: (_req, file, cb) => {
         const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+        console.log(file);
+        
         if (!allowedTypes.includes(file.mimetype)) {
             const error = new AppError("نوع الملف غير مدعوم", 400);
             return cb(error);
