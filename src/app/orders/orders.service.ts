@@ -1156,7 +1156,8 @@ export class OrdersService {
                 inquiryBranchesIDs,
                 inquiryStoresIDs,
                 inquiryCompaniesIDs
-            }
+            },
+            loggedInUser:data.loggedInUser
         });
         
         return statistics;

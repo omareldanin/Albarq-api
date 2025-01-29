@@ -1354,6 +1354,7 @@ export class OrdersRepository {
 
     async getOrdersStatistics(data: {
         filters: OrdersStatisticsFiltersType;
+        loggedInUser: loggedInUserType
     }) {
         const filtersReformed = {
             AND: [
@@ -1369,12 +1370,13 @@ export class OrdersRepository {
                 {
                     storeId: data.filters.storeID
                 },
+                
                 {
                     clientReport: data.filters.clientReport
                         ? { isNot: null }
                         : data.filters.clientReport
                           ? { is: null }
-                          : undefined
+                        :undefined
                 },
                 {
                     governorateReport: data.filters.governorateReport
@@ -1506,6 +1508,7 @@ export class OrdersRepository {
             ]
         } satisfies Prisma.OrderWhereInput;
 
+        
         const ordersStatisticsByStatus = await prisma.order.groupBy({
             by: ["status"],
             _sum: {
@@ -1515,7 +1518,26 @@ export class OrdersRepository {
                 id: true
             },
             where: {
-                ...filtersReformed
+                ...filtersReformed,
+                OR:data.loggedInUser.role === "CLIENT"?
+                    [
+                        { clientReport: { is: null } },
+                        { clientReport: { report: { deleted: true } } }
+                    ]: data.loggedInUser.role==="DELIVERY_AGENT" ?
+                    [
+                        { deliveryAgentReport: { is: null } },
+                        { deliveryAgentReport: { report: { deleted: true } } }
+                    ]:data.loggedInUser.role === "COMPANY_MANAGER" ? 
+                    [
+                        { companyReport: { is: null } },
+                        { companyReport: { report: { deleted: true } } }
+                    ] :data.loggedInUser.role === "BRANCH_MANAGER" ?
+                    [
+                        { branchReport: { is: null } },
+                        { branchReport: { report: { deleted: true } } }
+                    ]:undefined
+
+
             }
         });
 
