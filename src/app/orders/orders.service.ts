@@ -419,7 +419,7 @@ export class OrdersService {
             oldOrderData?.status !== data.orderData.status &&
             data.orderData.status === OrderStatus.RETURNED
         ) {
-            data.orderData.totalCost = 0;
+            // data.orderData.totalCost = 0;
             data.orderData.paidAmount = 0;
         }
 
