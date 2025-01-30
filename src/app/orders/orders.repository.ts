@@ -1263,7 +1263,7 @@ export class OrdersRepository {
                 recipientAddress: data.orderData.recipientAddress,
                 notes: data.orderData.notes,
                 currentLocation: data.orderData.currentLocation,
-                status: data.orderData.status,
+                status:data.orderData.confirmed === true ? "WITH_DELIVERY_AGENT": data.orderData.status,
                 secondaryStatus: data.orderData.secondaryStatus,
                 confirmed: data.orderData.forwardedCompanyID ? false : data.orderData.confirmed,
                 details: data.orderData.details,
