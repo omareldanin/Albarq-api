@@ -396,6 +396,7 @@ export class OrdersRepository {
 
     async getAllOrdersPaginated(data: {
         filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
+        loggedInUser:loggedInUserType | undefined
     }) {
         const where = {
             AND: [
@@ -851,7 +852,25 @@ export class OrdersRepository {
         if (data.filters.minified === true) {
             const paginatedOrders = await prisma.order.findManyPaginated(
                 {
-                    where: where,
+                    where: {...where,
+                        OR:data.loggedInUser?.role === "CLIENT"?
+                        [
+                            { clientReport: { is: null } },
+                            { clientReport: { report: { deleted: true } } }
+                        ]: data.loggedInUser?.role==="DELIVERY_AGENT" ?
+                        [
+                            { deliveryAgentReport: { is: null } },
+                            { deliveryAgentReport: { report: { deleted: true } } }
+                        ]:data.loggedInUser?.role === "COMPANY_MANAGER" ? 
+                        [
+                            { companyReport: { is: null } },
+                            { companyReport: { report: { deleted: true } } }
+                        ] :data.loggedInUser?.role === "BRANCH_MANAGER" ?
+                        [
+                            { branchReport: { is: null } },
+                            { branchReport: { report: { deleted: true } } }
+                        ]:undefined
+                    },
                     select: {
                         id: true
                     }
@@ -866,7 +885,25 @@ export class OrdersRepository {
         
         const paginatedOrders = await prisma.order.findManyPaginated(
             {
-                where: where,
+                where: {...where,
+                    OR:data.loggedInUser?.role === "CLIENT"?
+                    [
+                        { clientReport: { is: null } },
+                        { clientReport: { report: { deleted: true } } }
+                    ]: data.loggedInUser?.role==="DELIVERY_AGENT" ?
+                    [
+                        { deliveryAgentReport: { is: null } },
+                        { deliveryAgentReport: { report: { deleted: true } } }
+                    ]:data.loggedInUser?.role === "COMPANY_MANAGER" ? 
+                    [
+                        { companyReport: { is: null } },
+                        { companyReport: { report: { deleted: true } } }
+                    ] :data.loggedInUser?.role === "BRANCH_MANAGER" ?
+                    [
+                        { branchReport: { is: null } },
+                        { branchReport: { report: { deleted: true } } }
+                    ]:undefined
+                },
                 orderBy: {
                     [data.filters.sort.split(":")[0]]:
                         data.filters.sort.split(":")[1] === "desc" ? "desc" : "asc"

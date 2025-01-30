@@ -322,7 +322,8 @@ export class OrdersService {
                 inquiryBranchesIDs,
                 inquiryStoresIDs,
                 inquiryCompaniesIDs
-            }
+            },
+            loggedInUser:data.loggedInUser
         });
 
         return {
@@ -852,7 +853,8 @@ export class OrdersService {
         if (data.ordersData.ordersIDs === "*") {
             orders = (
                 await ordersRepository.getAllOrdersPaginated({
-                    filters: { ...data.ordersFilters, size: 5000 }
+                    filters: { ...data.ordersFilters, size: 5000 },
+                    loggedInUser:undefined
                 })
             ).orders as ReturnType<typeof orderReform>[];
 
