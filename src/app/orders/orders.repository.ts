@@ -29,7 +29,7 @@ export class OrdersRepository {
     }) {
         let totalCost = 0;
         let quantity = 0;
-        let weight = 0;
+        let weight =data.orderData.weight as number || 1;
 
         if (data.orderData.withProducts === true) {
             for (const product of data.orderData.products) {
@@ -47,7 +47,6 @@ export class OrdersRepository {
                 }
                 totalCost += +productData.price * product.quantity;
                 quantity += product.quantity;
-                weight += productData.weight * product.quantity;
             }
         }
 
@@ -200,10 +199,10 @@ export class OrdersRepository {
             }
         });
 
-        totalCost += companyAdditionalPrices?.additionalPriceForEvery500000IraqiDinar
+        deliveryCost += companyAdditionalPrices?.additionalPriceForEvery500000IraqiDinar
             ? companyAdditionalPrices?.additionalPriceForEvery500000IraqiDinar * Math.ceil(totalCost / 500000)
             : 0;
-        totalCost += companyAdditionalPrices?.additionalPriceForEveryKilogram
+        deliveryCost += companyAdditionalPrices?.additionalPriceForEveryKilogram
             ? weight * companyAdditionalPrices?.additionalPriceForEveryKilogram
             : 0;
 
@@ -217,17 +216,17 @@ export class OrdersRepository {
                 }
             });
 
-            totalCost += location?.remote ? companyAdditionalPrices?.additionalPriceForRemoteAreas || 0 : 0;
+            deliveryCost += location?.remote ? companyAdditionalPrices?.additionalPriceForRemoteAreas || 0 : 0;
         }
-
+        console.log(data.orderData);
+        
         // Create order
-
         const createdOrder = await prisma.order.create({
             data: {
                 totalCost: data.orderData.withProducts === false ? data.orderData.totalCost : totalCost,
                 deliveryCost: deliveryCost,
                 quantity: data.orderData.withProducts === false ? data.orderData.quantity : quantity,
-                weight: data.orderData.withProducts === false ? data.orderData.weight : weight,
+                weight: weight,
                 recipientName: data.orderData.recipientName,
                 recipientPhones: data.orderData.recipientPhones
                     ? data.orderData.recipientPhones
@@ -1204,23 +1203,54 @@ export class OrdersRepository {
         let deliveryAgentCost = 0;
         let companyNet = 0;
         let clientNet = 0;
-        if (data.orderData.paidAmount) {
-            const orderData = await prisma.order.findUnique({
-                where: {
-                    id: data.orderID
+        
+        const orderData = await prisma.order.findUnique({
+            where: {
+                id: data.orderID
+            },
+            select: {
+                deliveryCost: true,
+                weight:true,
+                deliveryAgent: {
+                    select: {
+                        deliveryCost: true
+                    }
                 },
-                select: {
-                    deliveryCost: true,
-                    deliveryAgent: {
-                        select: {
-                            deliveryCost: true
-                        }
+                company:{
+                    select:{
+                        id:true
                     }
                 }
-            });
+            }
+        });
 
+        let newDeliveryCost=orderData?.deliveryCost;
+        let weight = (data.orderData.weight) as number || orderData?.weight;
+
+        if(weight){
+            const companyAdditionalPrices = await prisma.company.findUnique({
+                where: {
+                    id: orderData?.company?.id
+                },
+                select: {
+                    additionalPriceForEveryKilogram: true,
+                }
+            });
+            
+            const oldWeight=(orderData?.weight) as number
+            
+            if(weight > oldWeight){
+                newDeliveryCost =  (orderData?.deliveryCost || 0) as number
+                newDeliveryCost += companyAdditionalPrices?.additionalPriceForEveryKilogram ? (weight - oldWeight) * companyAdditionalPrices.additionalPriceForEveryKilogram : 0
+            }else if(weight < oldWeight){
+                newDeliveryCost =  (orderData?.deliveryCost || 0) as number
+                newDeliveryCost -= companyAdditionalPrices?.additionalPriceForEveryKilogram ? (oldWeight - weight) * companyAdditionalPrices.additionalPriceForEveryKilogram : 0
+            }
+        }
+
+        if (data.orderData.paidAmount) {
             // calculate client net
-            const deliveryCost = (orderData?.deliveryCost || 0) as number;
+            const deliveryCost =newDeliveryCost ? newDeliveryCost : (orderData?.deliveryCost || 0) as number;
             clientNet = data.orderData.paidAmount - deliveryCost;
 
             // calculate company net
@@ -1241,6 +1271,8 @@ export class OrdersRepository {
             }
         }
 
+        console.log(newDeliveryCost);
+        
         const order = await prisma.order.update({
             where: {
                 id: data.orderID
@@ -1251,7 +1283,9 @@ export class OrdersRepository {
                 paidAmount: data.orderData.paidAmount,
                 receiptNumber: data.orderData.receiptNumber,
                 clientNet: clientNet,
+                deliveryCost:newDeliveryCost,
                 deliveryAgentNet: deliveryAgentCost,
+                weight:weight,
                 companyNet: companyNet,
                 discount: data.orderData.discount,
                 recipientName: data.orderData.recipientName,

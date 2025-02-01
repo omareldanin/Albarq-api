@@ -44,17 +44,14 @@ export class OrdersService {
         orderOrOrdersData: OrderCreateType | OrderCreateType[];
     }) => {
         let confirmed: boolean;
+        let status: OrderStatus;
         if (data.loggedInUser.role === "CLIENT" || data.loggedInUser.role === "CLIENT_ASSISTANT") {
             confirmed = false;
+            status = OrderStatus.REGISTERED;
         } else {
             confirmed = true;
-        }
-
-        let status: OrderStatus;
-        if (data.loggedInUser.role !== "CLIENT") {
             status = OrderStatus.WITH_DELIVERY_AGENT;
-        } else {
-            status = OrderStatus.REGISTERED;
+
         }
 
         if (Array.isArray(data.orderOrOrdersData)) {
@@ -127,7 +124,6 @@ export class OrdersService {
         const branch = await branchesRepository.getBranchByLocation({
             locationID: data.orderOrOrdersData.locationID
         });
-        console.log(data.orderOrOrdersData);
         
         if (!branch) {
             throw new AppError("لا يوجد فرع مرتبط بالموقع", 500);

@@ -28,7 +28,8 @@ export const OrderCreateBaseSchema = z.object({
     branchID: z.coerce.number().optional(),
     clientID: z.coerce.number().optional(),
     inquiryEmployeesIDs: z.array(z.coerce.number()).optional(),
-    forwardedCompanyID: z.coerce.number().optional()
+    forwardedCompanyID: z.coerce.number().optional(),
+    weight: z.number().optional()
 });
 
 export const OrderCreateSchema = z
@@ -66,6 +67,7 @@ export const OrderCreateOpenAPISchema = generateSchema(OrderCreateSchema);
 export const OrderUpdateSchema = z
     .object({
         quantity: z.number(),
+        weight: z.number(),
         totalCost: z.number(),
         paidAmount: z.number(),
         receiptNumber: z.number(),
