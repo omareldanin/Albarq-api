@@ -97,16 +97,53 @@
         </table>
         <h4 style="text-align: center; margin: 10px 0 0">تفاصيل الطلب</h4>
         <table>
-          <thead></thead>
+          <thead>
+            <tr>
+              <th>الكمية</th>
+              <th>الوزن</th>
+              <th>النوع</th>
+            </tr>
+          </thead>
           <tbody>
             <tr>
-              <td style="width: 25%; background-color: rgba(255, 255, 0, 0.26)">الكمية</td>
-              <td style="width: 25%">{{quantity}}</td>
-              <td style="width: 25%; background-color: rgba(255, 255, 0, 0.26)">الوزن</td>
-              <td style="width: 25%">{{weight}}</td>
+						<td>{{quantity}}</td>
+						<td>{{weight}}</td>
+						<td>{{deliveryType}}</td>
             </tr>
           </tbody>
         </table>
+      {{#if orderProducts}}
+			<table>
+				<thead>
+					<tr>
+						<th>اسم المنتج</th>
+						<th>اللون</th>
+						<th>الحجم</th>
+						<th>الكمية</th>
+						<th>السعر</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{#each orderProducts}}
+					<tr>
+						<td>{{product.title}}</td>
+						{{#if color}}
+						<td>{{color.title}}</td>
+						{{else}}
+						<td></td>
+						{{/if}}
+						{{#if size}}
+						<td>{{size.title}}</td>
+						{{else}}
+						<td></td>
+						{{/if}}
+						<td>{{quantity}}</td>
+						<td>{{currency product.price}}</td>
+					</tr>
+					{{/each}}
+				</tbody>
+			</table>
+			{{/if}}
         <table>
           <thead></thead>
           <tbody>
