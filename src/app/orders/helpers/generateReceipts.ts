@@ -8,7 +8,7 @@ import { Logger } from "../../../lib/logger";
 
 export const generateReceipts = async (orders: ReturnType<typeof orderReform>[]) => {
     try {
-        const templatePath = path.join(__dirname, "../../../../static/templates/receipt.hbs");
+        const templatePath = path.join(__dirname, "../../../../static/templates/receipt2.hbs");
 
         const template = await fs.readFile(templatePath, "utf8");
         const css = await fs.readFile(

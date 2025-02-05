@@ -218,7 +218,6 @@ export class OrdersRepository {
 
             deliveryCost += location?.remote ? companyAdditionalPrices?.additionalPriceForRemoteAreas || 0 : 0;
         }
-        console.log(data.orderData);
         
         // Create order
         const createdOrder = await prisma.order.create({
@@ -397,6 +396,7 @@ export class OrdersRepository {
         filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
         loggedInUser:loggedInUserType | undefined
     }) {
+        
         const where = {
             AND: [
                 // Search by receiptNumber, recipientName, recipientPhone, recipientAddress
@@ -884,25 +884,8 @@ export class OrdersRepository {
         
         const paginatedOrders = await prisma.order.findManyPaginated(
             {
-                where: {...where,
-                    OR:data.loggedInUser?.role === "CLIENT"?
-                    [
-                        { clientReport: { is: null } },
-                        { clientReport: { report: { deleted: true } } }
-                    ]: data.loggedInUser?.role==="DELIVERY_AGENT" ?
-                    [
-                        { deliveryAgentReport: { is: null } },
-                        { deliveryAgentReport: { report: { deleted: true } } }
-                    ]:data.loggedInUser?.role === "COMPANY_MANAGER" ? 
-                    [
-                        { companyReport: { is: null } },
-                        { companyReport: { report: { deleted: true } } }
-                    ] :data.loggedInUser?.role === "BRANCH_MANAGER" ?
-                    [
-                        { branchReport: { is: null } },
-                        { branchReport: { report: { deleted: true } } }
-                    ]:undefined
-                },
+                where: where
+                ,
                 orderBy: {
                     [data.filters.sort.split(":")[0]]:
                         data.filters.sort.split(":")[1] === "desc" ? "desc" : "asc"
@@ -1103,15 +1086,27 @@ export class OrdersRepository {
                 select: {
                     id: true,
                     paidAmount: true,
-                    weight: true
+                    weight: true,
+                    company:{
+                        select: {
+                            additionalPriceForEvery500000IraqiDinar: true,
+                            additionalPriceForEveryKilogram: true,
+                            additionalPriceForRemoteAreas: true
+                        }
+                    }
                 }
             });
 
             // Update Baghdad orders costs
             for (const order of baghdadOrders) {
-                const weight = order.weight || 0;
+                const weight = order.weight || 1;
                 const deliveryCost = data.costs.baghdadDeliveryCost || 0;
-                const weightedDeliveryCost = weight > 1 ? deliveryCost * weight : deliveryCost;
+                let weightedDeliveryCost =deliveryCost + weight*order.company?.additionalPriceForEveryKilogram
+
+                weightedDeliveryCost +=order.company?.additionalPriceForEvery500000IraqiDinar
+                ? order.company?.additionalPriceForEvery500000IraqiDinar * Math.ceil(order.paidAmount / 500000)
+                : 0;
+
                 const clientNet = (order.paidAmount || 0) - weightedDeliveryCost;
                 await prisma.order.update({
                     where: {
@@ -1139,15 +1134,27 @@ export class OrdersRepository {
                 select: {
                     id: true,
                     paidAmount: true,
-                    weight: true
+                    weight: true,
+                    company:{
+                        select: {
+                            additionalPriceForEvery500000IraqiDinar: true,
+                            additionalPriceForEveryKilogram: true,
+                            additionalPriceForRemoteAreas: true
+                        }
+                    }
                 }
             });
 
             // Update governorates orders costs
             for (const order of governoratesOrders) {
-                const weight = order.weight || 0;
-                const deliveryCost = data.costs.governoratesDeliveryCost || 0;
-                const weightedDeliveryCost = weight > 1 ? deliveryCost * weight : deliveryCost;
+                const weight = order.weight || 1;
+                const deliveryCost = data.costs.baghdadDeliveryCost || 0;
+                let weightedDeliveryCost =deliveryCost + weight*order.company?.additionalPriceForEveryKilogram
+
+                weightedDeliveryCost +=order.company?.additionalPriceForEvery500000IraqiDinar
+                ? order.company?.additionalPriceForEvery500000IraqiDinar * Math.ceil(order.paidAmount / 500000)
+                : 0;
+                
                 const clientNet = (order.paidAmount || 0) - weightedDeliveryCost;
                 await prisma.order.update({
                     where: {
@@ -1179,17 +1186,14 @@ export class OrdersRepository {
 
             // Update orders costs
             for (const order of orders) {
-                const weight = order.weight || 0;
-                const deliveryCost = data.costs.deliveryAgentDeliveryCost || 0;
-                const weightedDeliveryCost = weight > 1 ? deliveryCost * weight : deliveryCost;
-                const deliveryAgentNet = weightedDeliveryCost;
-                const companyNet = (order.paidAmount || 0) - weightedDeliveryCost;
+                const weight = order.weight || 1;
+                const deliveryAgentNet = data.costs.deliveryAgentDeliveryCost + weight*500;
+                const companyNet = (order.paidAmount || 0) - deliveryAgentNet;
                 await prisma.order.update({
                     where: {
                         id: order.id
                     },
                     data: {
-                        deliveryCost: weightedDeliveryCost,
                         deliveryAgentNet: deliveryAgentNet,
                         companyNet: companyNet
                     }
@@ -1199,17 +1203,17 @@ export class OrdersRepository {
     }
 
     async updateOrder(data: { orderID: number; orderData: OrderUpdateType; loggedInUser: loggedInUserType }) {
-        // Calculate order costs
-        let deliveryAgentCost = 0;
-        let companyNet = 0;
-        let clientNet = 0;
         
+      
         const orderData = await prisma.order.findUnique({
             where: {
                 id: data.orderID
             },
             select: {
                 deliveryCost: true,
+                clientNet:true,
+                companyNet:true,
+                deliveryAgentNet:true,
                 weight:true,
                 deliveryAgent: {
                     select: {
@@ -1224,8 +1228,12 @@ export class OrdersRepository {
             }
         });
 
+        // Calculate order costs
+        let deliveryAgentCost = orderData?.deliveryAgentNet;
+        let companyNet = orderData?.companyNet;
+        let clientNet = orderData?.clientNet;
         let newDeliveryCost=orderData?.deliveryCost;
-        let weight = (data.orderData.weight) as number || orderData?.weight;
+        let weight = (data.orderData.weight) as number || orderData?.weight || 1;
 
         if(weight){
             const companyAdditionalPrices = await prisma.company.findUnique({
@@ -1263,15 +1271,15 @@ export class OrdersRepository {
                         deliveryCost: true
                     }
                 });
-                deliveryAgentCost = (orderDeliveryAgent?.deliveryCost || 0) as number;
+                deliveryAgentCost =orderDeliveryAgent?.deliveryCost? Number(orderDeliveryAgent?.deliveryCost):0;
+                deliveryAgentCost += weight*500
                 companyNet = data.orderData.paidAmount - deliveryAgentCost;
             } else if (orderData?.deliveryAgent) {
-                deliveryAgentCost = (orderData?.deliveryAgent?.deliveryCost || 0) as number;
+                deliveryAgentCost =orderData?.deliveryAgent?.deliveryCost? Number(orderData?.deliveryAgent?.deliveryCost):0;
+                deliveryAgentCost += weight*500
                 companyNet = data.orderData.paidAmount - deliveryAgentCost;
             }
         }
-
-        console.log(newDeliveryCost);
         
         const order = await prisma.order.update({
             where: {

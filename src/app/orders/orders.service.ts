@@ -424,7 +424,7 @@ export class OrdersService {
             oldOrderData?.secondaryStatus !== data.orderData.secondaryStatus &&
             data.orderData.secondaryStatus === "IN_REPOSITORY"
         ) {
-            data.orderData.deliveryAgentID = null;
+            // data.orderData.deliveryAgentID = null;
             data.orderData.oldDeliveryAgentId = oldOrderData?.deliveryAgent?.id;
         }
         // if secondary status is changed to with_delivery_agent, link the delivery agent

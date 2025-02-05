@@ -38,10 +38,12 @@ export class ReportsService {
         if (data.reportData.ordersIDs === "*") {
             orders = (
                 await ordersRepository.getAllOrdersPaginated({
-                    filters: { ...data.ordersFilters, size: 5000 }
+                    filters: { ...data.ordersFilters, size: 5000 },
+                    loggedInUser:data.loggedInUser
                 })
             ).orders as ReturnType<typeof orderReform>[];
-
+            console.log(data.ordersFilters);
+            
             for (const order of orders) {
                 if (order) {
                     ordersIDs.push(order.id);

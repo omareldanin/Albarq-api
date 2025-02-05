@@ -405,6 +405,28 @@ export class ReportsRepository {
             },
             select: reportSelect
         });
+
+        if(data.reportData.repositoryID){
+            const orders=await prisma.order.findMany({
+                where: {
+                    repositoryReportId:data.reportID
+                },
+                select:{
+                    id:true
+                }
+            })
+            orders.forEach(async (order)=>{
+                await prisma.order.update({
+                    where: {
+                        id:order.id
+                    },
+                    data:{
+                        repositoryId:data.reportData.repositoryID
+                    }
+                })
+            })
+
+        }
         return reportReform(report);
     }
 
