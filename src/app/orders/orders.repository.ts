@@ -884,16 +884,69 @@ export class OrdersRepository {
                             { branchReport: { report: { deleted: true } } }
                         ]:undefined
                     },
-                    select: {
-                        id: true
-                    }
+                    select: orderSelect
                 },
                 {
                     page: data.filters.page,
                     size: data.filters.size
                 }
             );
-            return { orders: paginatedOrders.data, pagesCount: paginatedOrders.pagesCount };
+
+            const ordersReformed = paginatedOrders.data.map(orderReform);
+
+            const ordersMetaDataAggregate = await prisma.order.aggregate({
+                where: where,
+                _count: {
+                    id: true
+                },
+                _sum: {
+                    totalCost: true,
+                    paidAmount: true,
+                    clientNet: true,
+                    deliveryAgentNet: true,
+                    companyNet: true,
+                    deliveryCost: true
+                }
+            });
+    
+            const ordersMetaDataGroupByStatus = await prisma.order.groupBy({
+                where: where,
+                by: ["status"],
+                _count: {
+                    status: true
+                }
+            });
+    
+            const ordersMetaDataGroupByStatusReformed = (
+                Object.keys(OrderStatus) as Array<keyof typeof OrderStatus>
+            ).map((status) => {
+                const statusCount = ordersMetaDataGroupByStatus.find((orderStatus: { status: string }) => {
+                    return orderStatus.status === status;
+                });
+    
+                return {
+                    status: status,
+                    count: statusCount?._count?.status || 0
+                };
+            });
+    
+            const ordersMetaDataReformed = {
+                count: ordersMetaDataAggregate._count.id,
+                totalCost: ordersMetaDataAggregate._sum.totalCost || 0,
+                paidAmount: ordersMetaDataAggregate._sum.paidAmount || 0,
+                clientNet: ordersMetaDataAggregate._sum.clientNet || 0,
+                deliveryAgentNet: ordersMetaDataAggregate._sum.deliveryAgentNet || 0,
+                companyNet: ordersMetaDataAggregate._sum.companyNet || 0,
+                deliveryCost: ordersMetaDataAggregate._sum.deliveryCost || 0,
+                countByStatus: ordersMetaDataGroupByStatusReformed
+            };
+            
+            return {
+                orders: ordersReformed,
+                ordersMetaData: ordersMetaDataReformed,
+                pagesCount: paginatedOrders.pagesCount
+            };
+
         }
         
         const paginatedOrders = await prisma.order.findManyPaginated(
