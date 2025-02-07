@@ -962,7 +962,7 @@ export class OrdersRepository {
         };
         
         return {
-            orders: where,
+            orders: ordersReformed,
             ordersMetaData: ordersMetaDataReformed,
             pagesCount: paginatedOrders.pagesCount
         };
