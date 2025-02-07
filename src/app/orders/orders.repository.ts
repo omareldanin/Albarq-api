@@ -508,6 +508,7 @@ export class OrdersRepository {
                 {
                     id: data.filters.orderID
                 },
+             
                 // Filter by status
                 {
                     status: data.filters.statuses ? { in: data.filters.statuses } : undefined
@@ -630,6 +631,19 @@ export class OrdersRepository {
                                           { clientReport: { report: { deleted: true } } }
                                       ]
                                     : undefined
+                        }
+                    ]
+                },
+                {
+                    AND: [
+                        {
+                            OR:
+                            data.filters.secondaryStatus === "IN_REPOSITORY"?
+                            [
+                                {
+                                    secondaryStatus:{not:"WITH_CLIENT"},
+                                }
+                            ]:undefined
                         }
                     ]
                 },
@@ -843,7 +857,7 @@ export class OrdersRepository {
                             ]
                         }
                     ],
-                }
+                },
             ]
         } satisfies Prisma.OrderWhereInput;
         
@@ -948,7 +962,7 @@ export class OrdersRepository {
         };
         
         return {
-            orders: ordersReformed,
+            orders: where,
             ordersMetaData: ordersMetaDataReformed,
             pagesCount: paginatedOrders.pagesCount
         };
@@ -1187,7 +1201,7 @@ export class OrdersRepository {
             // Update orders costs
             for (const order of orders) {
                 const weight = order.weight || 1;
-                const deliveryAgentNet = data.costs.deliveryAgentDeliveryCost + weight*500;
+                const deliveryAgentNet = data.costs.deliveryAgentDeliveryCost + weight*250;
                 const companyNet = (order.paidAmount || 0) - deliveryAgentNet;
                 await prisma.order.update({
                     where: {
@@ -1272,11 +1286,11 @@ export class OrdersRepository {
                     }
                 });
                 deliveryAgentCost =orderDeliveryAgent?.deliveryCost? Number(orderDeliveryAgent?.deliveryCost):0;
-                deliveryAgentCost += weight*500
+                deliveryAgentCost += weight*250
                 companyNet = data.orderData.paidAmount - deliveryAgentCost;
             } else if (orderData?.deliveryAgent) {
                 deliveryAgentCost =orderData?.deliveryAgent?.deliveryCost? Number(orderData?.deliveryAgent?.deliveryCost):0;
-                deliveryAgentCost += weight*500
+                deliveryAgentCost += weight*250
                 companyNet = data.orderData.paidAmount - deliveryAgentCost;
             }
         }

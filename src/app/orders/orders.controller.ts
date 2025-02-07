@@ -81,7 +81,8 @@ export class OrdersController {
             forwarded: req.query.forwarded,
             forwardedByID: req.query.forwarded_by_id,
             forwardedFromID: req.query.forwarded_from_id,
-            processed: req.query.processed
+            processed: req.query.processed,
+            secondaryStatus:req.query.secondaryStatus
         });
 
         const { orders, ordersMetaData, page, pagesCount } = await ordersService.getAllOrders({

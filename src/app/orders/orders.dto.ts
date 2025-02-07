@@ -297,13 +297,13 @@ export const OrdersFiltersSchema = z.object({
         }
         return val;
     }, z.array(z.nativeEnum(OrderStatus)).optional()),
-    // secondaryStatuses: z.preprocess((val) => {
-    //     if (typeof val === "string") {
-    //         return val.split(",");
-    //     }
-    //     return val;
-    // }, z.array(z.nativeEnum(SecondaryStatus)).optional()),
-    // secondaryStatus: z.nativeEnum(SecondaryStatus).optional(),
+    secondaryStatuses: z.preprocess((val) => {
+        if (typeof val === "string") {
+            return val.split(",");
+        }
+        return val;
+    }, z.array(z.nativeEnum(SecondaryStatus)).optional()),
+    secondaryStatus: z.nativeEnum(SecondaryStatus).optional(),
     status: z.nativeEnum(OrderStatus).optional(),
     deliveryType: z.nativeEnum(DeliveryType).optional(),
     storeID: z.coerce.number().optional(),
