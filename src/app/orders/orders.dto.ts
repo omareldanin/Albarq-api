@@ -339,6 +339,11 @@ export const OrdersFiltersSchema = z.object({
         if (val === "false") return false;
         return val;
     }, z.boolean().optional()),
+    forMobile: z.preprocess((val) => {
+        if (val === "true") return true;
+        if (val === "false") return false;
+        return val;
+    }, z.boolean().optional()),
     inquiryBranchesIDs: z.array(z.coerce.number()).optional(),
     inquiryLocationsIDs: z.array(z.coerce.number()).optional(),
     inquiryStoresIDs: z.array(z.coerce.number()).optional(),

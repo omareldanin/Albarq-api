@@ -78,6 +78,7 @@ export class OrdersController {
             deleted: req.query.deleted,
             orderID: req.query.order_id,
             minified: req.query.minified,
+            forMobile:req.query.for_mobile,
             forwarded: req.query.forwarded,
             forwardedByID: req.query.forwarded_by_id,
             forwardedFromID: req.query.forwarded_from_id,

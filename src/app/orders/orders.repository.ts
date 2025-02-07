@@ -862,7 +862,7 @@ export class OrdersRepository {
         } satisfies Prisma.OrderWhereInput;
         
         
-        if (data.filters.minified === true) {
+        if (data.filters.minified === true || data.filters.forMobile === true) {
             const paginatedOrders = await prisma.order.findManyPaginated(
                 {
                     where: {...where,
