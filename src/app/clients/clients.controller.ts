@@ -111,7 +111,8 @@ export class ClientsController {
             storeID: storeID,
             branchID: branchID,
             phone: phone,
-            name: name
+            name: name,
+            loggedInUser
         });
 
         res.status(200).json({

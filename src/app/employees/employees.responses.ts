@@ -46,7 +46,8 @@ export const employeeSelect = {
     managedStores: {
         select: {
             id: true,
-            name: true
+            name: true,
+            clientId:true
         }
     },
     inquiryBranches: {

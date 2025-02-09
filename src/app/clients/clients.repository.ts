@@ -1,7 +1,8 @@
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../database/db";
 import type { ClientCreateTypeWithUserID, ClientUpdateType } from "./clients.dto";
 import { clientReform, clientSelect } from "./clients.responses";
+import { loggedInUserType } from "../../types/user";
 
 export class ClientsRepository {
     async createClient(companyID: number, data: ClientCreateTypeWithUserID) {
@@ -71,7 +72,30 @@ export class ClientsRepository {
         governorate?: string;
         phone?: string;
         name?: string;
+        loggedInUser?:loggedInUserType
     }) {
+        let clientIDs: number[] =[]
+
+        if(filters.loggedInUser?.role === "CLIENT_ASSISTANT"){
+            const stores = await prisma.employee.findMany({
+                where:{
+                    id:filters.loggedInUser.id
+                },
+                select:{
+                    managedStores:{
+                        select:{
+                            clientId:true
+                        }
+                    }
+                }
+            })
+            stores.forEach(store =>{
+                store.managedStores.forEach(e => {
+                    clientIDs.push(e.clientId)
+                })
+            })
+        }
+
         const where = {
             AND: [
                 { deleted: filters.deleted === "true" },
@@ -80,7 +104,9 @@ export class ClientsRepository {
                 { user: { phone: filters.phone } },
                 { user: { name: { contains: filters.name } } },
                 // TODO
-                { stores: filters.storeID ? { some: { id: filters.storeID } } : undefined }
+                { stores: filters.storeID ? { some: { id: filters.storeID } } : undefined },
+                {AND:filters.loggedInUser?.role === "CLIENT" ? {id:filters.loggedInUser.id}:undefined},
+                {AND:filters.loggedInUser?.role === "CLIENT_ASSISTANT" ? {id:{in:clientIDs}}:undefined}
             ]
         } as Prisma.ClientWhereInput;
 

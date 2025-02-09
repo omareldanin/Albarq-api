@@ -635,17 +635,14 @@ export class OrdersRepository {
                     ]
                 },
                 {
-                    AND: [
-                        {
-                            OR:
-                            data.filters.secondaryStatus === "IN_REPOSITORY"?
+                    OR: data.filters.secondaryStatus === "IN_REPOSITORY"?
                             [
                                 {
                                     secondaryStatus:{not:"WITH_CLIENT"},
-                                }
+                                },
+                                { clientReport: { is:null} }, 
+                                { clientReport: { report: { deleted: true } } }
                             ]:undefined
-                        }
-                    ]
                 },
                 // Filter by repositoryReport
                 {
