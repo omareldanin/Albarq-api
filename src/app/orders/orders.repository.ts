@@ -1163,7 +1163,7 @@ export class OrdersRepository {
 
             // Update Baghdad orders costs
             for (const order of baghdadOrders) {
-                const weight = order.weight || 1;
+                const weight = order.weight || 0;
                 const deliveryCost = data.costs.baghdadDeliveryCost || 0;
                 let weightedDeliveryCost =deliveryCost + weight*order.company?.additionalPriceForEveryKilogram
 
@@ -1211,7 +1211,7 @@ export class OrdersRepository {
 
             // Update governorates orders costs
             for (const order of governoratesOrders) {
-                const weight = order.weight || 1;
+                const weight = order.weight || 0;
                 const deliveryCost = data.costs.baghdadDeliveryCost || 0;
                 let weightedDeliveryCost =deliveryCost + weight*order.company?.additionalPriceForEveryKilogram
 
@@ -1250,7 +1250,7 @@ export class OrdersRepository {
 
             // Update orders costs
             for (const order of orders) {
-                const weight = order.weight || 1;
+                const weight = order.weight || 0;
                 const deliveryAgentNet = data.costs.deliveryAgentDeliveryCost + weight*250;
                 const companyNet = (order.paidAmount || 0) - deliveryAgentNet;
                 await prisma.order.update({
