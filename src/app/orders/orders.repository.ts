@@ -29,7 +29,7 @@ export class OrdersRepository {
     }) {
         let totalCost = 0;
         let quantity = 0;
-        let weight =data.orderData.weight as number || 1;
+        let weight =data.orderData.weight as number || 0;
 
         if (data.orderData.withProducts === true) {
             for (const product of data.orderData.products) {
@@ -1300,7 +1300,7 @@ export class OrdersRepository {
         let companyNet = orderData?.companyNet;
         let clientNet = orderData?.clientNet;
         let newDeliveryCost=orderData?.deliveryCost;
-        let weight = (data.orderData.weight) as number || orderData?.weight || 1;
+        let weight = (data.orderData.weight) as number || orderData?.weight || 0;
 
         if(weight){
             const companyAdditionalPrices = await prisma.company.findUnique({
