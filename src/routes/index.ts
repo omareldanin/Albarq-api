@@ -17,6 +17,7 @@ import repositoriesRoutes from "../app/repositories/repositories.routes";
 import sizesRoutes from "../app/sizes/sizes.routes";
 import storesRoutes from "../app/stores/stores.routes";
 import usersRoutes from "../app/users/users.routes";
+import clientReceiptsRoutes from "../app/clientReceipts/clientReceipts.routes"
 import { catchAsync } from "../lib/catchAsync";
 import { upload } from "../middlewares/upload";
 
@@ -40,6 +41,7 @@ router.use("/", bannersRoutes);
 router.use("/", reportsRoutes);
 router.use("/", automaticUpdatesRoutes);
 router.use("/", usersRoutes);
+router.use("/", clientReceiptsRoutes);
 
 /*******************************************************************************
  * TEST ROUTES

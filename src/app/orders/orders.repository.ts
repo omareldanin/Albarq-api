@@ -237,6 +237,11 @@ export class OrdersRepository {
                 notes: data.orderData.notes,
                 details: data.orderData.details,
                 deliveryType: data.orderData.deliveryType,
+                clientOrderReceipt:data.orderData.clientOrderReceiptId ?{
+                    connect:{
+                        id:data.orderData.clientOrderReceiptId
+                    }
+                }:undefined,
                 governorate: data.orderData.governorate,
                 branch: data.orderData.branchID
                     ? {

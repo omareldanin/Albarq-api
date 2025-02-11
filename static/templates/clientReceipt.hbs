@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>فاتورة</title>
+    <style>
+        .receipt{
+            margin-top: 10px;
+            position: relative;
+            margin-bottom: 70px;
+        }
+        p{
+          margin: 20px 0 0;
+        }
+      .logo {
+        width: 50px;
+        position: absolute;
+        top: 10px;
+        left: 10px;
+      }
+      .receipt div{
+        margin-top: 12px;
+        font-weight: bold;
+      }
+      .footer{
+        display: flex;justify-content: space-between;
+        align-items: end;
+        transform: translateY(20px);
+      }
+      .footer div{
+        font-weight: lighter !important;
+      }
+    </style>
+  </head>
+  <body style="direction: rtl">
+    {{#each receipts}}
+       <div class="receipt">
+            <img
+            src="{{client.companyLogo}}"
+            class="logo"
+            />
+            <p>وصل استلام</p>
+            <div>
+                <span>رقم الوصل :</span>
+                <span>{{receiptNumber}}</span>
+            </div>
+            <div>
+                <span>اسم العميل :</span>
+                <span>{{client.name}}</span>
+            </div>
+            <div>
+                <span>هاتف العميل :</span>
+                <span>{{client.phone}}</span>
+            </div>
+            <div>
+                <span>العنوان :</span>
+            </div>
+            <div>
+                <span>هاتف المستلم :</span>
+            </div>
+            <div>
+                <span>السعر :</span>
+            </div>
+            <div class="footer">
+              <div>
+                <span style="display: block;">ملاحظات مهمه</span>
+                <span style="display: block;">* الشركه مسئوله عن توصيل الطلبات فقط</span>
+              </div>
+              <div style="float: left;margin-top: 0px;">
+                  <img src="{{QRCode this}}" />
+              </div>
+            </div>
+       </div>
+    {{/each}}
+  </body>
+</html>

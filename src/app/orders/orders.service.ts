@@ -32,6 +32,7 @@ import type {
 } from "./orders.dto";
 import { OrdersRepository } from "./orders.repository";
 import type { orderReform } from "./orders.responses";
+import { prisma } from "../../database/db";
 
 const ordersRepository = new OrdersRepository();
 const employeesRepository = new EmployeesRepository();
@@ -111,15 +112,43 @@ export class OrdersService {
             return createdOrders;
         }
 
+        if(data.orderOrOrdersData.clientOrderReceiptId){
+            const clientReceipt= await prisma.clientOrderReceipt.findUnique({
+                where:{
+                    id:data.orderOrOrdersData.clientOrderReceiptId
+                },
+                select:{
+                    id:true,
+                    receiptNumber:true,
+                    clientId:true,
+                    order:{
+                        select:{
+                            id:true,
+                        }
+                    }
+                }
+            })
+            if(clientReceipt?.order){
+                throw new AppError("هذا الايصال غير صالح", 500);
+            }
+            if(data.loggedInUser.role==="CLIENT" && clientReceipt?.clientId !== data.loggedInUser.id){
+                throw new AppError("هذا الايصال غير صالح", 500);
+            }
+            data.orderOrOrdersData.receiptNumber = clientReceipt?.receiptNumber
+        }
+
         const clientID = await clientsRepository.getClientIDByStoreID({
             storeID: data.orderOrOrdersData.storeID
         });
+
         if (!clientID) {
             throw new AppError("حصل خطأ في ايجاد صاحب المتجر", 500);
         }
+
         const deliveryAgentID = await employeesRepository.getDeliveryAgentIDByLocationID({
             locationID: data.orderOrOrdersData.locationID
         });
+
         let branchID = undefined;
         const branch = await branchesRepository.getBranchByLocation({
             locationID: data.orderOrOrdersData.locationID

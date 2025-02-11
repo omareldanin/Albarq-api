@@ -273,11 +273,11 @@ model InquiryEmployeesDeliveryAgents {
 
 model Client {
   // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                        Int            @id
+  id                        Int                  @id
   // --- DETAILS --------------------------------------------------------------------------- //
-  role                      ClientRole     @default(CLIENT)
-  token                     String         @default("")
-  governoratesDeliveryCosts Json           @default("[]")
+  role                      ClientRole           @default(CLIENT)
+  token                     String               @default("")
+  governoratesDeliveryCosts Json                 @default("[]")
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //
   deletedById               Int?
   createdById               Int
@@ -291,17 +291,18 @@ model Client {
   colors                    Color[]
   categories                Category[]
   sizes                     Size[]
+  clientOrderReceipts       ClientOrderReceipt[]
   // createdBy                 Employee       @relation(fields: [employeeId], references: [id])
-  createdBy                 User           @relation("createdBy", fields: [createdById], references: [id])
-  user                      User           @relation(fields: [id], references: [id])
-  repository                Repository?    @relation(fields: [repositoryId], references: [id])
-  branch                    Branch?        @relation(fields: [branchId], references: [id])
+  createdBy                 User                 @relation("createdBy", fields: [createdById], references: [id])
+  user                      User                 @relation(fields: [id], references: [id])
+  repository                Repository?          @relation(fields: [repositoryId], references: [id])
+  branch                    Branch?              @relation(fields: [branchId], references: [id])
   // --- TENANT --------------------------------------------------------------------- //
   companyId                 Int
-  company                   Company        @relation(fields: [companyId], references: [id])
+  company                   Company              @relation(fields: [companyId], references: [id])
   // --- DELETED --------------------------------------------------------------------------- //
-  deleted                   Boolean        @default(false)
-  deletedBy                 User?          @relation("deletedBy", fields: [deletedById], references: [id])
+  deleted                   Boolean              @default(false)
+  deletedBy                 User?                @relation("deletedBy", fields: [deletedById], references: [id])
   deletedAt                 DateTime?
   // --- OTHER --------------------------------------------------------------------- //
 
@@ -575,6 +576,7 @@ model Order {
   locationId             Int
   storeId                Int
   repositoryId           Int?
+  clientOrderReceiptId   Int?                     @unique
   branchId               Int?
   automaticUpdateId      Int?
   // --- RELATIONS --------------------------------------------------------------------------- //
@@ -587,6 +589,7 @@ model Order {
   repository             Repository?              @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
   branch                 Branch?                  @relation(fields: [branchId], references: [id], onDelete: SetNull)
   automaticUpdate        AutomaticUpdate?         @relation(fields: [automaticUpdateId], references: [id], onDelete: SetNull)
+  clientOrderReceipt     ClientOrderReceipt?      @relation(fields: [clientOrderReceiptId], references: [id], onDelete: SetNull)
   // --- DELETED --------------------------------------------------------------------------- //
   deleted                Boolean                  @default(false)
   deletedAt              DateTime?
@@ -649,6 +652,21 @@ model Order {
   // @@index([repositoryId])
   @@index([branchId])
   @@index([companyId])
+}
+
+model ClientOrderReceipt {
+  // --- IDENTIFICATION --------------------------------------------------------------------- //
+  id            Int      @id @default(autoincrement())
+  receiptNumber Int      @default(autoincrement()) // TODO
+  clientId      Int
+  // --- RELATIONS --------------------------------------------------------------------- //
+  client        Client   @relation(fields: [clientId], references: [id])
+  order         Order?
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([clientId])
 }
 
 model OrderTimeline {
