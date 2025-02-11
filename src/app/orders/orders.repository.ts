@@ -513,7 +513,7 @@ export class OrdersRepository {
                 {
                     id: data.filters.orderID
                 },
-             
+                
                 // Filter by status
                 {
                     status: data.filters.statuses ? { in: data.filters.statuses } : undefined
@@ -803,6 +803,9 @@ export class OrdersRepository {
                              // Filter by governorate
                         {
                             governorate: data.filters.governorate
+                        },
+                        {
+                            clientOrderReceiptId:data.filters.clientOrderReceiptId
                         },
                         {
                             AND: [
