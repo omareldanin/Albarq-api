@@ -360,30 +360,31 @@ model InquiryEmployeesStores {
 
 model Branch {
   // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id               Int                        @id @default(autoincrement())
+  id                  Int                        @id @default(autoincrement())
   // --- DETAILS --------------------------------------------------------------------------- //
-  name             String
+  name                String
   // TODO: Governorate should be mandatory
-  governorate      Governorate?
+  governorate         Governorate?
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //
   // --- RELATIONS --------------------------------------------------------------------------- //
-  repositories     Repository[]
-  employees        Employee[]
-  locations        Location[]
-  branchReports    BranchReport[]
-  orders           Order[]
-  clients          Client[]
-  automaticUpdate  AutomaticUpdate[]
+  repositories        Repository[]
+  employees           Employee[]
+  locations           Location[]
+  branchReports       BranchReport[]
+  orders              Order[]
+  clients             Client[]
+  automaticUpdate     AutomaticUpdate[]
+  clientOrderReceipts ClientOrderReceipt[]
   // --- INQUIRY EMPLOYEE --------------------------------------------------------------------- //
   // inquiryEmployee   Employee?         @relation("inquiryBranches", fields: [inquiryEmployeeId], references: [id])
   // inquiryEmployeeId Int?
-  inquiryEmployees InquiryEmployeesBranches[]
+  inquiryEmployees    InquiryEmployeesBranches[]
   // --- TENANT --------------------------------------------------------------------- //
-  companyId        Int
-  company          Company                    @relation(fields: [companyId], references: [id])
+  companyId           Int
+  company             Company                    @relation(fields: [companyId], references: [id])
   // --- OTHER --------------------------------------------------------------------- //
-  createdAt        DateTime                   @default(now())
-  updatedAt        DateTime                   @updatedAt
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
 
   @@unique([name, companyId])
 }
@@ -659,8 +660,10 @@ model ClientOrderReceipt {
   id            Int      @id @default(autoincrement())
   receiptNumber Int      @default(autoincrement()) // TODO
   clientId      Int
+  branchId      Int
   // --- RELATIONS --------------------------------------------------------------------- //
   client        Client   @relation(fields: [clientId], references: [id])
+  branch        Branch   @relation(fields: [branchId], references: [id])
   order         Order?
   // --- OTHER --------------------------------------------------------------------- //
   createdAt     DateTime @default(now())

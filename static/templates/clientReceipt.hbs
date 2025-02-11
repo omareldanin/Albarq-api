@@ -26,7 +26,6 @@
       .footer{
         display: flex;justify-content: space-between;
         align-items: end;
-        transform: translateY(20px);
       }
       .footer div{
         font-weight: lighter !important;
@@ -40,7 +39,7 @@
             src="{{client.companyLogo}}"
             class="logo"
             />
-            <p>وصل استلام</p>
+            <p>{{branch.name}}</p>
             <div>
                 <span>رقم الوصل :</span>
                 <span>{{receiptNumber}}</span>
@@ -57,7 +56,10 @@
                 <span>العنوان :</span>
             </div>
             <div>
-                <span>هاتف المستلم :</span>
+                <span>هاتف الزبون :</span>
+            </div>
+            <div>
+                <span>رقم ثاني  للزبون :</span>
             </div>
             <div>
                 <span>السعر :</span>

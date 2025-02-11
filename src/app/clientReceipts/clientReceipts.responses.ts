@@ -4,6 +4,7 @@ export const clientReceiptSelect={
     id:true,
     receiptNumber:true,
     clientId:true,
+    branchId:true,
     client:{
         select:{
             id:true,
@@ -18,7 +19,12 @@ export const clientReceiptSelect={
                     id:true,
                     logo:true
                 }
-            }
+            },
+        }
+    },
+    branch:{
+        select:{
+            name:true
         }
     }
 } satisfies Prisma.ClientOrderReceiptSelect
