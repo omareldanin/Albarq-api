@@ -12,7 +12,7 @@ import { z } from "zod";
 
 export const OrderCreateBaseSchema = z.object({
     receiptNumber: z.number().optional(),
-    clientOrderReceiptId:z.number().optional(),
+    clientOrderReceiptId:z.coerce.number().optional(),
     recipientName: z.string().optional().default("غير معرف"),
     confirmed: z.boolean().optional(),
     status: z.nativeEnum(OrderStatus).default(OrderStatus.REGISTERED),
