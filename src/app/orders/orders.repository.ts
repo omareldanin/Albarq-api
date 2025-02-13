@@ -871,16 +871,16 @@ export class OrdersRepository {
             const paginatedOrders = await prisma.order.findManyPaginated(
                 {
                     where: {...where,
-                        AND:data.loggedInUser?.role === "DELIVERY_AGENT" ?
-                        [
-                            {status:data.filters.status},
-                            {
-                            OR: [
-                              { secondaryStatus: { notIn: ["IN_REPOSITORY", "WITH_CLIENT"] } },
-                              { secondaryStatus: null }
-                            ]
-                        }
-                        ]:undefined,
+                        // AND:data.loggedInUser?.role === "DELIVERY_AGENT" ?
+                        // [
+                        //     {status:data.filters.status},
+                        //     {
+                        //     OR: [
+                        //       { secondaryStatus: { notIn: ["IN_REPOSITORY", "WITH_CLIENT"] } },
+                        //       { secondaryStatus: null }
+                        //     ]
+                        // }
+                        // ]:undefined,
                         OR:data.loggedInUser?.role === "CLIENT"?
                         [
                             { clientReport: { is: null } },
