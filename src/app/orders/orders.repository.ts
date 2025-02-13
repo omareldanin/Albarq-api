@@ -1676,7 +1676,12 @@ export class OrdersRepository {
                 ...filtersReformed,
                 AND:data.loggedInUser.role === "DELIVERY_AGENT" ?
                     [
-                        {secondaryStatus:{notIn:["IN_REPOSITORY","WITH_CLIENT"]}}
+                        {
+                            OR: [
+                              { secondaryStatus: { notIn: ["IN_REPOSITORY", "WITH_CLIENT"] } },
+                              { secondaryStatus: null }
+                            ]
+                        }
                     ]:undefined,
                 OR:data.loggedInUser.role === "CLIENT"?
                     [
