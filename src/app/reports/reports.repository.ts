@@ -407,6 +407,14 @@ export class ReportsRepository {
         });
 
         if(data.reportData.repositoryID){
+            const repository = await prisma.repository.findUnique({
+                    where: {
+                        id: data.reportData.repositoryID
+                    },
+                    select:{
+                        branchId:true
+                    }
+                })
             const orders=await prisma.order.findMany({
                 where: {
                     repositoryReportId:data.reportID
@@ -421,7 +429,8 @@ export class ReportsRepository {
                         id:order.id
                     },
                     data:{
-                        repositoryId:data.reportData.repositoryID
+                        repositoryId:data.reportData.repositoryID,
+                        branchId:repository?.branchId
                     }
                 })
             })
