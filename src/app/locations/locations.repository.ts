@@ -95,7 +95,8 @@ export class LocationsRepository {
                     where: where,
                     select: {
                         id: true,
-                        name: true
+                        name: true,
+                        governorate:true
                     }
                 },
                 {
