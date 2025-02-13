@@ -1670,6 +1670,10 @@ export class OrdersRepository {
             },
             where: {
                 ...filtersReformed,
+                AND:data.loggedInUser.role === "DELIVERY_AGENT" ?
+                    [
+                        {secondaryStatus:{notIn:["IN_REPOSITORY","WITH_CLIENT"]}}
+                    ]:undefined,
                 OR:data.loggedInUser.role === "CLIENT"?
                     [
                         { clientReport: { is: null } },
