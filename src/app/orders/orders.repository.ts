@@ -1819,6 +1819,10 @@ export class OrdersRepository {
             },
             where: {
                 ...filtersReformed,
+                AND:data.loggedInUser?.role === "DELIVERY_AGENT" ?
+                        [
+                            {secondaryStatus:{notIn:["IN_REPOSITORY","WITH_CLIENT"]}}
+                        ]:undefined,
                 // deleted: false,
                 createdAt: {
                     gte: new Date(new Date().setHours(0, 0, 0, 0))
