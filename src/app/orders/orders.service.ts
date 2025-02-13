@@ -382,7 +382,7 @@ export class OrdersService {
         
         if (
             data.loggedInUser.role !== "COMPANY_MANAGER" &&
-            data.loggedInUser.permissions?.includes("CHANGE_ORDER_DATA") !== true
+            data.loggedInUser.permissions?.includes("CHANGE_ORDER_DATA") !== true && data.loggedInUser.role !== "CLIENT"
         ) {
             throw new AppError("ليس لديك صلاحية تعديل الطلب", 403);
         }

@@ -24,7 +24,6 @@ export class clientReceiptsRepository{
         const createdReceipt=await prisma.clientOrderReceipt.create({
             data:{
                 clientId:client.id,
-                receiptNumber:data.receiptData.receiptNumber,
                 branchId:data.receiptData.branchId
             },
             select:clientReceiptSelect
