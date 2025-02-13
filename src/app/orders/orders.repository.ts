@@ -873,7 +873,12 @@ export class OrdersRepository {
                     where: {...where,
                         AND:data.loggedInUser?.role === "DELIVERY_AGENT" ?
                         [
-                            {secondaryStatus:{notIn:["IN_REPOSITORY","WITH_CLIENT"]}}
+                            {
+                                OR: [
+                                  { secondaryStatus: { notIn: ["IN_REPOSITORY", "WITH_CLIENT"] } },
+                                  { secondaryStatus: null }
+                                ]
+                            }
                         ]:undefined,
                         OR:data.loggedInUser?.role === "CLIENT"?
                         [
@@ -1827,7 +1832,12 @@ export class OrdersRepository {
                 AND:data.loggedInUser?.role === "DELIVERY_AGENT" ?
                         [
                             {status:{not:"RETURNED"}},
-                            {secondaryStatus:{notIn:["IN_REPOSITORY"]}}
+                            {
+                                OR: [
+                                  { secondaryStatus: { notIn: ["IN_REPOSITORY", "WITH_CLIENT"] } },
+                                  { secondaryStatus: null }
+                                ]
+                            }
                         ]:undefined,
                 // deleted: false,
                 createdAt: {
