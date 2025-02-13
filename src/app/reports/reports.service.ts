@@ -20,6 +20,7 @@ import type {
 } from "./reports.dto";
 import { ReportsRepository } from "./reports.repository";
 import type { reportReform } from "./reports.responses";
+import { prisma } from "../../database/db";
 
 const reportsRepository = new ReportsRepository();
 const ordersRepository = new OrdersRepository();
@@ -42,7 +43,6 @@ export class ReportsService {
                     loggedInUser:data.loggedInUser
                 })
             ).orders as ReturnType<typeof orderReform>[];
-            console.log(data.ordersFilters);
             
             for (const order of orders) {
                 if (order) {
@@ -115,14 +115,37 @@ export class ReportsService {
                 }
             }
         }
+        
+        const company=await prisma.company.findUnique({
+            where:{
+                id:data.loggedInUser.companyID || 0
+            },
+            select:{
+                baghdadPrice:true,
+                governoratePrice:true,
+                deliveryAgentFee:true
+            }
+        })
 
         // Change orders costs reportData contains new costs
-        if (data.reportData.type === ReportType.CLIENT || data.reportData.type === ReportType.COMPANY) {
+        if (data.reportData.type === ReportType.CLIENT) {
             await ordersRepository.updateOrdersCosts({
                 ordersIDs,
                 costs: {
                     baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
                     governoratesDeliveryCost: data.reportData.governoratesDeliveryCost
+                }
+            });
+
+            orders = await ordersRepository.getOrdersByIDs({ ordersIDs });
+        }
+
+        if ( data.reportData.type === ReportType.COMPANY) {
+            await ordersRepository.updateOrdersCosts({
+                ordersIDs,
+                costs: {
+                    baghdadDeliveryCost: data.reportData.baghdadDeliveryCost || company?.baghdadPrice,
+                    governoratesDeliveryCost: data.reportData.governoratesDeliveryCost || company?.governoratePrice
                 }
             });
 
@@ -137,7 +160,7 @@ export class ReportsService {
             await ordersRepository.updateOrdersCosts({
                 ordersIDs,
                 costs: {
-                    deliveryAgentDeliveryCost: data.reportData.deliveryAgentDeliveryCost
+                    deliveryAgentDeliveryCost: data.reportData.deliveryAgentDeliveryCost || company?.deliveryAgentFee
                 }
             });
 

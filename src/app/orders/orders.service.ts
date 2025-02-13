@@ -129,7 +129,7 @@ export class OrdersService {
                 }
             })
             if(clientReceipt?.order){
-                throw new AppError("هذا الايصال غير صالح", 500);
+                throw new AppError("تم اضافه الوصل مسبق", 500);
             }
             if(data.loggedInUser.role==="CLIENT" && clientReceipt?.clientId !== data.loggedInUser.id){
                 throw new AppError("هذا الايصال غير صالح", 500);

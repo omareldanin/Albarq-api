@@ -26,7 +26,6 @@ export class OrdersController {
         } else {
             orderOrOrders = OrderCreateSchema.parse(req.body);
         }
-        console.log(req.body);
         
         const createdOrderOrOrders = await ordersService.createOrder({
             loggedInUser: loggedInUser,

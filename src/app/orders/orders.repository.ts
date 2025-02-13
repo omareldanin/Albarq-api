@@ -891,15 +891,15 @@ export class OrdersRepository {
                         [
                             { deliveryAgentReport: { is: null } },
                             { deliveryAgentReport: { report: { deleted: true } } }
-                        ]:data.loggedInUser?.role === "COMPANY_MANAGER" ? 
-                        [
-                            { companyReport: { is: null } },
-                            { companyReport: { report: { deleted: true } } }
                         ] :data.loggedInUser?.role === "BRANCH_MANAGER" ?
                         [
                             { branchReport: { is: null } },
                             { branchReport: { report: { deleted: true } } }
-                        ]:undefined
+                        ]:
+                        [
+                            { companyReport: { is: null } },
+                            { companyReport: { report: { deleted: true } } }
+                        ]
                     },
                     select: orderSelect
                 },
@@ -1699,15 +1699,15 @@ export class OrdersRepository {
                     [
                         { deliveryAgentReport: { is: null } },
                         { deliveryAgentReport: { report: { deleted: true } } }
-                    ]:data.loggedInUser.role === "COMPANY_MANAGER" ? 
-                    [
-                        { companyReport: { is: null } },
-                        { companyReport: { report: { deleted: true } } }
-                    ] :data.loggedInUser.role === "BRANCH_MANAGER" ?
+                    ]:data.loggedInUser.role === "BRANCH_MANAGER" ?
                     [
                         { branchReport: { is: null } },
                         { branchReport: { report: { deleted: true } } }
-                    ]:undefined
+                    ]:
+                    [
+                        { companyReport: { is: null } },
+                        { companyReport: { report: { deleted: true } } }
+                    ] 
 
 
             }
