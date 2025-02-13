@@ -1821,7 +1821,8 @@ export class OrdersRepository {
                 ...filtersReformed,
                 AND:data.loggedInUser?.role === "DELIVERY_AGENT" ?
                         [
-                            {secondaryStatus:{notIn:["IN_REPOSITORY","WITH_CLIENT"]}}
+                            {status:{not:"RETURNED"}},
+                            {secondaryStatus:{notIn:["IN_REPOSITORY"]}}
                         ]:undefined,
                 // deleted: false,
                 createdAt: {
