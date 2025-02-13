@@ -873,12 +873,13 @@ export class OrdersRepository {
                     where: {...where,
                         AND:data.loggedInUser?.role === "DELIVERY_AGENT" ?
                         [
+                            {status:{not:"RETURNED"}},
                             {
-                                OR: [
-                                  { secondaryStatus: { notIn: ["IN_REPOSITORY", "WITH_CLIENT"] } },
-                                  { secondaryStatus: null }
-                                ]
-                            }
+                            OR: [
+                              { secondaryStatus: { notIn: ["IN_REPOSITORY", "WITH_CLIENT"] } },
+                              { secondaryStatus: null }
+                            ]
+                        }
                         ]:undefined,
                         OR:data.loggedInUser?.role === "CLIENT"?
                         [
