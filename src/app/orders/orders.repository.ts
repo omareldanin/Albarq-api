@@ -571,6 +571,18 @@ export class OrdersRepository {
                         id: data.filters.locationID
                     }
                 },
+                {
+                    AND:data.loggedInUser?.role === "DELIVERY_AGENT" ?
+                    [
+                        {status:{not:"RETURNED"}},
+                        {
+                            OR: [
+                            { secondaryStatus: { notIn: ["IN_REPOSITORY", "WITH_CLIENT"] } },
+                            { secondaryStatus: null }
+                            ]
+                        }
+                    ]:undefined
+                },
                 // Filter by receiptNumber
                 {
                     receiptNumber: data.filters.receiptNumber
@@ -871,16 +883,6 @@ export class OrdersRepository {
             const paginatedOrders = await prisma.order.findManyPaginated(
                 {
                     where: {...where,
-                        // AND:data.loggedInUser?.role === "DELIVERY_AGENT" ?
-                        // [
-                        //     {status:data.filters.status},
-                        //     {
-                        //     OR: [
-                        //       { secondaryStatus: { notIn: ["IN_REPOSITORY", "WITH_CLIENT"] } },
-                        //       { secondaryStatus: null }
-                        //     ]
-                        // }
-                        // ]:undefined,
                         OR:data.loggedInUser?.role === "CLIENT"?
                         [
                             { clientReport: { is: null } },
