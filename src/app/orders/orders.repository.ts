@@ -1613,6 +1613,17 @@ export class OrdersRepository {
                 {
                     deleted: false
                 },
+                {
+                    AND:data.loggedInUser?.role === "DELIVERY_AGENT" ?
+                    [
+                        {
+                            OR: [
+                              { secondaryStatus: { notIn: ["IN_REPOSITORY", "WITH_CLIENT"] } },
+                              { secondaryStatus: null }
+                            ]
+                        }
+                    ]:undefined
+                },
                 // inquiry filters
                 {
                     AND: [
@@ -1832,16 +1843,6 @@ export class OrdersRepository {
             },
             where: {
                 ...filtersReformed,
-                // AND:data.loggedInUser?.role === "DELIVERY_AGENT" ?
-                //         [
-                //             {status:{not:"RETURNED"}},
-                //             {
-                //                 OR: [
-                //                   { secondaryStatus: { notIn: ["IN_REPOSITORY", "WITH_CLIENT"] } },
-                //                   { secondaryStatus: null }
-                //                 ]
-                //             }
-                //         ]:undefined,
                 // deleted: false,
                 createdAt: {
                     gte: new Date(new Date().setHours(0, 0, 0, 0))
