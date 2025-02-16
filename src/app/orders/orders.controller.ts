@@ -86,7 +86,6 @@ export class OrdersController {
             secondaryStatus:req.query.secondaryStatus,
             clientOrderReceiptId:req.query.clientOrderReceiptId
         });
-        console.log(req.body);
         
         const { orders, ordersMetaData, page, pagesCount } = await ordersService.getAllOrders({
             loggedInUser: loggedInUser,
@@ -126,6 +125,9 @@ export class OrdersController {
         const loggedInUser = res.locals.user as loggedInUserType;
         const orderData = OrderUpdateSchema.parse(req.body);
 
+        if(orderData.status === "PARTIALLY_RETURNED" && req.query.for_mobile){
+            orderData.paidAmount = orderData.quantity
+        }
         const order = await ordersService.updateOrder({
             params: params,
             orderData: orderData,
