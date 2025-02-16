@@ -434,7 +434,6 @@ export class OrdersService {
                 throw new AppError("لا يمكن تغيير حالة الطلب بعد عمل كشف به", 403);
             }
         }
-        console.log(data.orderData);
         
         // update order paid amount if new status is delivered or partially returned or replaced
         if (

@@ -86,7 +86,8 @@ export class OrdersController {
             secondaryStatus:req.query.secondaryStatus,
             clientOrderReceiptId:req.query.clientOrderReceiptId
         });
-
+        console.log(req.body);
+        
         const { orders, ordersMetaData, page, pagesCount } = await ordersService.getAllOrders({
             loggedInUser: loggedInUser,
             filters: filters
