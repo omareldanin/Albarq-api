@@ -16,7 +16,7 @@ export class ClientReceiptController{
 
         for(const receipt of receipts){
             const createdReceipt=await clientReceiptRepository.createClientReceipt({
-                clientID:receipt.clientId,
+                storeId:receipt.storeId,
                 receiptData:receipt
             })
 

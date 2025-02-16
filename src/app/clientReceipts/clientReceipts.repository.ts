@@ -5,25 +5,25 @@ import { clientReceiptSelect, receiptReform } from "./clientReceipts.responses";
 
 export class clientReceiptsRepository{
     async createClientReceipt(data:{
-        clientID:number,
+        storeId:number,
         receiptData:clientReceiptCreateType
     }){
-        const client = await prisma.client.findUnique({
+        const store = await prisma.store.findUnique({
             where: {
-                id: data.clientID
+                id: data.storeId
             },
             select: {
                 id:true
             }
         });
 
-        if (!client) {
+        if (!store) {
             throw new AppError("العميل غير موجود", 400);
         }
 
         const createdReceipt=await prisma.clientOrderReceipt.create({
             data:{
-                clientId:client.id,
+                storeId:store.id,
                 branchId:data.receiptData.branchId
             },
             select:clientReceiptSelect

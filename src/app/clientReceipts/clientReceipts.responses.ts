@@ -3,23 +3,28 @@ import type { Prisma } from "@prisma/client";
 export const clientReceiptSelect={
     id:true,
     receiptNumber:true,
-    clientId:true,
+    storeId:true,
     branchId:true,
-    client:{
+    store:{
         select:{
-            id:true,
-            user:{
-                select:{
-                    name:true,
-                    phone:true
-                }
-            },
-            company:{
+            name:true,
+            client:{
                 select:{
                     id:true,
-                    logo:true
+                    user:{
+                        select:{
+                            name:true,
+                            phone:true
+                        }
+                    },
+                    company:{
+                        select:{
+                            id:true,
+                            logo:true
+                        }
+                    },
                 }
-            },
+            }
         }
     },
     branch:{
@@ -41,10 +46,10 @@ export const receiptReform = (
         ...receipt,
         // TODO
         client: {
-            name: receipt.client.user.name,
-            phone: receipt.client.user.phone,
-            companyLogo:receipt.client.company.logo,
-            companyId:receipt.client.company.id
+            name: receipt.store.client.user.name,
+            phone: receipt.store.client.user.phone,
+            companyLogo:receipt.store.client.company.logo,
+            companyId:receipt.store.client.company.id
         },
         
     };

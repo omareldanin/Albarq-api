@@ -120,7 +120,7 @@ export class OrdersService {
                 select:{
                     id:true,
                     receiptNumber:true,
-                    clientId:true,
+                    storeId:true,
                     order:{
                         select:{
                             id:true,
@@ -131,7 +131,12 @@ export class OrdersService {
             if(clientReceipt?.order){
                 throw new AppError("تم اضافه الوصل مسبق", 500);
             }
-            if(data.loggedInUser.role==="CLIENT" && clientReceipt?.clientId !== data.loggedInUser.id){
+
+            const clientId = await clientsRepository.getClientIDByStoreID({
+                storeID: clientReceipt?.storeId || 0
+            });
+    
+            if(data.loggedInUser.role==="CLIENT" && clientId !== data.loggedInUser.id){
                 throw new AppError("هذا الايصال غير صالح", 500);
             }
             data.orderOrOrdersData.receiptNumber = clientReceipt?.receiptNumber
@@ -157,7 +162,9 @@ export class OrdersService {
         if (!branch) {
             throw new AppError("لا يوجد فرع مرتبط بالموقع", 500);
         }
+
         branchID = branch.id;
+
         const createdOrder = await ordersRepository.createOrder({
             companyID: data.loggedInUser.companyID as number,
             clientID,
@@ -427,7 +434,8 @@ export class OrdersService {
                 throw new AppError("لا يمكن تغيير حالة الطلب بعد عمل كشف به", 403);
             }
         }
-
+        console.log(data.orderData);
+        
         // update order paid amount if new status is delivered or partially returned or replaced
         if (
             oldOrderData?.status !== data.orderData.status &&

@@ -97,8 +97,8 @@ export class OrdersController {
             page: page,
             pagesCount: pagesCount,
             data: {
+                ordersMetaData: ordersMetaData,
                 orders: orders,
-                ordersMetaData: ordersMetaData
             }
         });
     });
