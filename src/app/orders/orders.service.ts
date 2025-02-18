@@ -1194,9 +1194,34 @@ export class OrdersService {
             loggedInUser:data.loggedInUser
         });
 
+        let ordersStatisticsByStatus = statistics.ordersStatisticsByStatus.filter(status => status.status !== "READY_TO_SEND")
+
+        let deliveredOrders=ordersStatisticsByStatus.find(status => status.status === "DELIVERED") || {status:"DELIVERED",count:0,totalCost:0}
+
+        const pReturedOrders=ordersStatisticsByStatus.find(status => status.status === "PARTIALLY_RETURNED")
+        
+        const replacedOrders=ordersStatisticsByStatus.find(status => status.status === "REPLACED")
+        
+        deliveredOrders.count += pReturedOrders?.count ? pReturedOrders?.count : 0
+        deliveredOrders.totalCost += pReturedOrders?.totalCost ? pReturedOrders?.totalCost : 0
+
+        deliveredOrders.count += pReturedOrders?.count ? pReturedOrders?.count : 0
+        deliveredOrders.totalCost += pReturedOrders?.totalCost ? pReturedOrders?.totalCost : 0
+
+        deliveredOrders.count += replacedOrders?.count ? replacedOrders?.count : 0
+        deliveredOrders.totalCost += replacedOrders?.totalCost ? replacedOrders?.totalCost : 0
+
+        ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "PARTIALLY_RETURNED")
+        ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "REPLACED")
+
+        let deliveredIndex = ordersStatisticsByStatus.findIndex(status => status.status === "DELIVERED")
+
+        ordersStatisticsByStatus[deliveredIndex]=deliveredOrders
+        
         statistics={...statistics,
-            ordersStatisticsByStatus:statistics.ordersStatisticsByStatus.filter(status => status.status !== "READY_TO_SEND")
+            ordersStatisticsByStatus:ordersStatisticsByStatus
         }
+
         if(data.loggedInUser.role === "DELIVERY_AGENT"){
             const ordersStatisticsByStatus = statistics.ordersStatisticsByStatus.filter(status => status.status !== "REGISTERED")
             return {
