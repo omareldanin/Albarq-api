@@ -337,8 +337,11 @@ export class OrdersService {
             size = 10;
         }
 
+        
+        
         if(data.filters.forMobile && data.filters.status ==="DELIVERED"){
             data.filters.statuses=["DELIVERED","PARTIALLY_RETURNED","REPLACED"]
+            data.filters.status=undefined
         }
 
         const { orders, ordersMetaData, pagesCount } = await ordersRepository.getAllOrdersPaginated({
