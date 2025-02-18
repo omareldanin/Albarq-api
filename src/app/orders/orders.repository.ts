@@ -1727,6 +1727,8 @@ export class OrdersRepository {
             }
         });
 
+        console.log(ordersStatisticsByStatus);
+        
         const ordersStatisticsByGovernorate = await prisma.order.groupBy({
             by: ["governorate"],
             _sum: {
