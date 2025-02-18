@@ -1193,6 +1193,7 @@ export class OrdersService {
             },
             loggedInUser:data.loggedInUser
         });
+        console.log(statistics);
         
         return statistics;
     };
