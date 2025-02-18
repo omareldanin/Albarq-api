@@ -1205,9 +1205,6 @@ export class OrdersService {
         deliveredOrders.count += pReturedOrders?.count ? pReturedOrders?.count : 0
         deliveredOrders.totalCost += pReturedOrders?.totalCost ? pReturedOrders?.totalCost : 0
 
-        deliveredOrders.count += pReturedOrders?.count ? pReturedOrders?.count : 0
-        deliveredOrders.totalCost += pReturedOrders?.totalCost ? pReturedOrders?.totalCost : 0
-
         deliveredOrders.count += replacedOrders?.count ? replacedOrders?.count : 0
         deliveredOrders.totalCost += replacedOrders?.totalCost ? replacedOrders?.totalCost : 0
 
@@ -1217,7 +1214,7 @@ export class OrdersService {
         let deliveredIndex = ordersStatisticsByStatus.findIndex(status => status.status === "DELIVERED")
 
         ordersStatisticsByStatus[deliveredIndex]=deliveredOrders
-        
+
         statistics={...statistics,
             ordersStatisticsByStatus:ordersStatisticsByStatus
         }
