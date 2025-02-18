@@ -1577,7 +1577,10 @@ export class OrdersRepository {
                           : undefined
                 },
                 {
-                    status: { in: data.filters.statuses }
+                    status:data.loggedInUser.role === "DELIVERY_AGENT" ? 
+                    {
+                        notIn:["REGISTERED"]
+                    }: { in: data.filters.statuses }
                 },
                 {
                     governorate: data.filters.governorate
