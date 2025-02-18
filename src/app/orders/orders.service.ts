@@ -1193,7 +1193,14 @@ export class OrdersService {
             },
             loggedInUser:data.loggedInUser
         });
-        console.log(statistics);
+
+        if(data.loggedInUser.role === "DELIVERY_AGENT"){
+            const ordersStatisticsByStatus = statistics.ordersStatisticsByStatus.filter(status => status.status !== "REGISTERED")
+            return {
+                ...statistics,
+                ordersStatisticsByStatus:ordersStatisticsByStatus
+            }
+        }
         
         return statistics;
     };
