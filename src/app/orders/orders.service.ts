@@ -1177,7 +1177,7 @@ export class OrdersService {
             clientReport = false;
         }
 
-        const statistics = await ordersRepository.getOrdersStatistics({
+        let statistics = await ordersRepository.getOrdersStatistics({
             filters: {
                 ...data.filters,
                 clientID,
@@ -1194,6 +1194,9 @@ export class OrdersService {
             loggedInUser:data.loggedInUser
         });
 
+        statistics={...statistics,
+            ordersStatisticsByStatus:statistics.ordersStatisticsByStatus.filter(status => status.status !== "READY_TO_SEND")
+        }
         if(data.loggedInUser.role === "DELIVERY_AGENT"){
             const ordersStatisticsByStatus = statistics.ordersStatisticsByStatus.filter(status => status.status !== "REGISTERED")
             return {
