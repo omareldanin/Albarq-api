@@ -333,10 +333,9 @@ export class OrdersService {
         }
 
         let size = data.filters.size;
-        if (size > 500 && data.filters.minified !== true) {
+        if (size > 500 && data.filters.forMobile !== true) {
             size = 10;
         }
-
         
         
         if(data.filters.forMobile && data.filters.status ==="DELIVERED"){

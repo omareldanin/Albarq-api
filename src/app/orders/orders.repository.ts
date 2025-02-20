@@ -1534,7 +1534,6 @@ export class OrdersRepository {
                 {
                     storeId: data.filters.storeID
                 },
-                
                 {
                     clientReport: data.filters.clientReport
                         ? { isNot: null }
@@ -1837,7 +1836,7 @@ export class OrdersRepository {
                     }
             }
         });
-
+        
         const todayOrdersStatistics = await prisma.order.aggregate({
             _sum: {
                 totalCost: true
