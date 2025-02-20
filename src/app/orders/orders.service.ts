@@ -401,18 +401,22 @@ export class OrdersService {
             throw new AppError("ليس لديك صلاحية تعديل الطلب", 403);
         }
 
-        if (!data.orderData.confirmed && data.loggedInUser.role !== "COMPANY_MANAGER") {
-            throw new AppError("لم يتم تأكيد الطلب من الشركه", 403);
+        if (data.orderData.confirmed && data.loggedInUser.role !== "COMPANY_MANAGER" && data.loggedInUser.permissions?.includes("CONFIRM_ORDER")) {
+            throw new AppError("ليس لديك صلاحية تأكيد الطلب", 403);
         }
 
         const oldOrderData = await ordersRepository.getOrder({
             orderID: data.params.orderID
         });
 
+        
         if (!oldOrderData) {
             throw new AppError("الطلب غير موجود", 404);
         }
-
+        
+        if (!oldOrderData?.confirmed && data.orderData.confirmed===undefined) {
+            throw new AppError("لم يتم تاكيد الطلب من الشركه", 403);
+        }
         // Cant process order unless INQUIRY_EMPLOYEE or EMERGENCY_EMPLOYEE
         if (
             data.orderData.processed !== undefined &&
@@ -1183,7 +1187,7 @@ export class OrdersService {
         if (data.loggedInUser.role === "CLIENT" && data.filters.clientReport !== true) {
             clientReport = false;
         }
-
+        
         let statistics = await ordersRepository.getOrdersStatistics({
             filters: {
                 ...data.filters,
