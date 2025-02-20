@@ -401,8 +401,6 @@ export class OrdersRepository {
         filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
         loggedInUser:loggedInUserType | undefined
     }) {
-        console.log(data.filters);
-        
         const where = {
             AND: [
                 // Search by receiptNumber, recipientName, recipientPhone, recipientAddress
