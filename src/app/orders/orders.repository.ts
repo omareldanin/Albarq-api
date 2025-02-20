@@ -401,7 +401,6 @@ export class OrdersRepository {
         filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
         loggedInUser:loggedInUserType | undefined
     }) {
-        console.log(data.filters);
         
         const where = {
             AND: [
@@ -906,7 +905,7 @@ export class OrdersRepository {
                 },
                 {
                     page: data.filters.page,
-                    size: data.filters.size
+                    size: 500
                 }
             );
 
