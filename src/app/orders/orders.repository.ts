@@ -1762,19 +1762,19 @@ export class OrdersRepository {
             },
             where: {
                 ...filtersReformed,
-                    OR:
-                        [
-                            { clientReport: { is: null } },
-                            { clientReport: { report: { deleted: true } } }
-                        ]
-                    ,
-                    status:
-                    {
-                        in: ["DELIVERED","PARTIALLY_RETURNED","REPLACED"]
-                    }
-        }
+                OR:
+                    [
+                        { clientReport: { is: null } },
+                        { clientReport: { report: { deleted: true } } }
+                    ]
+                ,
+                status:
+                {
+                    in: ["DELIVERED","PARTIALLY_RETURNED","REPLACED"]
+                }
+            }
         });
-
+        
         const allOrdersStatisticsWithoutDeliveryReport = await prisma.order.aggregate({
             _sum: {
                 paidAmount: true

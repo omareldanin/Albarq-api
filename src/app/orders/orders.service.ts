@@ -401,8 +401,8 @@ export class OrdersService {
             throw new AppError("ليس لديك صلاحية تعديل الطلب", 403);
         }
 
-        if (data.orderData.confirmed && data.loggedInUser.role !== "COMPANY_MANAGER") {
-            throw new AppError("ليس لديك صلاحية تأكيد الطلب", 403);
+        if (!data.orderData.confirmed && data.loggedInUser.role !== "COMPANY_MANAGER") {
+            throw new AppError("لم يتم تأكيد الطلب من الشركه", 403);
         }
 
         const oldOrderData = await ordersRepository.getOrder({
