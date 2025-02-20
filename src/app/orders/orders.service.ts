@@ -332,7 +332,8 @@ export class OrdersService {
             }
         }
 
-        let size = data.filters.size;
+        let size = data.filters.size || 500;
+
         if (size > 500 && data.filters.forMobile !== true) {
             size = 10;
         }
