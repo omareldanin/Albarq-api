@@ -309,7 +309,7 @@ export class OrdersRepository {
                       }
                     : undefined,
                 confirmed: data.orderData.forwardedCompanyID ? false : data.orderData.confirmed,
-                status: data.orderData.status,
+                status:data.orderData.forwardedCompanyID ? "REGISTERED" : data.orderData.status,
                 deliveryAgent: data.deliveryAgentID ? { connect: { id: data.deliveryAgentID } } : undefined,
                 orderProducts:
                     data.orderData.withProducts === false
@@ -401,6 +401,7 @@ export class OrdersRepository {
         filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
         loggedInUser:loggedInUserType | undefined
     }) {
+        console.log(data.filters);
         
         const where = {
             AND: [
@@ -491,21 +492,31 @@ export class OrdersRepository {
                         }
                     ]
                 },
-                // Filter by companyID
-                    {
-                    company: {
-                        id: data.filters.forwardedFromID
-                            ? undefined
-                            : data.filters.inquiryCompaniesIDs
-                              ? {
-                                    in: [
-                                        ...data.filters.inquiryCompaniesIDs
-                                        //   data.filters.companyID as number
-                                    ]
-                                }
-                              : data.filters.companyID
-                    }
+                {
+                    OR: [
+                        {
+                            company: {
+                                id: 
+                                    data.filters.inquiryCompaniesIDs
+                                        ? {
+                                            in: [
+                                                ...data.filters.inquiryCompaniesIDs
+                                                //   data.filters.companyID as number
+                                            ]
+                                        }
+                                        : data.filters.companyID
+                            }
+                        },
+                        {
+                            forwardedFrom: {
+                                id:data.filters.forwarded && data.filters.forwardedFromID === undefined
+                                ? undefined: data.filters.companyID
+                            }
+                        }
+                    ]
                 },
+                // Filter by companyID
+                    
                 {
                     confirmed: data.filters.confirmed
                 },
