@@ -1533,13 +1533,26 @@ export class OrdersRepository {
         const filtersReformed = {
             AND: [
                 {
-                    company: {
-                        id: data.filters.inquiryCompaniesIDs
-                            ? {
-                                  in: [...data.filters.inquiryCompaniesIDs]
-                              }
-                            : data.filters.companyID
-                    }
+                    OR: [
+                        {
+                            company: {
+                                id: 
+                                    data.filters.inquiryCompaniesIDs
+                                        ? {
+                                            in: [
+                                                ...data.filters.inquiryCompaniesIDs
+                                                //   data.filters.companyID as number
+                                            ]
+                                        }
+                                        : data.filters.companyID
+                            }
+                        },
+                        {
+                            forwardedFrom: {
+                                id:data.filters.companyID
+                            }
+                        }
+                    ]
                 },
                 {
                     storeId: data.filters.storeID

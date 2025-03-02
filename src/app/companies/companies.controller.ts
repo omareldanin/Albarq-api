@@ -48,7 +48,6 @@ export class CompaniesController {
         const minified = req.query.minified ? req.query.minified === "true" : undefined;
 
         const mainCompany = req.query.main_company ? req.query.main_company === "true" : undefined;
-
         let size = req.query.size ? +req.query.size : 10;
         if (size > 500 && minified !== true) {
             size = 10;

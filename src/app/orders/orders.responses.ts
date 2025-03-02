@@ -69,6 +69,11 @@ export const orderSelect = {
                     name: true,
                     phone: true
                 }
+            },
+            company:{
+                select:{
+                    name:true,
+                }
             }
         }
     },
@@ -220,7 +225,8 @@ export const orderReform = (
         client: {
             id: order.client.user.id,
             name: order.client.user.name,
-            phone: order.client.user.phone
+            phone: order.client.user.phone,
+            company:order.client.company.name
         },
         deliveryAgent: order.deliveryAgent && {
             id: order.deliveryAgent.user.id,
