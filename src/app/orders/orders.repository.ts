@@ -510,13 +510,12 @@ export class OrdersRepository {
                         {
                             forwardedFrom: {
                                 id:data.filters.forwarded && data.filters.forwardedFromID === undefined
-                                ? undefined: data.filters.companyID
+                                ? undefined:data.filters.governorate? undefined: data.filters.companyID
                             }
                         }
                     ]
                 },
                 // Filter by companyID
-                    
                 {
                     confirmed: data.filters.confirmed
                 },
@@ -524,7 +523,6 @@ export class OrdersRepository {
                 {
                     id: data.filters.orderID
                 },
-                
                 // Filter by status
                 {
                     status: data.filters.statuses ? { in: data.filters.statuses } : undefined
@@ -546,7 +544,6 @@ export class OrdersRepository {
                           }
                         : undefined
                 },
-           
                 // Filter by deliveryAgentID
                 {
                     deliveryAgent: {
