@@ -1209,10 +1209,16 @@ export class OrdersService {
 
         let deliveredOrders=ordersStatisticsByStatus.find(status => status.status === "DELIVERED") || {status:"DELIVERED",count:0,totalCost:0}
 
+        let registedOrders=ordersStatisticsByStatus.find(status => status.status === 'REGISTERED') || {status:"REGISTERED",count:0,totalCost:0}
+
         const pReturedOrders=ordersStatisticsByStatus.find(status => status.status === "PARTIALLY_RETURNED")
         
         const replacedOrders=ordersStatisticsByStatus.find(status => status.status === "REPLACED")
         
+        const gOrders=ordersStatisticsByStatus.find(status => status.status === 'IN_GOV_REPOSITORY')
+        
+        const rOrders=ordersStatisticsByStatus.find(status => status.status === "IN_MAIN_REPOSITORY")
+
         deliveredOrders.count += pReturedOrders?.count ? pReturedOrders?.count : 0
         deliveredOrders.totalCost += pReturedOrders?.totalCost ? pReturedOrders?.totalCost : 0
 
@@ -1222,9 +1228,20 @@ export class OrdersService {
         ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "PARTIALLY_RETURNED")
         ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "REPLACED")
 
+        registedOrders.count += gOrders?.count ? gOrders.count : 0
+        registedOrders.totalCost += gOrders?.totalCost ? gOrders.totalCost : 0
+
+        registedOrders.count += rOrders?.count ? rOrders.count : 0
+        registedOrders.count += rOrders?.totalCost ? rOrders.totalCost : 0
+
+        ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "IN_GOV_REPOSITORY")
+        ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "IN_MAIN_REPOSITORY")
+
         let deliveredIndex = ordersStatisticsByStatus.findIndex(status => status.status === "DELIVERED")
+        let registeredIndex = ordersStatisticsByStatus.findIndex(status => status.status === "REGISTERED")
 
         ordersStatisticsByStatus[deliveredIndex]=deliveredOrders
+        ordersStatisticsByStatus[registeredIndex]=registedOrders
 
         statistics={...statistics,
             ordersStatisticsByStatus:ordersStatisticsByStatus
