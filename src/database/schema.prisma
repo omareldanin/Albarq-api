@@ -275,11 +275,11 @@ model InquiryEmployeesDeliveryAgents {
 
 model Client {
   // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                        Int            @id
+  id                        Int              @id
   // --- DETAILS --------------------------------------------------------------------------- //
-  role                      ClientRole     @default(CLIENT)
-  token                     String         @default("")
-  governoratesDeliveryCosts Json           @default("[]")
+  role                      ClientRole       @default(CLIENT)
+  token                     String           @default("")
+  governoratesDeliveryCosts Json             @default("[]")
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //
   deletedById               Int?
   createdById               Int
@@ -294,18 +294,19 @@ model Client {
   categories                Category[]
   sizes                     Size[]
   // createdBy                 Employee       @relation(fields: [employeeId], references: [id])
-  createdBy                 User           @relation("createdBy", fields: [createdById], references: [id])
-  user                      User           @relation(fields: [id], references: [id])
-  repository                Repository?    @relation(fields: [repositoryId], references: [id])
-  branch                    Branch?        @relation(fields: [branchId], references: [id])
+  createdBy                 User             @relation("createdBy", fields: [createdById], references: [id])
+  user                      User             @relation(fields: [id], references: [id])
+  repository                Repository?      @relation(fields: [repositoryId], references: [id])
+  branch                    Branch?          @relation(fields: [branchId], references: [id])
   // --- TENANT --------------------------------------------------------------------- //
   companyId                 Int
-  company                   Company        @relation(fields: [companyId], references: [id])
+  company                   Company          @relation(fields: [companyId], references: [id])
   // --- DELETED --------------------------------------------------------------------------- //
-  deleted                   Boolean        @default(false)
-  deletedBy                 User?          @relation("deletedBy", fields: [deletedById], references: [id])
+  deleted                   Boolean          @default(false)
+  deletedBy                 User?            @relation("deletedBy", fields: [deletedById], references: [id])
   deletedAt                 DateTime?
   // --- OTHER --------------------------------------------------------------------- //
+  CustomerOutput            CustomerOutput[]
 
   @@index([companyId])
 }
@@ -343,6 +344,7 @@ model Store {
   // --- OTHER --------------------------------------------------------------------- //
   createdAt           DateTime                 @default(now())
   updatedAt           DateTime                 @updatedAt
+  CustomerOutput      CustomerOutput[]
 
   @@index([companyId])
   @@index([clientId])
@@ -422,6 +424,7 @@ model Repository {
   // --- OTHER --------------------------------------------------------------------- //
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+  CustomerOutput    CustomerOutput[]
 }
 
 model Location {
@@ -529,6 +532,7 @@ model Company {
   updatedAt                               DateTime                    @updatedAt
   DeliveryAgentsLocations                 DeliveryAgentsLocations[]
   usersLoginHistory                       UsersLoginHistory[]
+  CustomerOutput                          CustomerOutput[]
 }
 
 model InquiryEmployeesCompanies {
@@ -629,6 +633,7 @@ model Order {
   // --- OTHER --------------------------------------------------------------------- //
   createdAt              DateTime                 @default(now())
   updatedAt              DateTime                 @updatedAt
+  CustomerOutput         CustomerOutput[]
 
   // @@index([automaticUpdateId])
   // @@index([deleted, deletedById])
@@ -655,6 +660,20 @@ model Order {
   // @@index([repositoryId])
   @@index([branchId])
   @@index([companyId])
+}
+
+model CustomerOutput {
+  id           Int         @id @default(autoincrement())
+  repositoryId Int?
+  orderId      Int?
+  clientId     Int?
+  companyId    Int?
+  storeId      Int?
+  order        Order?      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  repository   Repository? @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
+  client       Client?     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  company      Company?    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  store        Store?      @relation(fields: [storeId], references: [id], onDelete: Cascade)
 }
 
 model ClientOrderReceipt {

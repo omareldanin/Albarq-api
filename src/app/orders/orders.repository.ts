@@ -309,7 +309,8 @@ export class OrdersRepository {
                       }
                     : undefined,
                 confirmed: data.orderData.forwardedCompanyID ? false : data.orderData.confirmed,
-                status:data.orderData.forwardedCompanyID ? "REGISTERED" : data.orderData.status,
+                status:"REGISTERED",
+                secondaryStatus:"WITH_CLIENT",
                 deliveryAgent: data.deliveryAgentID ? { connect: { id: data.deliveryAgentID } } : undefined,
                 orderProducts:
                     data.orderData.withProducts === false
