@@ -190,6 +190,7 @@ export class OrdersController {
         const ordersData = OrdersReportPDFCreateSchema.parse(req.body);
 
         const filters = OrdersFiltersSchema.parse({
+            confirmed:req.query.confirmed,
             clientID: req.query.client_id,
             deliveryAgentID: req.query.delivery_agent_id,
             companyID: req.query.company_id,

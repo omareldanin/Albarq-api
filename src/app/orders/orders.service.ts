@@ -893,6 +893,7 @@ export class OrdersService {
     }) => {
         let orders: ReturnType<typeof orderReform>[];
         let ordersIDs: number[] = [];
+        
         if (data.ordersData.ordersIDs === "*") {
             orders = (
                 await ordersRepository.getAllOrdersPaginated({

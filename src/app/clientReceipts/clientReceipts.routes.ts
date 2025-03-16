@@ -1,4 +1,4 @@
-import {  EmployeeRole, Permission } from "@prisma/client";
+import {  ClientRole, EmployeeRole, Permission } from "@prisma/client";
 import { Router } from "express";
 import { isAutherized } from "../../middlewares/isAutherized";
 import { isLoggedIn } from "../../middlewares/isLoggedIn";
@@ -14,6 +14,8 @@ router.route("/generate-receipts").post(
             EmployeeRole.COMPANY_MANAGER,
             EmployeeRole.DATA_ENTRY,
             EmployeeRole.ACCOUNTANT,
+            ClientRole.CLIENT,
+            EmployeeRole.CLIENT_ASSISTANT
         ],
         [Permission.ADD_ORDER]
     ),
