@@ -402,7 +402,6 @@ export class OrdersRepository {
         filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
         loggedInUser:loggedInUserType | undefined
     }) {
-        console.log(data.filters);
         
         const where = {
             AND: [
@@ -1398,7 +1397,7 @@ export class OrdersRepository {
                 recipientAddress: data.orderData.recipientAddress,
                 notes: data.orderData.notes,
                 currentLocation: data.orderData.currentLocation,
-                status:data.orderData.confirmed === true ? "WITH_DELIVERY_AGENT": data.orderData.status,
+                status:data.orderData.status,
                 secondaryStatus: data.orderData.secondaryStatus,
                 confirmed: data.orderData.forwardedCompanyID ? false : data.orderData.confirmed,
                 details: data.orderData.details,
