@@ -913,7 +913,7 @@ export class OrdersRepository {
                 },
                 {
                     page: data.filters.page,
-                    size: 500
+                    size: data.filters.size
                 }
             );
 
