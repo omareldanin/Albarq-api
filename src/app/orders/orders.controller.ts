@@ -175,8 +175,10 @@ export class OrdersController {
 
     createOrdersReceipts = catchAsync(async (req, res) => {
         const ordersIDs = OrdersReceiptsCreateSchema.parse(req.body);
+        const loggedInUser = res.locals.user as loggedInUserType;
+
         
-        const pdf = await ordersService.createOrdersReceipts({ ordersIDs });
+        const pdf = await ordersService.createOrdersReceipts({ ordersIDs,loggedInUser:loggedInUser });
         const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
         // Set headers for a PDF response
         res.setHeader('Content-Type', 'application/pdf');

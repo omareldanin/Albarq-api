@@ -70,6 +70,20 @@ export const employeeSelect = {
             }
         }
     },
+    inquiryClients:{
+        select:{
+            client:{
+                select:{
+                    user:{
+                        select:{
+                            id:true,
+                            name:true
+                        }
+                    }
+                }
+            }
+        }
+    },
     inquiryCompanies: {
         select: {
             company: {
@@ -171,6 +185,9 @@ export const employeeReform = (
         }),
         inquiryStores: employee.inquiryStores.map((store) => {
             return store.store;
+        }),
+        inquiryClients:employee.inquiryClients.map((client)=>{
+            return client.client.user
         }),
         // inquiryDeliveryAgents: employee.inquiryDeliveryAgents.map((deliveryAgent) => {
         //     return deliveryAgent.deliveryAgent.user;

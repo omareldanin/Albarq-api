@@ -17,7 +17,6 @@ export class EmployeesController {
             employeeData.residencyCard = files.residencyCard ? files.residencyCard[0].location : undefined;
         }
 
-        console.log(employeeData);
         
         const createdEmployee = await employeesService.createEmployee({
             loggedInUser,

@@ -112,6 +112,7 @@ enum AutomaticUpdateReturnCondition {
 enum SecondaryStatus {
   WITH_CLIENT
   WITH_AGENT
+  WITH_RECEIVING_AGENT
   IN_REPOSITORY
 }
 
@@ -242,6 +243,7 @@ model Employee {
   inquiryDeliveryAgents   InquiryEmployeesDeliveryAgents[] @relation("inquiryDeliveryAgents")
   inquiryGovernorates     Governorate[]
   inquiryStatuses         OrderStatus[]
+  inquiryClients          ReceivingAgentClients[]
   // --- INQUIRY EMPLOYEE (DELIVERY AGENTS) --------------------------------------------------------------------- //
   inquiryEmployees        InquiryEmployeesDeliveryAgents[] @relation("inquiryEmployees")
   // --- TENANT --------------------------------------------------------------------- //
@@ -275,16 +277,17 @@ model InquiryEmployeesDeliveryAgents {
 
 model Client {
   // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                        Int              @id
+  id                        Int                     @id
   // --- DETAILS --------------------------------------------------------------------------- //
-  role                      ClientRole       @default(CLIENT)
-  token                     String           @default("")
-  governoratesDeliveryCosts Json             @default("[]")
+  role                      ClientRole              @default(CLIENT)
+  token                     String                  @default("")
+  governoratesDeliveryCosts Json                    @default("[]")
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //
   deletedById               Int?
   createdById               Int
   repositoryId              Int?
   branchId                  Int?
+  receivingAgentId          Int?
   // --- RELATIONS --------------------------------------------------------------------------- //
   clientReports             ClientReport[]
   products                  Product[]
@@ -294,19 +297,20 @@ model Client {
   categories                Category[]
   sizes                     Size[]
   // createdBy                 Employee       @relation(fields: [employeeId], references: [id])
-  createdBy                 User             @relation("createdBy", fields: [createdById], references: [id])
-  user                      User             @relation(fields: [id], references: [id])
-  repository                Repository?      @relation(fields: [repositoryId], references: [id])
-  branch                    Branch?          @relation(fields: [branchId], references: [id])
+  createdBy                 User                    @relation("createdBy", fields: [createdById], references: [id])
+  user                      User                    @relation(fields: [id], references: [id])
+  repository                Repository?             @relation(fields: [repositoryId], references: [id])
+  branch                    Branch?                 @relation(fields: [branchId], references: [id])
   // --- TENANT --------------------------------------------------------------------- //
   companyId                 Int
-  company                   Company          @relation(fields: [companyId], references: [id])
+  company                   Company                 @relation(fields: [companyId], references: [id])
   // --- DELETED --------------------------------------------------------------------------- //
-  deleted                   Boolean          @default(false)
-  deletedBy                 User?            @relation("deletedBy", fields: [deletedById], references: [id])
+  deleted                   Boolean                 @default(false)
+  deletedBy                 User?                   @relation("deletedBy", fields: [deletedById], references: [id])
   deletedAt                 DateTime?
   // --- OTHER --------------------------------------------------------------------- //
   CustomerOutput            CustomerOutput[]
+  ReceivingAgentClients     ReceivingAgentClients[]
 
   @@index([companyId])
 }
@@ -360,6 +364,18 @@ model InquiryEmployeesStores {
   // --- OTHER --------------------------------------------------------------------- //
 
   @@id([inquiryEmployeeId, storeId])
+}
+
+model ReceivingAgentClients {
+  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
+  agentId        Int
+  clientId       Int
+  // --- RELATIONS --------------------------------------------------------------------------- //
+  receivingAgent Employee @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  client         Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  // --- OTHER --------------------------------------------------------------------- //
+
+  @@id([agentId, clientId])
 }
 
 model Branch {

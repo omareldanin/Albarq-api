@@ -117,7 +117,12 @@ export const OrderRepositoryConfirmByReceiptNumberOpenAPISchema = generateSchema
 /* --------------------------------------------------------------- */
 
 export const OrdersReceiptsCreateSchema = z.object({
-    ordersIDs: z.array(z.coerce.number()).min(1)
+    ordersIDs: z.array(z.coerce.number()).min(1),
+    selectedAll:z.preprocess((val) => {
+        if (val === "true") return true;
+        if (val === "false") return false;
+        return val;
+    }, z.boolean().optional()),
 });
 
 export type OrdersReceiptsCreateType = z.infer<typeof OrdersReceiptsCreateSchema>;

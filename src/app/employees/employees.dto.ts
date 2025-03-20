@@ -52,6 +52,12 @@ export const EmployeeCreateSchema = z.object({
             return val;
         }, z.array(z.coerce.number()).optional())
         .optional(),
+    inquiryClientsIDs: z
+    .preprocess((val) => {
+        if (typeof val === "string") return JSON.parse(val);
+        return val;
+    }, z.array(z.coerce.number()).optional())
+    .optional(),
     inquiryLocationsIDs: z
         .preprocess((val) => {
             if (typeof val === "string") return JSON.parse(val);

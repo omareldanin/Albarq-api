@@ -31,7 +31,7 @@ import type {
     OrdersStatisticsFiltersType
 } from "./orders.dto";
 import { OrdersRepository } from "./orders.repository";
-import type { orderReform } from "./orders.responses";
+import { orderReform, orderSelect } from "./orders.responses";
 import { prisma } from "../../database/db";
 
 const ordersRepository = new OrdersRepository();
@@ -879,12 +879,32 @@ export class OrdersService {
 
     createOrdersReceipts = async (data: {
         ordersIDs: OrdersReceiptsCreateType;
+        loggedInUser:loggedInUserType
     }) => {
-        const orders = await ordersRepository.getOrdersByIDs(data.ordersIDs);
+        if(data.loggedInUser.role === "CLIENT" && data.ordersIDs.selectedAll === true){
+            const orders = await prisma.order.findMany({
+                where:{
+                    status:"REGISTERED",
+                    client:{
+                        id:data.loggedInUser.id
+                    },
+                },
+                orderBy: {
+                        id: "asc"
+                },
+                select: orderSelect
+            })
+            const reformedOrders= orders.map(orderReform);
+            const pdf = await generateReceipts(reformedOrders);
 
-        const pdf = await generateReceipts(orders);
-
-        return pdf;
+            return pdf;
+        }else{
+            const orders = await ordersRepository.getOrdersByIDs(data.ordersIDs);
+    
+            const pdf = await generateReceipts(orders);
+    
+            return pdf;
+        }
     };
 
     getOrdersReportPDF = async (data: {

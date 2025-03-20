@@ -387,6 +387,22 @@ export class EmployeesRepository {
                           })
                       }
                     : undefined,
+                inquiryClients:data.employeeData.inquiryClientsIDs
+                ? {
+                      deleteMany: {
+                        agentId: data.employeeID
+                      },
+                      create: data.employeeData.inquiryClientsIDs.map((clientId) => {
+                          return {
+                              client: {
+                                  connect: {
+                                      id: clientId
+                                  }
+                              }
+                          };
+                      })
+                  }
+                : undefined,
                 inquiryStores: data.employeeData.inquiryStoresIDs
                     ? {
                           deleteMany: {
