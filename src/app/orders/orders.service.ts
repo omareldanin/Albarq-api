@@ -1236,6 +1236,12 @@ export class OrdersService {
             loggedInUser:data.loggedInUser
         });
         
+        if(data.loggedInUser.role === "RECEIVING_AGENT"){
+            return {
+                ...statistics,
+                ordersStatisticsByStatus:statistics.ordersStatisticsByStatus.filter(status => status.status === "READY_TO_SEND" || status.status === "WITH_RECEIVING_AGENT" || status.status === "RETURNED")
+            }
+        }
         let ordersStatisticsByStatus = statistics.ordersStatisticsByStatus
         
         let deliveredOrders=ordersStatisticsByStatus.find(status => status.status === "DELIVERED") || {status:"DELIVERED",count:0,totalCost:0}
