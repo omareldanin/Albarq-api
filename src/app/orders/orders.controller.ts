@@ -1,3 +1,4 @@
+import { prisma } from "../../database/db";
 import { catchAsync } from "../../lib/catchAsync";
 import type { loggedInUserType } from "../../types/user";
 import {
@@ -139,6 +140,50 @@ export class OrdersController {
             data: order
         });
     });
+
+    sendOrdersToReceivingAgent=catchAsync(async (req,res)=>{
+        const ordersIDs = OrdersReceiptsCreateSchema.parse(req.body);
+        const loggedInUser = res.locals.user as loggedInUserType;
+
+        if(loggedInUser.role === "CLIENT" && ordersIDs.selectedAll === true){
+            await prisma.order.updateMany(
+                {
+                    data:{
+                        status:"READY_TO_SEND"
+                    },
+                    where:{
+                        status:"REGISTERED",
+                        client:{
+                            id:loggedInUser.id
+                        }
+                    }
+                }
+            )
+            res.status(200).json({
+                status: "success",
+            });
+        }else{
+            await prisma.order.updateMany(
+                {
+                    data:{
+                        status:"READY_TO_SEND"
+                    },
+                    where:{
+                        status:"REGISTERED",
+                        client:{
+                            id:loggedInUser.id
+                        },
+                        id:{
+                            in:ordersIDs.ordersIDs
+                        }
+                    }
+                }
+            )
+            res.status(200).json({
+                status: "success",
+            });
+        }
+    })
 
     repositoryConfirmOrderByReceiptNumber = catchAsync(async (req, res) => {
         const params = {

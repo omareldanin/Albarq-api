@@ -408,6 +408,28 @@ router.route("/orders/:orderID").patch(
     */
 );
 
+router.route("/orders/sendOrders").post(
+    isLoggedIn,
+    isAutherized(
+        [...Object.values(AdminRole), ...Object.values(EmployeeRole), ...Object.values(ClientRole)],
+        [
+            Permission.CHANGE_CLOSED_ORDER_STATUS,
+            Permission.CHANGE_ORDER_BRANCH,
+            Permission.CHANGE_ORDER_CLIENT,
+            Permission.CHANGE_ORDER_COMPANY,
+            Permission.CHANGE_ORDER_DELIVERY_AGENT,
+            Permission.CHANGE_ORDER_STATUS,
+            Permission.CHANGE_ORDER_TOTAL_AMOUNT,
+            Permission.LOCK_ORDER_STATUS,
+            Permission.CHANGE_ORDER_DATA,
+            Permission.CHANGE_ORDER_PAID_AMOUNT,
+            Permission.CHANGE_ORDER_RECEIPT_NUMBER,
+            Permission.CHANGE_ORDER_RECEPIENT_NUMBER
+        ]
+    ),
+    ordersController.sendOrdersToReceivingAgent
+);
+
 //  تأكيد مباشر برقم الوصل في صفحة ادخال رواجع المخزن
 router.route("/orders/repository-confirm-order-by-receipt-number/:orderReceiptNumber").patch(
     isLoggedIn,
