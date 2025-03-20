@@ -1225,11 +1225,11 @@ export class OrdersService {
             },
             loggedInUser:data.loggedInUser
         });
-
-        let ordersStatisticsByStatus = statistics.ordersStatisticsByStatus.filter(status => status.status !== "READY_TO_SEND")
-
+        
+        let ordersStatisticsByStatus = statistics.ordersStatisticsByStatus
+        
         let deliveredOrders=ordersStatisticsByStatus.find(status => status.status === "DELIVERED") || {status:"DELIVERED",count:0,totalCost:0}
-
+        
         let registedOrders=ordersStatisticsByStatus.find(status => status.status === 'REGISTERED') || {status:"REGISTERED",count:0,totalCost:0}
 
         const pReturedOrders=ordersStatisticsByStatus.find(status => status.status === "PARTIALLY_RETURNED")
@@ -1257,16 +1257,17 @@ export class OrdersService {
 
         ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "IN_GOV_REPOSITORY")
         ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "IN_MAIN_REPOSITORY")
-
+        
         let deliveredIndex = ordersStatisticsByStatus.findIndex(status => status.status === "DELIVERED")
         let registeredIndex = ordersStatisticsByStatus.findIndex(status => status.status === "REGISTERED")
-
+        
         ordersStatisticsByStatus[deliveredIndex]=deliveredOrders
         ordersStatisticsByStatus[registeredIndex]=registedOrders
-
+        
         statistics={...statistics,
             ordersStatisticsByStatus:ordersStatisticsByStatus
         }
+
 
         if(data.loggedInUser.role === "DELIVERY_AGENT"){
             const ordersStatisticsByStatus = statistics.ordersStatisticsByStatus.filter(status => status.status !== "REGISTERED")

@@ -1866,7 +1866,7 @@ export class OrdersRepository {
                 }
             }
         });
-
+        
         return statisticsReformed({
             ordersStatisticsByStatus,
             ordersStatisticsByGovernorate,
