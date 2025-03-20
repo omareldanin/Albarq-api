@@ -299,6 +299,20 @@ export class EmployeesRepository {
                         }
                     }
                 },
+                inquiryClients:{
+                    select:{
+                        client:{
+                            select:{
+                                user:{
+                                    select:{
+                                        id: true,
+                                        name: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 inquiryGovernorates: true,
                 inquiryStatuses: true
             }
@@ -315,6 +329,9 @@ export class EmployeesRepository {
             }),
             inquiryStores: employee?.inquiryStores.map((store) => {
                 return store.store.id;
+            }),
+            inquiryClients: employee?.inquiryClients.map((client) => {
+                return client.client.user.id;
             }),
             inquiryGovernorates: employee?.inquiryGovernorates,
             inquiryStatuses: employee?.inquiryStatuses

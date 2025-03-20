@@ -990,6 +990,8 @@ export class OrdersService {
         let inquiryBranchesIDs: number[] | undefined = undefined;
         let inquiryStoresIDs: number[] | undefined = undefined;
         let inquiryCompaniesIDs: number[] | undefined = undefined;
+        let inquiryClientsIDs: number[] | undefined = undefined;
+
         if (data.loggedInUser.role === "INQUIRY_EMPLOYEE") {
             const inquiryEmployeeStuff = await employeesRepository.getInquiryEmployeeStuff({
                 employeeID: data.loggedInUser.id
@@ -1202,7 +1204,14 @@ export class OrdersService {
                         : undefined;
             }
         }
+        if(data.loggedInUser.role === "RECEIVING_AGENT"){
+            const inquiryEmployeeStuff = await employeesRepository.getInquiryEmployeeStuff({
+                employeeID: data.loggedInUser.id
+            });
 
+            inquiryClientsIDs = inquiryEmployeeStuff.inquiryClients && inquiryEmployeeStuff.inquiryClients.length > 0
+                                ? inquiryEmployeeStuff.inquiryClients : undefined
+        }
         // show orders/statistics without client reports to the client unless he searches for them
         let clientReport = data.filters.clientReport;
         if (data.loggedInUser.role === "CLIENT" && data.filters.clientReport !== true) {
@@ -1221,7 +1230,8 @@ export class OrdersService {
                 inquiryLocationsIDs,
                 inquiryBranchesIDs,
                 inquiryStoresIDs,
-                inquiryCompaniesIDs
+                inquiryCompaniesIDs,
+                inquiryClientsIDs
             },
             loggedInUser:data.loggedInUser
         });

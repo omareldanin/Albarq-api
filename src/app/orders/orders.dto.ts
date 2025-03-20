@@ -418,6 +418,7 @@ export const OrdersStatisticsFiltersSchema = z.object({
     inquiryLocationsIDs: z.array(z.coerce.number()).optional(),
     inquiryStoresIDs: z.array(z.coerce.number()).optional(),
     inquiryCompaniesIDs: z.array(z.coerce.number()).optional(),
+    inquiryClientsIDs: z.array(z.coerce.number()).optional(),
     inquiryDeliveryAgentsIDs: z.array(z.coerce.number()).optional(),
     inquiryGovernorates: z.array(z.nativeEnum(Governorate)).optional(),
     inquiryStatuses: z.array(z.nativeEnum(OrderStatus)).optional()

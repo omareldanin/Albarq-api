@@ -1603,7 +1603,9 @@ export class OrdersRepository {
                     status:data.loggedInUser.role === "DELIVERY_AGENT" ? 
                     {
                         notIn:["REGISTERED"]
-                    }: { in: data.filters.statuses }
+                    }: data.loggedInUser.role === "RECEIVING_AGENT" ? 
+                    { in:["READY_TO_SEND","WITH_RECEIVING_AGENT","RETURNED"]}: 
+                    { in: data.filters.statuses }
                 },
                 {
                     governorate: data.filters.governorate
@@ -1620,7 +1622,14 @@ export class OrdersRepository {
                 },
                 {
                     client: {
-                        id: data.filters.clientID
+                        id: data.filters.inquiryClientsIDs
+                        ? {
+                            in: [
+                                ...data.filters.inquiryClientsIDs
+                                //   data.filters.companyID as number
+                            ]
+                        }
+                        : data.filters.clientID
                     }
                 },
                 {
