@@ -401,8 +401,10 @@ export class OrdersService {
         ) {
             throw new AppError("ليس لديك صلاحية تعديل الطلب", 403);
         }
+        
+        console.log(data.orderData);
 
-        if (data.orderData.confirmed && data.loggedInUser.role !== "COMPANY_MANAGER" && data.loggedInUser.permissions?.includes("CONFIRM_ORDER")) {
+        if (data.orderData.confirmed && data.loggedInUser.role !== "COMPANY_MANAGER" && !data.loggedInUser.permissions?.includes("CONFIRM_ORDER")) {
             throw new AppError("ليس لديك صلاحية تأكيد الطلب", 403);
         }
 
