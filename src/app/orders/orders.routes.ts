@@ -296,6 +296,21 @@ router.route("/orders/statistics").get(
     */
 );
 
+router.route("/orders/clientStatistics").get(
+    isLoggedIn,
+    isAutherized([
+        AdminRole.ADMIN,
+        AdminRole.ADMIN_ASSISTANT,
+        EmployeeRole.COMPANY_MANAGER,
+        ClientRole.CLIENT,
+        EmployeeRole.CLIENT_ASSISTANT,
+        // TODO: Remove later
+        ...Object.values(EmployeeRole),
+        ...Object.values(ClientRole)
+    ]),
+    ordersController.getCLientOrdersStatistics
+);
+
 router.route("/orders/pdf").post(
     isLoggedIn,
     isAutherized([...Object.values(AdminRole), ...Object.values(EmployeeRole), ...Object.values(ClientRole)]),
@@ -429,6 +444,7 @@ router.route("/orders/sendOrders").post(
     ),
     ordersController.sendOrdersToReceivingAgent
 );
+
 
 //  تأكيد مباشر برقم الوصل في صفحة ادخال رواجع المخزن
 router.route("/orders/repository-confirm-order-by-receipt-number/:orderReceiptNumber").patch(

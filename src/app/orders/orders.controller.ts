@@ -15,6 +15,9 @@ import {
     OrdersStatisticsFiltersSchema
 } from "./orders.dto";
 import { OrdersService } from "./orders.service";
+import { EmployeesRepository } from "../employees/employees.repository";
+import { OrderStatus } from "@prisma/client";
+const employeesRepository = new EmployeesRepository();
 
 const ordersService = new OrdersService();
 
@@ -304,6 +307,56 @@ export class OrdersController {
             data: statistics
         });
     });
+
+    getCLientOrdersStatistics=catchAsync(async (req,res)=>{
+        const loggedInUser = res.locals.user as loggedInUserType;
+        const status=req.query.status;
+        let inquiryClientsIDs: number[] | undefined = undefined;
+        const inquiryEmployeeStuff = await employeesRepository.getInquiryEmployeeStuff({
+            employeeID: loggedInUser.id
+        });
+
+        inquiryClientsIDs = inquiryEmployeeStuff.inquiryClients && inquiryEmployeeStuff.inquiryClients.length > 0
+                            ? inquiryEmployeeStuff.inquiryClients : undefined
+
+        const clients = await prisma.client.findMany({
+            where: { id: { in: inquiryClientsIDs } },
+            select: { 
+                id: true, 
+                user:{
+                    select:{
+                        name:true
+                    }
+                }
+            }
+        });
+
+        const ordersStatisticsByStatus = await prisma.order.groupBy({
+            by: ["clientId"],
+            _count: {
+                id: true
+            },
+            where:{
+                status:status as OrderStatus,
+                client:{
+                    id:{
+                        in:inquiryClientsIDs
+                    }
+                }
+            }
+        })
+        
+        res.status(200).json({
+            status: "success",
+            data: ordersStatisticsByStatus.map(status => {
+                return({
+                    count:status._count.id,
+                    clientId:status.clientId,
+                    clientName:clients.find(client => +client.id === +status.clientId)?.user.name
+                })
+            })
+        });
+    })
 
     getOrderTimeline = catchAsync(async (req, res) => {
         const params = {
