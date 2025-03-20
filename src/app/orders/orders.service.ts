@@ -229,6 +229,7 @@ export class OrdersService {
             data.loggedInUser.role !== ClientRole.CLIENT &&
             data.loggedInUser.role !== EmployeeRole.CLIENT_ASSISTANT &&
             data.loggedInUser.role !== EmployeeRole.ACCOUNTANT &&
+            data.loggedInUser.role !== EmployeeRole.RECEIVING_AGENT &&
             data.loggedInUser.role !== EmployeeRole.ACCOUNT_MANAGER
         ) {
             const branch = await branchesRepository.getBranchManagerBranch({
