@@ -1719,15 +1719,6 @@ export class OrdersRepository {
             },
             where: {
                 ...filtersReformed,
-                // AND:data.loggedInUser.role === "DELIVERY_AGENT" ?
-                //     [
-                //         {
-                //             OR: [
-                //               { secondaryStatus: { notIn: ["IN_REPOSITORY", "WITH_CLIENT"] } },
-                //               { secondaryStatus: null }
-                //             ]
-                //         }
-                //     ]:undefined,
                 OR:data.loggedInUser.role === "CLIENT"?
                     [
                         { clientReport: { is: null } },

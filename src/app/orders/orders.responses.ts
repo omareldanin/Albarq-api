@@ -352,6 +352,9 @@ export const statisticsReformed = (statistics: {
     };
 }) => {
     const sortingOrder = [
+        "REGISTERED",
+        "READY_TO_SEND",
+        "WITH_RECEIVING_AGENT",
         "WITH_DELIVERY_AGENT",
         "POSTPONED",
         "RESEND",
@@ -361,9 +364,6 @@ export const statisticsReformed = (statistics: {
         "REPLACED",
         "CHANGE_ADDRESS",
         "RETURNED",
-        "REGISTERED",
-        "WITH_RECEIVING_AGENT",
-        "READY_TO_SEND"
     ];
 
     const statisticsReformed = {

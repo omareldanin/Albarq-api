@@ -1,4 +1,4 @@
-import type { OrderStatus, Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 export const employeeSelect = {
     salary: true,
