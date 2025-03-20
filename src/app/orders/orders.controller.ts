@@ -228,7 +228,6 @@ export class OrdersController {
         // Set headers for a PDF response
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename=generated.pdf');
-        console.log('PDF size:', pdfBuffer.length);
 
         res.send(pdfBuffer);
     });

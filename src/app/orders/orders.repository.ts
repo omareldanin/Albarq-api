@@ -909,7 +909,10 @@ export class OrdersRepository {
                             { companyReport: { report: { deleted: true } } }
                         ]
                     },
-                    select: orderSelect
+                    select: orderSelect,
+                    orderBy:{
+                        createdAt:"desc",
+                    }
                 },
                 {
                     page: data.filters.page,
