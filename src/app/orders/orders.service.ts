@@ -402,8 +402,6 @@ export class OrdersService {
             throw new AppError("ليس لديك صلاحية تعديل الطلب", 403);
         }
         
-        console.log(data.orderData);
-
         if (data.orderData.confirmed && data.loggedInUser.role !== "COMPANY_MANAGER" && !data.loggedInUser.permissions?.includes("CONFIRM_ORDER")) {
             throw new AppError("ليس لديك صلاحية تأكيد الطلب", 403);
         }
@@ -516,6 +514,9 @@ export class OrdersService {
             data.orderData.branchID = branch.id;
         }
 
+        if(data.orderData.secondaryStatus === oldOrderData.secondaryStatus && data.orderData.status === oldOrderData.status){
+            throw new AppError("لقد تم اضافه هذا الطلب مسبقا", 403);
+        }
         const newOrder = await ordersRepository.updateOrder({
             orderID: data.params.orderID,
             loggedInUser: data.loggedInUser,

@@ -16,7 +16,9 @@ import {
 } from "./orders.dto";
 import { OrdersService } from "./orders.service";
 import { EmployeesRepository } from "../employees/employees.repository";
-import { OrderStatus } from "@prisma/client";
+import { Governorate, OrderStatus } from "@prisma/client";
+import { orderReform, orderSelect } from "./orders.responses";
+import { AppError } from "../../lib/AppError";
 const employeesRepository = new EmployeesRepository();
 
 const ordersService = new OrdersService();
@@ -107,6 +109,63 @@ export class OrdersController {
         });
     });
 
+    getRepositoryOrders=catchAsync(async (req,res)=>{
+        const {client_id,size,page,store_id,repository_id,governorate}=req.query
+
+        const loggedInUser=res.locals.user as loggedInUserType
+
+        const user=await prisma.employee.findUnique({
+            where:{
+                id:loggedInUser.id
+            },
+            select:{
+                repository:{
+                    select:{
+                        id:true,
+                        name:true,
+                        mainRepository:true
+                    }
+                }
+            }
+        })
+
+        if(!user){
+            throw new AppError("حسابك غير موجود", 404);
+        }
+
+        if(!user.repository){
+            throw new AppError("حسابك غير مرتبط بمخزن", 404);
+        }
+
+        const results=await prisma.order.findManyPaginated({
+            where:{
+                repositoryId:repository_id ? Number(repository_id) : user.repository.id,
+                secondaryStatus:"IN_REPOSITORY",
+                storeId:store_id ? Number(store_id):undefined,
+                clientId:client_id ? Number(client_id):undefined,
+                governorate:governorate ? governorate as Governorate:undefined
+            },
+            orderBy: {
+                updatedAt:"desc"
+            },
+            select:orderSelect
+        },{
+            page:page ? +page : 1,
+            size:size ? +size: 10
+        })
+        const newData = results.data.map(order => orderReform(order))
+        
+        res.status(200).json({
+            status: "success",
+            data: {
+                count:results.dataCount,
+                pageCount:results.pagesCount,
+                currentPage:results.currentPage,
+                orders:newData
+            }
+        });
+    })
+
     getOrder = catchAsync(async (req, res) => {
         const params = {
             orderID: +req.params.orderID
@@ -187,7 +246,75 @@ export class OrdersController {
             });
         }
     })
+    
+    addOrderToRepository=catchAsync(async(req,res)=>{
+        const params = {
+            orderID: +req.params.orderID
+        };
+        const loggedInUser = res.locals.user as loggedInUserType;
 
+        const orderData = OrderUpdateSchema.parse(req.body);
+
+        const user=await prisma.employee.findUnique({
+            where:{
+                id:loggedInUser.id
+            },
+            select:{
+                repository:{
+                    select:{
+                        id:true,
+                        name:true,
+                        mainRepository:true
+                    }
+                }
+            }
+        })
+
+        
+        if(!user){
+            throw new AppError("حسابك غير موجود", 404);
+        }
+
+        if(!user.repository && !orderData.repositoryID){
+            throw new AppError("حسابك غير مرتبط بمخزن", 404);
+        }
+
+        if(!orderData.repositoryID){
+            orderData.repositoryID = user.repository?.id
+            if(user.repository?.mainRepository){
+                orderData.status="IN_MAIN_REPOSITORY"
+            }else{
+                orderData.status="IN_GOV_REPOSITORY"
+            }
+        }else{
+            const repository=await prisma.repository.findUnique({
+                where:{
+                    id:orderData.repositoryID
+                },
+                select:{
+                    mainRepository:true
+                }
+            })
+
+            if(repository?.mainRepository){
+                orderData.status="IN_MAIN_REPOSITORY"
+            }else{
+                orderData.status="IN_GOV_REPOSITORY"
+            }
+        }
+        
+        const order = await ordersService.updateOrder({
+            params: params,
+            orderData: orderData,
+            loggedInUser: loggedInUser
+        });
+
+        res.status(200).json({
+            status: "success",
+            data: order
+        });
+
+    })
     repositoryConfirmOrderByReceiptNumber = catchAsync(async (req, res) => {
         const params = {
             orderReceiptNumber: +req.params.orderReceiptNumber

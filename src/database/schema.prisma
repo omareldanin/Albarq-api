@@ -428,6 +428,7 @@ model Repository {
   name              String             @unique
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //
   branchId          Int
+  mainRepository    Boolean            @default(false)
   // --- RELATIONS --------------------------------------------------------------------------- //
   branch            Branch             @relation(fields: [branchId], references: [id])
   employees         Employee[]

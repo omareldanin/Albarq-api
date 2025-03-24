@@ -54,6 +54,7 @@ router.route("/stores").get(
         EmployeeRole.ACCOUNTANT,
         EmployeeRole.DATA_ENTRY,
         EmployeeRole.BRANCH_MANAGER,
+        EmployeeRole.REPOSITORIY_EMPLOYEE,
         ClientRole.CLIENT,
         EmployeeRole.CLIENT_ASSISTANT,
         //TODO: Remove later

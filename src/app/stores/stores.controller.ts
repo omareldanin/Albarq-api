@@ -58,8 +58,8 @@ export class StoresController {
             loggedInUser.role !== EmployeeRole.COMPANY_MANAGER &&
             loggedInUser.role !== AdminRole.ADMIN &&
             loggedInUser.role !== AdminRole.ADMIN_ASSISTANT &&
-            loggedInUser.role !== ClientRole.CLIENT &&
-            loggedInUser.role !== EmployeeRole.CLIENT_ASSISTANT
+            loggedInUser.role !== EmployeeRole.BRANCH_MANAGER &&
+            loggedInUser.role !== EmployeeRole.REPOSITORIY_EMPLOYEE
         ) {
             const employee = await employeesRepository.getEmployee({ employeeID: loggedInUser.id });
             branchID = employee?.branch?.id;

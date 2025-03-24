@@ -8,6 +8,7 @@ export class RepositoriesRepository {
         const createdRepository = await prisma.repository.create({
             data: {
                 name: data.name,
+                mainRepository:data.mainRepository ? true :false,
                 branch: {
                     connect: {
                         id: data.branchID
@@ -93,7 +94,8 @@ export class RepositoriesRepository {
                 id: data.repositoryID
             },
             data: {
-                name: data.repositoryData.name
+                name: data.repositoryData.name,
+                mainRepository:data.repositoryData.mainRepository ? true:false
             },
             select: repositorySelect
         });

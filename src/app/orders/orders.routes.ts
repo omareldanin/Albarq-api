@@ -311,6 +311,22 @@ router.route("/orders/clientStatistics").get(
     ordersController.getCLientOrdersStatistics
 );
 
+router.route("/orders/repositoryOrders").get(
+    isLoggedIn,
+    isAutherized([
+        AdminRole.ADMIN,
+        AdminRole.ADMIN_ASSISTANT,
+        EmployeeRole.COMPANY_MANAGER,
+        EmployeeRole.REPOSITORIY_EMPLOYEE,
+        EmployeeRole.BRANCH_MANAGER,
+        EmployeeRole.ACCOUNT_MANAGER,
+        // TODO: Remove later
+        ...Object.values(EmployeeRole),
+        ...Object.values(ClientRole)
+    ]),
+    ordersController.getRepositoryOrders
+);
+
 router.route("/orders/pdf").post(
     isLoggedIn,
     isAutherized([...Object.values(AdminRole), ...Object.values(EmployeeRole), ...Object.values(ClientRole)]),
@@ -446,7 +462,16 @@ router.route("/orders/sendOrders").post(
 );
 
 
-//  تأكيد مباشر برقم الوصل في صفحة ادخال رواجع المخزن
+//  تأكيد مباشر برقم الطل في صفحة ادخال الطلبات المخزن
+router.route("/orders/addOrderToRepository/:orderID").patch(
+    isLoggedIn,
+    isAutherized([...Object.values(AdminRole), ...Object.values(EmployeeRole), ...Object.values(ClientRole)]),
+    ordersController.addOrderToRepository
+    /*
+        #swagger.tags = ['Orders Routes']
+    */
+);
+
 router.route("/orders/repository-confirm-order-by-receipt-number/:orderReceiptNumber").patch(
     isLoggedIn,
     isAutherized([...Object.values(AdminRole), ...Object.values(EmployeeRole), ...Object.values(ClientRole)]),
@@ -455,7 +480,6 @@ router.route("/orders/repository-confirm-order-by-receipt-number/:orderReceiptNu
         #swagger.tags = ['Orders Routes']
     */
 );
-
 router.route("/orders/:orderID").delete(
     isLoggedIn,
     isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),

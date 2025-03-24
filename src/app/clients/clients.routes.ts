@@ -54,9 +54,9 @@ router.route("/clients").get(
         EmployeeRole.ACCOUNTANT,
         EmployeeRole.DATA_ENTRY,
         EmployeeRole.BRANCH_MANAGER,
+        EmployeeRole.REPOSITORIY_EMPLOYEE,
         //TODO: Remove later
         ...Object.values(EmployeeRole),
-        ...Object.values(ClientRole)
     ]),
     clientsController.getAllClients
     /*
