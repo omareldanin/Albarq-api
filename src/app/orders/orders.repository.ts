@@ -1043,7 +1043,7 @@ export class OrdersRepository {
         
         return {
             orders: ordersReformed,
-            ordersMetaData: ordersMetaDataReformed,
+            ordersMetaData: where,
             pagesCount: paginatedOrders.pagesCount
         };
     }
