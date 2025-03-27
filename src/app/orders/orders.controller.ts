@@ -16,7 +16,7 @@ import {
 } from "./orders.dto";
 import { OrdersService } from "./orders.service";
 import { EmployeesRepository } from "../employees/employees.repository";
-import { Governorate, OrderStatus } from "@prisma/client";
+import { Governorate, OrderStatus, SecondaryStatus } from "@prisma/client";
 import { orderReform, orderSelect } from "./orders.responses";
 import { AppError } from "../../lib/AppError";
 const employeesRepository = new EmployeesRepository();
@@ -110,7 +110,7 @@ export class OrdersController {
     });
 
     getRepositoryOrders=catchAsync(async (req,res)=>{
-        const {client_id,size,page,store_id,repository_id,governorate}=req.query
+        const {client_id,size,page,store_id,repository_id,governorate,secondaryStatus,status}=req.query
 
         const loggedInUser=res.locals.user as loggedInUserType
 
@@ -139,11 +139,13 @@ export class OrdersController {
 
         const results=await prisma.order.findManyPaginated({
             where:{
-                repositoryId:repository_id ? Number(repository_id) : user.repository.id,
-                secondaryStatus:"IN_REPOSITORY",
+                repositoryId:repository_id ? Number(repository_id) :secondaryStatus === 'IN_CAR'? undefined : user.repository.id,
+                secondaryStatus:secondaryStatus as SecondaryStatus,
+                status:status as OrderStatus,
                 storeId:store_id ? Number(store_id):undefined,
                 clientId:client_id ? Number(client_id):undefined,
-                governorate:governorate ? governorate as Governorate:undefined
+                governorate:governorate ? governorate as Governorate:undefined,
+                forwardedRepo:secondaryStatus === 'IN_CAR'?user.repository.id:undefined
             },
             orderBy: {
                 updatedAt:"desc"
@@ -153,6 +155,7 @@ export class OrdersController {
             page:page ? +page : 1,
             size:size ? +size: 10
         })
+
         const newData = results.data.map(order => orderReform(order))
         
         res.status(200).json({
@@ -270,7 +273,6 @@ export class OrdersController {
             }
         })
 
-        
         if(!user){
             throw new AppError("حسابك غير موجود", 404);
         }
@@ -279,30 +281,63 @@ export class OrdersController {
             throw new AppError("حسابك غير مرتبط بمخزن", 404);
         }
 
-        if(!orderData.repositoryID){
-            orderData.repositoryID = user.repository?.id
+        const oldOrder=await prisma.order.findUnique({
+            where:{
+                id:params.orderID
+            },
+            select:{
+                repository:{
+                    select:{
+                        id:true,
+                        mainRepository:true,
+                        branchId:true
+                    }
+                },
+                branchId:true,
+                forwardedToMainRepo:true,
+            }
+        })
+        if(orderData.secondaryStatus === "IN_CAR"){
             if(user.repository?.mainRepository){
-                orderData.status="IN_MAIN_REPOSITORY"
+                const repository = await prisma.repository.findFirst({
+                    where:{
+                        id:orderData.repositoryID
+                    },
+                    select:{
+                        branchId:true
+                    }
+                })
+                if(repository?.branchId !== oldOrder?.branchId){
+                    throw new AppError("الطلب غير مرتبط بهذا الفرع", 400)
+                }
+                orderData.forwardedRepo=user.repository?.id
             }else{
-                orderData.status="IN_GOV_REPOSITORY"
+                const mainRepository=await prisma.repository.findFirst({
+                    where:{
+                        mainRepository:true
+                    },
+                    select:{
+                        id:true
+                    }
+                })
+                orderData.repositoryID = mainRepository?.id
+                orderData.forwardedRepo=user.repository?.id
             }
         }else{
-            const repository=await prisma.repository.findUnique({
-                where:{
-                    id:orderData.repositoryID
-                },
-                select:{
-                    mainRepository:true
-                }
-            })
+            orderData.repositoryID=user.repository?.id
+        }
 
-            if(repository?.mainRepository){
-                orderData.status="IN_MAIN_REPOSITORY"
-            }else{
-                orderData.status="IN_GOV_REPOSITORY"
+
+        if(oldOrder?.repository && oldOrder.repository.id !== user.repository?.id){
+            throw new AppError("هذا الطلب لم يتم تحويله اليك!", 404);
+        }
+
+        if(orderData.forwardedToMainRepo){
+            if(oldOrder?.repository?.id !== user.repository?.id){
+                throw new AppError("هذا الطلب غير موجود بالمخزن", 404);
             }
         }
-        
+
         const order = await ordersService.updateOrder({
             params: params,
             orderData: orderData,
@@ -315,6 +350,7 @@ export class OrdersController {
         });
 
     })
+
     repositoryConfirmOrderByReceiptNumber = catchAsync(async (req, res) => {
         const params = {
             orderReceiptNumber: +req.params.orderReceiptNumber

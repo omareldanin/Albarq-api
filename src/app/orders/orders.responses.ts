@@ -28,6 +28,7 @@ export const orderSelect = {
     // timeline: true,
     processed: true,
     processedAt: true,
+    forwardedRepo:true,
     processedBy: {
         select: {
             user: {
@@ -203,6 +204,8 @@ export const orderSelect = {
     },
     deleted: true,
     deletedAt: true,
+    forwardedToGov:true,
+    forwardedToMainRepo:true,
     deletedBy: {
         select: {
             id: true,

@@ -62,9 +62,9 @@ export class OrdersService {
                 if (!clientID) {
                     throw new AppError("حصل حطأ في ايجاد صاحب المتجر", 500);
                 }
-                const deliveryAgentID = await employeesRepository.getDeliveryAgentIDByLocationID({
-                    locationID: order.locationID
-                });
+                // const deliveryAgentID = await employeesRepository.getDeliveryAgentIDByLocationID({
+                //     locationID: order.locationID
+                // });
                 let branchID = undefined;
                 const branch = await branchesRepository.getBranchByLocation({
                     locationID: order.locationID
@@ -76,7 +76,6 @@ export class OrdersService {
                 const createdOrder = await ordersRepository.createOrder({
                     companyID: data.loggedInUser.companyID as number,
                     clientID,
-                    deliveryAgentID,
                     loggedInUser: data.loggedInUser,
                     orderData: { ...order, confirmed, status, branchID }
                 });
@@ -150,9 +149,9 @@ export class OrdersService {
             throw new AppError("حصل خطأ في ايجاد صاحب المتجر", 500);
         }
 
-        const deliveryAgentID = await employeesRepository.getDeliveryAgentIDByLocationID({
-            locationID: data.orderOrOrdersData.locationID
-        });
+        // const deliveryAgentID = await employeesRepository.getDeliveryAgentIDByLocationID({
+        //     locationID: data.orderOrOrdersData.locationID
+        // });
 
         let branchID = undefined;
         const branch = await branchesRepository.getBranchByLocation({
@@ -168,7 +167,6 @@ export class OrdersService {
         const createdOrder = await ordersRepository.createOrder({
             companyID: data.loggedInUser.companyID as number,
             clientID,
-            deliveryAgentID,
             loggedInUser: data.loggedInUser,
             orderData: { ...data.orderOrOrdersData, confirmed, status, branchID }
         });
@@ -517,6 +515,7 @@ export class OrdersService {
         if(data.orderData.secondaryStatus === oldOrderData.secondaryStatus && data.orderData.status === oldOrderData.status){
             throw new AppError("لقد تم اضافه هذا الطلب مسبقا", 403);
         }
+        
         const newOrder = await ordersRepository.updateOrder({
             orderID: data.params.orderID,
             loggedInUser: data.loggedInUser,
@@ -1273,7 +1272,7 @@ export class OrdersService {
         registedOrders.totalCost += gOrders?.totalCost ? gOrders.totalCost : 0
 
         registedOrders.count += rOrders?.count ? rOrders.count : 0
-        registedOrders.count += rOrders?.totalCost ? rOrders.totalCost : 0
+        registedOrders.totalCost += rOrders?.totalCost ? rOrders.totalCost : 0
 
         ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "IN_GOV_REPOSITORY")
         ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "IN_MAIN_REPOSITORY")

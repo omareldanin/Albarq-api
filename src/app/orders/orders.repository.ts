@@ -23,7 +23,6 @@ export class OrdersRepository {
     async createOrder(data: {
         companyID: number;
         clientID: number;
-        deliveryAgentID?: number;
         loggedInUser: loggedInUserType;
         orderData: OrderCreateType;
     }) {
@@ -311,7 +310,7 @@ export class OrdersRepository {
                 confirmed: data.orderData.forwardedCompanyID ? false : data.orderData.confirmed,
                 status:"REGISTERED",
                 secondaryStatus:"WITH_CLIENT",
-                deliveryAgent: data.deliveryAgentID ? { connect: { id: data.deliveryAgentID } } : undefined,
+                deliveryAgent: undefined,
                 orderProducts:
                     data.orderData.withProducts === false
                         ? undefined
@@ -527,7 +526,7 @@ export class OrdersRepository {
                 {
                     status: data.filters.statuses ? { in: data.filters.statuses } : undefined
                 },
-                {
+                { 
                     status: data.filters.status
                 },
                 // Filter by deliveryType
@@ -1405,6 +1404,9 @@ export class OrdersRepository {
                 confirmed: data.orderData.forwardedCompanyID ? false : data.orderData.confirmed,
                 details: data.orderData.details,
                 deliveryDate: data.orderData.deliveryDate,
+                forwardedToMainRepo:data.orderData.status ==="IN_MAIN_REPOSITORY" ? false:data.orderData.forwardedToMainRepo,
+                forwardedToGov:data.orderData.forwardedToGov,
+                forwardedRepo:data.orderData.secondaryStatus=== "IN_REPOSITORY" ? null:data.orderData.forwardedRepo,
                 company: {
                     connect: {
                         id: data.orderData.forwardedCompanyID

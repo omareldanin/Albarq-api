@@ -22,6 +22,12 @@ export const userSelect = {
                     logo: true,
                     mainCompany: true
                 }
+            },
+            repository:{
+                select:{
+                    id:true,
+                    mainRepository:true
+                }
             }
         }
     },
@@ -37,7 +43,7 @@ export const userSelect = {
                 }
             }
         }
-    }
+    },
 } satisfies Prisma.UserSelect;
 
 export const userReform = (
@@ -56,6 +62,7 @@ export const userReform = (
         companyID: user.employee?.company.id || user.client?.company.id || null,
         companyName: user.employee?.company.name || user.client?.company.name || null,
         mainCompany: user.employee?.company.mainCompany ?? user.client?.company.mainCompany ?? null,
+        mainRepository:user.employee?.repository?.mainRepository,
         role: (user.admin?.role || user.employee?.role || user.client?.role) as
             | AdminRole
             | EmployeeRole

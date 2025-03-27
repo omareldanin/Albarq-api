@@ -38,6 +38,10 @@ export const localizeOrderStatus = (text: OrderStatus): string => {
             return "عند مندوب الاستلام";
         case "PROCESSING":
             return "قيد المعالجه";
+        case "IN_GOV_REPOSITORY":
+            return "في مخزن فرز المحافظه";
+        case "IN_MAIN_REPOSITORY":
+            return "في مخزن الفرز الرئيسي";
         default:
             return text;
     }

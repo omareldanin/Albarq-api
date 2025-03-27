@@ -91,7 +91,10 @@ export const OrderUpdateSchema = z
         currentLocation: z.string(),
         clientID: z.coerce.number(),
         inquiryEmployeesIDs: z.array(z.coerce.number()),
-        forwardedCompanyID: z.coerce.number().optional()
+        forwardedCompanyID: z.coerce.number().optional(),
+        forwardedToMainRepo:z.boolean().optional(),
+        forwardedToGov:z.boolean().optional(),
+        forwardedRepo: z.coerce.number().optional()
     })
     .partial();
 

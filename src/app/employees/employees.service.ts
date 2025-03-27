@@ -65,7 +65,7 @@ export class EmployeesService {
         // Only show delivery agents from the branch of the logged in branch manager
         let branchID: number | undefined;
         let role: EmployeeRole | undefined;
-        if (data.loggedInUser.role === EmployeeRole.BRANCH_MANAGER) {
+        if (data.loggedInUser.role === EmployeeRole.BRANCH_MANAGER || data.loggedInUser.role === EmployeeRole.REPOSITORIY_EMPLOYEE) {
             const branch = await branchesRepository.getBranchManagerBranch({
                 branchManagerID: data.loggedInUser.id
             });

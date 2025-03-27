@@ -114,6 +114,7 @@ enum SecondaryStatus {
   WITH_AGENT
   WITH_RECEIVING_AGENT
   IN_REPOSITORY
+  IN_CAR
 }
 
 enum DeliveryType {
@@ -593,6 +594,8 @@ model Order {
   status                 OrderStatus              @default(REGISTERED)
   secondaryStatus        SecondaryStatus?
   confirmed              Boolean                  @default(false)
+  forwardedToMainRepo    Boolean?                 @default(false)
+  forwardedToGov         Boolean?                 @default(false)
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //
   clientId               Int
   deliveryAgentId        Int?
@@ -600,6 +603,7 @@ model Order {
   locationId             Int
   storeId                Int
   repositoryId           Int?
+  forwardedRepo          Int?
   clientOrderReceiptId   Int?                     @unique
   branchId               Int?
   automaticUpdateId      Int?
