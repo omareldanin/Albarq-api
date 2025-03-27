@@ -578,18 +578,18 @@ export class OrdersRepository {
                         id: data.filters.locationID
                     }
                 },
-                {
-                    AND:data.loggedInUser?.role === "DELIVERY_AGENT" ?
-                    [
-                        {status:{notIn:["RETURNED","REGISTERED"]}},
-                        {
-                            OR: [
-                            { secondaryStatus: { notIn: ["IN_REPOSITORY", "WITH_CLIENT"] } },
-                            { secondaryStatus: null }
-                            ]
-                        }
-                    ]:undefined
-                },
+                // {
+                //     AND:data.loggedInUser?.role === "DELIVERY_AGENT" ?
+                //     [
+                //         {status:{notIn:["RETURNED","REGISTERED"]}},
+                //         {
+                //             OR: [
+                //             { secondaryStatus: { notIn: ["IN_REPOSITORY", "WITH_CLIENT"] } },
+                //             { secondaryStatus: null }
+                //             ]
+                //         }
+                //     ]:undefined
+                // },
                 // Filter by receiptNumber
                 {
                     receiptNumber: data.filters.receiptNumber
