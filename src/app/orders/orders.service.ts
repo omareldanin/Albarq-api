@@ -1268,11 +1268,11 @@ export class OrdersService {
         ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "PARTIALLY_RETURNED")
         ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "REPLACED")
 
-        registedOrders.count += gOrders?.count ? gOrders.count : 0
-        registedOrders.totalCost += gOrders?.totalCost ? gOrders.totalCost : 0
+        // registedOrders.count += gOrders?.count ? gOrders.count : 0
+        // registedOrders.totalCost += gOrders?.totalCost ? gOrders.totalCost : 0
 
-        registedOrders.count += rOrders?.count ? rOrders.count : 0
-        registedOrders.totalCost += rOrders?.totalCost ? rOrders.totalCost : 0
+        // registedOrders.count += rOrders?.count ? rOrders.count : 0
+        // registedOrders.totalCost += rOrders?.totalCost ? rOrders.totalCost : 0
 
         ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "IN_GOV_REPOSITORY")
         ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "IN_MAIN_REPOSITORY")
