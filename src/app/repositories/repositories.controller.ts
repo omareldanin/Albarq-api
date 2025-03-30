@@ -1,9 +1,11 @@
-import { AdminRole, EmployeeRole } from "@prisma/client";
+import { AdminRole, EmployeeRole, RepositoryType } from "@prisma/client";
 import { catchAsync } from "../../lib/catchAsync";
 import type { loggedInUserType } from "../../types/user";
 import { BranchesRepository } from "../branches/branches.repository";
 import { RepositoryCreateSchema, RepositoryUpdateSchema } from "./repositories.dto";
 import { RepositoriesRepository } from "./repositories.repository";
+import { prisma } from "../../database/db";
+import { AppError } from "../../lib/AppError";
 
 const repositoriesRepository = new RepositoriesRepository();
 const branchesRepository = new BranchesRepository();
@@ -13,6 +15,19 @@ export class RepositoriesController {
         const repositoryData = RepositoryCreateSchema.parse(req.body);
         const companyID = +res.locals.user.companyID;
 
+        const repository=await prisma.repository.findFirst({
+            where: {
+                branchId:repositoryData.branchID,
+                type:repositoryData.type
+            },
+            select:{
+                id:true
+            }
+        })
+
+        if(repository){
+            throw new AppError(repositoryData.type === "EXPORT" ? "لقد تم انشاء مخزن صادر لهذا الفرع مسبقا":"لقد تم انشاء مخزن راجع لهذا الفرع مسبقا", 404);
+        }
         const createdRepository = await repositoriesRepository.createRepository(companyID, repositoryData);
 
         res.status(200).json({
@@ -23,6 +38,7 @@ export class RepositoriesController {
 
     getAllRepositories = catchAsync(async (req, res) => {
         // Filters
+        const {type}=req.query
         const loggedInUser = res.locals.user as loggedInUserType;
         let companyID: number | undefined;
         if (Object.keys(AdminRole).includes(loggedInUser.role)) {
@@ -57,7 +73,8 @@ export class RepositoriesController {
             size: size,
             companyID: companyID,
             branchID: branchID,
-            minified: minified
+            minified: minified,
+            type:type as RepositoryType
         });
 
         res.status(200).json({

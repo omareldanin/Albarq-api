@@ -17,7 +17,7 @@ export class CustomerOutputController{
     saveOrderInCache=catchAsync(async (req,res)=>{
         const loggedInUser = res.locals.user as loggedInUserType;
         
-        const {orderId,clientId,companyId,type,storeId}=req.body
+        const {orderId,clientId,companyId,type,repository,storeId}=req.body
 
         let order=await prisma.order.findFirst({
             where:{
@@ -39,7 +39,7 @@ export class CustomerOutputController{
             
             throw new AppError("هذا الطلب غير تابع لهذا العميل", 404);
         }
-        
+
         if(type === "client" && +storeId !== +order.store.id){
             
             throw new AppError("هذا الطلب غير تابع لهذا المتجر", 404);
@@ -77,7 +77,8 @@ export class CustomerOutputController{
                 clientId:clientId ? clientId :null,
                 storeId:storeId ? storeId :null,
                 companyId:companyId ? companyId : null,
-                repositoryId:userRepository.repositoryId
+                repositoryId:userRepository.repositoryId,
+                targetRepositoryId:repository ? repository :null
             }
         })
 
@@ -87,7 +88,7 @@ export class CustomerOutputController{
     })
 
     getCustomerOldData=catchAsync(async(req,res)=>{
-        const {clientId,companyId,size,page,type,storeId}=req.query
+        const {clientId,companyId,size,page,type,repository,storeId}=req.query
         
         const loggedInUser = res.locals.user as loggedInUserType;
         
@@ -103,13 +104,15 @@ export class CustomerOutputController{
         if(!userRepository){
             throw new AppError("حسابك غير مرتبط بمخزن", 404);
         }
-
+            
         const results = await prisma.customerOutput.findManyPaginated({
                 where:{
                     AND:[
                         {repositoryId:userRepository.repositoryId},
-                        type === "client" ? {storeId:storeId ? +storeId:null}:{},
-                        type === "client" ? {clientId:clientId ? +clientId:null}:{companyId:companyId? +companyId:null}
+                        type === "client" ? {clientId:clientId ? +clientId:undefined}:
+                        type === "company" ? {companyId:companyId? +companyId:undefined}:
+                        {targetRepositoryId:repository? +repository:undefined},
+                        {storeId:storeId && type === "client" ? +storeId:undefined},
                     ]
                 },
                 orderBy: {
@@ -140,7 +143,7 @@ export class CustomerOutputController{
     })
 
     saveAndCreateReport=catchAsync(async(req,res)=>{
-        const {clientId,companyId,type,storeId}=req.body;
+        const {clientId,companyId,type,storeId,repositoryId,repositoryName}=req.body;
 
         let ordersIDs: number[] = [];
 
@@ -155,7 +158,7 @@ export class CustomerOutputController{
             }
         })
 
-        if(!userRepository){
+        if(!userRepository?.repositoryId){
             throw new AppError("حسابك غير مرتبط بمخزن", 404);
         }
         const results = await prisma.customerOutput.findManyPaginated({
@@ -163,7 +166,9 @@ export class CustomerOutputController{
                     AND:[
                         {repositoryId:userRepository.repositoryId},
                         type === "client" ? {storeId:storeId ? +storeId:null}:{},
-                        type === "client" ? {clientId:clientId ? +clientId:null}:{companyId:companyId? +companyId:null}
+                        type === "client" ? {clientId:clientId ? +clientId:null}:
+                        type === "company"?{companyId:companyId? +companyId:null}:
+                        {targetRepositoryId:repositoryId}
                     ]
                 },
                 select:{
@@ -221,13 +226,16 @@ export class CustomerOutputController{
         const report = await reportsRepository.createReport({
             loggedInUser:loggedInUser,
             reportData:{
-                type:type === "client"?"CLIENT":"COMPANY",
+                type:type === "client" ? "CLIENT" : type === "company" ? "COMPANY":"REPOSITORY",
                 secondaryType:"RETURNED",
                 clientID:clientId,
                 companyID:companyId,
                 baghdadDeliveryCost:0,
                 governoratesDeliveryCost:0,
                 storeID:storeId,
+                repositoryID:userRepository.repositoryId,
+                repositoryName:repositoryName,
+                targetRepositoryId:repositoryId,
                 ordersIDs:ordersIDs
             },
             reportMetaData: reportMetaData
@@ -258,7 +266,9 @@ export class CustomerOutputController{
                 AND:[
                     {repositoryId:userRepository.repositoryId},
                     type === "client" ? {storeId:storeId ? +storeId:null}:{},
-                    type === "client" ? {clientId:clientId ? +clientId:null}:{companyId:companyId? +companyId:null}
+                    type === "client" ? {clientId:clientId ? +clientId:null}:
+                    type === "company"?{companyId:companyId? +companyId:null}:
+                    {targetRepositoryId:repositoryId}
                 ]
             }
         })
@@ -290,19 +300,18 @@ export class CustomerOutputController{
                         id: loggedInUser.id,
                         name: loggedInUser.name
                     },
-                    message: `تم انشاء كشف ${localizeReportType(reportData?.type)} برقم ${reportData?.id}`
+                    message: `تم انشاء كشف راجع ${localizeReportType(reportData?.type)} برقم ${reportData?.id}`
                 }
             });
         }
 
         // TODO
-        const pdf = await generateReport(type === "client"?"CLIENT":"COMPANY", reportData, orders);
+        const pdf = await generateReport(type === "client"?"CLIENT":type === "company"?"COMPANY":"REPOSITORY", reportData, orders);
 
         const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
         // Set headers for a PDF response
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename=generated.pdf');
-        console.log('PDF size:', pdfBuffer.length);
 
         res.send(pdfBuffer);
     })

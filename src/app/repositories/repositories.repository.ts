@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma, RepositoryType } from "@prisma/client";
 import { prisma } from "../../database/db";
 import type { RepositoryCreateType, RepositoryUpdateType } from "./repositories.dto";
 import { repositorySelect } from "./repositories.responses";
@@ -9,6 +9,7 @@ export class RepositoriesRepository {
             data: {
                 name: data.name,
                 mainRepository:data.mainRepository ? true :false,
+                type:data.type,
                 branch: {
                     connect: {
                         id: data.branchID
@@ -31,6 +32,7 @@ export class RepositoriesRepository {
         companyID?: number;
         branchID?: number;
         minified?: boolean;
+        type:string
     }) {
         const where = {
             branch: {
@@ -38,7 +40,8 @@ export class RepositoriesRepository {
             },
             company: {
                 id: filters.companyID
-            }
+            },
+            type:filters.type ? filters.type as RepositoryType :undefined
         } satisfies Prisma.RepositoryWhereInput;
 
         if (filters.minified === true) {
@@ -47,7 +50,9 @@ export class RepositoriesRepository {
                     where: where,
                     select: {
                         id: true,
-                        name: true
+                        name: true,
+                        type:true,
+                        mainRepository:true
                     }
                 },
                 {
@@ -95,6 +100,7 @@ export class RepositoriesRepository {
             },
             data: {
                 name: data.repositoryData.name,
+                type:data.repositoryData.type,
                 mainRepository:data.repositoryData.mainRepository ? true:false
             },
             select: repositorySelect

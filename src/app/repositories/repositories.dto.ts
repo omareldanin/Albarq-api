@@ -1,11 +1,13 @@
 // // import { generateMock } from "@anatine/zod-mock";
 import { generateSchema } from "@anatine/zod-openapi";
+import { RepositoryType } from "@prisma/client";
 import { z } from "zod";
 
 export const RepositoryCreateSchema = z.object({
     name: z.string().min(3),
     branchID: z.coerce.number(),
-    mainRepository:z.boolean().optional()
+    mainRepository:z.boolean().optional(),
+    type:z.nativeEnum(RepositoryType).default(RepositoryType.EXPORT)
     // tenantID: z.string(),
 });
 

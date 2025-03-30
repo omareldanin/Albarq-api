@@ -68,6 +68,8 @@ export const reportSelect = {
         select: {
             id: true,
             secondaryType: true,
+            targetRepositoryId:true,
+            targetRepositoryName:true,
             repository: {
                 select: {
                     id: true,
@@ -202,7 +204,9 @@ export const reportReform = (
             reportNumber: report.repositoryReport.id,
             repositoryReportOrders: report.repositoryReport.orders,
             repository: report.repositoryReport.repository,
-            secondaryType: report.repositoryReport.secondaryType
+            secondaryType: report.repositoryReport.secondaryType,
+            targetRepositoryId:report.repositoryReport.targetRepositoryId,
+            targetRepositoryName:report.repositoryReport.targetRepositoryName,
         },
         branchReport: report.branchReport && {
             reportNumber: report.branchReport.id,

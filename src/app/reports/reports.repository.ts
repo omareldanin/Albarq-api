@@ -79,6 +79,8 @@ export class ReportsRepository {
             const createdReport = await prisma.repositoryReport.create({
                 data: {
                     secondaryType: data.reportData.secondaryType,
+                    targetRepositoryId:data.reportData.targetRepositoryId,
+                    targetRepositoryName:data.reportData.repositoryName,
                     repository: {
                         connect: {
                             id: data.reportData.repositoryID

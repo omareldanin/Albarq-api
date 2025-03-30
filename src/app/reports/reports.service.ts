@@ -264,8 +264,8 @@ export class ReportsService {
         // Send notification to client if report type is client report
         if (data.reportData.type === ReportType.CLIENT) {
             await sendNotification({
-                title: "تم انشاء كشف جديد",
-                content: `تم انشاء كشف جديد برقم ${reportData?.id}`,
+                title: data.reportData.secondaryType === "RETURNED" ? "تم انشاء كشف راجع جديد":"تم انشاء كشف واصل جديد",
+                content:data.reportData.secondaryType === "RETURNED" ? `تم انشاء كشف راجع جديد برقم ${reportData?.id}`:`تم انشاء كشف واصل جديد برقم ${reportData?.id}`,
                 userID: reportData?.clientReport?.client.id as number
             });
         }
@@ -273,7 +273,7 @@ export class ReportsService {
         // Send notification to delivery agent if report type is delivery agent report
         if (data.reportData.type === ReportType.DELIVERY_AGENT) {
             await sendNotification({
-                title: "تم انشاء كشف جديد",
+                title: "تم انشاء كشف مندوب جديد",
                 content: `تم انشاء كشف جديد برقم ${reportData?.id}`,
                 userID: reportData?.deliveryAgentReport?.deliveryAgent.id as number
             });
@@ -338,7 +338,9 @@ export class ReportsService {
             data.loggedInUser.role !== EmployeeRole.CLIENT_ASSISTANT
         ) {
             const employee = await employeesRepository.getEmployee({ employeeID: data.loggedInUser.id });
-            branch = employee?.branch?.id;
+            if(!employee?.repository?.mainRepository){
+                branch = employee?.branch?.id;
+            }
         } else if (data.filters.branch) {
             branch = +data.filters.branch;
         } else {
@@ -427,7 +429,9 @@ export class ReportsService {
         const ordersData = await ordersRepository.getOrdersByIDs({
             ordersIDs: ordersIDs
         });
-
+        if(ordersData.length === 0){
+            throw new AppError("لا يوجد طلبات", 404);
+        }
         const pdf = await generateReport(
             // @ts-expect-error Fix later
             reportData.type,
@@ -575,7 +579,7 @@ export class ReportsService {
         // Send notification to client if report type is client report
         if (report?.type === ReportType.CLIENT) {
             await sendNotification({
-                title: "تم حذف كشف",
+                title: report.clientReport?.secondaryType === "RETURNED" ? "تم حذف كشف راجع ":"تم حذف كشف واصل ",
                 content: `تم حذف الكشف برقم ${report.id}`,
                 userID: report.clientReport?.client.id as number
             });

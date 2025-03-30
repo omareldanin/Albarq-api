@@ -861,18 +861,6 @@ export class OrdersService {
                     governorate: oldOrderData.governorate
                 }
             });
-            // await reportsRepository.reEvaluateRepositoryReport({
-            //     repositoryReportID: oldOrderData.repositoryReport.id,
-            //     orderData: {
-            //         totalCost: oldOrderData.totalCost,
-            //         paidAmount: oldOrderData.paidAmount,
-            //         deliveryCost: oldOrderData.deliveryCost,
-            //         clientNet: oldOrderData.clientNet,
-            //         deliveryAgentNet: oldOrderData.deliveryAgentNet,
-            //         companyNet: oldOrderData.companyNet,
-            //         governorate: oldOrderData.governorate
-            //     }
-            // });
         }
 
         // Update the order repository

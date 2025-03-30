@@ -136,6 +136,11 @@ enum ReportType {
   CLIENT
 }
 
+enum RepositoryType {
+  EXPORT
+  RETURN
+}
+
 enum SecondaryReportType {
   DELIVERED
   RETURNED
@@ -430,6 +435,7 @@ model Repository {
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //
   branchId          Int
   mainRepository    Boolean            @default(false)
+  type              RepositoryType     @default(EXPORT)
   // --- RELATIONS --------------------------------------------------------------------------- //
   branch            Branch             @relation(fields: [branchId], references: [id])
   employees         Employee[]
@@ -684,17 +690,18 @@ model Order {
 }
 
 model CustomerOutput {
-  id           Int         @id @default(autoincrement())
-  repositoryId Int?
-  orderId      Int?
-  clientId     Int?
-  companyId    Int?
-  storeId      Int?
-  order        Order?      @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  repository   Repository? @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
-  client       Client?     @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  company      Company?    @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  store        Store?      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  id                 Int         @id @default(autoincrement())
+  repositoryId       Int?
+  targetRepositoryId Int?
+  orderId            Int?
+  clientId           Int?
+  companyId          Int?
+  storeId            Int?
+  order              Order?      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  repository         Repository? @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
+  client             Client?     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  company            Company?    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  store              Store?      @relation(fields: [storeId], references: [id], onDelete: Cascade)
 }
 
 model ClientOrderReceipt {
@@ -827,15 +834,17 @@ model ClientReport {
 
 model RepositoryReport {
   // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id            Int                 @id
+  id                   Int                 @id
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  repositoryId  Int
+  repositoryId         Int
+  targetRepositoryName String?
+  targetRepositoryId   Int?
   // --- RELATIONS --------------------------------------------------------------------------- //
-  report        Report              @relation(fields: [id], references: [id], onDelete: Cascade)
-  repository    Repository          @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
-  orders        Order[]
+  report               Report              @relation(fields: [id], references: [id], onDelete: Cascade)
+  repository           Repository          @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  orders               Order[]
   // --- OTHER --------------------------------------------------------------------- //
-  secondaryType SecondaryReportType @default(DELIVERED)
+  secondaryType        SecondaryReportType @default(DELIVERED)
 
   @@index([repositoryId])
 }

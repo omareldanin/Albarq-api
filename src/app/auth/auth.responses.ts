@@ -15,6 +15,7 @@ export const userSelect = {
             role: true,
             permissions: true,
             orderStatus: true,
+            branchId:true,
             company: {
                 select: {
                     id: true,
@@ -26,7 +27,8 @@ export const userSelect = {
             repository:{
                 select:{
                     id:true,
-                    mainRepository:true
+                    mainRepository:true,
+                    type:true
                 }
             }
         }
@@ -62,7 +64,10 @@ export const userReform = (
         companyID: user.employee?.company.id || user.client?.company.id || null,
         companyName: user.employee?.company.name || user.client?.company.name || null,
         mainCompany: user.employee?.company.mainCompany ?? user.client?.company.mainCompany ?? null,
+        branchId: user.employee?.branchId ?? user.employee?.branchId ?? null,
+        repositoryId: user.employee?.repository?.id ?? user.employee?.repository?.id ?? null,
         mainRepository:user.employee?.repository?.mainRepository,
+        type:user.employee?.repository?.type,
         role: (user.admin?.role || user.employee?.role || user.client?.role) as
             | AdminRole
             | EmployeeRole

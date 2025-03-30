@@ -43,7 +43,9 @@ export const ReportCreateSchema = z
         z.object({
             type: z.literal(ReportType.REPOSITORY),
             repositoryID: z.coerce.number(),
-            secondaryType: z.nativeEnum(SecondaryReportType).optional().default(SecondaryReportType.DELIVERED)
+            secondaryType: z.nativeEnum(SecondaryReportType).optional().default(SecondaryReportType.DELIVERED),
+            targetRepositoryId: z.coerce.number(),
+            repositoryName:z.string()
         })
     ])
     .and(ReportCreateBaseSchema);

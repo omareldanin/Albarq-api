@@ -42,7 +42,10 @@ export class AuthController {
                 companyID: returnedUser.companyID,
                 companyName: returnedUser.companyName,
                 mainCompany: returnedUser.mainCompany,
-                mainRepository:returnedUser.mainRepository
+                mainRepository:returnedUser.mainRepository,
+                branchId:returnedUser.branchId,
+                repositoryId:returnedUser.repositoryId,
+                type:returnedUser.type
             } as loggedInUserType,
             env.ACCESS_TOKEN_SECRET as string,
             { expiresIn: env.ACCESS_TOKEN_EXPIRES_IN }

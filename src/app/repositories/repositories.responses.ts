@@ -5,6 +5,7 @@ export const repositorySelect = {
     name: true,
     branch: true,
     mainRepository:true,
+    type:true,
     company: {
         select: {
             id: true,

@@ -472,10 +472,10 @@ router.route("/orders/addOrderToRepository/:orderID").patch(
     */
 );
 
-router.route("/orders/repository-confirm-order-by-receipt-number/:orderReceiptNumber").patch(
+router.route("/orders/repository-confirm-order-by-receipt-number/:orderID").patch(
     isLoggedIn,
     isAutherized([...Object.values(AdminRole), ...Object.values(EmployeeRole), ...Object.values(ClientRole)]),
-    ordersController.repositoryConfirmOrderByReceiptNumber
+    ordersController.addReturnedOrderToRepository
     /*
         #swagger.tags = ['Orders Routes']
     */

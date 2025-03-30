@@ -19,9 +19,12 @@ import { EmployeesRepository } from "../employees/employees.repository";
 import { Governorate, OrderStatus, SecondaryStatus } from "@prisma/client";
 import { orderReform, orderSelect } from "./orders.responses";
 import { AppError } from "../../lib/AppError";
+import { OrdersRepository } from "./orders.repository";
 const employeesRepository = new EmployeesRepository();
 
 const ordersService = new OrdersService();
+
+const ordersRepository = new OrdersRepository();
 
 export class OrdersController {
     createOrder = catchAsync(async (req, res) => {
@@ -125,7 +128,8 @@ export class OrdersController {
                         name:true,
                         mainRepository:true
                     }
-                }
+                },
+                branchId:true
             }
         })
 
@@ -141,7 +145,7 @@ export class OrdersController {
             where:{
                 repositoryId:repository_id ? Number(repository_id) :secondaryStatus === 'IN_CAR'? undefined : user.repository.id,
                 secondaryStatus:secondaryStatus as SecondaryStatus,
-                status:status as OrderStatus,
+                status:status === "RETURNED" ? {in:["RETURNED","PARTIALLY_RETURNED","REPLACED"]}: status as OrderStatus,
                 storeId:store_id ? Number(store_id):undefined,
                 clientId:client_id ? Number(client_id):undefined,
                 governorate:governorate ? governorate as Governorate:undefined,
@@ -286,6 +290,7 @@ export class OrdersController {
                 id:params.orderID
             },
             select:{
+                status:true,
                 repository:{
                     select:{
                         id:true,
@@ -297,6 +302,7 @@ export class OrdersController {
                 forwardedToMainRepo:true,
             }
         })
+
         if(orderData.secondaryStatus === "IN_CAR"){
             if(user.repository?.mainRepository){
                 const repository = await prisma.repository.findFirst({
@@ -327,6 +333,9 @@ export class OrdersController {
             orderData.repositoryID=user.repository?.id
         }
 
+        if(oldOrder?.status === "RETURNED" || oldOrder?.status === "REPLACED" || oldOrder?.status === "PARTIALLY_RETURNED"){
+            throw new AppError("هذا الطلب مرتجع!", 400);
+        }
 
         if(oldOrder?.repository && oldOrder.repository.id !== user.repository?.id){
             throw new AppError("هذا الطلب لم يتم تحويله اليك!", 404);
@@ -349,6 +358,85 @@ export class OrdersController {
             data: order
         });
 
+    })
+
+    addReturnedOrderToRepository=catchAsync(async(req,res)=>{
+        const params = {
+            orderID: +req.params.orderID
+        };
+        const loggedInUser = res.locals.user as loggedInUserType;
+
+        const orderData = OrderUpdateSchema.parse(req.body);
+
+        const user=await prisma.employee.findUnique({
+            where:{
+                id:loggedInUser.id
+            },
+            select:{
+                repository:{
+                    select:{
+                        id:true,
+                        name:true,
+                        mainRepository:true
+                    }
+                }
+            }
+        })
+
+        if(!user){
+            throw new AppError("حسابك غير موجود", 404);
+        }
+
+        if(!user.repository && !orderData.repositoryID){
+            throw new AppError("حسابك غير مرتبط بمخزن", 404);
+        }
+
+        const oldOrder=await prisma.order.findUnique({
+            where:{
+                id:params.orderID
+            },
+            select:orderSelect
+        })
+
+        if(!orderData.repositoryID){
+            orderData.repositoryID=user.repository?.id
+        }
+
+        if(oldOrder?.status !== "RETURNED" && oldOrder?.status !== "REPLACED" && oldOrder?.status !== "PARTIALLY_RETURNED"){
+            throw new AppError("هذا الطلب غير مرتجع!", 400);
+        }
+
+        if(oldOrder.secondaryStatus === "IN_REPOSITORY" && oldOrder.repository?.id === user.repository?.id){
+            throw new AppError("هذا الطلب موجود في مخزن!", 400);
+        }
+
+            // Remove the order from the repository report
+        if (oldOrder.repositoryReport) {
+            await ordersRepository.removeOrderFromRepositoryReport({
+                orderID: oldOrder.id,
+                repositoryReportID: oldOrder.repositoryReport.id,
+                orderData: {
+                    totalCost: oldOrder.totalCost,
+                    paidAmount: oldOrder.paidAmount,
+                    deliveryCost: oldOrder.deliveryCost,
+                    clientNet: oldOrder.clientNet,
+                    deliveryAgentNet: oldOrder.deliveryAgentNet,
+                    companyNet: oldOrder.companyNet,
+                    governorate: oldOrder.governorate
+                }
+            });
+        }
+
+        const order = await ordersService.updateOrder({
+            params: params,
+            orderData: orderData,
+            loggedInUser: loggedInUser
+        });
+
+        res.status(200).json({
+            status: "success",
+            data: order
+        });
     })
 
     repositoryConfirmOrderByReceiptNumber = catchAsync(async (req, res) => {
