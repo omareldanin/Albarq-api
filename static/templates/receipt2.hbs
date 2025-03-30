@@ -45,12 +45,14 @@
   </head>
   <body style="direction: rtl">
     {{#each orders}}
-        <img
-          src="{{company.logo}}"
-          class="logo"
-        />
-        <div style="position: absolute;top: 0px;right: 25px;">{{{BarCode id}}}</div>
-        <hr style="margin-top: 110px; opacity: 0.5" />
+        <div style="position: relative;width:100%;transform:translateY(-100px)">
+          <img
+            src="{{company.logo}}"
+            class="logo"
+          />
+          <div style="position: absolute;top: 0px;right: 25px;">{{{BarCode id}}}</div>
+          <hr style="margin-top: 110px; opacity: 0.5" />
+        </div>
         <table>
           <thead>
             <tr>
@@ -193,7 +195,7 @@
           <img src="{{QRCode this}}" />
         </div>
         <div style="display: inline-block;">{{{company.registrationText}}}</div>
-        <div style="margin-bottom: 80px;"></div>
+        <div style="page-break-before: always;"></div>  <!-- Forces a new page -->
       {{/each}}
   </body>
 </html>
