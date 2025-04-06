@@ -903,6 +903,7 @@ export class OrdersService {
                 },
                 select: orderSelect
             })
+
             await prisma.order.updateMany({
                 where:{
                     status:"REGISTERED",
@@ -914,6 +915,7 @@ export class OrdersService {
                     printed:true
                 }
             })
+
             const reformedOrders= orders.map(orderReform);
             const pdf = await generateReceipts(reformedOrders);
 

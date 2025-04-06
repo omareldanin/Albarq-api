@@ -240,6 +240,18 @@ export class OrdersController {
         const loggedInUser = res.locals.user as loggedInUserType;
 
         if(loggedInUser.role === "CLIENT" && ordersIDs.selectedAll === true){
+            const count = await prisma.order.count({
+                where:{
+                    status:"REGISTERED",
+                    printed:false,
+                    client:{
+                        id:loggedInUser.id
+                    },
+                },
+            })
+            if(count > 0){
+                throw new AppError("تأكد من طباعه جميع الوصلات", 404);
+            }
             await prisma.order.updateMany(
                 {
                     data:{
@@ -257,6 +269,21 @@ export class OrdersController {
                 status: "success",
             });
         }else{
+            const count = await prisma.order.count({
+                where:{
+                    status:"REGISTERED",
+                    printed:false,
+                    id:{
+                        in:ordersIDs.ordersIDs
+                    },
+                    client:{
+                        id:loggedInUser.id
+                    },
+                },
+            })
+            if(count > 0){
+                throw new AppError("تأكد من طباعه جميع الوصلات", 404);
+            }
             await prisma.order.updateMany(
                 {
                     data:{
