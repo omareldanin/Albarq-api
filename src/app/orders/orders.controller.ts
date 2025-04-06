@@ -93,7 +93,8 @@ export class OrdersController {
             forwardedFromID: req.query.forwarded_from_id,
             processed: req.query.processed,
             secondaryStatus:req.query.secondaryStatus,
-            clientOrderReceiptId:req.query.clientOrderReceiptId
+            clientOrderReceiptId:req.query.clientOrderReceiptId,
+            printed:req.query.printed
         });
         
         const { orders, ordersMetaData, page, pagesCount } = await ordersService.getAllOrders({
@@ -113,7 +114,7 @@ export class OrdersController {
     });
 
     getRepositoryOrders=catchAsync(async (req,res)=>{
-        const {client_id,size,page,store_id,repository_id,governorate,secondaryStatus,status}=req.query
+        const {client_id,size,page,store_id,repository_id,governorate,secondaryStatus,status,getIncoming}=req.query
 
         const loggedInUser=res.locals.user as loggedInUserType
 
@@ -122,34 +123,58 @@ export class OrdersController {
                 id:loggedInUser.id
             },
             select:{
-                repository:{
+                branch:{
                     select:{
                         id:true,
-                        name:true,
-                        mainRepository:true
+                        repositories:{
+                            select:{
+                                id:true,
+                                type:true,
+                                name:true,
+                                mainRepository:true
+                            }
+                        }
                     }
                 },
-                branchId:true
             }
         })
+
+        const exportRepo=user?.branch?.repositories.find(repo => repo.type === "EXPORT")
+        const returnRepo=user?.branch?.repositories.find(repo => repo.type === "RETURN")
 
         if(!user){
             throw new AppError("حسابك غير موجود", 404);
         }
 
-        if(!user.repository){
-            throw new AppError("حسابك غير مرتبط بمخزن", 404);
+        if(!exportRepo && status !== "RETURNED"){
+            throw new AppError("لا يوجد مخزن وارد للفرع الخاص بك ", 404);
+        }
+
+        if(!returnRepo && status === "RETURNED"){
+            throw new AppError("لا يوجد مخزن راوجع للفرع الخاص بك ", 404);
+        }
+
+        if(loggedInUser.role ==="BRANCH_MANAGER" && !repository_id){
+            throw res.status(200).json({
+                status: "success",
+                data: {
+                    count:0,
+                    pageCount:0,
+                    currentPage:0,
+                    orders:[]
+                }
+            });
         }
 
         const results=await prisma.order.findManyPaginated({
             where:{
-                repositoryId:repository_id ? Number(repository_id) :secondaryStatus === 'IN_CAR'? undefined : user.repository.id,
+                repositoryId: repository_id ? Number(repository_id) :secondaryStatus === 'IN_CAR'? undefined :status === "RETURNED" ? returnRepo?.id : exportRepo?.id,
                 secondaryStatus:secondaryStatus as SecondaryStatus,
                 status:status === "RETURNED" ? {in:["RETURNED","PARTIALLY_RETURNED","REPLACED"]}: status as OrderStatus,
                 storeId:store_id ? Number(store_id):undefined,
                 clientId:client_id ? Number(client_id):undefined,
                 governorate:governorate ? governorate as Governorate:undefined,
-                forwardedRepo:secondaryStatus === 'IN_CAR'?user.repository.id:undefined
+                forwardedRepo:getIncoming ? undefined :secondaryStatus === 'IN_CAR'?exportRepo?.id:undefined
             },
             orderBy: {
                 updatedAt:"desc"
@@ -175,7 +200,7 @@ export class OrdersController {
 
     getOrder = catchAsync(async (req, res) => {
         const params = {
-            orderID: +req.params.orderID
+            orderID: req.params.orderID
         };
 
         const order = await ordersService.getOrder({
@@ -190,7 +215,7 @@ export class OrdersController {
 
     updateOrder = catchAsync(async (req, res) => {
         const params = {
-            orderID: +req.params.orderID
+            orderID: req.params.orderID
         };
         const loggedInUser = res.locals.user as loggedInUserType;
         const orderData = OrderUpdateSchema.parse(req.body);
@@ -256,7 +281,7 @@ export class OrdersController {
     
     addOrderToRepository=catchAsync(async(req,res)=>{
         const params = {
-            orderID: +req.params.orderID
+            orderReceiptNumber: req.params.orderID
         };
         const loggedInUser = res.locals.user as loggedInUserType;
 
@@ -267,44 +292,42 @@ export class OrdersController {
                 id:loggedInUser.id
             },
             select:{
-                repository:{
+                branch:{
                     select:{
                         id:true,
-                        name:true,
-                        mainRepository:true
+                        repositories:{
+                            select:{
+                                id:true,
+                                type:true,
+                                name:true,
+                                mainRepository:true
+                            }
+                        }
                     }
-                }
+                },
             }
         })
+
+        const exportRepo=user?.branch?.repositories.find(repo => repo.type === "EXPORT")
 
         if(!user){
             throw new AppError("حسابك غير موجود", 404);
         }
 
-        if(!user.repository && !orderData.repositoryID){
-            throw new AppError("حسابك غير مرتبط بمخزن", 404);
+        if(!exportRepo){
+            throw new AppError("لا يوجد مخزن وارد لهذا الفرع!", 404);
         }
 
-        const oldOrder=await prisma.order.findUnique({
-            where:{
-                id:params.orderID
-            },
-            select:{
-                status:true,
-                repository:{
-                    select:{
-                        id:true,
-                        mainRepository:true,
-                        branchId:true
-                    }
-                },
-                branchId:true,
-                forwardedToMainRepo:true,
-            }
-        })
+        const oldOrder = await ordersRepository.getOrderByReceiptNumber({
+            orderReceiptNumber: params.orderReceiptNumber
+        });
+
+        if (!oldOrder) {
+            throw new AppError("الطلب غير موجود", 404);
+        }
 
         if(orderData.secondaryStatus === "IN_CAR"){
-            if(user.repository?.mainRepository){
+            if(exportRepo?.mainRepository){
                 const repository = await prisma.repository.findFirst({
                     where:{
                         id:orderData.repositoryID
@@ -313,42 +336,45 @@ export class OrdersController {
                         branchId:true
                     }
                 })
-                if(repository?.branchId !== oldOrder?.branchId){
+                if(repository?.branchId !== oldOrder?.branch?.id){
                     throw new AppError("الطلب غير مرتبط بهذا الفرع", 400)
                 }
-                orderData.forwardedRepo=user.repository?.id
+                orderData.forwardedRepo=exportRepo?.id
             }else{
                 const mainRepository=await prisma.repository.findFirst({
                     where:{
-                        mainRepository:true
+                        mainRepository:true,
+                        type:"EXPORT"
                     },
                     select:{
                         id:true
                     }
                 })
                 orderData.repositoryID = mainRepository?.id
-                orderData.forwardedRepo=user.repository?.id
+                orderData.forwardedRepo=exportRepo?.id
             }
         }else{
-            orderData.repositoryID=user.repository?.id
+            orderData.repositoryID=exportRepo?.id
         }
 
         if(oldOrder?.status === "RETURNED" || oldOrder?.status === "REPLACED" || oldOrder?.status === "PARTIALLY_RETURNED"){
             throw new AppError("هذا الطلب مرتجع!", 400);
         }
 
-        if(oldOrder?.repository && oldOrder.repository.id !== user.repository?.id){
+        if(oldOrder?.repository && oldOrder.repository.id !== exportRepo?.id){
             throw new AppError("هذا الطلب لم يتم تحويله اليك!", 404);
         }
 
         if(orderData.forwardedToMainRepo){
-            if(oldOrder?.repository?.id !== user.repository?.id){
+            if(oldOrder?.repository?.id !== exportRepo?.id){
                 throw new AppError("هذا الطلب غير موجود بالمخزن", 404);
             }
         }
 
         const order = await ordersService.updateOrder({
-            params: params,
+            params: {
+                orderID:oldOrder?.id
+            },
             orderData: orderData,
             loggedInUser: loggedInUser
         });
@@ -361,52 +387,63 @@ export class OrdersController {
     })
 
     addReturnedOrderToRepository=catchAsync(async(req,res)=>{
-        const params = {
-            orderID: +req.params.orderID
+       const params = {
+            orderReceiptNumber: req.params.orderID
         };
         const loggedInUser = res.locals.user as loggedInUserType;
 
         const orderData = OrderUpdateSchema.parse(req.body);
+
 
         const user=await prisma.employee.findUnique({
             where:{
                 id:loggedInUser.id
             },
             select:{
-                repository:{
+                branch:{
                     select:{
                         id:true,
-                        name:true,
-                        mainRepository:true
+                        repositories:{
+                            select:{
+                                id:true,
+                                type:true,
+                                name:true,
+                                mainRepository:true
+                            }
+                        }
                     }
-                }
+                },
             }
         })
+
+        const returnsRepo=user?.branch?.repositories.find(repo => repo.type === "RETURN")
 
         if(!user){
             throw new AppError("حسابك غير موجود", 404);
         }
 
-        if(!user.repository && !orderData.repositoryID){
-            throw new AppError("حسابك غير مرتبط بمخزن", 404);
+        if(!returnsRepo){
+            throw new AppError("لا يوجد مخزن راوجع لهذا الفرع!", 404);
         }
 
-        const oldOrder=await prisma.order.findUnique({
-            where:{
-                id:params.orderID
-            },
-            select:orderSelect
-        })
+ 
+        const oldOrder = await ordersRepository.getOrderByReceiptNumber({
+            orderReceiptNumber: params.orderReceiptNumber
+        });
+
+        if (!oldOrder) {
+            throw new AppError("الطلب غير موجود", 404);
+        }
 
         if(!orderData.repositoryID){
-            orderData.repositoryID=user.repository?.id
+            orderData.repositoryID=returnsRepo?.id
         }
 
         if(oldOrder?.status !== "RETURNED" && oldOrder?.status !== "REPLACED" && oldOrder?.status !== "PARTIALLY_RETURNED"){
             throw new AppError("هذا الطلب غير مرتجع!", 400);
         }
 
-        if(oldOrder.secondaryStatus === "IN_REPOSITORY" && oldOrder.repository?.id === user.repository?.id){
+        if(oldOrder.secondaryStatus === "IN_REPOSITORY" && oldOrder.repository?.id === returnsRepo?.id){
             throw new AppError("هذا الطلب موجود في مخزن!", 400);
         }
 
@@ -428,7 +465,9 @@ export class OrdersController {
         }
 
         const order = await ordersService.updateOrder({
-            params: params,
+            params: {
+                orderID:oldOrder.id
+            },
             orderData: orderData,
             loggedInUser: loggedInUser
         });
@@ -441,7 +480,7 @@ export class OrdersController {
 
     repositoryConfirmOrderByReceiptNumber = catchAsync(async (req, res) => {
         const params = {
-            orderReceiptNumber: +req.params.orderReceiptNumber
+            orderReceiptNumber:req.params.orderReceiptNumber
         };
         const loggedInUser = res.locals.user as loggedInUserType;
         const orderData = OrderRepositoryConfirmByReceiptNumberSchema.parse(req.body);
@@ -460,7 +499,7 @@ export class OrdersController {
 
     deleteOrder = catchAsync(async (req, res) => {
         const params = {
-            orderID: +req.params.orderID
+            orderID: req.params.orderID
         };
 
         await ordersService.deleteOrder({
@@ -611,7 +650,7 @@ export class OrdersController {
 
     getOrderTimeline = catchAsync(async (req, res) => {
         const params = {
-            orderID: +req.params.orderID
+            orderID: req.params.orderID
         };
 
         const filters = OrderTimelineFiltersSchema.parse({
@@ -632,7 +671,7 @@ export class OrdersController {
 
     getOrderChatMembers = catchAsync(async (req, res) => {
         const params = {
-            orderID: +req.params.orderID
+            orderID: req.params.orderID
         };
 
         const orderChatMembers = await ordersService.getOrderChatMembers({
@@ -647,7 +686,7 @@ export class OrdersController {
 
     getOrderInquiryEmployees = catchAsync(async (req, res) => {
         const params = {
-            orderID: +req.params.orderID
+            orderID: req.params.orderID
         };
 
         const orderInquiryEmployees = await ordersService.getOrderInquiryEmployees({
@@ -662,7 +701,7 @@ export class OrdersController {
 
     deactivateOrder = catchAsync(async (req, res) => {
         const params = {
-            orderID: +req.params.orderID
+            orderID: req.params.orderID
         };
         const loggedInUser = res.locals.user as loggedInUserType;
 
@@ -678,7 +717,7 @@ export class OrdersController {
 
     reactivateOrder = catchAsync(async (req, res) => {
         const params = {
-            orderID: +req.params.orderID
+            orderID: req.params.orderID
         };
 
         await ordersService.reactivateOrder({
@@ -692,7 +731,7 @@ export class OrdersController {
 
     sendNotificationToOrderChatMembers = catchAsync(async (req, res) => {
         const params = {
-            orderID: +req.params.orderID
+            orderID: req.params.orderID
         };
         const loggedInUser = res.locals.user as loggedInUserType;
         const notificationData = OrderChatNotificationCreateSchema.parse(req.body);

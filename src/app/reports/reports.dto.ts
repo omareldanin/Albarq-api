@@ -5,7 +5,7 @@ import { z } from "zod";
 import { OrdersFiltersSchema } from "../orders/orders.dto";
 
 export const ReportCreateBaseSchema = z.object({
-    ordersIDs: z.array(z.coerce.number()).min(1).or(z.literal("*"))
+    ordersIDs: z.array(z.coerce.string()).min(1).or(z.literal("*"))
 });
 
 export const ReportCreateSchema = z

@@ -20,6 +20,17 @@ import {
 } from "./orders.responses";
 
 export class OrdersRepository {
+    generateRandomId(){
+        const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Gaza" }));
+
+        // Format date as YYMMDD
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        const datePart = `${month}${day}`;
+        const randomPart = Math.floor(10000 + Math.random() * 90000);
+
+        return `${datePart}-${randomPart}`;
+    }
     async createOrder(data: {
         companyID: number;
         clientID: number;
@@ -217,10 +228,14 @@ export class OrdersRepository {
 
             deliveryCost += location?.remote ? companyAdditionalPrices?.additionalPriceForRemoteAreas || 0 : 0;
         }
+
+        let randomId=this.generateRandomId()
+        console.log(randomId);
         
         // Create order
         const createdOrder = await prisma.order.create({
             data: {
+                id:randomId,
                 totalCost: data.orderData.withProducts === false ? data.orderData.totalCost : totalCost,
                 deliveryCost: deliveryCost,
                 quantity: data.orderData.withProducts === false ? data.orderData.quantity : quantity,
@@ -231,7 +246,7 @@ export class OrdersRepository {
                     : data.orderData.recipientPhone
                       ? [data.orderData.recipientPhone]
                       : undefined,
-                receiptNumber: data.orderData.receiptNumber,
+                receiptNumber: data.orderData.receiptNumber ? data.orderData.receiptNumber : randomId,
                 recipientAddress: data.orderData.recipientAddress,
                 notes: data.orderData.notes,
                 details: data.orderData.details,
@@ -409,11 +424,11 @@ export class OrdersRepository {
                     OR: [
                         {
                             receiptNumber: data.filters.search
-                                ? Number.isNaN(+data.filters.search)
+                                ? data.filters.search
                                     ? undefined
                                     : data.filters.search.length > 9
                                       ? undefined
-                                      : +data.filters.search
+                                      : data.filters.search
                                 : undefined
                         },
                         {
@@ -593,6 +608,9 @@ export class OrdersRepository {
                 // Filter by receiptNumber
                 {
                     receiptNumber: data.filters.receiptNumber
+                },
+                {
+                    printed: data.filters.printed
                 },
                 {
                     receiptNumber: data.filters.receiptNumbers
@@ -1048,7 +1066,7 @@ export class OrdersRepository {
         };
     }
 
-    async getOrdersByIDs(data: { ordersIDs: number[] }) {
+    async getOrdersByIDs(data: { ordersIDs: string[] }) {
         const orders = await prisma.order.findMany({
             where: {
                 id: {
@@ -1063,7 +1081,7 @@ export class OrdersRepository {
         return orders.map(orderReform);
     }
 
-    async getOrder(data: { orderID: number }) {
+    async getOrder(data: { orderID: string }) {
         const order = await prisma.order.findUnique({
             where: {
                 id: data.orderID
@@ -1147,7 +1165,7 @@ export class OrdersRepository {
         // };
     }
 
-    async getOrderByReceiptNumber(data: { orderReceiptNumber: number }) {
+    async getOrderByReceiptNumber(data: { orderReceiptNumber: string }) {
         const order = await prisma.order.findFirst({
             where: {
                 receiptNumber: data.orderReceiptNumber
@@ -1161,7 +1179,7 @@ export class OrdersRepository {
     }
 
     async updateOrdersCosts(data: {
-        ordersIDs: number[];
+        ordersIDs: string[];
         costs: {
             baghdadDeliveryCost?: number;
             governoratesDeliveryCost?: number;
@@ -1296,7 +1314,7 @@ export class OrdersRepository {
         }
     }
 
-    async updateOrder(data: { orderID: number; orderData: OrderUpdateType; loggedInUser: loggedInUserType }) {
+    async updateOrder(data: { orderID: string; orderData: OrderUpdateType; loggedInUser: loggedInUserType }) {
         
       
         const orderData = await prisma.order.findUnique({
@@ -1489,7 +1507,7 @@ export class OrdersRepository {
         return orderReform(order);
     }
 
-    async deleteOrder(data: { orderID: number }) {
+    async deleteOrder(data: { orderID: string }) {
         const deletedOrder = await prisma.order.delete({
             where: {
                 id: data.orderID
@@ -1498,7 +1516,7 @@ export class OrdersRepository {
         return deletedOrder;
     }
 
-    async deactivateOrder(data: { orderID: number; deletedByID: number }) {
+    async deactivateOrder(data: { orderID: string; deletedByID: number }) {
         const deletedOrder = await prisma.order.update({
             where: {
                 id: data.orderID
@@ -1516,7 +1534,7 @@ export class OrdersRepository {
         return deletedOrder;
     }
 
-    async reactivateOrder(data: { orderID: number }) {
+    async reactivateOrder(data: { orderID: string }) {
         const deletedOrder = await prisma.order.update({
             where: {
                 id: data.orderID
@@ -1890,7 +1908,7 @@ export class OrdersRepository {
         });
     }
 
-    async getOrderTimeline(data: { params: { orderID: number }; filters: OrderTimelineFiltersType }) {
+    async getOrderTimeline(data: { params: { orderID: string }; filters: OrderTimelineFiltersType }) {
         const orderTimeline = await prisma.orderTimeline.findMany({
             where: {
                 orderId: data.params.orderID,
@@ -1902,7 +1920,7 @@ export class OrdersRepository {
     }
 
     async updateOrderTimeline(data: {
-        orderID: number;
+        orderID: string;
         data: OrderTimelinePieceType;
         // {
         //     type: OrderTimelineType;
@@ -1939,7 +1957,7 @@ export class OrdersRepository {
         });
     }
 
-    async getOrderChatMembers(data: { orderID: number }) {
+    async getOrderChatMembers(data: { orderID: string }) {
         /*
             chatMembers:
                 CLIENT
@@ -2045,7 +2063,7 @@ export class OrdersRepository {
         return chatMembers;
     }
 
-    async getOrderInquiryEmployees(data: { orderID: number }) {
+    async getOrderInquiryEmployees(data: { orderID: string }) {
         const order = await prisma.order.findUnique({
             where: {
                 id: data.orderID
@@ -2142,7 +2160,7 @@ export class OrdersRepository {
         return inquiryEmployees;
     }
 
-    async getOrderStatus(data: { orderID: number }) {
+    async getOrderStatus(data: { orderID: string }) {
         const order = await prisma.order.findUnique({
             where: {
                 id: data.orderID
@@ -2155,7 +2173,7 @@ export class OrdersRepository {
     }
 
     async updateOrdersSecondaryStatus(data: {
-        ordersIDs: number[];
+        ordersIDs: string[];
         secondaryStatus: SecondaryStatus;
     }) {
         const updatedOrders = await prisma.order.updateMany({
@@ -2172,7 +2190,7 @@ export class OrdersRepository {
     }
 
     async removeOrderFromRepositoryReport(data: {
-        orderID: number;
+        orderID: string;
         repositoryReportID: number;
         orderData: {
             totalCost: number;

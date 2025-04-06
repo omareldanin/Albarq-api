@@ -573,8 +573,8 @@ model InquiryEmployeesCompanies {
 
 model Order {
   // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                     Int                      @id @default(autoincrement())
-  receiptNumber          Int                      @default(autoincrement()) // TODO
+  id                     String                   @id @default("")
+  receiptNumber          String                   @default("") // TODO
   // --- DETAILS --------------------------------------------------------------------------- //
   quantity               Int                      @default(0)
   weight                 Float                    @default(0)
@@ -600,6 +600,7 @@ model Order {
   status                 OrderStatus              @default(REGISTERED)
   secondaryStatus        SecondaryStatus?
   confirmed              Boolean                  @default(false)
+  printed                Boolean                  @default(false)
   forwardedToMainRepo    Boolean?                 @default(false)
   forwardedToGov         Boolean?                 @default(false)
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //
@@ -693,7 +694,7 @@ model CustomerOutput {
   id                 Int         @id @default(autoincrement())
   repositoryId       Int?
   targetRepositoryId Int?
-  orderId            Int?
+  orderId            String?
   clientId           Int?
   companyId          Int?
   storeId            Int?
@@ -707,7 +708,7 @@ model CustomerOutput {
 model ClientOrderReceipt {
   // --- IDENTIFICATION --------------------------------------------------------------------- //
   id            Int      @id @default(autoincrement())
-  receiptNumber Int      @default(autoincrement()) // TODO
+  receiptNumber String   @default("") // TODO
   storeId       Int
   branchId      Int
   // --- RELATIONS --------------------------------------------------------------------- //
@@ -731,7 +732,7 @@ model OrderTimeline {
   message   String
   by        Json
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  orderId   Int
+  orderId   String
   // --- RELATIONS --------------------------------------------------------------------------- //
   order     Order             @relation(fields: [orderId], references: [id])
   // --- OTHER --------------------------------------------------------------------- //
@@ -741,7 +742,7 @@ model OrderTimeline {
 model OrdersInquiryEmployees {
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //
   inquiryEmployeeId Int
-  orderId           Int
+  orderId           String
   // --- RELATIONS --------------------------------------------------------------------------- //
   order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   inquiryEmployee   Employee @relation(fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
@@ -949,7 +950,7 @@ model OrderProducts {
   quantity  Int
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //
   productId Int
-  orderId   Int
+  orderId   String
   colorId   Int?
   sizeId    Int?
   // --- RELATIONS --------------------------------------------------------------------------- //

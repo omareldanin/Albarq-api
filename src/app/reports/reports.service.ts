@@ -35,7 +35,7 @@ export class ReportsService {
         ordersFilters: ReportCreateOrdersFiltersType;
     }) {
         let orders: ReturnType<typeof orderReform>[];
-        let ordersIDs: number[] = [];
+        let ordersIDs: string[] = [];
         if (data.reportData.ordersIDs === "*") {
             orders = (
                 await ordersRepository.getAllOrdersPaginated({

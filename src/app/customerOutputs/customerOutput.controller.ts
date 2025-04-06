@@ -54,21 +54,37 @@ export class CustomerOutputController{
             }
         })
 
-        const userRepository=await prisma.employee.findFirst({
-            select:{
-                repositoryId:true
-            },
+        const userRepository=await prisma.employee.findUnique({
             where:{
                 id:loggedInUser.id
+            },
+            select:{
+                branch:{
+                    select:{
+                        id:true,
+                        repositories:{
+                            select:{
+                                id:true,
+                                type:true,
+                                name:true,
+                                mainRepository:true
+                            }
+                        }
+                    }
+                },
             }
         })
+
 
         if(checkIfExist){
             throw new AppError("هذا الطلب موجود بالفعل", 404);
         }
 
-        if(!userRepository){
-            throw new AppError("حسابك غير مرتبط بمخزن", 404);
+  
+        const returnsRepo=userRepository?.branch?.repositories.find(repo => repo.type === "RETURN")
+
+        if(!returnsRepo){
+            throw new AppError("لا يوجد مخزن راوجع لهذا الفرع!", 404);
         }
 
         await prisma.customerOutput.create({
@@ -77,7 +93,7 @@ export class CustomerOutputController{
                 clientId:clientId ? clientId :null,
                 storeId:storeId ? storeId :null,
                 companyId:companyId ? companyId : null,
-                repositoryId:userRepository.repositoryId,
+                repositoryId:returnsRepo.id,
                 targetRepositoryId:repository ? repository :null
             }
         })
@@ -92,23 +108,39 @@ export class CustomerOutputController{
         
         const loggedInUser = res.locals.user as loggedInUserType;
         
-        const userRepository=await prisma.employee.findFirst({
-            select:{
-                repositoryId:true
-            },
+
+        const userRepository=await prisma.employee.findUnique({
             where:{
                 id:loggedInUser.id
+            },
+            select:{
+                branch:{
+                    select:{
+                        id:true,
+                        repositories:{
+                            select:{
+                                id:true,
+                                type:true,
+                                name:true,
+                                mainRepository:true
+                            }
+                        }
+                    }
+                },
             }
         })
 
-        if(!userRepository){
-            throw new AppError("حسابك غير مرتبط بمخزن", 404);
+        const returnsRepo=userRepository?.branch?.repositories.find(repo => repo.type === "RETURN")
+
+        if(!returnsRepo){
+            throw new AppError("لا يوجد مخزن راوجع لهذا الفرع!", 404);
         }
+
             
         const results = await prisma.customerOutput.findManyPaginated({
                 where:{
                     AND:[
-                        {repositoryId:userRepository.repositoryId},
+                        {repositoryId:returnsRepo.id},
                         type === "client" ? {clientId:clientId ? +clientId:undefined}:
                         type === "company" ? {companyId:companyId? +companyId:undefined}:
                         {targetRepositoryId:repository? +repository:undefined},
@@ -149,22 +181,38 @@ export class CustomerOutputController{
 
         const loggedInUser = res.locals.user as loggedInUserType;
         
-        const userRepository=await prisma.employee.findFirst({
-            select:{
-                repositoryId:true
-            },
+
+        const userRepository=await prisma.employee.findUnique({
             where:{
                 id:loggedInUser.id
+            },
+            select:{
+                branch:{
+                    select:{
+                        id:true,
+                        repositories:{
+                            select:{
+                                id:true,
+                                type:true,
+                                name:true,
+                                mainRepository:true
+                            }
+                        }
+                    }
+                },
             }
         })
 
-        if(!userRepository?.repositoryId){
-            throw new AppError("حسابك غير مرتبط بمخزن", 404);
+        const returnsRepo=userRepository?.branch?.repositories.find(repo => repo.type === "RETURN")
+
+        if(!returnsRepo){
+            throw new AppError("لا يوجد مخزن راوجع لهذا الفرع!", 404);
         }
+
         const results = await prisma.customerOutput.findManyPaginated({
                 where:{
                     AND:[
-                        {repositoryId:userRepository.repositoryId},
+                        {repositoryId:returnsRepo.id},
                         type === "client" ? {storeId:storeId ? +storeId:null}:{},
                         type === "client" ? {clientId:clientId ? +clientId:null}:
                         type === "company"?{companyId:companyId? +companyId:null}:
@@ -181,7 +229,7 @@ export class CustomerOutputController{
                     page:1,
                     size:5000
                     }
-            )
+        )
     
         const orders = results.data.map(order => orderReform(order.order))
 
@@ -233,7 +281,7 @@ export class CustomerOutputController{
                 baghdadDeliveryCost:0,
                 governoratesDeliveryCost:0,
                 storeID:storeId,
-                repositoryID:userRepository.repositoryId,
+                repositoryID:returnsRepo.id,
                 repositoryName:repositoryName,
                 targetRepositoryId:repositoryId,
                 ordersIDs:ordersIDs
@@ -264,7 +312,7 @@ export class CustomerOutputController{
         await prisma.customerOutput.deleteMany({
             where:{
                 AND:[
-                    {repositoryId:userRepository.repositoryId},
+                    {repositoryId:returnsRepo.id},
                     type === "client" ? {storeId:storeId ? +storeId:null}:{},
                     type === "client" ? {clientId:clientId ? +clientId:null}:
                     type === "company"?{companyId:companyId? +companyId:null}:

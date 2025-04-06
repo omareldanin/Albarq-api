@@ -11,7 +11,7 @@ import {
 import { z } from "zod";
 
 export const OrderCreateBaseSchema = z.object({
-    receiptNumber: z.number().optional(),
+    receiptNumber: z.string().optional(),
     clientOrderReceiptId:z.coerce.number().optional(),
     recipientName: z.string().optional().default("غير معرف"),
     confirmed: z.boolean().optional(),
@@ -71,7 +71,7 @@ export const OrderUpdateSchema = z
         weight: z.number(),
         totalCost: z.number(),
         paidAmount: z.number(),
-        receiptNumber: z.number(),
+        receiptNumber: z.string(),
         processed: z.boolean(),
         confirmed: z.boolean(),
         discount: z.number(),
@@ -94,7 +94,8 @@ export const OrderUpdateSchema = z
         forwardedCompanyID: z.coerce.number().optional(),
         forwardedToMainRepo:z.boolean().optional(),
         forwardedToGov:z.boolean().optional(),
-        forwardedRepo: z.coerce.number().optional()
+        forwardedRepo: z.coerce.number().optional(),
+        type:z.string().optional()
     })
     .partial();
 
@@ -120,7 +121,7 @@ export const OrderRepositoryConfirmByReceiptNumberOpenAPISchema = generateSchema
 /* --------------------------------------------------------------- */
 
 export const OrdersReceiptsCreateSchema = z.object({
-    ordersIDs: z.array(z.coerce.number()).min(1),
+    ordersIDs: z.array(z.coerce.string()).min(1),
     selectedAll:z.preprocess((val) => {
         if (val === "true") return true;
         if (val === "false") return false;
@@ -276,6 +277,11 @@ export const OrdersFiltersSchema = z.object({
         if (val === "false") return false;
         return val;
     }, z.boolean().optional()),
+    printed: z.preprocess((val) => {
+        if (val === "true") return true;
+        if (val === "false") return false;
+        return val;
+    }, z.boolean().optional()),
     forwarded: z.preprocess((val) => {
         if (val === "true") return true;
         if (val === "false") return false;
@@ -294,7 +300,7 @@ export const OrdersFiltersSchema = z.object({
     companyID: z.coerce.number().optional(),
     automaticUpdateID: z.coerce.number().optional(),
     search: z.string().optional(),
-    sort: z.string().optional().default("id:desc"),
+    sort: z.string().optional().default("createdAt:desc"),
     page: z.coerce.number().optional().default(1),
     size: z.coerce.number().optional().default(10),
     startDate: z.coerce.date().optional(),
@@ -321,13 +327,13 @@ export const OrdersFiltersSchema = z.object({
     branchID: z.coerce.number().optional(),
     productID: z.coerce.number().optional(),
     locationID: z.coerce.number().optional(),
-    receiptNumber: z.coerce.number().optional(),
+    receiptNumber: z.coerce.string().optional(),
     receiptNumbers: z.preprocess((val) => {
         if (typeof val === "string") {
             return val.split(",");
         }
         return val;
-    }, z.array(z.coerce.number()).optional()),
+    }, z.array(z.coerce.string()).optional()),
     recipientName: z.string().optional(),
     recipientPhone: z.string().optional(),
     recipientAddress: z.string().optional(),
@@ -343,7 +349,7 @@ export const OrdersFiltersSchema = z.object({
         if (val === "false") return false;
         return false;
     }, z.boolean().default(false).optional()),
-    orderID: z.coerce.number().optional(),
+    orderID: z.coerce.string().optional(),
     minified: z.preprocess((val) => {
         if (val === "true") return true;
         if (val === "false") return false;
@@ -436,7 +442,7 @@ export const OrdersStatisticsFiltersOpenAPISchema = generateSchema(OrdersStatist
 /* --------------------------------------------------------------- */
 
 export const OrdersReportPDFCreateSchema = z.object({
-    ordersIDs: z.array(z.coerce.number()).min(1).or(z.literal("*")),
+    ordersIDs: z.array(z.coerce.string()).min(1).or(z.literal("*")),
     type: z.literal("GENERAL").or(z.literal("DELIVERY_AGENT_MANIFEST"))
 });
 

@@ -8,7 +8,7 @@ import { reportReform, reportSelect } from "./reports.responses";
 export class ReportsRepository {
     async createReport(data: {
         loggedInUser: loggedInUserType;
-        reportData: ReportCreateType & { ordersIDs: number[] };
+        reportData: ReportCreateType & { ordersIDs: string[] };
         // TODO: Make reportMetaData a type
         reportMetaData: {
             totalCost: number;

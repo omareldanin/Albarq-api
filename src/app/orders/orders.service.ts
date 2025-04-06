@@ -374,7 +374,7 @@ export class OrdersService {
 
     getOrder = async (data: {
         params: {
-            orderID: number;
+            orderID: string;
         };
     }) => {
         const order = await ordersRepository.getOrder({
@@ -386,7 +386,7 @@ export class OrdersService {
 
     updateOrder = async (data: {
         params: {
-            orderID: number;
+            orderID: string;
         };
         loggedInUser: loggedInUserType;
         orderData: OrderUpdateType;
@@ -825,7 +825,7 @@ export class OrdersService {
 
     repositoryConfirmOrderByReceiptNumber = async (data: {
         params: {
-            orderReceiptNumber: number;
+            orderReceiptNumber: string;
         };
         loggedInUser: loggedInUserType;
         orderData: OrderRepositoryConfirmByReceiptNumberType;
@@ -877,7 +877,7 @@ export class OrdersService {
 
     deleteOrder = async (data: {
         params: {
-            orderID: number;
+            orderID: string;
         };
     }) => {
         await ordersRepository.deleteOrder({
@@ -898,9 +898,20 @@ export class OrdersService {
                     },
                 },
                 orderBy: {
-                        id: "asc"
+                    createdAt:"desc"
                 },
                 select: orderSelect
+            })
+            await prisma.order.updateMany({
+                where:{
+                    status:"REGISTERED",
+                    client:{
+                        id:data.loggedInUser.id
+                    },
+                },
+                data:{
+                    printed:true
+                }
             })
             const reformedOrders= orders.map(orderReform);
             const pdf = await generateReceipts(reformedOrders);
@@ -908,7 +919,18 @@ export class OrdersService {
             return pdf;
         }else{
             const orders = await ordersRepository.getOrdersByIDs(data.ordersIDs);
-    
+            if(data.loggedInUser.role === "CLIENT"){
+                await prisma.order.updateMany({
+                    where:{
+                        id:{
+                            in:data.ordersIDs.ordersIDs
+                        }
+                    },
+                    data:{
+                        printed:true
+                    }
+                })
+            }
             const pdf = await generateReceipts(orders);
     
             return pdf;
@@ -920,7 +942,7 @@ export class OrdersService {
         ordersFilters: OrdersFiltersType;
     }) => {
         let orders: ReturnType<typeof orderReform>[];
-        let ordersIDs: number[] = [];
+        let ordersIDs: string[] = [];
         
         if (data.ordersData.ordersIDs === "*") {
             orders = (
@@ -1260,9 +1282,6 @@ export class OrdersService {
         
         const replacedOrders=ordersStatisticsByStatus.find(status => status.status === "REPLACED")
         
-        const gOrders=ordersStatisticsByStatus.find(status => status.status === 'IN_GOV_REPOSITORY')
-        
-        const rOrders=ordersStatisticsByStatus.find(status => status.status === "IN_MAIN_REPOSITORY")
 
         deliveredOrders.count += pReturedOrders?.count ? pReturedOrders?.count : 0
         deliveredOrders.totalCost += pReturedOrders?.totalCost ? pReturedOrders?.totalCost : 0
@@ -1273,15 +1292,6 @@ export class OrdersService {
         ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "PARTIALLY_RETURNED")
         ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "REPLACED")
 
-        // registedOrders.count += gOrders?.count ? gOrders.count : 0
-        // registedOrders.totalCost += gOrders?.totalCost ? gOrders.totalCost : 0
-
-        // registedOrders.count += rOrders?.count ? rOrders.count : 0
-        // registedOrders.totalCost += rOrders?.totalCost ? rOrders.totalCost : 0
-
-        ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "IN_GOV_REPOSITORY")
-        ordersStatisticsByStatus = ordersStatisticsByStatus.filter(status => status.status !== "IN_MAIN_REPOSITORY")
-        
         let deliveredIndex = ordersStatisticsByStatus.findIndex(status => status.status === "DELIVERED")
         let registeredIndex = ordersStatisticsByStatus.findIndex(status => status.status === "REGISTERED")
         
@@ -1294,7 +1304,11 @@ export class OrdersService {
 
 
         if(data.loggedInUser.role === "DELIVERY_AGENT"){
-            const ordersStatisticsByStatus = statistics.ordersStatisticsByStatus.filter(status => status.status !== "REGISTERED")
+            const ordersStatisticsByStatus = statistics.ordersStatisticsByStatus.filter(status => status.status !== "REGISTERED" &&
+                status.status !== "IN_GOV_REPOSITORY" &&
+                status.status !== "IN_MAIN_REPOSITORY" &&
+                status.status !== "WITH_RECEIVING_AGENT" &&
+                status.status !== "READY_TO_SEND" )
             return {
                 ...statistics,
                 ordersStatisticsByStatus:ordersStatisticsByStatus
@@ -1306,7 +1320,7 @@ export class OrdersService {
 
     getOrderTimeline = async (data: {
         params: {
-            orderID: number;
+            orderID: string;
         };
         filters: OrderTimelineFiltersType;
     }) => {
@@ -1319,7 +1333,7 @@ export class OrdersService {
 
     getOrderChatMembers = async (data: {
         params: {
-            orderID: number;
+            orderID: string;
         };
     }) => {
         const orderChatMembers = await ordersRepository.getOrderChatMembers({
@@ -1331,7 +1345,7 @@ export class OrdersService {
 
     getOrderInquiryEmployees = async (data: {
         params: {
-            orderID: number;
+            orderID: string;
         };
     }) => {
         const orderInquiryEmployees = await ordersRepository.getOrderInquiryEmployees({
@@ -1343,7 +1357,7 @@ export class OrdersService {
 
     deactivateOrder = async (data: {
         params: {
-            orderID: number;
+            orderID: string;
         };
         loggedInUser: loggedInUserType;
     }) => {
@@ -1363,7 +1377,7 @@ export class OrdersService {
 
     reactivateOrder = async (data: {
         params: {
-            orderID: number;
+            orderID: string;
         };
     }) => {
         await ordersRepository.reactivateOrder({
@@ -1373,7 +1387,7 @@ export class OrdersService {
 
     sendNotificationToOrderChatMembers = async (data: {
         params: {
-            orderID: number;
+            orderID: string;
         };
         loggedInUser: loggedInUserType;
         notificationData: OrderChatNotificationCreateType;
