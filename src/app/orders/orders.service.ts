@@ -110,11 +110,11 @@ export class OrdersService {
             }
             return createdOrders;
         }
-
+        
         if(data.orderOrOrdersData.clientOrderReceiptId){
-            const clientReceipt= await prisma.clientOrderReceipt.findUnique({
+            const clientReceipt= await prisma.clientOrderReceipt.findFirst({
                 where:{
-                    id:data.orderOrOrdersData.clientOrderReceiptId
+                    receiptNumber:data.orderOrOrdersData.clientOrderReceiptId
                 },
                 select:{
                     id:true,
@@ -139,6 +139,7 @@ export class OrdersService {
                 throw new AppError("هذا الايصال غير صالح", 500);
             }
             data.orderOrOrdersData.receiptNumber = clientReceipt?.receiptNumber
+            data.orderOrOrdersData.clientOrderReceiptId = clientReceipt?.id + ""
         }
 
         const clientID = await clientsRepository.getClientIDByStoreID({
@@ -168,7 +169,7 @@ export class OrdersService {
             companyID: data.loggedInUser.companyID as number,
             clientID,
             loggedInUser: data.loggedInUser,
-            orderData: { ...data.orderOrOrdersData, confirmed, status, branchID }
+            orderData: { ...data.orderOrOrdersData, confirmed, status, branchID },
         });
 
         // Update Order Timeline

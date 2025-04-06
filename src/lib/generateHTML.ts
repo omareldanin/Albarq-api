@@ -61,7 +61,7 @@ export const generateHTML = async (template: string, data: object) => {
         hb.registerHelper("QRCode", (data) => {
             return generateQRCode(
                 JSON.stringify({
-                    id: data.id
+                    id: data.receiptNumber
                 })
             );
         });

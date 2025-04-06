@@ -235,7 +235,7 @@ export class OrdersRepository {
         // Create order
         const createdOrder = await prisma.order.create({
             data: {
-                id:randomId,
+                id: randomId,
                 totalCost: data.orderData.withProducts === false ? data.orderData.totalCost : totalCost,
                 deliveryCost: deliveryCost,
                 quantity: data.orderData.withProducts === false ? data.orderData.quantity : quantity,
@@ -253,7 +253,7 @@ export class OrdersRepository {
                 deliveryType: data.orderData.deliveryType,
                 clientOrderReceipt:data.orderData.clientOrderReceiptId ?{
                     connect:{
-                        id:data.orderData.clientOrderReceiptId
+                        id:+data.orderData.clientOrderReceiptId
                     }
                 }:undefined,
                 governorate: data.orderData.governorate,

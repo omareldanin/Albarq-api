@@ -6,7 +6,7 @@ import { clientReceiptSelect, receiptReform } from "./clientReceipts.responses";
 export class clientReceiptsRepository{
     async createClientReceipt(data:{
         storeId:number,
-        receiptData:clientReceiptCreateType
+        receiptData:clientReceiptCreateType,
     }){
         const store = await prisma.store.findUnique({
             where: {
@@ -24,7 +24,8 @@ export class clientReceiptsRepository{
         const createdReceipt=await prisma.clientOrderReceipt.create({
             data:{
                 storeId:store.id,
-                branchId:data.receiptData.branchId
+                branchId:data.receiptData.branchId,
+                receiptNumber:data.receiptData.receiptNumber
             },
             select:clientReceiptSelect
         })
