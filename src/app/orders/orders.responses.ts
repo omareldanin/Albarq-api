@@ -367,6 +367,8 @@ export const statisticsReformed = (statistics: {
         "REPLACED",
         "CHANGE_ADDRESS",
         "RETURNED",
+        "IN_MAIN_REPOSITORY",
+        "IN_GOV_REPOSITORY"
     ];
 
     const statisticsReformed = {
