@@ -17,7 +17,7 @@ export class CustomerOutputController{
     saveOrderInCache=catchAsync(async (req,res)=>{
         const loggedInUser = res.locals.user as loggedInUserType;
         
-        const {orderId,clientId,companyId,type,repository,storeId}=req.body
+        const {orderId,companyId,type,repository,storeId}=req.body
 
         let order=await prisma.order.findFirst({
             where:{
@@ -35,15 +35,19 @@ export class CustomerOutputController{
             throw new AppError("هذا الطلب غير تابع لهذه الشركه", 404);
         }
 
-        if(type === "client" && +clientId !== +order.client.user.id){
-            
-            throw new AppError("هذا الطلب غير تابع لهذا العميل", 404);
-        }
-
         if(type === "client" && +storeId !== +order.store.id){
             
             throw new AppError("هذا الطلب غير تابع لهذا المتجر", 404);
         }
+
+        const store = await prisma.store.findUnique({
+            where:{
+                id:storeId
+            },
+            select:{
+                clientId:true
+            }
+        })
 
         const checkIfExist=await prisma.customerOutput.findFirst({
             select:{
@@ -90,7 +94,7 @@ export class CustomerOutputController{
         await prisma.customerOutput.create({
             data:{
                 orderId:orderId,
-                clientId:clientId ? clientId :null,
+                clientId:store ? store.clientId :null,
                 storeId:storeId ? storeId :null,
                 companyId:companyId ? companyId : null,
                 repositoryId:returnsRepo.id,
@@ -104,7 +108,7 @@ export class CustomerOutputController{
     })
 
     getCustomerOldData=catchAsync(async(req,res)=>{
-        const {clientId,companyId,size,page,type,repository,storeId}=req.query
+        const {companyId,size,page,type,repository,storeId}=req.query
         
         const loggedInUser = res.locals.user as loggedInUserType;
         
@@ -141,10 +145,9 @@ export class CustomerOutputController{
                 where:{
                     AND:[
                         {repositoryId:returnsRepo.id},
-                        type === "client" ? {clientId:clientId ? +clientId:undefined}:
+                        type === "client" ? {storeId:storeId ? +storeId:undefined}:
                         type === "company" ? {companyId:companyId? +companyId:undefined}:
                         {targetRepositoryId:repository? +repository:undefined},
-                        {storeId:storeId && type === "client" ? +storeId:undefined},
                     ]
                 },
                 orderBy: {
@@ -175,9 +178,9 @@ export class CustomerOutputController{
     })
 
     saveAndCreateReport=catchAsync(async(req,res)=>{
-        const {clientId,companyId,type,storeId,repositoryId,repositoryName}=req.body;
+        const {companyId,type,storeId,repositoryId,repositoryName}=req.body;
 
-        let ordersIDs: number[] = [];
+        let ordersIDs: string[] = [];
 
         const loggedInUser = res.locals.user as loggedInUserType;
         
@@ -205,6 +208,15 @@ export class CustomerOutputController{
 
         const returnsRepo=userRepository?.branch?.repositories.find(repo => repo.type === "RETURN")
 
+        const store = await prisma.store.findUnique({
+            where:{
+                id:storeId
+            },
+            select:{
+                clientId:true
+            }
+        })
+
         if(!returnsRepo){
             throw new AppError("لا يوجد مخزن راوجع لهذا الفرع!", 404);
         }
@@ -214,7 +226,7 @@ export class CustomerOutputController{
                     AND:[
                         {repositoryId:returnsRepo.id},
                         type === "client" ? {storeId:storeId ? +storeId:null}:{},
-                        type === "client" ? {clientId:clientId ? +clientId:null}:
+                        type === "client" ? {clientId:store ? +store.clientId:null}:
                         type === "company"?{companyId:companyId? +companyId:null}:
                         {targetRepositoryId:repositoryId}
                     ]
@@ -276,7 +288,7 @@ export class CustomerOutputController{
             reportData:{
                 type:type === "client" ? "CLIENT" : type === "company" ? "COMPANY":"REPOSITORY",
                 secondaryType:"RETURNED",
-                clientID:clientId,
+                clientID:store?.clientId,
                 companyID:companyId,
                 baghdadDeliveryCost:0,
                 governoratesDeliveryCost:0,
@@ -314,7 +326,7 @@ export class CustomerOutputController{
                 AND:[
                     {repositoryId:returnsRepo.id},
                     type === "client" ? {storeId:storeId ? +storeId:null}:{},
-                    type === "client" ? {clientId:clientId ? +clientId:null}:
+                    type === "client" ? {clientId:store ? +store.clientId:null}:
                     type === "company"?{companyId:companyId? +companyId:null}:
                     {targetRepositoryId:repositoryId}
                 ]
@@ -325,7 +337,7 @@ export class CustomerOutputController{
             await sendNotification({
                 title: "تم انشاء كشف جديد",
                 content: `تم انشاء كشف جديد برقم ${reportData?.id}`,
-                userID: clientId as number
+                userID: store?.clientId as number
             });
         }
 
