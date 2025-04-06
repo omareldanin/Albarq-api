@@ -423,13 +423,7 @@ export class OrdersRepository {
                 {
                     OR: [
                         {
-                            receiptNumber: data.filters.search
-                                ? data.filters.search
-                                    ? undefined
-                                    : data.filters.search.length > 9
-                                      ? undefined
-                                      : data.filters.search
-                                : undefined
+                            receiptNumber: data.filters.search ? data.filters.search : undefined
                         },
                         {
                             repositoryReportId: data.filters.search
