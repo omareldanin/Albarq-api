@@ -534,6 +534,9 @@ export class OrdersService {
                 throw new AppError("هذا الطلب غير مرتبط بهذا الفرع", 403);
             }
         }
+        if(data.orderData.status === "WITH_RECEIVING_AGENT" && oldOrderData.status !=="READY_TO_SEND"){
+            throw new AppError("هذا الطلب غير جاهز للارسال", 403);
+        }
         const newOrder = await ordersRepository.updateOrder({
             orderID: data.params.orderID,
             loggedInUser: data.loggedInUser,
