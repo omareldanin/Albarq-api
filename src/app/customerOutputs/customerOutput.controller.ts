@@ -307,12 +307,44 @@ export class CustomerOutputController{
         
         // if client report, make secondary status WITH_CLIENT
         if (type === "client") {
-            await ordersRepository.updateOrdersSecondaryStatus({
-                ordersIDs,
-                secondaryStatus: "WITH_CLIENT"
+            await prisma.order.updateMany({
+                where: {
+                    id: {
+                        in: ordersIDs
+                    }
+                },
+                data: {
+                    secondaryStatus: "WITH_CLIENT",
+                    repositoryId:null
+                }
             });
         }
-
+        if(type === "repository"){
+            await prisma.order.updateMany({
+                where: {
+                    id: {
+                        in: ordersIDs
+                    }
+                },
+                data: {
+                    secondaryStatus: "IN_CAR",
+                    repositoryId:repositoryId
+                }
+            });
+        }
+        if(type === "company"){
+            await prisma.order.updateMany({
+                where: {
+                    id: {
+                        in: ordersIDs
+                    }
+                },
+                data: {
+                    secondaryStatus:"WITH_AGENT",
+                    repositoryId:null
+                }
+            });
+        }
         const reportData = await reportsRepository.getReport({
             reportID: report.id
         });

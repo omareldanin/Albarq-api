@@ -175,7 +175,7 @@ export class OrdersController {
                 clientId:client_id ? Number(client_id):undefined,
                 governorate:governorate ? governorate as Governorate:undefined,
                 forwardedRepo:getIncoming ? undefined :secondaryStatus === 'IN_CAR'?exportRepo?.id:undefined
-            },
+            },  
             orderBy: {
                 updatedAt:"desc"
             },
@@ -659,7 +659,11 @@ export class OrdersController {
                     id:{
                         in:inquiryClientsIDs
                     }
-                }
+                },
+                AND: [
+                      { status: { notIn: ["RETURNED", "REPLACED","PARTIALLY_RETURNED"] } },
+                      { secondaryStatus: {notIn:["WITH_CLIENT","IN_REPOSITORY"]} }
+                ]
             }
         })
         
