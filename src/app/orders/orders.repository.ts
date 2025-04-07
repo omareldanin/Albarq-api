@@ -819,9 +819,15 @@ export class OrdersRepository {
                 },
                 // inquiry filters
                 {
-                    branch: {
-                        id: data.filters.branchID
-                    }
+                    branch: data.filters.inquiryBranchesIDs
+                        ? {
+                              id: {
+                                  in: data.filters.inquiryBranchesIDs
+                              }
+                          }
+                        : {
+                            id: data.filters.branchID
+                        }
                 },
                 {
                     OR:[
@@ -838,54 +844,58 @@ export class OrdersRepository {
                             clientOrderReceiptId:data.filters.clientOrderReceiptId
                         },
                         {
-                            status: data.filters.inquiryStatuses
-                                ? {
-                                        in: data.filters.inquiryStatuses
-                                    }
-                                : undefined
-                        },
-                        {
-                            governorate: data.filters.inquiryGovernorates
-                                ? {
-                                        in: data.filters.inquiryGovernorates
-                                    }
-                                : undefined
-                        },
-                        {
-                            branch: data.filters.inquiryBranchesIDs
-                                ? {
-                                        id: {
-                                            in: data.filters.inquiryBranchesIDs
-                                        }
-                                    }
-                                : undefined
-                        },
-                        {
-                            store: data.filters.inquiryStoresIDs
-                                ? {
-                                        id: {
-                                            in: data.filters.inquiryStoresIDs
-                                        }
-                                    }
-                                : undefined
-                        },
-                        {
-                            company: data.filters.inquiryCompaniesIDs
-                                ? {
-                                        id: {
-                                            in: data.filters.inquiryCompaniesIDs
-                                        }
-                                    }
-                                : undefined
-                        },
-                        {
-                            location: data.filters.inquiryLocationsIDs
-                                ? {
-                                        id: {
-                                            in: data.filters.inquiryLocationsIDs
-                                        }
-                                    }
-                                : undefined
+                            OR: [
+                                {
+                                    status: data.filters.inquiryStatuses
+                                        ? {
+                                              in: data.filters.inquiryStatuses
+                                          }
+                                        : undefined
+                                },
+                                {
+                                    governorate: data.filters.inquiryGovernorates
+                                        ? {
+                                              in: data.filters.inquiryGovernorates
+                                          }
+                                        : undefined
+                                },
+                                {
+                                    branch: data.filters.inquiryBranchesIDs
+                                        ? {
+                                              id: {
+                                                  in: data.filters.inquiryBranchesIDs
+                                              }
+                                          }
+                                        : undefined
+                                },
+                                {
+                                    store: data.filters.inquiryStoresIDs
+                                        ? {
+                                              id: {
+                                                  in: data.filters.inquiryStoresIDs
+                                              }
+                                          }
+                                        : undefined
+                                },
+                                {
+                                    company: data.filters.inquiryCompaniesIDs
+                                        ? {
+                                              id: {
+                                                  in: data.filters.inquiryCompaniesIDs
+                                              }
+                                          }
+                                        : undefined
+                                },
+                                {
+                                    location: data.filters.inquiryLocationsIDs
+                                        ? {
+                                              id: {
+                                                  in: data.filters.inquiryLocationsIDs
+                                              }
+                                          }
+                                        : undefined
+                                }
+                            ]
                         }
                     ],
                 },
