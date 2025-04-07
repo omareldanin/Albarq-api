@@ -474,6 +474,13 @@ export class OrdersService {
             data.orderData.deliveryAgentID = oldOrderData?.deliveryAgent?.id;
             data.orderData.oldDeliveryAgentId = oldOrderData?.deliveryAgent?.id;
         }
+        if (
+            oldOrderData?.status === "RETURNED" &&
+            data.orderData.secondaryStatus === "IN_REPOSITORY"
+        ) {
+            data.orderData.deliveryAgentID = null;
+            data.orderData.oldDeliveryAgentId = oldOrderData?.deliveryAgent?.id;
+        }
         // if secondary status is changed to with_delivery_agent, link the delivery agent
         // or if old order secondary status is in repository and new status is resend, link the delivery agent
         // if (
