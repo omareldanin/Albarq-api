@@ -914,6 +914,11 @@ export class OrdersRepository {
                         [
                             { branchReport: { is: null } },
                             { branchReport: { report: { deleted: true } } }
+                        ]:data.loggedInUser?.role === "RECEIVING_AGENT"?
+                        [
+                            { clientReport: { is: null } },
+                            { clientReport: { report: { deleted: true } } },
+                            { clientReport: { report: { confirmed: false } } },
                         ]:
                         [
                             { companyReport: { is: null } },
