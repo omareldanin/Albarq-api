@@ -1727,6 +1727,12 @@ export class OrdersRepository {
                                 : undefined
                         }
                     ]
+                },{
+                    AND:data.loggedInUser.role === "RECEIVING_AGENT"?
+                    [
+                        { status: { notIn: ["RETURNED", "REPLACED","PARTIALLY_RETURNED"] } },
+                        { secondaryStatus: {notIn:["WITH_CLIENT","IN_REPOSITORY"]} }
+                  ]:undefined
                 }
             ]
         } satisfies Prisma.OrderWhereInput;
