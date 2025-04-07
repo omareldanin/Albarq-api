@@ -1654,17 +1654,6 @@ export class OrdersRepository {
                 {
                     deleted: false
                 },
-                {
-                    AND:data.loggedInUser?.role === "DELIVERY_AGENT" ?
-                    [
-                        {
-                            OR: [
-                              { secondaryStatus: { notIn: ["IN_REPOSITORY", "WITH_CLIENT"] } },
-                              { secondaryStatus: null }
-                            ]
-                        }
-                    ]:undefined
-                },
                 // inquiry filters
                 {
                     AND: [
