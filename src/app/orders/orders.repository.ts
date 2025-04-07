@@ -1713,13 +1713,6 @@ export class OrdersRepository {
                                 : undefined
                         }
                     ]
-                },{
-                    AND:data.loggedInUser.role === "RECEIVING_AGENT"?
-                    [
-                        { clientReport: { isNot: null } },
-                        { clientReport: { report: { deleted: false } } },
-                        { clientReport: { report: { confirmed: false } } },
-                    ]:undefined
                 }
             ]
         } satisfies Prisma.OrderWhereInput;
