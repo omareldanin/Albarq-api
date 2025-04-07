@@ -1730,7 +1730,7 @@ export class OrdersRepository {
                 },{
                     AND:data.loggedInUser.role === "RECEIVING_AGENT"?
                     [
-                        { status: { notIn: ["RETURNED", "REPLACED","PARTIALLY_RETURNED"] } },
+                        { status: { in: ["RETURNED", "REPLACED","PARTIALLY_RETURNED"] } },
                         { secondaryStatus: {notIn:["WITH_CLIENT","IN_REPOSITORY"]} }
                   ]:undefined
                 }
