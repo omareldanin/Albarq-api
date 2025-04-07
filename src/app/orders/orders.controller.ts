@@ -660,6 +660,12 @@ export class OrdersController {
                         in:inquiryClientsIDs
                     }
                 },
+                OR:loggedInUser.role === "RECEIVING_AGENT"?
+                    [
+                        { clientReport: { is: null } },
+                        { clientReport: { report: { deleted: true } } },
+                        { clientReport: { report: { confirmed: false } } },
+                    ]:undefined
             }
         })
         
