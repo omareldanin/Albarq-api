@@ -1280,9 +1280,24 @@ export class OrdersService {
         });
         
         if(data.loggedInUser.role === "RECEIVING_AGENT"){
+            let returnedOrders=statistics.ordersStatisticsByStatus.find(status => status.status === "RETURNED") || {status:"RETURNED",count:0,totalCost:0}
+
+            const pReturedOrders=statistics.ordersStatisticsByStatus.find(status => status.status === "PARTIALLY_RETURNED")
+        
+            const replacedOrders=statistics.ordersStatisticsByStatus.find(status => status.status === "REPLACED")
+            
+            returnedOrders.count += pReturedOrders?.count ? pReturedOrders?.count : 0
+            returnedOrders.totalCost += pReturedOrders?.totalCost ? pReturedOrders?.totalCost : 0
+    
+            returnedOrders.count += replacedOrders?.count ? replacedOrders?.count : 0
+            returnedOrders.totalCost += replacedOrders?.totalCost ? replacedOrders?.totalCost : 0
+
             return {
                 ...statistics,
-                ordersStatisticsByStatus:statistics.ordersStatisticsByStatus.filter(status => status.status === "READY_TO_SEND" || status.status === "WITH_RECEIVING_AGENT" || status.status === "RETURNED")
+                ordersStatisticsByStatus:{
+                    ...statistics.ordersStatisticsByStatus.filter(status => status.status === "READY_TO_SEND" || status.status === "WITH_RECEIVING_AGENT"),
+                    returnedOrders
+                }
             }
         }
         let ordersStatisticsByStatus = statistics.ordersStatisticsByStatus
