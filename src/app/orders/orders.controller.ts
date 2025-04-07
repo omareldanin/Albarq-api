@@ -654,7 +654,7 @@ export class OrdersController {
                 id: true
             },
             where:{
-                status:status as OrderStatus,
+                status:status==="RETURNED"? {in:["RETURNED","REPLACED","PARTIALLY_RETURNED"]} :status as OrderStatus,
                 client:{
                     id:{
                         in:inquiryClientsIDs
