@@ -1714,10 +1714,10 @@ export class OrdersRepository {
                         }
                     ]
                 },{
-                    OR:data.loggedInUser.role === "RECEIVING_AGENT"?
+                    AND:data.loggedInUser.role === "RECEIVING_AGENT"?
                     [
-                        { clientReport: { is: null } },
-                        { clientReport: { report: { deleted: true } } },
+                        { clientReport: { isNot: null } },
+                        { clientReport: { report: { deleted: false } } },
                         { clientReport: { report: { confirmed: false } } },
                     ]:undefined
                 }
