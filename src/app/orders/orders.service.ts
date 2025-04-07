@@ -1294,10 +1294,10 @@ export class OrdersService {
 
             return {
                 ...statistics,
-                ordersStatisticsByStatus:{
+                ordersStatisticsByStatus:[
                     ...statistics.ordersStatisticsByStatus.filter(status => status.status === "READY_TO_SEND" || status.status === "WITH_RECEIVING_AGENT"),
                     returnedOrders
-                }
+                ]
             }
         }
         let ordersStatisticsByStatus = statistics.ordersStatisticsByStatus
