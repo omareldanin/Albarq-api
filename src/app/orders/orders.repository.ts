@@ -1559,7 +1559,7 @@ export class OrdersRepository {
                                     data.filters.inquiryCompaniesIDs
                                         ? {
                                             in: [
-                                                ...data.filters.inquiryCompaniesIDs
+                                                ...data.filters.inquiryCompaniesIDs,
                                                 //   data.filters.companyID as number
                                             ]
                                         }
@@ -1661,7 +1661,7 @@ export class OrdersRepository {
                 },
                 // inquiry filters
                 {
-                    AND: [
+                    OR: [
                         {
                             status: data.filters.inquiryStatuses
                                 ? {
@@ -1716,7 +1716,7 @@ export class OrdersRepository {
                 }
             ]
         } satisfies Prisma.OrderWhereInput;
-
+        
         
         const ordersStatisticsByStatus = await prisma.order.groupBy({
             by: ["status"],
