@@ -660,10 +660,6 @@ export class OrdersController {
                         in:inquiryClientsIDs
                     }
                 },
-                AND: [
-                      { status: { notIn: ["RETURNED", "REPLACED","PARTIALLY_RETURNED"] } },
-                      { secondaryStatus: {notIn:["WITH_CLIENT","IN_REPOSITORY"]} }
-                ]
             }
         })
         
