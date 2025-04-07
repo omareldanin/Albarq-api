@@ -536,7 +536,7 @@ export class OrdersRepository {
                     status: data.filters.statuses ? { in: data.filters.statuses } : undefined
                 },
                 { 
-                    status: data.filters.status
+                    status:data.filters.status==="RETURNED" && data.loggedInUser?.role ==="RECEIVING_AGENT" ? {in:["RETURNED","REPLACED","PARTIALLY_RETURNED"]}: data.filters.status
                 },
                 // Filter by deliveryType
                 {
