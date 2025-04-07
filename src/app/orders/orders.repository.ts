@@ -1614,14 +1614,6 @@ export class OrdersRepository {
                           : undefined
                 },
                 {
-                    status:data.loggedInUser.role === "DELIVERY_AGENT" ? 
-                    {
-                        notIn:["REGISTERED"]
-                    }: data.loggedInUser.role === "RECEIVING_AGENT" ? 
-                    { in:["READY_TO_SEND","WITH_RECEIVING_AGENT","RETURNED"]}: 
-                    { in: data.filters.statuses }
-                },
-                {
                     governorate: data.filters.governorate
                 },
                 {
@@ -1728,11 +1720,12 @@ export class OrdersRepository {
                         }
                     ]
                 },{
-                    AND:data.loggedInUser.role === "RECEIVING_AGENT"?
+                    OR:data.loggedInUser.role === "RECEIVING_AGENT"?
                     [
-                        { status: { in: ["RETURNED", "REPLACED","PARTIALLY_RETURNED"] } },
-                        { secondaryStatus: {notIn:["WITH_CLIENT","IN_REPOSITORY"]} }
-                  ]:undefined
+                        { clientReport: { is: null } },
+                        { clientReport: { report: { deleted: true } } },
+                        { clientReport: { report: { confirmed: false } } },
+                    ]:undefined
                 }
             ]
         } satisfies Prisma.OrderWhereInput;
