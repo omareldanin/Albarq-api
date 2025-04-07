@@ -825,7 +825,7 @@ export class OrdersRepository {
                                   in: data.filters.inquiryBranchesIDs
                               }
                           }
-                        : {
+                        :{
                             id: data.filters.branchID
                         }
                 },
@@ -1576,6 +1576,15 @@ export class OrdersRepository {
                             }
                         }
                     ]
+                },
+                {
+                    branch: data.filters.inquiryBranchesIDs
+                        ? {
+                              id: {
+                                  in: data.filters.inquiryBranchesIDs
+                              }
+                          }
+                        : undefined
                 },
                 {
                     storeId: data.filters.storeID
