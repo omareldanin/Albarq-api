@@ -1555,20 +1555,19 @@ export class OrdersRepository {
                     OR: [
                         {
                             company: {
-                                id: 
-                                    data.filters.inquiryCompaniesIDs
-                                        ? {
-                                            in: [
-                                                ...data.filters.inquiryCompaniesIDs,
-                                                //   data.filters.companyID as number
-                                            ]
-                                        }
-                                        : data.filters.companyID
+                                id: data.filters.companyID
                             }
                         },
                         {
                             forwardedFrom: {
-                                id:data.filters.companyID
+                                id:data.filters.inquiryCompaniesIDs
+                                ? {
+                                    in: [
+                                        ...data.filters.inquiryCompaniesIDs,
+                                        //   data.filters.companyID as number
+                                    ]
+                                }
+                                : data.filters.companyID
                             }
                         }
                     ]
