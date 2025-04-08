@@ -421,11 +421,7 @@ export class OrdersRepository {
         {
             AND: [
                 {
-                    status: data.filters.inquiryStatuses
-                        ? {
-                                in: data.filters.inquiryStatuses
-                            }
-                        : undefined
+                    status: data.filters.status
                 },
                 {
                     governorate: data.filters.inquiryGovernorates
