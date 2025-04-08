@@ -2099,34 +2099,30 @@ export class OrdersRepository {
                                     : undefined
                             },
                             {
-                                OR: [
-                                    {
-                                        inquiryStores: order?.storeId
-                                            ? {
-                                                  some: {
-                                                      storeId: order.storeId
-                                                  }
-                                              }
-                                            : undefined
-                                    },
-                                    {
-                                        inquiryLocations: order?.locationId
-                                            ? {
-                                                  some: {
-                                                      locationId: order.locationId
-                                                  }
-                                              }
-                                            : undefined
-                                    },
-                                    // TODO
-                                    {
-                                        inquiryGovernorates: order?.governorate
-                                            ? { has: order.governorate }
-                                            : undefined
-                                    },
-                                    
-                                ]
-                            }
+                                inquiryStores: order?.storeId
+                                    ? {
+                                            some: {
+                                                storeId: order.storeId
+                                            }
+                                        }
+                                    : undefined
+                            },
+                            {
+                                inquiryLocations: order?.locationId
+                                    ? {
+                                            some: {
+                                                locationId: order.locationId
+                                            }
+                                        }
+                                    : undefined
+                            },
+                            // TODO
+                            {
+                                inquiryGovernorates: order?.governorate
+                                    ? { has: order.governorate }
+                                    : undefined
+                            },
+                            
                         ]
                     },
                     select: {
