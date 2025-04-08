@@ -2078,30 +2078,33 @@ export class OrdersRepository {
                         AND: [
                             { role: "INQUIRY_EMPLOYEE" },
                             {
+                                inquiryStatuses: order?.status ? { has: order.status } : undefined
+                            },
+                            {
+                                inquiryBranches: order?.branchId
+                                    ? {
+                                          some: {
+                                              branchId: order.branchId
+                                          }
+                                      }
+                                    : undefined
+                            },
+                            {
+                                inquiryCompanies: order?.companyId
+                                    ? {
+                                          some: {
+                                              companyId: order.companyId
+                                          }
+                                      }
+                                    : undefined
+                            },
+                            {
                                 OR: [
-                                    {
-                                        inquiryBranches: order?.branchId
-                                            ? {
-                                                  some: {
-                                                      branchId: order.branchId
-                                                  }
-                                              }
-                                            : undefined
-                                    },
                                     {
                                         inquiryStores: order?.storeId
                                             ? {
                                                   some: {
                                                       storeId: order.storeId
-                                                  }
-                                              }
-                                            : undefined
-                                    },
-                                    {
-                                        inquiryCompanies: order?.companyId
-                                            ? {
-                                                  some: {
-                                                      companyId: order.companyId
                                                   }
                                               }
                                             : undefined
@@ -2121,9 +2124,7 @@ export class OrdersRepository {
                                             ? { has: order.governorate }
                                             : undefined
                                     },
-                                    {
-                                        inquiryStatuses: order?.status ? { has: order.status } : undefined
-                                    }
+                                    
                                 ]
                             }
                         ]
