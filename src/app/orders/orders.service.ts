@@ -1300,6 +1300,20 @@ export class OrdersService {
                 ]
             }
         }
+
+        if(data.loggedInUser.role === "INQUIRY_EMPLOYEE"){
+            const employee = await prisma.employee.findUnique({
+                where:{
+                    id:data.loggedInUser.id
+                },select:{
+                    inquiryStatuses:true
+                }
+            })
+            return {
+                ...statistics,
+                ordersStatisticsByStatus:statistics.ordersStatisticsByStatus.filter(status =>employee?.inquiryStatuses.includes(status.status))
+            }
+        }
         let ordersStatisticsByStatus = statistics.ordersStatisticsByStatus
         
         let deliveredOrders=ordersStatisticsByStatus.find(status => status.status === "DELIVERED") || {status:"DELIVERED",count:0,totalCost:0}
