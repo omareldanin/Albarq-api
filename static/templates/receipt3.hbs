@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>فاتورة</title>
+    <style>
+        .receipt{
+            margin-top: 10px;
+            position: relative;
+            margin-bottom: 70px;
+        }
+        p{
+          margin: 10px 0 0;
+        }
+      .logo {
+        width: 50px;
+        position: absolute;
+        top: 5px;
+        left: 10px;
+      }
+      .receipt div{
+        margin-top: 8px;
+        font-weight: bold;
+        font-size: 14px;
+      }
+      .footer{
+        display: flex;justify-content: space-between;
+        align-items: end;
+      }
+      .footer div{
+        font-weight: lighter !important;
+      }
+    </style>
+  </head>
+  <body style="direction: rtl">
+    {{#each orders}}
+       <div class="receipt">
+            <img
+            src="{{company.logo}}"
+            class="logo"
+            />
+            <p>{{branch.name}}</p>
+            <div>
+                <span>رقم الوصل :</span>
+                <span>{{receiptNumber}}</span>
+            </div>
+            <div>
+                <span>اسم الصفحه :</span>
+                <span>{{store.name}}</span>
+            </div>
+            <div>
+                <span>العنوان : </span>
+                <span>{{localizeGovernorate governorate}} - {{location.name}} - {{recipientAddress}}</span>
+            </div>
+            <div>
+                {{#each recipientPhones}}
+                    <span>هاتف الزبون {{add @index 1}}:</span>
+                    <span>{{this}}</span><br />
+                {{/each}}
+            </div>
+            <div>
+                <span>السعر الكلي :</span>
+                <span>{{add totalCost}}</span>
+            </div>
+            <div class="footer">
+              <div>
+                <span style="display: block;">ملاحظات مهمه</span>
+                <span style="display: block;">* الشركه مسئوله عن توصيل الطلبات فقط</span>
+              </div>
+              <div style="float: left;margin-top: 0px;">
+                  <img src="{{QRCode this}}" />
+              </div>
+            </div>
+       </div>
+        {{#unless @last}}
+            <div style="page-break-before: always;"></div>
+        {{/unless}}
+    {{/each}}
+  </body>
+</html>
