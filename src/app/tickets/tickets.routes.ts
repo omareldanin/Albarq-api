@@ -18,7 +18,7 @@ router.route("/ticket").post(
         EmployeeRole.CLIENT_ASSISTANT,
         ClientRole.CLIENT
     ]),
-    ticketController.createResponse
+    ticketController.createTicket
 );
 
 router.route("/ticket").get(
