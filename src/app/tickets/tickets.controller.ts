@@ -163,6 +163,23 @@ export class TicketController{
         })
     })
 
+    forwardTicket=catchAsync(async(req,res)=>{
+        const {id}=req.params;
+        const ticket= await prisma.ticket.update({
+            where:{
+                id:+id
+            },
+            data:{
+                departmentId:req.body.departmentId
+            }
+        })
+
+        res.status(200).json({
+            status: "success",
+            data: ticket
+        })
+    })
+
     getOne=catchAsync(async(req,res)=>{
         const {id}=req.params;
         const ticket=await prisma.ticket.findUnique({
