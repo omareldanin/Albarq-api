@@ -189,7 +189,8 @@ export class TicketController{
                 id:+id
             },
             data:{
-                departmentId:req.body.departmentId
+                departmentId:req.body.departmentId,
+                forwarded:true
             }
         })
 
