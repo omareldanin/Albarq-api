@@ -142,11 +142,14 @@ export class TicketController{
                             }
                         }
                     }
+                },
+                orderBy:{
+                    id:"desc",
                 }
             },
             {
                 page:page ? +page : 1,
-                size:size ? +size : 10
+                size:size ? +size : 10,
             }
         )
         res.status(200).json({
