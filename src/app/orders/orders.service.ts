@@ -1280,23 +1280,45 @@ export class OrdersService {
         });
         
         if(data.loggedInUser.role === "RECEIVING_AGENT"){
-            let returnedOrders=statistics.ordersStatisticsByStatus.find(status => status.status === "RETURNED") || {status:"RETURNED",count:0,totalCost:0}
-
-            const pReturedOrders=statistics.ordersStatisticsByStatus.find(status => status.status === "PARTIALLY_RETURNED")
-        
-            const replacedOrders=statistics.ordersStatisticsByStatus.find(status => status.status === "REPLACED")
+                const ordersStatisticsByStatus = await prisma.order.groupBy({
+                        by: ["status"],
+                        _sum: {
+                            totalCost: true
+                        },
+                        _count: {
+                            id: true
+                        },
+                        where:{
+                            status:{in:["RETURNED","REPLACED","PARTIALLY_RETURNED"]},
+                            client:{
+                                id:{
+                                    in:inquiryClientsIDs
+                                }
+                            },
+                            AND:[
+                                    { clientReport: { isNot: null } },
+                                    { clientReport: { secondaryType: "RETURNED" } },
+                                    { clientReport: { report: { deleted: false } } },
+                                    { clientReport: { report: { confirmed: false } } },
+                                ]
+                        }
+                    });
             
-            returnedOrders.count += pReturedOrders?.count ? pReturedOrders?.count : 0
-            returnedOrders.totalCost += pReturedOrders?.totalCost ? pReturedOrders?.totalCost : 0
-    
-            returnedOrders.count += replacedOrders?.count ? replacedOrders?.count : 0
-            returnedOrders.totalCost += replacedOrders?.totalCost ? replacedOrders?.totalCost : 0
-
+                let total=0
+                let count =0
+                ordersStatisticsByStatus.map(s =>{
+                    total += s._sum.totalCost ||0 
+                    count += s._count.id
+                })
             return {
                 ...statistics,
                 ordersStatisticsByStatus:[
                     ...statistics.ordersStatisticsByStatus.filter(status => status.status === "READY_TO_SEND" || status.status === "WITH_RECEIVING_AGENT"),
-                    returnedOrders
+                    {
+                        status: "RETURNED",
+                        totalCost: total,
+                        count:count
+                    }
                 ]
             }
         }
