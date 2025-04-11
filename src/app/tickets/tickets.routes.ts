@@ -63,6 +63,20 @@ router.route("/ticket/:id").get(
     ticketController.getOne
 );
 
+router.route("/take-ticket/:id").get(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER,
+        EmployeeRole.BRANCH_MANAGER,
+        EmployeeRole.ACCOUNT_MANAGER,
+        EmployeeRole.DATA_ENTRY,
+        EmployeeRole.INQUIRY_EMPLOYEE,
+        EmployeeRole.DELIVERY_AGENT,
+        EmployeeRole.CLIENT_ASSISTANT,
+        ClientRole.CLIENT
+    ]),
+    ticketController.takeTicket
+);
+
 router.route("/forward-ticket/:id").patch(
     isLoggedIn,
     isAutherized([EmployeeRole.COMPANY_MANAGER,

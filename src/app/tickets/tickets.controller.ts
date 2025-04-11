@@ -185,21 +185,71 @@ export class TicketController{
         })
     })
 
+    takeTicket=catchAsync(async(req,res)=>{
+        const {id}=req.params;
+        const loggedInUser=res.locals.user as loggedInUserType
+
+        const ticket =await prisma.ticket.findUnique({
+            where:{
+                id:+id
+            },
+            select:{
+                id:true,
+                employeeId:true
+            }
+        })
+
+        if(ticket?.employeeId){
+            throw new AppError("لا يمكنك استلام هذه التذكره",404)
+        }
+
+        const updatedticket= await prisma.ticket.update({
+            where:{
+                id:+id
+            },
+            data:{
+                employeeId:loggedInUser.id
+            }
+        })
+
+        res.status(200).json({
+            status: "success",
+            data: updatedticket
+        })
+    })
+
     forwardTicket=catchAsync(async(req,res)=>{
         const {id}=req.params;
-        const ticket= await prisma.ticket.update({
+        const loggedInUser=res.locals.user as loggedInUserType
+
+        const ticket =await prisma.ticket.findUnique({
+            where:{
+                id:+id
+            },
+            select:{
+                id:true,
+                employeeId:true
+            }
+        })
+
+        if(ticket?.employeeId !== loggedInUser.id){
+            throw new AppError("لا يمكنك تحويل هذه التذكره",404)
+        }
+
+        const updatedTicket= await prisma.ticket.update({
             where:{
                 id:+id
             },
             data:{
                 departmentId:req.body.departmentId,
+                employeeId:null,
                 forwarded:true
             }
         })
 
         res.status(200).json({
             status: "success",
-            data: ticket
+            data: updatedTicket
         })
     })
 
@@ -252,9 +302,25 @@ export class TicketController{
             data: ticket
         })
     })
+    
     createResponse=catchAsync(async(req,res)=>{
         const loggedInUser=res.locals.user as loggedInUserType
         const {ticketId,content}=req.body
+
+        const ticket =await prisma.ticket.findUnique({
+            where:{
+                id:+ticketId
+            },
+            select:{
+                id:true,
+                employeeId:true
+            }
+        })
+
+        if(ticket?.employeeId !== loggedInUser.id){
+            throw new AppError("لا يمكنك الرد علي هذه التذكره",404)
+        }
+
         const ticketResponse=await prisma.ticketResponse.create({
             data:{
                 ticketId:+ticketId,
@@ -262,6 +328,7 @@ export class TicketController{
                 createdById:loggedInUser.id
             }
         })
+
         res.status(201).json({
             status: "success",
             data: ticketResponse
