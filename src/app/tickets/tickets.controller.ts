@@ -92,6 +92,13 @@ export class TicketController{
                     clientId:true,
                     companyId:true,
                     closed:true,
+                    forwarded:true,
+                    Department:{
+                        select:{
+                            id:true,
+                            name:true
+                        }
+                    },
                     Order:{
                         select:{
                             status:true,
