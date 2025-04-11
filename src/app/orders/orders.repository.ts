@@ -957,8 +957,23 @@ export class OrdersRepository {
         
         if (data.filters.minified === true || data.filters.forMobile === true) {
             const paginatedOrders = await prisma.order.findManyPaginated(
-                {
-                    where: {...where,
+                { 
+                    where:data.loggedInUser?.role === "RECEIVING_AGENT" && data.filters.status === "RETURNED" ? 
+                    {
+                        AND:[
+                            {status:{in:["RETURNED","REPLACED","PARTIALLY_RETURNED"]}},
+                            {client:{
+                                id:{
+                                    in:data.filters.inquiryClientsIDs
+                                }
+                            }},
+                            {clientReport: { isNot: null }} ,
+                            {clientReport: { secondaryType: "RETURNED" }},
+                            {clientReport: { report: { deleted: false } }},
+                            {clientReport: { report: { confirmed: false } } },
+                        ]
+                    }
+                    :{...where,
                         OR:data.loggedInUser?.role === "CLIENT"?
                         [
                             { clientReport: { is: null } },
@@ -971,11 +986,6 @@ export class OrdersRepository {
                         [
                             { branchReport: { is: null } },
                             { branchReport: { report: { deleted: true } } }
-                        ]:data.loggedInUser?.role === "RECEIVING_AGENT"?
-                        [
-                            { clientReport: { is: null } },
-                            { clientReport: { report: { deleted: true } } },
-                            { clientReport: { report: { confirmed: false } } },
                         ]:
                         [
                             { companyReport: { is: null } },

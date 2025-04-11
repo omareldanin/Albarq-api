@@ -270,6 +270,16 @@ export class OrdersService {
         let inquiryBranchesIDs: number[] | undefined = undefined;
         let inquiryStoresIDs: number[] | undefined = undefined;
         let inquiryCompaniesIDs: number[] | undefined = undefined;
+        let inquiryClientsIDs: number[] | undefined = undefined;
+
+        if(data.loggedInUser.role === "RECEIVING_AGENT"){
+            const inquiryEmployeeStuff = await employeesRepository.getInquiryEmployeeStuff({
+                employeeID: data.loggedInUser.id
+            });
+
+            inquiryClientsIDs = inquiryEmployeeStuff.inquiryClients && inquiryEmployeeStuff.inquiryClients.length > 0
+                                ? inquiryEmployeeStuff.inquiryClients : undefined
+        }
         if (data.loggedInUser.role === "INQUIRY_EMPLOYEE") {
             const inquiryEmployeeStuff = await employeesRepository.getInquiryEmployeeStuff({
                 employeeID: data.loggedInUser.id
@@ -360,7 +370,8 @@ export class OrdersService {
                 inquiryLocationsIDs,
                 inquiryBranchesIDs,
                 inquiryStoresIDs,
-                inquiryCompaniesIDs
+                inquiryCompaniesIDs,
+                inquiryClientsIDs
             },
             loggedInUser:data.loggedInUser
         });
