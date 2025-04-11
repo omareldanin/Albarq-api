@@ -93,7 +93,19 @@ export class TicketController{
                     companyId:true,
                     closed:true,
                     Order:{
-                        select:orderSelect
+                        select:{
+                            status:true,
+                            receiptNumber:true,
+                            client:{
+                                select:{
+                                    user:{
+                                        select:{
+                                            name:true,
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     createdBy:{
                         select:{
