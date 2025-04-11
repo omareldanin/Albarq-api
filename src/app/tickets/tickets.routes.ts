@@ -1,0 +1,78 @@
+import { Router } from "express";
+
+import {  ClientRole, EmployeeRole } from "@prisma/client";
+import { isAutherized } from "../../middlewares/isAutherized";
+import { isLoggedIn } from "../../middlewares/isLoggedIn";
+import { TicketController } from "./tickets.controller";
+const router = Router();
+const ticketController = new TicketController();
+
+router.route("/ticket").post(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER,
+        EmployeeRole.BRANCH_MANAGER,
+        EmployeeRole.ACCOUNT_MANAGER,
+        EmployeeRole.DATA_ENTRY,
+        EmployeeRole.INQUIRY_EMPLOYEE,
+        EmployeeRole.DELIVERY_AGENT,
+        EmployeeRole.CLIENT_ASSISTANT,
+        ClientRole.CLIENT
+    ]),
+    ticketController.createResponse
+);
+
+router.route("/ticket").get(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER,
+        EmployeeRole.BRANCH_MANAGER,
+        EmployeeRole.ACCOUNT_MANAGER,
+        EmployeeRole.DATA_ENTRY,
+        EmployeeRole.INQUIRY_EMPLOYEE,
+        EmployeeRole.DELIVERY_AGENT,
+        EmployeeRole.CLIENT_ASSISTANT,
+        ClientRole.CLIENT
+    ]),
+    ticketController.getAllTicket
+);
+
+router.route("/ticket/:id").patch(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER,
+        EmployeeRole.BRANCH_MANAGER,
+        EmployeeRole.ACCOUNT_MANAGER,
+        EmployeeRole.DATA_ENTRY,
+        EmployeeRole.INQUIRY_EMPLOYEE,
+        EmployeeRole.DELIVERY_AGENT,
+        EmployeeRole.CLIENT_ASSISTANT,
+        ClientRole.CLIENT
+    ]),
+    ticketController.closeTicket
+);
+
+router.route("/ticket/:id").get(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER,
+        EmployeeRole.BRANCH_MANAGER,
+        EmployeeRole.ACCOUNT_MANAGER,
+        EmployeeRole.DATA_ENTRY,
+        EmployeeRole.INQUIRY_EMPLOYEE,
+        EmployeeRole.DELIVERY_AGENT,
+        EmployeeRole.CLIENT_ASSISTANT,
+        ClientRole.CLIENT
+    ]),
+    ticketController.getOne
+);
+
+router.route("/ticket-response").post(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER,
+        EmployeeRole.BRANCH_MANAGER,
+        EmployeeRole.ACCOUNT_MANAGER,
+        EmployeeRole.DATA_ENTRY,
+        EmployeeRole.INQUIRY_EMPLOYEE,
+        EmployeeRole.DELIVERY_AGENT,
+        EmployeeRole.CLIENT_ASSISTANT,
+        ClientRole.CLIENT
+    ]),
+    ticketController.createResponse
+);

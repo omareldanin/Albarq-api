@@ -199,6 +199,8 @@ model User {
   createdEmployees Employee[]          @relation("createdBy")
   createdClients   Client[]            @relation("createdBy")
   loginHistory     UsersLoginHistory[]
+  tickets          Ticket[]
+  ticketResponses  TicketResponse[]
   // --- OTHER --------------------------------------------------------------------- //
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
@@ -250,6 +252,7 @@ model Employee {
   inquiryGovernorates     Governorate[]
   inquiryStatuses         OrderStatus[]
   inquiryClients          ReceivingAgentClients[]
+  tickets                 Ticket[]
   // --- INQUIRY EMPLOYEE (DELIVERY AGENTS) --------------------------------------------------------------------- //
   inquiryEmployees        InquiryEmployeesDeliveryAgents[] @relation("inquiryEmployees")
   // --- TENANT --------------------------------------------------------------------- //
@@ -261,6 +264,8 @@ model Employee {
   deletedById             Int?
   deletedBy               User?                            @relation("deletedBy", fields: [deletedById], references: [id])
   // --- OTHER --------------------------------------------------------------------- //
+  Department              Department?                      @relation(fields: [departmentId], references: [id])
+  departmentId            Int?
 
   @@index([companyId])
   @@index([role])
@@ -302,6 +307,7 @@ model Client {
   colors                    Color[]
   categories                Category[]
   sizes                     Size[]
+  tickets                   Ticket[]
   // createdBy                 Employee       @relation(fields: [employeeId], references: [id])
   createdBy                 User                    @relation("createdBy", fields: [createdById], references: [id])
   user                      User                    @relation(fields: [id], references: [id])
@@ -557,6 +563,8 @@ model Company {
   DeliveryAgentsLocations                 DeliveryAgentsLocations[]
   usersLoginHistory                       UsersLoginHistory[]
   CustomerOutput                          CustomerOutput[]
+  departments                             Department[]
+  tickets                                 Ticket[]
 }
 
 model InquiryEmployeesCompanies {
@@ -617,6 +625,7 @@ model Order {
   // --- RELATIONS --------------------------------------------------------------------------- //
   orderProducts          OrderProducts[]
   ordersInquiryEmployees OrdersInquiryEmployees[]
+  tickets                Ticket[]
   deliveryAgent          Employee?                @relation(fields: [deliveryAgentId], references: [id], onDelete: SetNull)
   location               Location                 @relation(fields: [locationId], references: [id])
   client                 Client                   @relation(fields: [clientId], references: [id])
@@ -737,6 +746,45 @@ model OrderTimeline {
   order     Order             @relation(fields: [orderId], references: [id])
   // --- OTHER --------------------------------------------------------------------- //
   createdAt DateTime          @default(now())
+}
+
+model Department {
+  id        Int        @id @default(autoincrement())
+  name      String
+  createdBy String?
+  employees Employee[]
+  tickets   Ticket[]
+  Company   Company?   @relation(fields: [companyId], references: [id])
+  companyId Int?
+}
+
+model Ticket {
+  id             Int              @id @default(autoincrement())
+  content        String
+  closed         Boolean          @default(false)
+  forwarded      Boolean          @default(false)
+  Department     Department?      @relation(fields: [departmentId], references: [id])
+  departmentId   Int?
+  Employee       Employee?        @relation(fields: [employeeId], references: [id])
+  employeeId     Int?
+  Client         Client?          @relation(fields: [clientId], references: [id])
+  clientId       Int?
+  Order          Order?           @relation(fields: [orderId], references: [id])
+  orderId        String?
+  createdBy      User?            @relation(fields: [createdById], references: [id])
+  createdById    Int?
+  ticketResponse TicketResponse[]
+  Company        Company?         @relation(fields: [companyId], references: [id])
+  companyId      Int?
+}
+
+model TicketResponse {
+  id          Int     @id @default(autoincrement())
+  content     String
+  Ticket      Ticket? @relation(fields: [ticketId], references: [id])
+  ticketId    Int?
+  createdBy   User?   @relation(fields: [createdById], references: [id])
+  createdById Int?
 }
 
 model OrdersInquiryEmployees {
