@@ -101,7 +101,6 @@ export class TicketController{
         const loggedInUser=res.locals.user as loggedInUserType
         const {forwarded,closed,status,page,size}=req.query
         // Inquiry Employee Filters
-        let inquiryStatuses: OrderStatus[] | undefined = undefined;
         let inquiryGovernorates: Governorate[] | undefined = undefined;
         let inquiryLocationsIDs: number[] | undefined = undefined;
         let inquiryBranchesIDs: number[] | undefined = undefined;
@@ -113,11 +112,6 @@ export class TicketController{
             });
             if (inquiryEmployeeStuff) {
                 // if all filters are empty, that means he shouldnt see any orders
-
-                inquiryStatuses =
-                    inquiryEmployeeStuff.inquiryStatuses && inquiryEmployeeStuff.inquiryStatuses.length > 0
-                        ? inquiryEmployeeStuff.inquiryStatuses
-                        : undefined;
                 inquiryGovernorates =
                     inquiryEmployeeStuff.inquiryGovernorates &&
                     inquiryEmployeeStuff.inquiryGovernorates.length > 0
