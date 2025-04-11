@@ -91,3 +91,5 @@ router.route("/ticket-response").post(
     ]),
     ticketController.createResponse
 );
+
+export default router

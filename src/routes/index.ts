@@ -20,6 +20,7 @@ import usersRoutes from "../app/users/users.routes";
 import clientReceiptsRoutes from "../app/clientReceipts/clientReceipts.routes"
 import cutomerOutput from "../app/customerOutputs/customerOutput.routes"
 import departments from "../app/departments/deparment.routes"
+import tickets from "../app/tickets/tickets.routes"
 import { catchAsync } from "../lib/catchAsync";
 import { upload } from "../middlewares/upload";
 
@@ -46,6 +47,7 @@ router.use("/", usersRoutes);
 router.use("/", clientReceiptsRoutes);
 router.use("/", cutomerOutput);
 router.use("/", departments);
+router.use("/", tickets);
 
 /*******************************************************************************
  * TEST ROUTES
