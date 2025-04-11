@@ -1,10 +1,67 @@
-import { OrderStatus } from "@prisma/client";
+import { Governorate, OrderStatus } from "@prisma/client";
 import { prisma } from "../../database/db";
 import { AppError } from "../../lib/AppError";
 import { catchAsync } from "../../lib/catchAsync";
 import { loggedInUserType } from "../../types/user";
-import { orderSelect } from "../orders/orders.responses";
-
+import { EmployeesRepository } from "../employees/employees.repository";
+// import { orderSelect } from "../orders/orders.responses";
+const ticketSelect={
+    id:true,
+    clientId:true,
+    companyId:true,
+    closed:true,
+    forwarded:true,
+    Department:{
+        select:{
+            id:true,
+            name:true
+        }
+    },
+    Order:{
+        select:{
+            status:true,
+            receiptNumber:true,
+            client:{
+                select:{
+                    user:{
+                        select:{
+                            name:true,
+                        }
+                    }
+                }
+            }
+        }
+    },
+    createdBy:{
+        select:{
+            id:true,
+            name:true
+        }
+    },
+    ticketResponse:{
+        select:{
+            id:true,
+            content:true,
+            createdBy:{
+                select:{
+                    id:true,
+                    name:true
+                }
+            }
+        }
+    },
+    Client:{
+        select:{
+            user:{
+                select:{
+                    id:true,
+                    name:true,
+                }
+            }
+        }
+    }
+}
+const employeesRepository=new EmployeesRepository()
 export class TicketController{
     createTicket=catchAsync(async(req,res)=>{
         const {content,orderId}=req.body
@@ -43,13 +100,55 @@ export class TicketController{
     getAllTicket=catchAsync(async(req,res)=>{
         const loggedInUser=res.locals.user as loggedInUserType
         const {forwarded,closed,status,page,size}=req.query
-        
+        // Inquiry Employee Filters
+        let inquiryStatuses: OrderStatus[] | undefined = undefined;
+        let inquiryGovernorates: Governorate[] | undefined = undefined;
+        let inquiryLocationsIDs: number[] | undefined = undefined;
+        let inquiryBranchesIDs: number[] | undefined = undefined;
+        let inquiryStoresIDs: number[] | undefined = undefined;
+
+        if (loggedInUser.role === "INQUIRY_EMPLOYEE") {
+            const inquiryEmployeeStuff = await employeesRepository.getInquiryEmployeeStuff({
+                employeeID: loggedInUser.id
+            });
+            if (inquiryEmployeeStuff) {
+                // if all filters are empty, that means he shouldnt see any orders
+
+                inquiryStatuses =
+                    inquiryEmployeeStuff.inquiryStatuses && inquiryEmployeeStuff.inquiryStatuses.length > 0
+                        ? inquiryEmployeeStuff.inquiryStatuses
+                        : undefined;
+                inquiryGovernorates =
+                    inquiryEmployeeStuff.inquiryGovernorates &&
+                    inquiryEmployeeStuff.inquiryGovernorates.length > 0
+                        ? inquiryEmployeeStuff.inquiryGovernorates
+                        : undefined;
+                inquiryLocationsIDs =
+                    inquiryEmployeeStuff.inquiryLocations && inquiryEmployeeStuff.inquiryLocations.length > 0
+                        ? inquiryEmployeeStuff.inquiryLocations
+                        : undefined;
+                inquiryBranchesIDs =
+                    inquiryEmployeeStuff.inquiryBranches && inquiryEmployeeStuff.inquiryBranches.length > 0
+                        ? inquiryEmployeeStuff.inquiryBranches
+                        : undefined;
+                inquiryStoresIDs =
+                    inquiryEmployeeStuff.inquiryStores && inquiryEmployeeStuff.inquiryStores.length > 0
+                        ? inquiryEmployeeStuff.inquiryStores
+                        : undefined;
+            }
+        }
+
         const employee=await prisma.employee.findUnique({
             where:{
                 id:loggedInUser.id
             },
             select:{
-                departmentId:true
+                departmentId:true,
+                inquiryBranches:true,
+                inquiryLocations:true,
+                inquiryStatuses:true,
+                inquiryGovernorates:true,
+                inquiryStores:true,
             }
         })
         
@@ -74,7 +173,7 @@ export class TicketController{
         const tickets=await prisma.ticket.findManyPaginated({
                 where:{
                     AND:[
-                        { companyId:loggedInUser.companyID},
+                        {companyId:loggedInUser.companyID},
                         {clientId:loggedInUser.role === "CLIENT" ? loggedInUser.id :undefined},
                         {forwarded:forward},
                         {departmentId:forward ? employee?.departmentId :undefined},
@@ -82,67 +181,38 @@ export class TicketController{
                         {
                             Order:{
                                 status:status ? status as OrderStatus :undefined,
-                                deliveryAgentId:loggedInUser.role === "DELIVERY_AGENT"? loggedInUser.id:undefined
+                                deliveryAgentId:loggedInUser.role === "DELIVERY_AGENT"? loggedInUser.id:undefined,
+                                governorate:inquiryGovernorates
+                                ?   {
+                                        in: inquiryGovernorates
+                                    }
+                                : undefined,
+                                branch: inquiryBranchesIDs
+                                ? {
+                                        id: {
+                                            in: inquiryBranchesIDs
+                                        }
+                                    }
+                                : undefined,
+                                store: inquiryStoresIDs
+                                ? {
+                                        id: {
+                                            in: inquiryStoresIDs
+                                        }
+                                    }
+                                : undefined,
+                                location: inquiryLocationsIDs
+                                ? {
+                                        id: {
+                                            in: inquiryLocationsIDs
+                                        }
+                                    }
+                                : undefined
                             }
                         },
                     ]
                 },
-                select:{
-                    id:true,
-                    clientId:true,
-                    companyId:true,
-                    closed:true,
-                    forwarded:true,
-                    Department:{
-                        select:{
-                            id:true,
-                            name:true
-                        }
-                    },
-                    Order:{
-                        select:{
-                            status:true,
-                            receiptNumber:true,
-                            client:{
-                                select:{
-                                    user:{
-                                        select:{
-                                            name:true,
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    createdBy:{
-                        select:{
-                            id:true,
-                            name:true
-                        }
-                    },
-                    ticketResponse:{
-                        select:{
-                            id:true,
-                            content:true,
-                            createdBy:{
-                                select:{
-                                    id:true,
-                                    name:true
-                                }
-                            }
-                        }
-                    },
-                    Client:{
-                        select:{
-                            user:{
-                                select:{
-                                    id:true,
-                                    name:true,
-                                }
-                            }
-                        }
-                    }
-                },
+                select:ticketSelect,
                 orderBy:{
                     id:"desc",
                 }
@@ -259,50 +329,14 @@ export class TicketController{
             where:{
                 id:+id
             },
-            select:{
-                id:true,
-                clientId:true,
-                companyId:true,
-                closed:true,
-                createdBy:{
-                    select:{
-                        id:true,
-                        name:true
-                    }
-                },
-                Order:{
-                    select:orderSelect
-                },
-                ticketResponse:{
-                    select:{
-                        id:true,
-                        content:true,
-                        createdBy:{
-                            select:{
-                                id:true,
-                                name:true
-                            }
-                        }
-                    }
-                },
-                Client:{
-                    select:{
-                        user:{
-                            select:{
-                                id:true,
-                                name:true,
-                            }
-                        }
-                    }
-                }
-            }
+            select:ticketSelect
         })
         res.status(200).json({
             status: "success",
             data: ticket
         })
     })
-    
+
     createResponse=catchAsync(async(req,res)=>{
         const loggedInUser=res.locals.user as loggedInUserType
         const {ticketId,content}=req.body

@@ -449,13 +449,9 @@ export class OrdersRepository {
                         : undefined
                 },
                 {
-                    company: data.filters.inquiryCompaniesIDs
-                        ? {
-                                id: {
-                                    in: data.filters.inquiryCompaniesIDs
-                                }
-                            }
-                        : undefined
+                    company:  {
+                        id: data.filters.companyID
+                    }
                 },
                 {
                     location: data.filters.inquiryLocationsIDs
@@ -1652,13 +1648,9 @@ export class OrdersRepository {
                         : undefined
                 },
                 {
-                    company: data.filters.inquiryCompaniesIDs
-                        ? {
-                                id: {
-                                    in: data.filters.inquiryCompaniesIDs
-                                }
-                            }
-                        : undefined
+                    company:{
+                        id:data.filters.companyID
+                    }
                 },
                 {
                     location: data.filters.inquiryLocationsIDs
