@@ -663,6 +663,7 @@ export class OrdersController {
                 AND:loggedInUser.role === "RECEIVING_AGENT" && status==="RETURNED"?
                     [
                         { clientReport: { isNot: null } },
+                        { clientReport: { secondaryType: "RETURNED" } },
                         { clientReport: { report: { deleted: false } } },
                         { clientReport: { report: { confirmed: false } } },
                     ]:undefined
