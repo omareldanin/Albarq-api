@@ -46,7 +46,9 @@ export class DepartmentController{
 
         res.status(200).json({
             status: "success",
-            data: departments,
+            data: departments.data,
+            page:departments.currentPage,
+            count:departments.dataCount,
             pagesCount: departments.pagesCount
         });
     })
