@@ -220,7 +220,7 @@ export class TicketController{
             status: "success",
             page: page,
             pagesCount: tickets.pagesCount,
-            data: tickets
+            data: tickets.data
         }); 
     })
 
