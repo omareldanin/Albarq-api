@@ -31,6 +31,7 @@ const ticketSelect={
     Order:{
         select:{
             receiptNumber: true,
+            status:true,
             recipientPhones: true,
             branch: {
                 select: {
