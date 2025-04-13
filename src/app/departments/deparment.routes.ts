@@ -17,6 +17,11 @@ router.route("/department").get(
     isAutherized([EmployeeRole.COMPANY_MANAGER,EmployeeRole.BRANCH_MANAGER,EmployeeRole.ACCOUNT_MANAGER,EmployeeRole.DATA_ENTRY,EmployeeRole.INQUIRY_EMPLOYEE,ClientRole.CLIENT,EmployeeRole.CLIENT_ASSISTANT,EmployeeRole.DELIVERY_AGENT]),
     departmentController.getAllDepartments
 );
+router.route("/assignEmployees").post(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER,EmployeeRole.BRANCH_MANAGER,EmployeeRole.ACCOUNT_MANAGER,EmployeeRole.DATA_ENTRY,EmployeeRole.INQUIRY_EMPLOYEE,ClientRole.CLIENT,EmployeeRole.CLIENT_ASSISTANT,EmployeeRole.DELIVERY_AGENT]),
+    departmentController.assignDepartmentsToEmployees
+);
 router.route("/department/:id").get(
     isLoggedIn,
     isAutherized([EmployeeRole.COMPANY_MANAGER,EmployeeRole.BRANCH_MANAGER,EmployeeRole.ACCOUNT_MANAGER,EmployeeRole.DATA_ENTRY,EmployeeRole.INQUIRY_EMPLOYEE]),

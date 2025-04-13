@@ -36,7 +36,17 @@ export class DepartmentController{
                 id:true,
                 name:true,
                 companyId:true,
-                createdBy:true
+                createdBy:true,
+                employees:{
+                    select:{
+                        user:{
+                            select:{
+                                name:true,
+                                id:true
+                            }
+                        }
+                    }
+                }
             }
         },
         {
@@ -51,6 +61,38 @@ export class DepartmentController{
             count:departments.dataCount,
             pagesCount: departments.pagesCount
         });
+    })
+    assignDepartmentsToEmployees=catchAsync(async (req,res)=>{
+        const {departmentId,employeesIds}=req.body
+
+
+        let employees:number[]=[]
+        
+        if(employeesIds){
+            const parsedEmployessIDS = JSON.parse(employeesIds) as number[];
+            employees = parsedEmployessIDS.map(id => +id);
+        }
+        await prisma.employee.updateMany({
+            where:{
+                departmentId:+departmentId
+            },
+            data:{
+                departmentId:null
+            }
+        })
+
+        await prisma.employee.updateMany({
+            where:{
+                id:{in:employees}
+            },
+            data:{
+                departmentId:+departmentId
+            }
+        })
+        res.status(200).json({
+            status: "success",
+            message: "Departments assigned to employees successfully"
+        })
     })
     getOne=catchAsync(async(req,res)=>{
         const {id}=req.params
