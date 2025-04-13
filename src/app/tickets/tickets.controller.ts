@@ -11,6 +11,7 @@ const ticketSelect={
     companyId:true,
     closed:true,
     forwarded:true,
+    content:true,
     Department:{
         select:{
             id:true,
