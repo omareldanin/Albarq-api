@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import {  EmployeeRole } from "@prisma/client";
+import {  ClientRole, EmployeeRole } from "@prisma/client";
 import { isAutherized } from "../../middlewares/isAutherized";
 import { isLoggedIn } from "../../middlewares/isLoggedIn";
 import { DepartmentController } from "./department.controller";
@@ -14,7 +14,7 @@ router.route("/department").post(
 );
 router.route("/department").get(
     isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER,EmployeeRole.BRANCH_MANAGER,EmployeeRole.ACCOUNT_MANAGER,EmployeeRole.DATA_ENTRY,EmployeeRole.INQUIRY_EMPLOYEE]),
+    isAutherized([EmployeeRole.COMPANY_MANAGER,EmployeeRole.BRANCH_MANAGER,EmployeeRole.ACCOUNT_MANAGER,EmployeeRole.DATA_ENTRY,EmployeeRole.INQUIRY_EMPLOYEE,ClientRole.CLIENT,EmployeeRole.CLIENT_ASSISTANT,EmployeeRole.DELIVERY_AGENT]),
     departmentController.getAllDepartments
 );
 router.route("/department/:id").get(
