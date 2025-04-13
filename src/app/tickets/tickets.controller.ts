@@ -19,8 +19,12 @@ const ticketSelect={
     },
     Employee:{
         select:{
-            id:true,
-            name:true
+            user:{
+                select:{
+                    id:true,
+                    name:true
+                }
+            }
         }
     },
     Order:{
