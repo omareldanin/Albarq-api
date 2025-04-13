@@ -4,7 +4,6 @@ import { AppError } from "../../lib/AppError";
 import { catchAsync } from "../../lib/catchAsync";
 import { loggedInUserType } from "../../types/user";
 import { EmployeesRepository } from "../employees/employees.repository";
-import { orderSelect } from "../orders/orders.responses";
 // import { orderSelect } from "../orders/orders.responses";
 const ticketSelect={
     id:true,
@@ -19,7 +18,39 @@ const ticketSelect={
         }
     },
     Order:{
-        select:orderSelect
+        select:{
+            receiptNumber: true,
+            name:true,
+            recipientPhones: true,
+            branch: {
+                select: {
+                    id: true,
+                    name: true
+                }
+            },
+            client: {
+                select: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            phone: true
+                        }
+                    },
+                }
+            },
+            deliveryAgent: {
+                select: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            phone: true
+                        }
+                    }
+                }
+            },
+        }
     },
     createdBy:{
         select:{
@@ -261,7 +292,11 @@ export class TicketController{
                 id:+id
             },
             data:{
-                employeeId:loggedInUser.id
+                Employee:{
+                    connect:{
+                        id:loggedInUser.id
+                    }
+                }
             }
         })
 
@@ -333,7 +368,8 @@ export class TicketController{
                 employeeId:true
             }
         })
-
+        console.log(ticket);
+        
         if(ticket?.employeeId !== loggedInUser.id){
             throw new AppError("لا يمكنك الرد علي هذه التذكره",404)
         }
