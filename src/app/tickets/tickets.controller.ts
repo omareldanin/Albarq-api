@@ -4,6 +4,7 @@ import { AppError } from "../../lib/AppError";
 import { catchAsync } from "../../lib/catchAsync";
 import { loggedInUserType } from "../../types/user";
 import { EmployeesRepository } from "../employees/employees.repository";
+import { orderSelect } from "../orders/orders.responses";
 // import { orderSelect } from "../orders/orders.responses";
 const ticketSelect={
     id:true,
@@ -18,19 +19,7 @@ const ticketSelect={
         }
     },
     Order:{
-        select:{
-            status:true,
-            receiptNumber:true,
-            client:{
-                select:{
-                    user:{
-                        select:{
-                            name:true,
-                        }
-                    }
-                }
-            }
-        }
+        select:orderSelect
     },
     createdBy:{
         select:{
