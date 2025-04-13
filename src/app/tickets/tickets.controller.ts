@@ -17,6 +17,12 @@ const ticketSelect={
             name:true
         }
     },
+    Employee:{
+        select:{
+            id:true,
+            name:true
+        }
+    },
     Order:{
         select:{
             receiptNumber: true,
