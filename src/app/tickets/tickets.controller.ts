@@ -20,7 +20,6 @@ const ticketSelect={
     Order:{
         select:{
             receiptNumber: true,
-            name:true,
             recipientPhones: true,
             branch: {
                 select: {
