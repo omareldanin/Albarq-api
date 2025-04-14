@@ -1853,7 +1853,7 @@ export class OrdersRepository {
                 OR:data.loggedInUser.role === "CLIENT"?
                     [
                         { clientReport: { is: null } },
-                        { clientReport: { report: { deleted: true,confirmed:false } } }
+                        { clientReport: { report: { deleted: true } } }
                     ]: data.loggedInUser.role==="DELIVERY_AGENT" ?
                     [
                         { deliveryAgentReport: { is: null } },
