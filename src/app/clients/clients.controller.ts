@@ -162,13 +162,13 @@ export class ClientsController {
 
         // hash the password
         const hashedPassword = bcrypt.hashSync(password + (env.PASSWORD_SALT as string), 12);
-
+        
         const updatedClient = await clientsRepository.updateClient({
             clientID: clientID,
             // companyID: companyID,
             clientData: {
                 ...rest,
-                password: hashedPassword,
+                password:clientData.password ? hashedPassword:undefined,
                 avatar
             }
         });

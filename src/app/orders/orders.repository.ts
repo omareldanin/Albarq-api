@@ -1480,7 +1480,7 @@ export class OrdersRepository {
                 notes: data.orderData.notes,
                 currentLocation: data.orderData.currentLocation,
                 status:data.orderData.status,
-                secondaryStatus: data.orderData.secondaryStatus,
+                secondaryStatus:data.orderData.status === "DELIVERED"? null: data.orderData.secondaryStatus,
                 confirmed: data.orderData.forwardedCompanyID ? false : data.orderData.confirmed,
                 details: data.orderData.details,
                 deliveryDate: data.orderData.deliveryDate,
@@ -1853,7 +1853,7 @@ export class OrdersRepository {
                 OR:data.loggedInUser.role === "CLIENT"?
                     [
                         { clientReport: { is: null } },
-                        { clientReport: { report: { deleted: true } } }
+                        { clientReport: { report: { deleted: true,confirmed:false } } }
                     ]: data.loggedInUser.role==="DELIVERY_AGENT" ?
                     [
                         { deliveryAgentReport: { is: null } },

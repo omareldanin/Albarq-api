@@ -7,6 +7,7 @@ import { BranchesRepository } from "../branches/branches.repository";
 import { sendNotification } from "../notifications/helpers/sendNotification";
 import type { EmployeeCreateType, EmployeeUpdateType, EmployeesFiltersType } from "./employees.dto";
 import { EmployeesRepository } from "./employees.repository";
+import { prisma } from "../../database/db";
 
 const employeesRepository = new EmployeesRepository();
 const branchesRepository = new BranchesRepository();
@@ -39,6 +40,17 @@ export class EmployeesService {
             12
         );
 
+        if(data.employeeData.repositoryID){
+            const repository = await prisma.repository.findFirst({
+                where:{
+                    id:data.employeeData.repositoryID,
+                    branchId:data.employeeData.branchID
+                }
+            })
+            if(!repository){
+                throw new AppError("هذا المخزن غير مرتبط بالفرع", 404);
+            }
+        }
         const createdEmployee = await employeesRepository.createEmployee({
             companyID,
             loggedInUser: data.loggedInUser,
@@ -112,6 +124,17 @@ export class EmployeesService {
             data.employeeData.password = hashedPassword;
         }
 
+        if(data.employeeData.repositoryID){
+            const repository = await prisma.repository.findFirst({
+                where:{
+                    id:data.employeeData.repositoryID,
+                    branchId:data.employeeData.branchID
+                }
+            })
+            if(!repository){
+                throw new AppError("هذا المخزن غير مرتبط بالفرع", 404);
+            }
+        }
         const updatedEmployee = await employeesRepository.updateEmployee({
             employeeID: data.params.employeeID,
             // companyID: companyID,
