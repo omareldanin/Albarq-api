@@ -42,10 +42,6 @@
             />
             <p>{{branch.name}}</p>
             <div>
-                <span>رقم الوصل : </span>
-                <span>{{receiptNumber}}</span>
-            </div>
-            <div>
                 <span>اسم الصفحه :</span>
                 <span>{{store.name}}</span>
             </div>
@@ -61,7 +57,7 @@
             </div>
             <div>
                 <span>السعر الكلي :</span>
-                <span>{{add totalCost}}</span>
+                <span>{{currency totalCost}}</span>
             </div>
             <div class="footer">
               <div>
@@ -70,6 +66,7 @@
               </div>
               <div style="float: left;margin-top: 0px;">
                   <img src="{{QRCode this}}" />
+                  <span style="display: block;text-align:center;font-weight:bold">{{receiptNumber}}</span>
               </div>
             </div>
        </div>
