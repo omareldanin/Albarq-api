@@ -63,7 +63,7 @@ router.route("/ticket/:id").get(
     ticketController.getOne
 );
 
-router.route("/take-ticket/:id").get(
+router.route("/take-ticket/:id").post(
     isLoggedIn,
     isAutherized([EmployeeRole.COMPANY_MANAGER,
         EmployeeRole.BRANCH_MANAGER,
