@@ -973,7 +973,8 @@ export class OrdersRepository {
                         OR:data.loggedInUser?.role === "CLIENT"?
                         [
                             { clientReport: { is: null } },
-                            { clientReport: { report: { deleted: true } } }
+                            { clientReport: { report: { deleted: true } } },
+                            { clientReport: { report: { confirmed: false } } }
                         ]: data.loggedInUser?.role==="DELIVERY_AGENT" ?
                         [
                             { deliveryAgentReport: { is: null } },
@@ -1853,7 +1854,8 @@ export class OrdersRepository {
                 OR:data.loggedInUser.role === "CLIENT"?
                     [
                         { clientReport: { is: null } },
-                        { clientReport: { report: { deleted: true } } }
+                        { clientReport: { report: { deleted: true } } },
+                        { clientReport: { report: { confirmed: false } } }
                     ]: data.loggedInUser.role==="DELIVERY_AGENT" ?
                     [
                         { deliveryAgentReport: { is: null } },
@@ -1867,8 +1869,6 @@ export class OrdersRepository {
                         { companyReport: { is: null } },
                         { companyReport: { report: { deleted: true } } }
                     ] 
-
-
             }
         });
 
