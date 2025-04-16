@@ -332,7 +332,7 @@ export class TicketController{
             }
         })
 
-        if(ticket?.employeeId !== loggedInUser.id){
+        if(loggedInUser.role === "INQUIRY_EMPLOYEE" && ticket?.employeeId !== loggedInUser.id){
             throw new AppError("لا يمكنك تحويل هذه التذكره",404)
         }
 
@@ -371,20 +371,19 @@ export class TicketController{
         const loggedInUser=res.locals.user as loggedInUserType
         const {ticketId,content}=req.body
 
-        // const ticket =await prisma.ticket.findUnique({
-        //     where:{
-        //         id:+ticketId
-        //     },
-        //     select:{
-        //         id:true,
-        //         employeeId:true
-        //     }
-        // })
-        // console.log(ticket);
+        const ticket =await prisma.ticket.findUnique({
+            where:{
+                id:+ticketId
+            },
+            select:{
+                id:true,
+                employeeId:true
+            }
+        })
         
-        // if(ticket?.employeeId !== loggedInUser.id){
-        //     throw new AppError("لا يمكنك الرد علي هذه التذكره",404)
-        // }
+        if(loggedInUser.role === "INQUIRY_EMPLOYEE" && ticket?.employeeId !== loggedInUser.id){
+            throw new AppError("لا يمكنك الرد علي هذه التذكره",404)
+        }
 
         const ticketResponse=await prisma.ticketResponse.create({
             data:{
