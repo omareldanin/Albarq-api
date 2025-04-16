@@ -32,6 +32,7 @@ const ticketSelect={
         select:{
             receiptNumber: true,
             status:true,
+            secondaryStatus:true,
             recipientPhones: true,
             branch: {
                 select: {
@@ -87,6 +88,7 @@ const ticketSelect={
                 select:{
                     id:true,
                     name:true,
+                    phone:true
                 }
             }
         }
@@ -251,6 +253,7 @@ export class TicketController{
             status: "success",
             page: page,
             pagesCount: tickets.pagesCount,
+            count:tickets.dataCount,
             data: tickets.data
         }); 
     })
@@ -340,7 +343,7 @@ export class TicketController{
                 id:+id
             },
             data:{
-                departmentId:req.body.departmentId,
+                departmentId:+req.body.departmentId,
                 employeeId:null,
                 forwarded:true
             }
