@@ -171,21 +171,19 @@ export class TicketController{
             },
             select:{
                 departmentId:true,
-                inquiryBranches:true,
-                inquiryLocations:true,
-                inquiryStatuses:true,
-                inquiryGovernorates:true,
-                inquiryStores:true,
+                branchId:true
             }
         })
+
+        if(loggedInUser.role === "BRANCH_MANAGER" || loggedInUser.role ==="REPOSITORIY_EMPLOYEE" ){
+            inquiryBranchesIDs = []
+            inquiryBranchesIDs.push(employee?.branchId || 0)
+        }
         
         let forward:boolean | undefined
         let close:boolean | undefined
 
         if(forwarded && forwarded === "true"){
-            if(!employee?.departmentId){
-                throw new AppError("لا يوجد قسم خاص بك",404)
-            }
             forward=true
         }else if(forwarded && forwarded === "false"){
             forward=false
@@ -373,20 +371,20 @@ export class TicketController{
         const loggedInUser=res.locals.user as loggedInUserType
         const {ticketId,content}=req.body
 
-        const ticket =await prisma.ticket.findUnique({
-            where:{
-                id:+ticketId
-            },
-            select:{
-                id:true,
-                employeeId:true
-            }
-        })
-        console.log(ticket);
+        // const ticket =await prisma.ticket.findUnique({
+        //     where:{
+        //         id:+ticketId
+        //     },
+        //     select:{
+        //         id:true,
+        //         employeeId:true
+        //     }
+        // })
+        // console.log(ticket);
         
-        if(ticket?.employeeId !== loggedInUser.id){
-            throw new AppError("لا يمكنك الرد علي هذه التذكره",404)
-        }
+        // if(ticket?.employeeId !== loggedInUser.id){
+        //     throw new AppError("لا يمكنك الرد علي هذه التذكره",404)
+        // }
 
         const ticketResponse=await prisma.ticketResponse.create({
             data:{
