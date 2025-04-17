@@ -278,6 +278,7 @@ export class MessagesController{
         const allStatistics=chats.data.map(e => {
             totalUnSeened +=unSeenChats.find(c => c.chatId === e.id)?._count.id || 0
             return({
+                id:e.id,
                 unseenMessages:unSeenChats.find(c => c.chatId === e.id)?._count.id || 0,
                 orderId:e.orderId,
                 lastMessage:e.messages[0]
