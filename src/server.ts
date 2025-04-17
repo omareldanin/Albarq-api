@@ -3,9 +3,44 @@ import { env } from "./config";
 import { automaticUpdatesCronJob } from "./cron-jobs/automaticUpdatesCronJob";
 import { Logger } from "./lib/logger";
 
-const address = `http://localhost:${env.PORT}`;
 
-const server = app.listen(env.PORT, () => {
+const address = `http://localhost:${env.PORT}`;
+import { Server } from "socket.io";
+import http from "http";
+import { MessagesController } from "./app/messages/messages.controller";
+const newServer = http.createServer(app);
+
+const messageController=new MessagesController()
+// Middlewares
+export const io = new Server(newServer, {
+    cors: {
+      origin: "*", // or whatever port your frontend runs on
+      methods: ["GET", "POST"],
+      credentials: true
+    },
+  });
+
+io.on("connection",(socket)=>{
+    socket.on("joinChat", async (chatId) => {
+        socket.join(`chat_${chatId}`);
+        const initialMessages=await messageController.getChatMessages(chatId)
+        socket.emit("initialMessage",initialMessages)
+        console.log(`Socket ${socket.id} joined room chat_${chatId}`);
+    });
+    socket.on("saveUserId",(id)=>{
+        socket.join(`${id}`);
+    })
+    // Leave room
+    socket.on("leaveChat", (chatId) => {
+        socket.leave(`chat_${chatId}`);
+    });
+
+    socket.on("disconnect", () => {
+        console.log("🔥 Client disconnected:", socket.id);
+    });
+})
+
+const server = newServer.listen(env.PORT, () => {
     console.info(
         "------------------------------------------------------------------------------------------\n"
     );

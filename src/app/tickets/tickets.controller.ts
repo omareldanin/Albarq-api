@@ -201,32 +201,38 @@ export class TicketController{
                         {companyId:loggedInUser.companyID},
                         {clientId:loggedInUser.role === "CLIENT" ? loggedInUser.id :undefined},
                         {forwarded:forward},
-                        {departmentId:forward ? employee?.departmentId :undefined},
+                        {departmentId:forward && loggedInUser.role === "INQUIRY_EMPLOYEE" ? employee?.departmentId :undefined},
                         {closed:close},
                         {
                             Order:{
                                 status:status ? status as OrderStatus :undefined,
                                 deliveryAgentId:loggedInUser.role === "DELIVERY_AGENT"? loggedInUser.id:undefined,
-                                governorate:inquiryGovernorates
+                                governorate:inquiryGovernorates && forward===false
                                 ?   {
                                         in: inquiryGovernorates
                                     }
                                 : undefined,
-                                branch: inquiryBranchesIDs
+                                branch: inquiryBranchesIDs && forward===false
                                 ? {
                                         id: {
                                             in: inquiryBranchesIDs
                                         }
                                     }
+                                :loggedInUser.role==="BRANCH_MANAGER" || loggedInUser.role === "REPOSITORIY_EMPLOYEE"? 
+                                {
+                                    id: {
+                                        in: inquiryBranchesIDs
+                                    }
+                                }
                                 : undefined,
-                                store: inquiryStoresIDs
+                                store: inquiryStoresIDs && forward===false
                                 ? {
                                         id: {
                                             in: inquiryStoresIDs
                                         }
                                     }
                                 : undefined,
-                                location: inquiryLocationsIDs
+                                location: inquiryLocationsIDs && forward===false
                                 ? {
                                         id: {
                                             in: inquiryLocationsIDs

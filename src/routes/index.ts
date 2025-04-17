@@ -21,6 +21,7 @@ import clientReceiptsRoutes from "../app/clientReceipts/clientReceipts.routes"
 import cutomerOutput from "../app/customerOutputs/customerOutput.routes"
 import departments from "../app/departments/deparment.routes"
 import tickets from "../app/tickets/tickets.routes"
+import message from "../app/messages/messages.routes"
 import { catchAsync } from "../lib/catchAsync";
 import { upload } from "../middlewares/upload";
 
@@ -48,6 +49,7 @@ router.use("/", clientReceiptsRoutes);
 router.use("/", cutomerOutput);
 router.use("/", departments);
 router.use("/", tickets);
+router.use("/", message);
 
 /*******************************************************************************
  * TEST ROUTES

@@ -201,6 +201,7 @@ model User {
   loginHistory     UsersLoginHistory[]
   tickets          Ticket[]
   ticketResponses  TicketResponse[]
+  message          Message[]
   // --- OTHER --------------------------------------------------------------------- //
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
@@ -671,6 +672,7 @@ model Order {
   createdAt              DateTime                 @default(now())
   updatedAt              DateTime                 @updatedAt
   CustomerOutput         CustomerOutput[]
+  chat                   Chat?
 
   // @@index([automaticUpdateId])
   // @@index([deleted, deletedById])
@@ -697,6 +699,37 @@ model Order {
   // @@index([repositoryId])
   @@index([branchId])
   @@index([companyId])
+}
+
+model Chat {
+  id               Int       @id @default(autoincrement())
+  numberOfMessages Int       @default(0)
+  messages         Message[]
+
+  Order     Order?   @relation(fields: [orderId], references: [id])
+  orderId   String?  @unique
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id                   Int      @id @default(autoincrement())
+  content              String
+  seenByClient         Boolean  @default(false)
+  seenByDelivery       Boolean  @default(false)
+  seenByCallCenter     Boolean  @default(false)
+  seenByBranchManager  Boolean  @default(false)
+  seenByCompanyManager Boolean  @default(false)
+  // --- OTHER --------------------------------------------------------------------- //
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  // --- RELATIONS --------------------------------------------------------------------------- //
+
+  createdBy   User? @relation(fields: [createdById], references: [id])
+  createdById Int?
+  Chat        Chat? @relation(fields: [chatId], references: [id])
+  chatId      Int?
 }
 
 model CustomerOutput {
