@@ -24,7 +24,7 @@ io.on("connection",(socket)=>{
     socket.on("joinChat", async (chatId) => {
         socket.join(`chat_${chatId}`);
         const initialMessages=await messageController.getChatMessages(chatId)
-        socket.emit("initialMessage",initialMessages)
+        socket.emit("chatMessages",initialMessages)
         console.log(`Socket ${socket.id} joined room chat_${chatId}`);
     });
     socket.on("saveUserId",(id)=>{
