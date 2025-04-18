@@ -230,7 +230,6 @@ export class OrdersRepository {
         }
 
         let randomId=this.generateRandomId()
-        console.log(randomId);
         
         // Create order
         const createdOrder = await prisma.order.create({
@@ -359,6 +358,12 @@ export class OrdersRepository {
             select: orderSelect
         });
 
+        await prisma.chat.create({
+            data: {
+                orderId:createdOrder.id,
+                numberOfMessages:0
+            }
+        })
         // TODO: Reduce products quantity and color and size quantity
         if (data.orderData.withProducts === true) {
             for (const product of data.orderData.products) {

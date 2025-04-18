@@ -716,6 +716,7 @@ model Chat {
 model Message {
   id                   Int      @id @default(autoincrement())
   content              String
+  image                String?
   seenByClient         Boolean  @default(false)
   seenByDelivery       Boolean  @default(false)
   seenByCallCenter     Boolean  @default(false)

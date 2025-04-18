@@ -21,18 +21,18 @@ export const io = new Server(newServer, {
   });
 
 io.on("connection",(socket)=>{
-    socket.on("joinChat", async (chatId) => {
-        socket.join(`chat_${chatId}`);
-        const initialMessages=await messageController.getChatMessages(chatId)
+    socket.on("joinChat", async (data) => {
+        socket.join(`chat_${data.orderId}`);
+        const initialMessages=await messageController.getChatMessages(data.orderId,data.userId)
         socket.emit("chatMessages",initialMessages)
-        console.log(`Socket ${socket.id} joined room chat_${chatId}`);
+        console.log(`Socket ${socket.id} joined room chat_${data.orderId}`);
     });
     socket.on("saveUserId",(id)=>{
         socket.join(`${id}`);
     })
     // Leave room
-    socket.on("leaveChat", (chatId) => {
-        socket.leave(`chat_${chatId}`);
+    socket.on("leaveChat", (orderId) => {
+        socket.leave(`chat_${orderId}`);
     });
 
     socket.on("disconnect", () => {

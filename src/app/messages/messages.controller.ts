@@ -173,6 +173,9 @@ export class MessagesController{
 
         const chats =await prisma.chat.findManyPaginated({
             where:{
+                messages: {
+                    some: {} // Only include chats that have at least one message
+                },
                 Order:user.role === "INQUIRY_EMPLOYEE"? 
                 {
                     AND: [
@@ -244,6 +247,7 @@ export class MessagesController{
                     },
                     take: 1,
                     select:{
+                        image:true,
                         content:true,
                         createdBy:{
                             select:{
@@ -292,14 +296,52 @@ export class MessagesController{
         }
     }
 
-    getChatMessages=async(chatId:number)=>{
+    getChatMessages=async(orderId:string,userId:number)=>{
+        const employee=await prisma.employee.findUnique({
+            where:{
+                id:userId
+            },
+            select:{
+                role:true
+            }
+        })
+
+        await prisma.message.updateMany({
+            where:{
+                Chat:{
+                    orderId:orderId
+                }
+            },
+            data:{
+                seenByClient:employee ? undefined :true,
+                seenByDelivery:employee?.role === "DELIVERY_AGENT" ? true :undefined,
+                seenByBranchManager:employee?.role === "BRANCH_MANAGER" ? true :undefined,
+                seenByCompanyManager:employee?.role === "COMPANY_MANAGER" ? true :undefined,
+                seenByCallCenter:employee?.role === "INQUIRY_EMPLOYEE" ? true :undefined,
+            }
+        })
+
+        let chatMembers= await this.getOrderChatMembers(orderId)
+
+        
+        const initialMessages=await this.getChatMessages(orderId,userId)
+
+        chatMembers.forEach(member =>{
+            io.to(`${member}`).emit("newMessage", "");
+        })
+
+        io.to(`chat_${orderId}`).emit("chatMessages", initialMessages);
+
         const messages=await prisma.message.findMany({
                 where:{
-                    chatId:chatId
+                    Chat:{
+                        orderId:orderId
+                    }
                 },
                 select:{
                     id:true,
                     content:true,
+                    image:true,
                     createdBy:{
                         select:{
                             id:true,
@@ -317,6 +359,12 @@ export class MessagesController{
     sendMessage=catchAsync(async(req,res)=>{
         const {content,orderId}=req.body
         const loggedInUser=res.locals.user as loggedInUserType
+
+        let image: string | undefined;
+        if (req.file) {
+            const file = req.file as Express.MulterS3.File;
+            image = file.location;
+        }
 
         let chat =await prisma.chat.findFirst({
             where:{
@@ -355,6 +403,7 @@ export class MessagesController{
        const message=await prisma.message.create({
             data:{
                 content,
+                image:image,
                 Chat:{
                     connect:{
                         id:chat.id
@@ -390,9 +439,9 @@ export class MessagesController{
         let chatMembers= await this.getOrderChatMembers(orderId)
         chatMembers =chatMembers.filter(e => e !== loggedInUser.id)
 
-        const initialMessages=await this.getChatMessages(chat.id)
+        const initialMessages=await this.getChatMessages(orderId,loggedInUser.id)
 
-        io.to(`chat_${chat.id}`).emit("chatMessages", initialMessages);
+        io.to(`chat_${chat.orderId}`).emit("chatMessages", initialMessages);
 
         chatMembers.forEach(member =>{
             io.to(`${member}`).emit("newMessage", message);
