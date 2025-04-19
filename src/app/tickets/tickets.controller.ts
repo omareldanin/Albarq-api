@@ -130,21 +130,28 @@ export class TicketController{
         });
     })
 
-    getAllTicket=catchAsync(async(req,res)=>{
+    getAllTicket=catchAsync(async(req,res)=>{   
         const loggedInUser=res.locals.user as loggedInUserType
-        const {forwarded,closed,status,page,size}=req.query
+        const {forwarded,closed,status,page,size,userTickets}=req.query
         // Inquiry Employee Filters
         let inquiryGovernorates: Governorate[] | undefined = undefined;
         let inquiryLocationsIDs: number[] | undefined = undefined;
         let inquiryBranchesIDs: number[] | undefined = undefined;
         let inquiryStoresIDs: number[] | undefined = undefined;
+        let inquiryStatuses: OrderStatus[] | undefined = undefined;
 
+        
         if (loggedInUser.role === "INQUIRY_EMPLOYEE") {
             const inquiryEmployeeStuff = await employeesRepository.getInquiryEmployeeStuff({
                 employeeID: loggedInUser.id
             });
             if (inquiryEmployeeStuff) {
                 // if all filters are empty, that means he shouldnt see any orders
+                inquiryStatuses =
+                inquiryEmployeeStuff.inquiryStatuses && inquiryEmployeeStuff.inquiryStatuses.length > 0
+                    ? inquiryEmployeeStuff.inquiryStatuses
+                    : undefined;
+
                 inquiryGovernorates =
                     inquiryEmployeeStuff.inquiryGovernorates &&
                     inquiryEmployeeStuff.inquiryGovernorates.length > 0
@@ -199,13 +206,17 @@ export class TicketController{
                 where:{
                     AND:[
                         {companyId:loggedInUser.companyID},
+                        {employeeId:userTickets === "true" ? loggedInUser.id: loggedInUser.role === "INQUIRY_EMPLOYEE" && close === false?
+                            null:loggedInUser.role === "INQUIRY_EMPLOYEE" && close === true ?
+                            loggedInUser.id:undefined
+                        },
                         {clientId:loggedInUser.role === "CLIENT" ? loggedInUser.id :undefined},
                         {forwarded:forward},
                         {departmentId:forward && loggedInUser.role === "INQUIRY_EMPLOYEE" ? employee?.departmentId :undefined},
                         {closed:close},
                         {
                             Order:{
-                                status:status ? status as OrderStatus :undefined,
+                                status:status ? status as OrderStatus :inquiryStatuses ? {in:inquiryStatuses}: undefined,
                                 deliveryAgentId:loggedInUser.role === "DELIVERY_AGENT"? loggedInUser.id:undefined,
                                 governorate:inquiryGovernorates && forward===false
                                 ?   {
