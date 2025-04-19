@@ -392,7 +392,8 @@ export class MessagesController{
                 }
             })
         }
-
+        console.log(req.body);
+        
         await prisma.chat.update({
             where:{
                 id:chat.id
@@ -404,7 +405,7 @@ export class MessagesController{
         
        const message=await prisma.message.create({
             data:{
-                content,
+                content:content ? content : "",
                 image:image,
                 Chat:{
                     connect:{
