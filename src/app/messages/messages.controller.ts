@@ -323,14 +323,12 @@ export class MessagesController{
         })
 
         let chatMembers= await this.getOrderChatMembers(orderId)
-
         
         // const initialMessages=await this.getChatMessages(orderId,userId)
 
         chatMembers.forEach(member =>{
             io.to(`${member}`).emit("newMessage", "");
         })
-
         // io.to(`chat_${orderId}`).emit("chatMessages", initialMessages);
 
         const messages=await prisma.message.findMany({
@@ -350,6 +348,9 @@ export class MessagesController{
                             name:true,
                         }
                     }
+                },
+                orderBy:{
+                    createdAt:"asc"
                 }
             }
         )
@@ -392,7 +393,6 @@ export class MessagesController{
                 }
             })
         }
-        console.log(req.body);
         
         await prisma.chat.update({
             where:{
@@ -443,7 +443,7 @@ export class MessagesController{
         chatMembers =chatMembers.filter(e => e !== loggedInUser.id)
 
         const initialMessages=await this.getChatMessages(orderId,loggedInUser.id)
-
+        
         io.to(`chat_${chat.orderId}`).emit("chatMessages", initialMessages);
 
         chatMembers.forEach(member =>{

@@ -15,7 +15,6 @@ const messageController=new MessagesController()
 export const io = new Server(newServer, {
     cors: {
       origin: "*", // or whatever port your frontend runs on
-      methods: ["GET", "POST"],
       credentials: true
     },
   });
@@ -24,10 +23,11 @@ io.on("connection",(socket)=>{
     socket.on("joinChat", async (data) => {
         socket.join(`chat_${data.orderId}`);
         const initialMessages=await messageController.getChatMessages(data.orderId,data.userId)
+        socket.join(`${data.userId}`);
         socket.emit("chatMessages",initialMessages)
         console.log(`Socket ${socket.id} joined room chat_${data.orderId}`);
     });
-    socket.on("getUserChats",(id)=>{
+    socket.on("saveUserId",(id)=>{
         socket.join(`${id}`);
     })
     // Leave room
