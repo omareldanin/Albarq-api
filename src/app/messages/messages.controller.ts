@@ -325,13 +325,13 @@ export class MessagesController{
         let chatMembers= await this.getOrderChatMembers(orderId)
 
         
-        const initialMessages=await this.getChatMessages(orderId,userId)
+        // const initialMessages=await this.getChatMessages(orderId,userId)
 
         chatMembers.forEach(member =>{
             io.to(`${member}`).emit("newMessage", "");
         })
 
-        io.to(`chat_${orderId}`).emit("chatMessages", initialMessages);
+        // io.to(`chat_${orderId}`).emit("chatMessages", initialMessages);
 
         const messages=await prisma.message.findMany({
                 where:{
