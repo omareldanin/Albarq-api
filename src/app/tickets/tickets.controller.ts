@@ -34,6 +34,14 @@ const ticketSelect={
             status:true,
             secondaryStatus:true,
             recipientPhones: true,
+            recipientAddress: true,
+            governorate: true,
+            location: {
+                select: {
+                    id: true,
+                    name: true
+                }
+            },
             branch: {
                 select: {
                     id: true,

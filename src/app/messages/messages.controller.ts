@@ -249,6 +249,7 @@ export class MessagesController{
                     select:{
                         image:true,
                         content:true,
+                        createdAt:true,
                         createdBy:{
                             select:{
                                 id:true,
@@ -342,6 +343,7 @@ export class MessagesController{
                     id:true,
                     content:true,
                     image:true,
+                    createdAt:true,
                     createdBy:{
                         select:{
                             id:true,
