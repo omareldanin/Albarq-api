@@ -180,7 +180,7 @@ export class MessagesController{
                 {
                     AND: [
                         {
-                            status:status && status !=="null" ? status as OrderStatus : inquiryStatuses
+                            status:status as OrderStatus ? status as OrderStatus : inquiryStatuses
                                 ? {
                                         in: inquiryStatuses
                                     }
