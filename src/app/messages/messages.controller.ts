@@ -122,7 +122,7 @@ export class MessagesController{
     getUserChats=async(user : loggedInUserType,size:number,page:number,status :string |undefined)=>{
         const employee=await prisma.employee.findUnique({
             where:{
-                id:user.id
+                id:+user.id
             },
             select:{
                 id:true,
@@ -144,7 +144,7 @@ export class MessagesController{
 
         if (user.role === "INQUIRY_EMPLOYEE") {
             const inquiryEmployeeStuff = await employeesRepository.getInquiryEmployeeStuff({
-                employeeID: user.id
+                employeeID: +user.id
             });
             if (inquiryEmployeeStuff) {
                 inquiryStatuses =
@@ -300,7 +300,7 @@ export class MessagesController{
     getChatMessages=async(orderId:string,userId:number)=>{
         const employee=await prisma.employee.findUnique({
             where:{
-                id:userId
+                id:+userId
             },
             select:{
                 role:true
