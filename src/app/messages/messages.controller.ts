@@ -171,7 +171,8 @@ export class MessagesController{
             }
         }
         const parsedStatus = status === "null" || !status ? undefined : status as OrderStatus;
-
+        console.log(parsedStatus);
+        
         const chats =await prisma.chat.findManyPaginated({
             where:{
                 messages: {
