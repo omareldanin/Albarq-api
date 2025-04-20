@@ -170,7 +170,6 @@ export class MessagesController{
                         : undefined;
             }
         }
-        const parsedStatus = status === "null" || !status ? undefined : status as OrderStatus;
         
         const chats =await prisma.chat.findManyPaginated({
             where:{
@@ -180,9 +179,13 @@ export class MessagesController{
                 Order:user.role === "INQUIRY_EMPLOYEE"? 
                 {
                     AND: [
-                        // {
-                        //     status: parsedStatus ? parsedStatus : (inquiryStatuses ? { in: inquiryStatuses } : undefined)
-                        // },
+                        {
+                            status:status && status !== "null" ? status as OrderStatus : inquiryStatuses
+                                ? {
+                                        in: inquiryStatuses
+                                    }
+                                : undefined
+                        },
                         {
                             governorate: inquiryGovernorates
                                 ? {
@@ -225,7 +228,7 @@ export class MessagesController{
                     ]
                 }
                 :{
-                    status:status ? status as OrderStatus :undefined,
+                    status:status && status !== "null" ? status as OrderStatus :undefined,
                     clientId:user.role === "CLIENT" ? user.id :undefined,
                     companyId:user?.companyID || undefined,
                     branchId:user.role === "BRANCH_MANAGER" ? employee?.branchId:undefined,
