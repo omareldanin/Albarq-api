@@ -171,7 +171,7 @@ export class MessagesController{
             }
         }
         const parsedStatus = status === "null" || !status ? undefined : status as OrderStatus;
-        console.log(parsedStatus);
+        console.log(typeof parsedStatus);
         
         const chats =await prisma.chat.findManyPaginated({
             where:{
@@ -182,7 +182,7 @@ export class MessagesController{
                 {
                     AND: [
                         {
-                            status: parsedStatus ?? (inquiryStatuses ? { in: inquiryStatuses } : undefined)
+                            status: parsedStatus ? parsedStatus : (inquiryStatuses ? { in: inquiryStatuses } : undefined)
                         },
                         {
                             governorate: inquiryGovernorates
