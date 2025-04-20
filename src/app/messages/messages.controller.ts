@@ -170,9 +170,7 @@ export class MessagesController{
                         : undefined;
             }
         }
-        console.log(status);
-        console.log(typeof status);
-        console.log(status && status !== "null" );
+        console.log(!status && status !== "null" );
         
         const chats =await prisma.chat.findManyPaginated({
             where:{
