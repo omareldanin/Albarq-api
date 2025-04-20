@@ -181,9 +181,9 @@ export class MessagesController{
                 Order:user.role === "INQUIRY_EMPLOYEE"? 
                 {
                     AND: [
-                        {
-                            status: parsedStatus ? parsedStatus : (inquiryStatuses ? { in: inquiryStatuses } : undefined)
-                        },
+                        // {
+                        //     status: parsedStatus ? parsedStatus : (inquiryStatuses ? { in: inquiryStatuses } : undefined)
+                        // },
                         {
                             governorate: inquiryGovernorates
                                 ? {
