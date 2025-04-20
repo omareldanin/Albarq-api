@@ -170,7 +170,8 @@ export class MessagesController{
                         : undefined;
             }
         }
-
+        console.log(status);
+        
         const chats =await prisma.chat.findManyPaginated({
             where:{
                 messages: {
@@ -180,7 +181,7 @@ export class MessagesController{
                 {
                     AND: [
                         {
-                            status:status as OrderStatus ? status as OrderStatus : inquiryStatuses
+                            status:status as OrderStatus && status !== "null" ? status as OrderStatus : inquiryStatuses
                                 ? {
                                         in: inquiryStatuses
                                     }
