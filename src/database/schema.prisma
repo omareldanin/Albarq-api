@@ -130,6 +130,11 @@ enum ReportStatus {
   PAID
 }
 
+enum MessageType {
+  DELIVERY
+  CLIENT
+}
+
 enum ReportType {
   COMPANY
   REPOSITORY
@@ -717,17 +722,19 @@ model Chat {
 }
 
 model Message {
-  id                   Int      @id @default(autoincrement())
+  id                   Int          @id @default(autoincrement())
   content              String
   image                String?
-  seenByClient         Boolean  @default(false)
-  seenByDelivery       Boolean  @default(false)
-  seenByCallCenter     Boolean  @default(false)
-  seenByBranchManager  Boolean  @default(false)
-  seenByCompanyManager Boolean  @default(false)
+  sendFor              MessageType?
+  seenByClient         Boolean      @default(false)
+  seenByDelivery       Boolean      @default(false)
+  seenByCallCenter     Boolean      @default(false)
+  seenByBranchManager  Boolean      @default(false)
+  seenByCompanyManager Boolean      @default(false)
+
   // --- OTHER --------------------------------------------------------------------- //
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   // --- RELATIONS --------------------------------------------------------------------------- //
 
   createdBy   User? @relation(fields: [createdById], references: [id])
