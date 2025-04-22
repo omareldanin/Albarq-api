@@ -410,6 +410,7 @@ export class TicketController {
     ) {
       throw new AppError("لا يمكنك تحويل هذه التذكره", 404);
     }
+    console.log(req.body);
 
     const updatedTicket = await prisma.ticket.update({
       where: {
