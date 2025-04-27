@@ -470,7 +470,7 @@ export class MessagesController {
     });
 
     let chatMembers = await this.getOrderChatMembers(orderId);
-    chatMembers = chatMembers.filter((e) => e !== loggedInUser.id);
+    chatMembers = chatMembers.filter((e) => +e !== +loggedInUser.id);
 
     const initialMessages = await this.getChatMessages(
       orderId,
@@ -483,7 +483,6 @@ export class MessagesController {
       io.to(`${member}`).emit("newMessage", message);
     });
     // const chats=await this.getUserChats(loggedInUser.id)
-    console.log(chatMembers);
 
     chatMembers.forEach(async (e) => {
       await sendNotification({
