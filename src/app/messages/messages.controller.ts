@@ -1,4 +1,4 @@
-import { Governorate, MessageType, OrderStatus } from "@prisma/client";
+import { Governorate, OrderStatus } from "@prisma/client";
 import { prisma } from "../../database/db";
 import { catchAsync } from "../../lib/catchAsync";
 import { loggedInUserType } from "../../types/user";
@@ -389,7 +389,7 @@ export class MessagesController {
   };
 
   sendMessage = catchAsync(async (req, res) => {
-    const { content, orderId, sendFor } = req.body;
+    const { content, orderId } = req.body;
     const loggedInUser = res.locals.user as loggedInUserType;
 
     let image: string | undefined;
@@ -436,8 +436,6 @@ export class MessagesController {
       data: {
         content: content ? content : "",
         image: image,
-        sendFor:
-          sendFor && sendFor !== "null" ? (sendFor as MessageType) : undefined,
         Chat: {
           connect: {
             id: chat.id,
@@ -485,6 +483,7 @@ export class MessagesController {
       io.to(`${member}`).emit("newMessage", message);
     });
     // const chats=await this.getUserChats(loggedInUser.id)
+    console.log(chatMembers);
 
     chatMembers.forEach(async (e) => {
       await sendNotification({
