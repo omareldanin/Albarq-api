@@ -478,20 +478,20 @@ export class MessagesController {
       loggedInUser.id
     );
 
-    // io.to(`chat_${chat.orderId}`).emit("chatMessages", initialMessages);
+    io.to(`chat_${chat.orderId}`).emit("chatMessages", initialMessages);
 
     chatMembers.forEach((member) => {
       io.to(`${member}`).emit("newMessage", message);
     });
     // const chats=await this.getUserChats(loggedInUser.id)
 
-    chatMembers.forEach(async (e) => {
-      await sendNotification({
-        title: `رساله جديده "${content}"`,
-        content: `هناك رساله جديده للطلب رقم ${orderId}`,
-        userID: e,
-      });
-    });
+    // chatMembers.forEach(async (e) => {
+    //   await sendNotification({
+    //     title: `رساله جديده "${content}"`,
+    //     content: `هناك رساله جديده للطلب رقم ${orderId}`,
+    //     userID: e,
+    //   });
+    // });
 
     res.status(201).json({ message: "success" });
   });
