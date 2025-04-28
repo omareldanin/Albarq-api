@@ -20,7 +20,7 @@
         left: 10px;
       }
       .receipt div{
-        margin-top: 3px;
+        margin-top: 8px;
         font-weight: bold;
         font-size: 14px;
       }
@@ -41,10 +41,10 @@
             class="logo"
             />
             <p>{{branch.name}}</p>
-            <div>
+            {{!-- <div>
                 <span>رقم الوصل :</span>
                 <span>{{receiptNumber}}</span>
-            </div>
+            </div> --}}
             <div>
                 <span>اسم العميل :</span>
                 <span>{{client.name}}</span>
@@ -68,9 +68,13 @@
               </div>
               <div style="float: left;margin-top: 0px;">
                   <img src="{{QRCode this}}" />
+                  <span style="display: block;text-align:center;font-weight:bold">{{receiptNumber}}</span>
               </div>
             </div>
        </div>
+       {{#unless @last}}
+            <div style="page-break-before: always;"></div>
+        {{/unless}}
     {{/each}}
   </body>
 </html>
