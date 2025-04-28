@@ -233,14 +233,6 @@ export class TicketController {
           AND: [
             { companyId: loggedInUser.companyID },
             {
-              createdByRole:
-                loggedInUser.role === "CLIENT"
-                  ? { not: "DELIVERY_AGENT" }
-                  : loggedInUser.role === "DELIVERY_AGENT"
-                  ? { not: "CLIENT" }
-                  : undefined,
-            },
-            {
               employeeId:
                 userTickets === "true"
                   ? loggedInUser.id
@@ -261,7 +253,7 @@ export class TicketController {
                   ? employee?.departmentId
                   : undefined,
             },
-            { closed: close },
+            { closed: forward === true ? false : close },
             {
               Order: {
                 status: status
