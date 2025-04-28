@@ -332,6 +332,8 @@ export class TicketController {
     const { id } = req.params;
     const loggedInUser = res.locals.user as loggedInUserType;
     const { content } = req.body;
+    console.log(req.body);
+
     const ticket = await prisma.ticket.update({
       where: {
         id: +id,
