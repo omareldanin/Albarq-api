@@ -246,7 +246,7 @@ export class TicketController {
               clientId:
                 loggedInUser.role === "CLIENT" ? loggedInUser.id : undefined,
             },
-            { forwarded: forward },
+            { forwarded: userTickets === "true" ? undefined : forward },
             {
               departmentId:
                 forward && loggedInUser.role === "INQUIRY_EMPLOYEE"
