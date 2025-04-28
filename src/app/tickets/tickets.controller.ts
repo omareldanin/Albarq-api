@@ -4,6 +4,7 @@ import { AppError } from "../../lib/AppError";
 import { catchAsync } from "../../lib/catchAsync";
 import { loggedInUserType } from "../../types/user";
 import { EmployeesRepository } from "../employees/employees.repository";
+import z from "zod";
 // import { orderSelect } from "../orders/orders.responses";
 const ticketSelect = {
   id: true,
@@ -102,6 +103,10 @@ const ticketSelect = {
     },
   },
 };
+const TicketCreateSchema = z.object({
+  content: z.string(),
+});
+
 const employeesRepository = new EmployeesRepository();
 export class TicketController {
   createTicket = catchAsync(async (req, res) => {
@@ -331,8 +336,7 @@ export class TicketController {
   closeTicket = catchAsync(async (req, res) => {
     const { id } = req.params;
     const loggedInUser = res.locals.user as loggedInUserType;
-    const { content } = req.body;
-    console.log(req.body);
+    const { content } = TicketCreateSchema.parse(req.body);
 
     const ticket = await prisma.ticket.update({
       where: {
