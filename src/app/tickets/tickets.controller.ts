@@ -236,7 +236,9 @@ export class TicketController {
               employeeId:
                 userTickets === "true"
                   ? loggedInUser.id
-                  : loggedInUser.role === "INQUIRY_EMPLOYEE" && close === false
+                  : (loggedInUser.role === "INQUIRY_EMPLOYEE" &&
+                      close === false) ||
+                    forward === true
                   ? null
                   : loggedInUser.role === "INQUIRY_EMPLOYEE" && close === true
                   ? loggedInUser.id
