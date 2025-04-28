@@ -47,6 +47,7 @@ export class MessagesController {
         id: true,
       },
     });
+
     const inquiryEmployees = await prisma.employee.findMany({
       where: {
         AND: [
@@ -477,7 +478,7 @@ export class MessagesController {
       loggedInUser.id
     );
 
-    io.to(`chat_${chat.orderId}`).emit("chatMessages", initialMessages);
+    // io.to(`chat_${chat.orderId}`).emit("chatMessages", initialMessages);
 
     chatMembers.forEach((member) => {
       io.to(`${member}`).emit("newMessage", message);
