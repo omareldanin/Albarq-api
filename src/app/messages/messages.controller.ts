@@ -485,13 +485,13 @@ export class MessagesController {
     });
     // const chats=await this.getUserChats(loggedInUser.id)
 
-    // chatMembers.forEach(async (e) => {
-    //   await sendNotification({
-    //     title: `رساله جديده "${content}"`,
-    //     content: `هناك رساله جديده للطلب رقم ${orderId}`,
-    //     userID: e,
-    //   });
-    // });
+    chatMembers.forEach(async (e) => {
+      await sendNotification({
+        title: `رساله جديده "${content}"`,
+        content: `هناك رساله جديده للطلب رقم ${orderId}`,
+        userID: e,
+      });
+    });
 
     res.status(201).json({ message: "success" });
   });
