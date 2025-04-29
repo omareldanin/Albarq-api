@@ -31,7 +31,7 @@ import type {
   OrdersStatisticsFiltersType,
 } from "./orders.dto";
 import { OrdersRepository } from "./orders.repository";
-import { orderReform, orderSelect } from "./orders.responses";
+import { orderReform, orderSelect, OrderStatusData } from "./orders.responses";
 import { prisma } from "../../database/db";
 
 const ordersRepository = new OrdersRepository();
@@ -1436,6 +1436,8 @@ export class OrdersService {
             status: "RETURNED",
             totalCost: total,
             count: count,
+            name: OrderStatusData["RETURNED"].name,
+            icon: OrderStatusData["RETURNED"].icon,
           },
         ],
       };
@@ -1461,11 +1463,17 @@ export class OrdersService {
 
     let deliveredOrders = ordersStatisticsByStatus.find(
       (status) => status.status === "DELIVERED"
-    ) || { status: "DELIVERED", count: 0, totalCost: 0 };
+    ) || {
+      status: "DELIVERED",
+      count: 0,
+      totalCost: 0,
+      name: "تم التوصيل",
+      icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/delivered.png",
+    };
 
-    let registedOrders = ordersStatisticsByStatus.find(
-      (status) => status.status === "REGISTERED"
-    ) || { status: "REGISTERED", count: 0, totalCost: 0 };
+    // let registedOrders = ordersStatisticsByStatus.find(
+    //   (status) => status.status === "REGISTERED"
+    // ) || { status: "REGISTERED", count: 0, totalCost: 0 };
 
     const pReturedOrders = ordersStatisticsByStatus.find(
       (status) => status.status === "PARTIALLY_RETURNED"
@@ -1495,12 +1503,12 @@ export class OrdersService {
     let deliveredIndex = ordersStatisticsByStatus.findIndex(
       (status) => status.status === "DELIVERED"
     );
-    let registeredIndex = ordersStatisticsByStatus.findIndex(
-      (status) => status.status === "REGISTERED"
-    );
+    // let registeredIndex = ordersStatisticsByStatus.findIndex(
+    //   (status) => status.status === "REGISTERED"
+    // );
 
     ordersStatisticsByStatus[deliveredIndex] = deliveredOrders;
-    ordersStatisticsByStatus[registeredIndex] = registedOrders;
+    // ordersStatisticsByStatus[registeredIndex] = registedOrders;
 
     statistics = {
       ...statistics,
