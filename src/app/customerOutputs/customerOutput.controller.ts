@@ -13,412 +13,436 @@ import { generateReport } from "../reports/helpers/generateReport";
 const reportsRepository = new ReportsRepository();
 const ordersRepository = new OrdersRepository();
 
-export class CustomerOutputController{
-    saveOrderInCache=catchAsync(async (req,res)=>{
-        const loggedInUser = res.locals.user as loggedInUserType;
-        
-        const {orderId,companyId,type,repository,storeId}=req.body
+export class CustomerOutputController {
+  saveOrderInCache = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
 
-        let order=await prisma.order.findFirst({
-            where:{
-                id:orderId,
+    const { orderId, companyId, type, repository, storeId } = req.body;
+
+    let order = await prisma.order.findFirst({
+      where: {
+        receiptNumber: orderId,
+      },
+      select: orderSelect,
+    });
+
+    if (!order) {
+      throw new AppError("الطلب غير موجود", 404);
+    }
+
+    if (type === "company" && +companyId !== +order.company.id) {
+      throw new AppError("هذا الطلب غير تابع لهذه الشركه", 404);
+    }
+
+    if (type === "client" && +storeId !== +order.store.id) {
+      throw new AppError("هذا الطلب غير تابع لهذا المتجر", 404);
+    }
+
+    const store = await prisma.store.findUnique({
+      where: {
+        id: storeId,
+      },
+      select: {
+        clientId: true,
+      },
+    });
+
+    const checkIfExist = await prisma.customerOutput.findFirst({
+      select: {
+        id: true,
+      },
+      where: {
+        orderId: order.id,
+      },
+    });
+
+    const userRepository = await prisma.employee.findUnique({
+      where: {
+        id: loggedInUser.id,
+      },
+      select: {
+        branch: {
+          select: {
+            id: true,
+            repositories: {
+              select: {
+                id: true,
+                type: true,
+                name: true,
+                mainRepository: true,
+              },
             },
-            select:orderSelect
-        })
+          },
+        },
+      },
+    });
 
-        
-        if(!order){
-            throw new AppError("الطلب غير موجود", 404);
-        }
+    if (checkIfExist) {
+      throw new AppError("هذا الطلب موجود بالفعل", 404);
+    }
 
-        if(type === "company" && +companyId !== +order.company.id){
-            throw new AppError("هذا الطلب غير تابع لهذه الشركه", 404);
-        }
+    const returnsRepo = userRepository?.branch?.repositories.find(
+      (repo) => repo.type === "RETURN"
+    );
 
-        if(type === "client" && +storeId !== +order.store.id){
-            
-            throw new AppError("هذا الطلب غير تابع لهذا المتجر", 404);
-        }
+    if (!returnsRepo) {
+      throw new AppError("لا يوجد مخزن راوجع لهذا الفرع!", 404);
+    }
 
-        const store = await prisma.store.findUnique({
-            where:{
-                id:storeId
+    await prisma.customerOutput.create({
+      data: {
+        orderId: order.id,
+        clientId: store ? store.clientId : null,
+        storeId: storeId ? storeId : null,
+        companyId: companyId ? companyId : null,
+        repositoryId: returnsRepo.id,
+        targetRepositoryId: repository ? repository : null,
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+    });
+  });
+
+  getCustomerOldData = catchAsync(async (req, res) => {
+    const { companyId, size, page, type, repository, storeId } = req.query;
+
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    const userRepository = await prisma.employee.findUnique({
+      where: {
+        id: loggedInUser.id,
+      },
+      select: {
+        branch: {
+          select: {
+            id: true,
+            repositories: {
+              select: {
+                id: true,
+                type: true,
+                name: true,
+                mainRepository: true,
+              },
             },
-            select:{
-                clientId:true
-            }
-        })
+          },
+        },
+      },
+    });
 
-        const checkIfExist=await prisma.customerOutput.findFirst({
-            select:{
-                id:true
+    const returnsRepo = userRepository?.branch?.repositories.find(
+      (repo) => repo.type === "RETURN"
+    );
+
+    if (!returnsRepo) {
+      throw new AppError("لا يوجد مخزن راوجع لهذا الفرع!", 404);
+    }
+
+    const results = await prisma.customerOutput.findManyPaginated(
+      {
+        where: {
+          AND: [
+            { repositoryId: returnsRepo.id },
+            type === "client"
+              ? { storeId: storeId ? +storeId : undefined }
+              : type === "company"
+              ? { companyId: companyId ? +companyId : undefined }
+              : { targetRepositoryId: repository ? +repository : undefined },
+          ],
+        },
+        orderBy: {
+          id: "desc",
+        },
+        select: {
+          id: true,
+          order: {
+            select: orderSelect,
+          },
+        },
+      },
+      {
+        page: page ? +page : 1,
+        size: size ? +size : 10,
+      }
+    );
+
+    const newData = results.data.map((order) => orderReform(order.order));
+    res.status(200).json({
+      status: "success",
+      data: {
+        count: results.dataCount,
+        pageCount: results.pagesCount,
+        currentPage: results.currentPage,
+        orders: newData,
+      },
+    });
+  });
+
+  saveAndCreateReport = catchAsync(async (req, res) => {
+    const { companyId, type, storeId, repositoryId, repositoryName } = req.body;
+
+    let ordersIDs: string[] = [];
+
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    const userRepository = await prisma.employee.findUnique({
+      where: {
+        id: loggedInUser.id,
+      },
+      select: {
+        branch: {
+          select: {
+            id: true,
+            repositories: {
+              select: {
+                id: true,
+                type: true,
+                name: true,
+                mainRepository: true,
+              },
             },
-            where:{
-                orderId:orderId,
-            }
-        })
+          },
+        },
+      },
+    });
 
-        const userRepository=await prisma.employee.findUnique({
-            where:{
-                id:loggedInUser.id
-            },
-            select:{
-                branch:{
-                    select:{
-                        id:true,
-                        repositories:{
-                            select:{
-                                id:true,
-                                type:true,
-                                name:true,
-                                mainRepository:true
-                            }
-                        }
-                    }
-                },
-            }
-        })
+    const returnsRepo = userRepository?.branch?.repositories.find(
+      (repo) => repo.type === "RETURN"
+    );
 
+    const store = await prisma.store.findUnique({
+      where: {
+        id: storeId,
+      },
+      select: {
+        clientId: true,
+      },
+    });
 
-        if(checkIfExist){
-            throw new AppError("هذا الطلب موجود بالفعل", 404);
-        }
+    if (!returnsRepo) {
+      throw new AppError("لا يوجد مخزن راوجع لهذا الفرع!", 404);
+    }
 
-  
-        const returnsRepo=userRepository?.branch?.repositories.find(repo => repo.type === "RETURN")
+    const results = await prisma.customerOutput.findManyPaginated(
+      {
+        where: {
+          AND: [
+            { repositoryId: returnsRepo.id },
+            type === "client" ? { storeId: storeId ? +storeId : null } : {},
+            type === "client"
+              ? { clientId: store ? +store.clientId : null }
+              : type === "company"
+              ? { companyId: companyId ? +companyId : null }
+              : { targetRepositoryId: repositoryId },
+          ],
+        },
+        select: {
+          id: true,
+          order: {
+            select: orderSelect,
+          },
+        },
+      },
+      {
+        page: 1,
+        size: 5000,
+      }
+    );
 
-        if(!returnsRepo){
-            throw new AppError("لا يوجد مخزن راوجع لهذا الفرع!", 404);
-        }
+    const orders = results.data.map((order) => orderReform(order.order));
 
-        await prisma.customerOutput.create({
-            data:{
-                orderId:orderId,
-                clientId:store ? store.clientId :null,
-                storeId:storeId ? storeId :null,
-                companyId:companyId ? companyId : null,
-                repositoryId:returnsRepo.id,
-                targetRepositoryId:repository ? repository :null
-            }
-        })
+    if (!results || results.data.length === 0) {
+      throw new AppError("لا يوجد طلبات لعمل الكشف", 400);
+    }
 
-        res.status(200).json({
-            status: "success",
-        });
-    })
+    const reportMetaData = {
+      baghdadOrdersCount: 0,
+      governoratesOrdersCount: 0,
+      totalCost: 0,
+      paidAmount: 0,
+      deliveryCost: 0,
+      clientNet: 0,
+      deliveryAgentNet: 0,
+      companyNet: 0,
+    };
 
-    getCustomerOldData=catchAsync(async(req,res)=>{
-        const {companyId,size,page,type,repository,storeId}=req.query
-        
-        const loggedInUser = res.locals.user as loggedInUserType;
-        
+    for (const order of orders) {
+      // @ts-expect-error Fix later
+      ordersIDs.push(order?.id);
+      // @ts-expect-error Fix later
+      reportMetaData.totalCost += +order.totalCost;
+      // @ts-expect-error Fix later
+      reportMetaData.paidAmount += +order.paidAmount;
+      // @ts-expect-error Fix later
+      reportMetaData.deliveryCost += +order.deliveryCost;
+      // @ts-expect-error Fix later
+      reportMetaData.clientNet += +order.clientNet;
+      // @ts-expect-error Fix later
+      reportMetaData.deliveryAgentNet += order.deliveryAgentNet;
+      // @ts-expect-error Fix later
+      reportMetaData.companyNet += +order.companyNet;
+      // @ts-expect-error Fix later
+      if (order.governorate === "BAGHDAD") {
+        reportMetaData.baghdadOrdersCount++;
+      } else {
+        reportMetaData.governoratesOrdersCount++;
+      }
+    }
 
-        const userRepository=await prisma.employee.findUnique({
-            where:{
-                id:loggedInUser.id
-            },
-            select:{
-                branch:{
-                    select:{
-                        id:true,
-                        repositories:{
-                            select:{
-                                id:true,
-                                type:true,
-                                name:true,
-                                mainRepository:true
-                            }
-                        }
-                    }
-                },
-            }
-        })
+    const report = await reportsRepository.createReport({
+      loggedInUser: loggedInUser,
+      reportData: {
+        type:
+          type === "client"
+            ? "CLIENT"
+            : type === "company"
+            ? "COMPANY"
+            : "REPOSITORY",
+        secondaryType: "RETURNED",
+        clientID: store?.clientId,
+        companyID: companyId,
+        baghdadDeliveryCost: 0,
+        governoratesDeliveryCost: 0,
+        storeID: storeId,
+        repositoryID: returnsRepo.id,
+        repositoryName: repositoryName,
+        targetRepositoryId: repositoryId,
+        ordersIDs: ordersIDs,
+      },
+      reportMetaData: reportMetaData,
+    });
 
-        const returnsRepo=userRepository?.branch?.repositories.find(repo => repo.type === "RETURN")
+    if (!report) {
+      throw new AppError("حدث خطأ اثناء عمل الكشف", 500);
+    }
 
-        if(!returnsRepo){
-            throw new AppError("لا يوجد مخزن راوجع لهذا الفرع!", 404);
-        }
+    // if client report, make secondary status WITH_CLIENT
+    if (type === "client") {
+      await prisma.order.updateMany({
+        where: {
+          id: {
+            in: ordersIDs,
+          },
+        },
+        data: {
+          secondaryStatus: "WITH_CLIENT",
+          repositoryId: null,
+        },
+      });
+    }
+    if (type === "repository") {
+      await prisma.order.updateMany({
+        where: {
+          id: {
+            in: ordersIDs,
+          },
+        },
+        data: {
+          secondaryStatus: "IN_CAR",
+          repositoryId: repositoryId,
+        },
+      });
+    }
+    if (type === "company") {
+      await prisma.order.updateMany({
+        where: {
+          id: {
+            in: ordersIDs,
+          },
+        },
+        data: {
+          secondaryStatus: "WITH_AGENT",
+          repositoryId: null,
+        },
+      });
+    }
+    const reportData = await reportsRepository.getReport({
+      reportID: report.id,
+    });
 
-            
-        const results = await prisma.customerOutput.findManyPaginated({
-                where:{
-                    AND:[
-                        {repositoryId:returnsRepo.id},
-                        type === "client" ? {storeId:storeId ? +storeId:undefined}:
-                        type === "company" ? {companyId:companyId? +companyId:undefined}:
-                        {targetRepositoryId:repository? +repository:undefined},
-                    ]
-                },
-                orderBy: {
-                    id: "desc"
-                },
-                select:{
-                    id:true,
-                    order:{
-                        select:orderSelect
-                    }
-                }
-            },{
-                page:page ? +page : 1,
-                size:size ? +size: 10
-                }
-            )
-        
-        const newData = results.data.map(order => orderReform(order.order))
-        res.status(200).json({
-            status: "success",
-            data: {
-                count:results.dataCount,
-                pageCount:results.pagesCount,
-                currentPage:results.currentPage,
-                orders:newData
-            }
-        });
-    })
+    if (!reportData) {
+      throw new AppError("حدث خطأ اثناء عمل الكشف", 500);
+    }
 
-    saveAndCreateReport=catchAsync(async(req,res)=>{
-        const {companyId,type,storeId,repositoryId,repositoryName}=req.body;
+    await prisma.customerOutput.deleteMany({
+      where: {
+        AND: [
+          { repositoryId: returnsRepo.id },
+          type === "client" ? { storeId: storeId ? +storeId : null } : {},
+          type === "client"
+            ? { clientId: store ? +store.clientId : null }
+            : type === "company"
+            ? { companyId: companyId ? +companyId : null }
+            : { targetRepositoryId: repositoryId },
+        ],
+      },
+    });
+    // Send notification to client if report type is client report
+    if (type === "client") {
+      await sendNotification({
+        title: "تم انشاء كشف جديد",
+        content: `تم انشاء كشف جديد برقم ${reportData?.id}`,
+        userID: store?.clientId as number,
+      });
+    }
 
-        let ordersIDs: string[] = [];
+    // update orders timeline
+    for (const order of orders) {
+      if (!order) {
+        continue;
+      }
+      await ordersRepository.updateOrderTimeline({
+        orderID: order.id,
+        data: {
+          type: "REPORT_CREATE",
+          date: reportData?.createdAt,
+          old: null,
+          new: {
+            id: reportData?.id,
+            type: reportData?.type as ReportType,
+          },
+          by: {
+            id: loggedInUser.id,
+            name: loggedInUser.name,
+          },
+          message: `تم انشاء كشف راجع ${localizeReportType(
+            reportData?.type
+          )} برقم ${reportData?.id}`,
+        },
+      });
+    }
 
-        const loggedInUser = res.locals.user as loggedInUserType;
-        
+    // TODO
+    const pdf = await generateReport(
+      type === "client"
+        ? "CLIENT"
+        : type === "company"
+        ? "COMPANY"
+        : "REPOSITORY",
+      reportData,
+      orders
+    );
 
-        const userRepository=await prisma.employee.findUnique({
-            where:{
-                id:loggedInUser.id
-            },
-            select:{
-                branch:{
-                    select:{
-                        id:true,
-                        repositories:{
-                            select:{
-                                id:true,
-                                type:true,
-                                name:true,
-                                mainRepository:true
-                            }
-                        }
-                    }
-                },
-            }
-        })
+    const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
+    // Set headers for a PDF response
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=generated.pdf");
 
-        const returnsRepo=userRepository?.branch?.repositories.find(repo => repo.type === "RETURN")
+    res.send(pdfBuffer);
+  });
 
-        const store = await prisma.store.findUnique({
-            where:{
-                id:storeId
-            },
-            select:{
-                clientId:true
-            }
-        })
+  // deleteOrderFromSavedData=catchAsync(async(req,res)=>{
+  //     const {orderIds}=req.body
 
-        if(!returnsRepo){
-            throw new AppError("لا يوجد مخزن راوجع لهذا الفرع!", 404);
-        }
+  //     await prisma.customerOutput.deleteMany({
+  //         where:{
+  //             orderId:
+  //         }
+  //     })
 
-        const results = await prisma.customerOutput.findManyPaginated({
-                where:{
-                    AND:[
-                        {repositoryId:returnsRepo.id},
-                        type === "client" ? {storeId:storeId ? +storeId:null}:{},
-                        type === "client" ? {clientId:store ? +store.clientId:null}:
-                        type === "company"?{companyId:companyId? +companyId:null}:
-                        {targetRepositoryId:repositoryId}
-                    ]
-                },
-                select:{
-                    id:true,
-                    order:{
-                        select:orderSelect
-                    }
-                }
-                },{
-                    page:1,
-                    size:5000
-                    }
-        )
-    
-        const orders = results.data.map(order => orderReform(order.order))
-
-        if (!results || results.data.length === 0) {
-            throw new AppError("لا يوجد طلبات لعمل الكشف", 400);
-        }
-
-        const reportMetaData = {
-            baghdadOrdersCount: 0,
-            governoratesOrdersCount: 0,
-            totalCost: 0,
-            paidAmount: 0,
-            deliveryCost: 0,
-            clientNet: 0,
-            deliveryAgentNet: 0,
-            companyNet: 0
-        };
-
-        for (const order of orders) {
-            // @ts-expect-error Fix later
-            ordersIDs.push(order?.id)
-            // @ts-expect-error Fix later
-            reportMetaData.totalCost += +order.totalCost;
-            // @ts-expect-error Fix later
-            reportMetaData.paidAmount += +order.paidAmount;
-            // @ts-expect-error Fix later
-            reportMetaData.deliveryCost += +order.deliveryCost;
-            // @ts-expect-error Fix later
-            reportMetaData.clientNet += +order.clientNet;
-            // @ts-expect-error Fix later
-            reportMetaData.deliveryAgentNet += order.deliveryAgentNet;
-            // @ts-expect-error Fix later
-            reportMetaData.companyNet += +order.companyNet;
-            // @ts-expect-error Fix later
-            if (order.governorate === "BAGHDAD") {
-                reportMetaData.baghdadOrdersCount++;
-            } else {
-                reportMetaData.governoratesOrdersCount++;
-            }
-        }
-
-        const report = await reportsRepository.createReport({
-            loggedInUser:loggedInUser,
-            reportData:{
-                type:type === "client" ? "CLIENT" : type === "company" ? "COMPANY":"REPOSITORY",
-                secondaryType:"RETURNED",
-                clientID:store?.clientId,
-                companyID:companyId,
-                baghdadDeliveryCost:0,
-                governoratesDeliveryCost:0,
-                storeID:storeId,
-                repositoryID:returnsRepo.id,
-                repositoryName:repositoryName,
-                targetRepositoryId:repositoryId,
-                ordersIDs:ordersIDs
-            },
-            reportMetaData: reportMetaData
-        });
-        
-        if (!report) {
-            throw new AppError("حدث خطأ اثناء عمل الكشف", 500);
-        }
-        
-        // if client report, make secondary status WITH_CLIENT
-        if (type === "client") {
-            await prisma.order.updateMany({
-                where: {
-                    id: {
-                        in: ordersIDs
-                    }
-                },
-                data: {
-                    secondaryStatus: "WITH_CLIENT",
-                    repositoryId:null
-                }
-            });
-        }
-        if(type === "repository"){
-            await prisma.order.updateMany({
-                where: {
-                    id: {
-                        in: ordersIDs
-                    }
-                },
-                data: {
-                    secondaryStatus: "IN_CAR",
-                    repositoryId:repositoryId
-                }
-            });
-        }
-        if(type === "company"){
-            await prisma.order.updateMany({
-                where: {
-                    id: {
-                        in: ordersIDs
-                    }
-                },
-                data: {
-                    secondaryStatus:"WITH_AGENT",
-                    repositoryId:null
-                }
-            });
-        }
-        const reportData = await reportsRepository.getReport({
-            reportID: report.id
-        });
-
-        if (!reportData) {
-            throw new AppError("حدث خطأ اثناء عمل الكشف", 500);
-        }
-
-        await prisma.customerOutput.deleteMany({
-            where:{
-                AND:[
-                    {repositoryId:returnsRepo.id},
-                    type === "client" ? {storeId:storeId ? +storeId:null}:{},
-                    type === "client" ? {clientId:store ? +store.clientId:null}:
-                    type === "company"?{companyId:companyId? +companyId:null}:
-                    {targetRepositoryId:repositoryId}
-                ]
-            }
-        })
-        // Send notification to client if report type is client report
-        if (type === "client") {
-            await sendNotification({
-                title: "تم انشاء كشف جديد",
-                content: `تم انشاء كشف جديد برقم ${reportData?.id}`,
-                userID: store?.clientId as number
-            });
-        }
-
-        // update orders timeline
-        for (const order of orders) {
-            if (!order) {
-                continue;
-            }
-            await ordersRepository.updateOrderTimeline({
-                orderID: order.id,
-                data: {
-                    type: "REPORT_CREATE",
-                    date: reportData?.createdAt,
-                    old: null,
-                    new: {
-                        id: reportData?.id,
-                        type: reportData?.type as ReportType
-                    },
-                    by: {
-                        id: loggedInUser.id,
-                        name: loggedInUser.name
-                    },
-                    message: `تم انشاء كشف راجع ${localizeReportType(reportData?.type)} برقم ${reportData?.id}`
-                }
-            });
-        }
-
-        // TODO
-        const pdf = await generateReport(type === "client"?"CLIENT":type === "company"?"COMPANY":"REPOSITORY", reportData, orders);
-
-        const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
-        // Set headers for a PDF response
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'attachment; filename=generated.pdf');
-
-        res.send(pdfBuffer);
-    })
-    
-    // deleteOrderFromSavedData=catchAsync(async(req,res)=>{
-    //     const {orderIds}=req.body
-        
-    //     await prisma.customerOutput.deleteMany({
-    //         where:{
-    //             orderId:
-    //         }
-    //     })
-
-    //     res.status(200).json({
-    //         status: "success",
-    //     });
-    // })
+  //     res.status(200).json({
+  //         status: "success",
+  //     });
+  // })
 }
