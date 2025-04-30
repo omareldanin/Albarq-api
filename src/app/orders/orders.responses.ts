@@ -451,6 +451,7 @@ export const statisticsReformed = (statistics: {
           count: statusCount?._count.id || 0,
           name: OrderStatusData[status].name,
           icon: OrderStatusData[status].icon,
+          inside: false,
         };
       })
       .sort((a, b) => {

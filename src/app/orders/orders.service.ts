@@ -1459,6 +1459,7 @@ export class OrdersService {
         ),
       };
     }
+
     let ordersStatisticsByStatus = statistics.ordersStatisticsByStatus;
 
     let deliveredOrders = ordersStatisticsByStatus.find(
@@ -1469,11 +1470,8 @@ export class OrdersService {
       totalCost: 0,
       name: "تم التوصيل",
       icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/delivered.png",
+      inside: false,
     };
-
-    // let registedOrders = ordersStatisticsByStatus.find(
-    //   (status) => status.status === "REGISTERED"
-    // ) || { status: "REGISTERED", count: 0, totalCost: 0 };
 
     const pReturedOrders = ordersStatisticsByStatus.find(
       (status) => status.status === "PARTIALLY_RETURNED"
@@ -1503,18 +1501,52 @@ export class OrdersService {
     let deliveredIndex = ordersStatisticsByStatus.findIndex(
       (status) => status.status === "DELIVERED"
     );
-    // let registeredIndex = ordersStatisticsByStatus.findIndex(
-    //   (status) => status.status === "REGISTERED"
-    // );
 
     ordersStatisticsByStatus[deliveredIndex] = deliveredOrders;
-    // ordersStatisticsByStatus[registeredIndex] = registedOrders;
 
     statistics = {
       ...statistics,
       ordersStatisticsByStatus: ordersStatisticsByStatus,
     };
 
+    if (
+      data.loggedInUser.role === "CLIENT" ||
+      data.loggedInUser.role === "CLIENT_ASSISTANT"
+    ) {
+      let newStatusStatistics = statistics.ordersStatisticsByStatus;
+      let updatedStatusStatistics = newStatusStatistics.filter(
+        (status) =>
+          status.status !== "REGISTERED" &&
+          status.status !== "READY_TO_SEND" &&
+          status.status !== "WITH_RECEIVING_AGENT" &&
+          status.status !== "IN_GOV_REPOSITORY" &&
+          status.status !== "IN_MAIN_REPOSITORY"
+      );
+      let reg = newStatusStatistics.find(
+        (status) => status.status === "REGISTERED"
+      );
+      let ready = newStatusStatistics.find(
+        (status) => status.status === "READY_TO_SEND"
+      );
+      let rCount = 0;
+      let rTotal = 0;
+
+      rCount += reg?.count ? reg.count : 0;
+      rCount += ready?.count ? ready.count : 0;
+      rTotal += reg?.totalCost ? reg.totalCost : 0;
+      rTotal += ready?.totalCost ? ready.totalCost : 0;
+
+      updatedStatusStatistics.unshift({
+        name: "قيد الارسال",
+        status: "REGISTERED",
+        icon:
+          newStatusStatistics.find((status) => status.status === "REGISTERED")
+            ?.icon || "",
+        count: rCount,
+        totalCost: rTotal,
+        inside: true,
+      });
+    }
     if (data.loggedInUser.role === "DELIVERY_AGENT") {
       const ordersStatisticsByStatus =
         statistics.ordersStatisticsByStatus.filter(
