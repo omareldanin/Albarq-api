@@ -1546,6 +1546,10 @@ export class OrdersService {
         totalCost: rTotal,
         inside: true,
       });
+      return {
+        ...statistics,
+        ordersStatisticsByStatus: updatedStatusStatistics,
+      };
     }
     if (data.loggedInUser.role === "DELIVERY_AGENT") {
       const ordersStatisticsByStatus =
