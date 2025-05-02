@@ -2508,7 +2508,6 @@ export class OrdersRepository {
           phone: inquiryEmployee.user?.phone ?? null,
           avatar: inquiryEmployee.user?.avatar ?? null,
           role: inquiryEmployee.role,
-          lo: inquiryEmployee.inquiryLocations,
         };
       }) ?? [];
 
