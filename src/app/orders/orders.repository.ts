@@ -2394,17 +2394,19 @@ export class OrdersRepository {
       },
     });
 
+    console.log(order);
+
     const inquiryEmployees =
       (
         await prisma.employee.findMany({
           where: {
             AND: [
               { role: "INQUIRY_EMPLOYEE" },
-              {
-                inquiryStatuses: order?.status
-                  ? { has: order.status }
-                  : undefined,
-              },
+              // {
+              //   inquiryStatuses: order?.status
+              //     ? { has: order.status }
+              //     : undefined,
+              // },
               {
                 inquiryBranches: order?.branchId
                   ? {
@@ -2414,39 +2416,39 @@ export class OrdersRepository {
                     }
                   : undefined,
               },
-              {
-                inquiryCompanies: order?.companyId
-                  ? {
-                      some: {
-                        companyId: order.companyId,
-                      },
-                    }
-                  : undefined,
-              },
-              {
-                inquiryStores: order?.storeId
-                  ? {
-                      some: {
-                        storeId: order.storeId,
-                      },
-                    }
-                  : undefined,
-              },
-              {
-                inquiryLocations: order?.locationId
-                  ? {
-                      some: {
-                        locationId: order.locationId,
-                      },
-                    }
-                  : undefined,
-              },
-              // TODO
-              {
-                inquiryGovernorates: order?.governorate
-                  ? { has: order.governorate }
-                  : undefined,
-              },
+              // {
+              //   inquiryCompanies: order?.companyId
+              //     ? {
+              //         some: {
+              //           companyId: order.companyId,
+              //         },
+              //       }
+              //     : undefined,
+              // },
+              // {
+              //   inquiryStores: order?.storeId
+              //     ? {
+              //         some: {
+              //           storeId: order.storeId,
+              //         },
+              //       }
+              //     : undefined,
+              // },
+              // {
+              //   inquiryLocations: order?.locationId
+              //     ? {
+              //         some: {
+              //           locationId: order.locationId,
+              //         },
+              //       }
+              //     : undefined,
+              // },
+              // // TODO
+              // {
+              //   inquiryGovernorates: order?.governorate
+              //     ? { has: order.governorate }
+              //     : undefined,
+              // },
             ],
           },
           select: {
@@ -2458,6 +2460,10 @@ export class OrdersRepository {
                 avatar: true,
               },
             },
+            inquiryStatuses: true,
+            inquiryGovernorates: true,
+            inquiryLocations: true,
+            inquiryStores: true,
             role: true,
           },
         })
