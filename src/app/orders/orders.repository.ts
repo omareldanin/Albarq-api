@@ -2391,10 +2391,17 @@ export class OrdersRepository {
         locationId: true,
         status: true,
         governorate: true,
+        location: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
 
-    console.log(order);
+    if (!order) {
+      throw new AppError("الطلب غير موجود", 404);
+    }
 
     const inquiryEmployees =
       (
@@ -2468,12 +2475,40 @@ export class OrdersRepository {
           },
         })
       ).map((inquiryEmployee) => {
+        const inquiryLocation = inquiryEmployee.inquiryLocations.find(
+          (e) => e.locationId === order.locationId
+        );
+        const inquiryStore = inquiryEmployee.inquiryStores.find(
+          (e) => e.storeId === order.storeId
+        );
+        if (
+          inquiryEmployee.inquiryStatuses.length > 0 &&
+          !inquiryEmployee.inquiryStatuses.includes(order?.status)
+        ) {
+          return;
+        }
+        if (
+          inquiryEmployee.inquiryGovernorates.length > 0 &&
+          !inquiryEmployee.inquiryGovernorates.includes(order?.governorate)
+        ) {
+          return;
+        }
+        if (
+          inquiryEmployee.inquiryStores.length > 0 &&
+          !inquiryEmployee.inquiryGovernorates.includes(order?.governorate)
+        ) {
+          return;
+        }
+        if (inquiryEmployee.inquiryLocations.length > 0 && !inquiryStore) {
+          return;
+        }
         return {
           id: inquiryEmployee.user?.id ?? null,
           name: inquiryEmployee.user?.name ?? null,
           phone: inquiryEmployee.user?.phone ?? null,
           avatar: inquiryEmployee.user?.avatar ?? null,
           role: inquiryEmployee.role,
+          lo: inquiryEmployee.inquiryLocations,
         };
       }) ?? [];
 
