@@ -327,6 +327,9 @@ export class TicketController {
         size: size ? +size : 10,
       }
     );
+    console.log(loggedInUser);
+    console.log(req.query);
+
     res.status(200).json({
       status: "success",
       page: page,
