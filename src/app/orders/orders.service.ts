@@ -1641,7 +1641,7 @@ export class OrdersService {
         orderID: data.params.orderID,
       });
 
-    return orderInquiryEmployees;
+    return orderInquiryEmployees || [];
   };
 
   deactivateOrder = async (data: {
