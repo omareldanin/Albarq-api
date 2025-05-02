@@ -2403,6 +2403,13 @@ export class OrdersRepository {
       throw new AppError("الطلب غير موجود", 404);
     }
 
+    const orderInquiryEmployees: {
+      id: number;
+      name: string;
+      phone: string;
+      avatar: string;
+      role: string;
+    }[] = [];
     const inquiryEmployees =
       (
         await prisma.employee.findMany({
@@ -2474,7 +2481,7 @@ export class OrdersRepository {
             role: true,
           },
         })
-      ).map((inquiryEmployee) => {
+      ).forEach((inquiryEmployee) => {
         const inquiryLocation = inquiryEmployee.inquiryLocations.find(
           (e) => e.locationId === order.locationId
         );
@@ -2493,25 +2500,29 @@ export class OrdersRepository {
         ) {
           return;
         }
-        if (
-          inquiryEmployee.inquiryStores.length > 0 &&
-          !inquiryEmployee.inquiryGovernorates.includes(order?.governorate)
-        ) {
+        if (inquiryEmployee.inquiryStores.length > 0 && !inquiryStore) {
           return;
         }
-        if (inquiryEmployee.inquiryLocations.length > 0 && !inquiryStore) {
+        if (inquiryEmployee.inquiryLocations.length > 0 && !inquiryLocation) {
           return;
         }
-        return {
+        orderInquiryEmployees.push({
           id: inquiryEmployee.user?.id ?? null,
           name: inquiryEmployee.user?.name ?? null,
           phone: inquiryEmployee.user?.phone ?? null,
           avatar: inquiryEmployee.user?.avatar ?? null,
           role: inquiryEmployee.role,
-        };
+        });
+        // return {
+        //   id: inquiryEmployee.user?.id ?? null,
+        //   name: inquiryEmployee.user?.name ?? null,
+        //   phone: inquiryEmployee.user?.phone ?? null,
+        //   avatar: inquiryEmployee.user?.avatar ?? null,
+        //   role: inquiryEmployee.role,
+        // };
       }) ?? [];
 
-    return inquiryEmployees;
+    return orderInquiryEmployees;
   }
 
   async getOrderStatus(data: { orderID: string }) {
