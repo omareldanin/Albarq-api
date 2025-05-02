@@ -2380,9 +2380,9 @@ export class OrdersRepository {
   }
 
   async getOrderInquiryEmployees(data: { orderID: string }) {
-    const order = await prisma.order.findFirst({
+    const order = await prisma.order.findUnique({
       where: {
-        receiptNumber: data.orderID,
+        id: data.orderID,
       },
       select: {
         branchId: true,
@@ -2416,11 +2416,6 @@ export class OrdersRepository {
           where: {
             AND: [
               { role: "INQUIRY_EMPLOYEE" },
-              // {
-              //   inquiryStatuses: order?.status
-              //     ? { has: order.status }
-              //     : undefined,
-              // },
               {
                 inquiryBranches: order?.branchId
                   ? {
@@ -2430,39 +2425,6 @@ export class OrdersRepository {
                     }
                   : undefined,
               },
-              // {
-              //   inquiryCompanies: order?.companyId
-              //     ? {
-              //         some: {
-              //           companyId: order.companyId,
-              //         },
-              //       }
-              //     : undefined,
-              // },
-              // {
-              //   inquiryStores: order?.storeId
-              //     ? {
-              //         some: {
-              //           storeId: order.storeId,
-              //         },
-              //       }
-              //     : undefined,
-              // },
-              // {
-              //   inquiryLocations: order?.locationId
-              //     ? {
-              //         some: {
-              //           locationId: order.locationId,
-              //         },
-              //       }
-              //     : undefined,
-              // },
-              // // TODO
-              // {
-              //   inquiryGovernorates: order?.governorate
-              //     ? { has: order.governorate }
-              //     : undefined,
-              // },
             ],
           },
           select: {
