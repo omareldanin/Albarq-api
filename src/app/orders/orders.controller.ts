@@ -17,7 +17,12 @@ import {
 import { OrdersService } from "./orders.service";
 import { EmployeesRepository } from "../employees/employees.repository";
 import { Governorate, OrderStatus, SecondaryStatus } from "@prisma/client";
-import { orderReform, orderSelect, OrderStatusData } from "./orders.responses";
+import {
+  orderReform,
+  orderSelect,
+  OrderStatusData,
+  statisticsReformed,
+} from "./orders.responses";
 import { AppError } from "../../lib/AppError";
 import { OrdersRepository } from "./orders.repository";
 const employeesRepository = new EmployeesRepository();
@@ -754,15 +759,20 @@ export class OrdersController {
           status: { in: ["REGISTERED", "READY_TO_SEND"] },
         },
       });
+      const statuses: OrderStatus[] = ["REGISTERED", "READY_TO_SEND"];
       res.status(200).json({
         status: "success",
-        data: ordersStatisticsByStatus.map((status) => {
+        data: statuses.map((status) => {
+          const statuscount = ordersStatisticsByStatus.find(
+            (s) => s.status === status
+          );
+
           return {
-            status: status.status,
-            count: status._count.id,
-            totalCost: status._sum.totalCost,
-            name: OrderStatusData[status.status].name,
-            icon: OrderStatusData[status.status].icon,
+            status: status,
+            count: statuscount?._count.id || 0,
+            totalCost: statuscount?._sum.totalCost || 0,
+            name: OrderStatusData[status].name,
+            icon: OrderStatusData[status].icon,
           };
         }),
       });
@@ -786,15 +796,24 @@ export class OrdersController {
           },
         },
       });
+      const statuses: OrderStatus[] = [
+        "WITH_RECEIVING_AGENT",
+        "IN_MAIN_REPOSITORY",
+        "IN_GOV_REPOSITORY",
+      ];
       res.status(200).json({
         status: "success",
-        data: ordersStatisticsByStatus.map((status) => {
+        data: statuses.map((status) => {
+          const statuscount = ordersStatisticsByStatus.find(
+            (s) => s.status === status
+          );
+
           return {
-            status: status.status,
-            count: status._count.id,
-            totalCost: status._sum.totalCost,
-            name: OrderStatusData[status.status].name,
-            icon: OrderStatusData[status.status].icon,
+            status: status,
+            count: statuscount?._count.id || 0,
+            totalCost: statuscount?._sum.totalCost || 0,
+            name: OrderStatusData[status].name,
+            icon: OrderStatusData[status].icon,
           };
         }),
       });
