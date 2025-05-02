@@ -766,19 +766,39 @@ export class OrdersController {
           };
         }),
       });
+    } else if (status === "WITH_RECEIVING_AGENT") {
+      const ordersStatisticsByStatus = await prisma.order.groupBy({
+        by: ["status"],
+        _count: {
+          id: true,
+        },
+        _sum: {
+          totalCost: true,
+        },
+        where: {
+          clientId: loggedInUser.id,
+          status: {
+            in: [
+              "WITH_RECEIVING_AGENT",
+              "IN_MAIN_REPOSITORY",
+              "IN_GOV_REPOSITORY",
+            ],
+          },
+        },
+      });
+      res.status(200).json({
+        status: "success",
+        data: ordersStatisticsByStatus.map((status) => {
+          return {
+            status: status.status,
+            count: status._count.id,
+            totalCost: status._sum.totalCost,
+            name: OrderStatusData[status.status].name,
+            icon: OrderStatusData[status.status].icon,
+          };
+        }),
+      });
     }
-
-    // res.status(200).json({
-    //   status: "success",
-    //   data: ordersStatisticsByStatus.map((status) => {
-    //     return {
-    //       count: status._count.id,
-    //       clientId: status.clientId,
-    //       clientName: clients.find((client) => +client.id === +status.clientId)
-    //         ?.user.name,
-    //     };
-    //   }),
-    // });
   });
   getOrderTimeline = catchAsync(async (req, res) => {
     const params = {

@@ -1514,6 +1514,7 @@ export class OrdersService {
       data.loggedInUser.role === "CLIENT_ASSISTANT"
     ) {
       let newStatusStatistics = statistics.ordersStatisticsByStatus;
+
       let updatedStatusStatistics = newStatusStatistics.filter(
         (status) =>
           status.status !== "REGISTERED" &&
@@ -1522,19 +1523,53 @@ export class OrdersService {
           status.status !== "IN_GOV_REPOSITORY" &&
           status.status !== "IN_MAIN_REPOSITORY"
       );
+
       let reg = newStatusStatistics.find(
         (status) => status.status === "REGISTERED"
       );
       let ready = newStatusStatistics.find(
         (status) => status.status === "READY_TO_SEND"
       );
-      let rCount = 0;
-      let rTotal = 0;
+
+      let withR = newStatusStatistics.find(
+        (status) => status.status === "WITH_RECEIVING_AGENT"
+      );
+
+      let inGov = newStatusStatistics.find(
+        (status) => status.status === "IN_GOV_REPOSITORY"
+      );
+
+      let inMain = newStatusStatistics.find(
+        (status) => status.status === "IN_MAIN_REPOSITORY"
+      );
+
+      let rCount = 0,
+        rTotal = 0,
+        dCount = 0,
+        dtotal = 0;
 
       rCount += reg?.count ? reg.count : 0;
       rCount += ready?.count ? ready.count : 0;
       rTotal += reg?.totalCost ? reg.totalCost : 0;
       rTotal += ready?.totalCost ? ready.totalCost : 0;
+      dCount += withR?.count ? withR.count : 0;
+      dCount += inGov?.count ? inGov.count : 0;
+      dCount += inMain?.count ? inMain.count : 0;
+      dtotal += withR?.totalCost ? withR.totalCost : 0;
+      dtotal += inGov?.totalCost ? inGov.totalCost : 0;
+      dtotal += inMain?.totalCost ? inMain.totalCost : 0;
+
+      updatedStatusStatistics.unshift({
+        name: "قيد التوصيل",
+        status: "WITH_RECEIVING_AGENT",
+        icon:
+          newStatusStatistics.find(
+            (status) => status.status === "WITH_RECEIVING_AGENT"
+          )?.icon || "",
+        count: dCount,
+        totalCost: dtotal,
+        inside: true,
+      });
 
       updatedStatusStatistics.unshift({
         name: "قيد الارسال",
@@ -1546,6 +1581,7 @@ export class OrdersService {
         totalCost: rTotal,
         inside: true,
       });
+
       return {
         ...statistics,
         ordersStatisticsByStatus: updatedStatusStatistics,
