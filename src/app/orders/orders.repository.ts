@@ -547,6 +547,9 @@ export class OrdersRepository {
                 confirmed: data.filters.confirmed,
               },
               {
+                processed: data.filters.processed,
+              },
+              {
                 status: data.filters.status,
               },
               {
@@ -704,6 +707,9 @@ export class OrdersRepository {
               // Filter by companyID
               {
                 confirmed: data.filters.confirmed,
+              },
+              {
+                processed: data.filters.processed,
               },
               // Filter by orderID
               {

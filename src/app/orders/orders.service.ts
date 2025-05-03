@@ -222,10 +222,7 @@ export class OrdersService {
       data.loggedInUser.role === EmployeeRole.DELIVERY_AGENT
         ? data.loggedInUser.id
         : data.filters.deliveryAgentID;
-    // const companyID =
-    //     Object.keys(AdminRole).includes(data.loggedInUser.role) && data.filters.companyID
-    //         ? data.filters.companyID
-    //         : data.loggedInUser.companyID || undefined;\
+
     const companyID = data.filters.companyID
       ? data.filters.companyID
       : data.loggedInUser.companyID || undefined;
@@ -512,6 +509,14 @@ export class OrdersService {
     ) {
       // data.orderData.totalCost = 0;
       data.orderData.paidAmount = 0;
+    }
+
+    if (
+      data.orderData.status &&
+      oldOrderData?.status !== data.orderData.status
+    ) {
+      // data.orderData.totalCost = 0;
+      data.orderData.processed = false;
     }
 
     // if secondary status is changed to in_reposiroty, unlink the delivery agent
