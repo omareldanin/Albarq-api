@@ -455,6 +455,16 @@ export class ReportsRepository {
   }
 
   async deleteReport(data: { reportID: number }) {
+    const deletedReport = await prisma.report.delete({
+      where: {
+        id: data.reportID,
+      },
+      select: reportSelect,
+    });
+    return reportReform(deletedReport);
+  }
+
+  async deactivateReport(data: { reportID: number; deletedByID: number }) {
     const report = await prisma.report.findUnique({
       where: {
         id: data.reportID,
@@ -505,16 +515,6 @@ export class ReportsRepository {
       }
     }
 
-    const deletedReport = await prisma.report.delete({
-      where: {
-        id: data.reportID,
-      },
-      select: reportSelect,
-    });
-    return reportReform(deletedReport);
-  }
-
-  async deactivateReport(data: { reportID: number; deletedByID: number }) {
     const deletedReport = await prisma.report.update({
       where: {
         id: data.reportID,
