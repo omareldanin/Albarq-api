@@ -328,6 +328,7 @@ export class CustomerOutputController {
         data: {
           secondaryStatus: "WITH_CLIENT",
           repositoryId: null,
+          forwardedRepo: returnsRepo.id,
         },
       });
     }
@@ -341,6 +342,7 @@ export class CustomerOutputController {
         data: {
           secondaryStatus: "IN_CAR",
           repositoryId: repositoryId,
+          forwardedRepo: returnsRepo.id,
         },
       });
     }
@@ -354,6 +356,7 @@ export class CustomerOutputController {
         data: {
           secondaryStatus: "WITH_AGENT",
           repositoryId: null,
+          forwardedRepo: returnsRepo.id,
         },
       });
     }

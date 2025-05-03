@@ -464,6 +464,8 @@ model Repository {
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   CustomerOutput    CustomerOutput[]
+  ClientReport      ClientReport[]
+  CompanyReport     CompanyReport[]
 }
 
 model Location {
@@ -891,12 +893,15 @@ model Report {
 
 model CompanyReport {
   // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                       Int                 @id
+  id           Int         @id
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  companyId                Int
+  companyId    Int
   // --- RELATIONS --------------------------------------------------------------------------- //
-  report                   Report              @relation(fields: [id], references: [id], onDelete: Cascade)
-  orders                   Order[]
+  report       Report      @relation(fields: [id], references: [id], onDelete: Cascade)
+  orders       Order[]
+  repositoryId Int
+  repository   Repository? @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
   company                  Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
   // --- OTHER --------------------------------------------------------------------- //
   baghdadDeliveryCost      Float               @default(0)
@@ -908,15 +913,18 @@ model CompanyReport {
 
 model ClientReport {
   // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                       Int                 @id
+  id           Int         @id
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  clientId                 Int
-  storeId                  Int?
+  clientId     Int
+  storeId      Int?
   // --- RELATIONS --------------------------------------------------------------------------- //
-  client                   Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  report                   Report              @relation(fields: [id], references: [id], onDelete: Cascade)
-  store                    Store?              @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  orders                   Order[]
+  client       Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  report       Report      @relation(fields: [id], references: [id], onDelete: Cascade)
+  store        Store?      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  orders       Order[]
+  repositoryId Int
+  repository   Repository? @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
   // --- OTHER --------------------------------------------------------------------- //
   baghdadDeliveryCost      Float               @default(0)
   governoratesDeliveryCost Float               @default(0)
@@ -930,11 +938,11 @@ model RepositoryReport {
   // --- IDENTIFICATION --------------------------------------------------------------------- //
   id                   Int                 @id
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  repositoryId         Int
   targetRepositoryName String?
   targetRepositoryId   Int?
   // --- RELATIONS --------------------------------------------------------------------------- //
   report               Report              @relation(fields: [id], references: [id], onDelete: Cascade)
+  repositoryId         Int
   repository           Repository          @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
   orders               Order[]
   // --- OTHER --------------------------------------------------------------------- //
