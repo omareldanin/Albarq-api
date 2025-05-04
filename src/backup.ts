@@ -15,7 +15,7 @@ const GDRIVE_FOLDER_ID = "19-VriVzLqpCDSTPvIA0qYBtZZJGW2odB"; // Optional
 if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR);
 
 // ⏰ Run every day at 12:00 AM
-export const automaticBackUpCronJob = cron.schedule("* * * * *", async () => {
+export const automaticBackUpCronJob = cron.schedule("0 0 * * *", async () => {
   Logger.info("Running backup updates");
   //   const date = new Date().toISOString().split("T")[0];
   const fileName = `albarq-backup.sql`;
