@@ -8,7 +8,7 @@ import { Logger } from "./lib/logger";
 
 // 🔧 CONFIG
 const BACKUP_DIR = path.resolve(__dirname, "../backups");
-const CREDENTIALS_PATH = path.resolve(__dirname, "../../credentials.json");
+const CREDENTIALS_PATH = path.resolve(__dirname, "../credentials.json");
 const GDRIVE_FOLDER_ID = "19-VriVzLqpCDSTPvIA0qYBtZZJGW2odB"; // Optional
 
 // Ensure backup directory exists
