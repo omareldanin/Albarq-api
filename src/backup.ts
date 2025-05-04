@@ -40,6 +40,19 @@ async function uploadToDrive(filePath: string, fileName: string) {
 
   const drive = google.drive({ version: "v3", auth });
 
+  // Check if the file exists in the specified folder
+  const res = await drive.files.list({
+    q: `name = '${fileName}' and '${GDRIVE_FOLDER_ID}' in parents`,
+    fields: "files(id, name)",
+  });
+
+  let fileId: string | undefined | null;
+
+  if (res.data.files && res.data.files.length > 0) {
+    // File exists, get its ID
+    fileId = res.data.files[0].id;
+  }
+
   const fileMetadata: any = {
     name: fileName,
     ...(GDRIVE_FOLDER_ID && { parents: [GDRIVE_FOLDER_ID] }),
@@ -51,12 +64,25 @@ async function uploadToDrive(filePath: string, fileName: string) {
   };
 
   try {
-    const response = await drive.files.create({
-      requestBody: fileMetadata,
-      media,
-      fields: "id",
-    });
-    console.log("✅ Uploaded to Drive. File ID:", response.data.id);
+    let response;
+    if (fileId) {
+      // File exists, update it
+      response = await drive.files.update({
+        fileId: fileId,
+        requestBody: fileMetadata,
+        media,
+        fields: "id",
+      });
+      console.log("✅ File updated. File ID:", response.data.id);
+    } else {
+      // File doesn't exist, create a new one
+      response = await drive.files.create({
+        requestBody: fileMetadata,
+        media,
+        fields: "id",
+      });
+      console.log("✅ File uploaded. File ID:", response.data.id);
+    }
   } catch (err) {
     console.error("❌ Google Drive upload failed:", err);
   }
