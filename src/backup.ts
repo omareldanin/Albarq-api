@@ -4,6 +4,7 @@ import * as path from "path";
 import * as cron from "node-cron";
 import { google } from "googleapis";
 import { env } from "./config";
+import { Logger } from "./lib/logger";
 
 // 🔧 CONFIG
 const BACKUP_DIR = path.resolve(__dirname, "../backups");
@@ -15,6 +16,7 @@ if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR);
 
 // ⏰ Run every day at 12:00 AM
 export const automaticBackUpCronJob = cron.schedule("* * * * *", async () => {
+  Logger.info("Running backup updates");
   const date = new Date().toISOString().split("T")[0];
   const fileName = `backup-${date}.sql`;
   const filePath = path.join(BACKUP_DIR, fileName);
