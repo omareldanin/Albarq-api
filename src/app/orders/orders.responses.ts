@@ -122,6 +122,7 @@ export const orderSelect = {
   },
   client: {
     select: {
+      showNumbers: true,
       user: {
         select: {
           id: true,
@@ -288,6 +289,7 @@ export const orderReform = (
       name: order.client.user.name,
       phone: order.client.user.phone,
       company: order.client.company.name,
+      showNumbers: order.client.showNumbers,
     },
     deliveryAgent: order.deliveryAgent && {
       id: order.deliveryAgent.user.id,

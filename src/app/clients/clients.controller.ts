@@ -15,219 +15,239 @@ const employeesRepository = new EmployeesRepository();
 // const branchesRepository = new BranchesRepository();
 
 export class ClientsController {
-    createClient = catchAsync(async (req, res) => {
-        const clientData = ClientCreateSchema.parse(req.body);
-        let companyID = +res.locals.user.companyID;
-        const { password, ...rest } = clientData;
+  createClient = catchAsync(async (req, res) => {
+    const clientData = ClientCreateSchema.parse(req.body);
+    let companyID = +res.locals.user.companyID;
+    const { password, ...rest } = clientData;
 
-        let avatar: string | undefined;
-        if (req.file) {
-            const file = req.file as Express.MulterS3.File;
-            avatar = file.location;
-        }
+    let avatar: string | undefined;
+    if (req.file) {
+      const file = req.file as Express.MulterS3.File;
+      avatar = file.location;
+    }
 
-        const currentUser = res.locals.user;
+    const currentUser = res.locals.user;
+    // TODO: CANT CRATE ADMIN_ASSISTANT
 
-        // TODO: CANT CRATE ADMIN_ASSISTANT
+    if (
+      !companyID &&
+      (currentUser.role === AdminRole.ADMIN ||
+        currentUser.role === AdminRole.ADMIN_ASSISTANT)
+    ) {
+      companyID = clientData.companyID as number;
+    }
 
-        if (
-            !companyID &&
-            (currentUser.role === AdminRole.ADMIN || currentUser.role === AdminRole.ADMIN_ASSISTANT)
-        ) {
-            companyID = clientData.companyID as number;
-        }
+    // hash the password
+    const hashedPassword = bcrypt.hashSync(
+      password + (env.PASSWORD_SALT as string),
+      12
+    );
 
-        // hash the password
-        const hashedPassword = bcrypt.hashSync(password + (env.PASSWORD_SALT as string), 12);
-
-        const createdClient = await clientsRepository.createClient(companyID, {
-            ...rest,
-            password: hashedPassword,
-            userID: currentUser.id,
-            avatar
-        });
-
-        res.status(200).json({
-            status: "success",
-            data: createdClient
-        });
+    const createdClient = await clientsRepository.createClient(companyID, {
+      ...rest,
+      password: hashedPassword,
+      userID: currentUser.id,
+      avatar,
     });
 
-    getAllClients = catchAsync(async (req, res) => {
-        // Filters
-        const loggedInUser = res.locals.user as loggedInUserType;
-        let companyID: number | undefined;
-        if (Object.keys(AdminRole).includes(loggedInUser.role)) {
-            companyID = req.query.company_id ? +req.query.company_id : undefined;
-        } else if (loggedInUser.companyID) {
-            companyID = loggedInUser.companyID;
-        }
+    res.status(200).json({
+      status: "success",
+      data: createdClient,
+    });
+  });
 
-        // Show only clients of the same branch as the logged in user
-        let branchID: number | undefined = req.query.branch_id ? +req.query.branch_id : undefined;
-        if (
-            loggedInUser.role !== EmployeeRole.COMPANY_MANAGER &&
-            loggedInUser.role !== AdminRole.ADMIN &&
-            loggedInUser.role !== AdminRole.ADMIN_ASSISTANT &&
-            loggedInUser.role !== EmployeeRole.BRANCH_MANAGER &&
-            loggedInUser.role !== EmployeeRole.REPOSITORIY_EMPLOYEE
-        ) {
-            const employee = await employeesRepository.getEmployee({ employeeID: loggedInUser.id });
-            branchID = employee?.branch?.id;
-            // if (!branch) {
-            //     throw new AppError("انت غير مرتبط بفرع", 500);
-            // }
-            // // TODO: Every branch should have a governorate
-            // if (!branch.governorate) {
-            //     throw new AppError("الفرع الذي تعمل به غير مرتبط بمحافظة", 500);
-            // }
-        }
+  getAllClients = catchAsync(async (req, res) => {
+    // Filters
+    const loggedInUser = res.locals.user as loggedInUserType;
+    let companyID: number | undefined;
+    if (Object.keys(AdminRole).includes(loggedInUser.role)) {
+      companyID = req.query.company_id ? +req.query.company_id : undefined;
+    } else if (loggedInUser.companyID) {
+      companyID = loggedInUser.companyID;
+    }
 
-        const phone = req.query.phone as string | undefined;
+    // Show only clients of the same branch as the logged in user
+    let branchID: number | undefined = req.query.branch_id
+      ? +req.query.branch_id
+      : undefined;
+    if (
+      loggedInUser.role !== EmployeeRole.COMPANY_MANAGER &&
+      loggedInUser.role !== AdminRole.ADMIN &&
+      loggedInUser.role !== AdminRole.ADMIN_ASSISTANT &&
+      loggedInUser.role !== EmployeeRole.BRANCH_MANAGER &&
+      loggedInUser.role !== EmployeeRole.REPOSITORIY_EMPLOYEE
+    ) {
+      const employee = await employeesRepository.getEmployee({
+        employeeID: loggedInUser.id,
+      });
+      branchID = employee?.branch?.id;
+      // if (!branch) {
+      //     throw new AppError("انت غير مرتبط بفرع", 500);
+      // }
+      // // TODO: Every branch should have a governorate
+      // if (!branch.governorate) {
+      //     throw new AppError("الفرع الذي تعمل به غير مرتبط بمحافظة", 500);
+      // }
+    }
 
-        const name = req.query.name as string | undefined;
+    const phone = req.query.phone as string | undefined;
 
-        const deleted = (req.query.deleted as string) || "false";
+    const name = req.query.name as string | undefined;
 
-        const storeID = req.query.store_id ? +req.query.store_id : undefined;
+    const deleted = (req.query.deleted as string) || "false";
 
-        const minified = req.query.minified ? req.query.minified === "true" : undefined;
+    const storeID = req.query.store_id ? +req.query.store_id : undefined;
 
-        let size = req.query.size ? +req.query.size : 10;
-        if (size > 500 && minified !== true) {
-            size = 10;
-        }
-        let page = 1;
-        if (req.query.page && !Number.isNaN(+req.query.page) && +req.query.page > 0) {
-            page = +req.query.page;
-        }
+    const minified = req.query.minified
+      ? req.query.minified === "true"
+      : undefined;
 
-        const { clients, pagesCount } = await clientsRepository.getAllClientsPaginated({
-            page: page,
-            size: size,
-            deleted: deleted,
-            companyID: companyID,
-            minified: minified,
-            storeID: storeID,
-            branchID: branchID,
-            phone: phone,
-            name: name,
-            loggedInUser
-        });
+    let size = req.query.size ? +req.query.size : 10;
+    if (size > 500 && minified !== true) {
+      size = 10;
+    }
+    let page = 1;
+    if (
+      req.query.page &&
+      !Number.isNaN(+req.query.page) &&
+      +req.query.page > 0
+    ) {
+      page = +req.query.page;
+    }
 
-        res.status(200).json({
-            status: "success",
-            page: page,
-            pagesCount: pagesCount,
-            data: clients
-        });
+    const { clients, pagesCount } =
+      await clientsRepository.getAllClientsPaginated({
+        page: page,
+        size: size,
+        deleted: deleted,
+        companyID: companyID,
+        minified: minified,
+        storeID: storeID,
+        branchID: branchID,
+        phone: phone,
+        name: name,
+        loggedInUser,
+      });
+
+    res.status(200).json({
+      status: "success",
+      page: page,
+      pagesCount: pagesCount,
+      data: clients,
+    });
+  });
+
+  getClient = catchAsync(async (req, res) => {
+    const clientID = +req.params.clientID;
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    if (
+      loggedInUser.role === ClientRole.CLIENT ||
+      loggedInUser.role === EmployeeRole.CLIENT_ASSISTANT
+    ) {
+      if (clientID !== loggedInUser.id) {
+        throw new AppError("غير مصرح لك الاطلاع علي بيانات عميل اخر", 403);
+      }
+    }
+
+    const client = await clientsRepository.getClient({
+      clientID: clientID,
     });
 
-    getClient = catchAsync(async (req, res) => {
-        const clientID = +req.params.clientID;
-        const loggedInUser = res.locals.user as loggedInUserType;
+    res.status(200).json({
+      status: "success",
+      data: client,
+    });
+  });
 
-        if (loggedInUser.role === ClientRole.CLIENT || loggedInUser.role === EmployeeRole.CLIENT_ASSISTANT) {
-            if (clientID !== loggedInUser.id) {
-                throw new AppError("غير مصرح لك الاطلاع علي بيانات عميل اخر", 403);
-            }
-        }
+  updateClient = catchAsync(async (req, res) => {
+    const clientData = ClientUpdateSchema.parse(req.body);
+    const clientID = +req.params.clientID;
+    // const companyID = +res.locals.user.companyID;
 
-        const client = await clientsRepository.getClient({
-            clientID: clientID
-        });
+    let avatar: string | undefined;
+    if (req.file) {
+      const file = req.file as Express.MulterS3.File;
+      avatar = file.location;
+    }
 
-        res.status(200).json({
-            status: "success",
-            data: client
-        });
+    const oldClient = await clientsRepository.getClient({
+      clientID: clientID,
     });
 
-    updateClient = catchAsync(async (req, res) => {
-        const clientData = ClientUpdateSchema.parse(req.body);
-        const clientID = +req.params.clientID;
-        // const companyID = +res.locals.user.companyID;
+    const { password, ...rest } = clientData;
 
-        let avatar: string | undefined;
-        if (req.file) {
-            const file = req.file as Express.MulterS3.File;
-            avatar = file.location;
-        }
+    // hash the password
+    const hashedPassword = bcrypt.hashSync(
+      password + (env.PASSWORD_SALT as string),
+      12
+    );
 
-        const oldClient = await clientsRepository.getClient({
-            clientID: clientID
-        });
-
-        const { password, ...rest } = clientData;
-
-        // hash the password
-        const hashedPassword = bcrypt.hashSync(password + (env.PASSWORD_SALT as string), 12);
-        
-        const updatedClient = await clientsRepository.updateClient({
-            clientID: clientID,
-            // companyID: companyID,
-            clientData: {
-                ...rest,
-                password:clientData.password ? hashedPassword:undefined,
-                avatar
-            }
-        });
-
-        // Send notification to the company manager if the client name is updated
-        if (clientData.name && oldClient?.name !== updatedClient?.name) {
-            // get the company manager id
-            const companyManager = await employeesRepository.getCompanyManager({
-                companyID: updatedClient?.company.id as number
-            });
-
-            await sendNotification({
-                userID: companyManager?.id as number,
-                title: "تغيير اسم عميل",
-                content: `تم تغيير اسم العميل ${oldClient?.name} إلى ${updatedClient?.name}`
-            });
-        }
-
-        res.status(200).json({
-            status: "success",
-            data: updatedClient
-        });
+    const updatedClient = await clientsRepository.updateClient({
+      clientID: clientID,
+      // companyID: companyID,
+      clientData: {
+        ...rest,
+        password: clientData.password ? hashedPassword : undefined,
+        avatar,
+      },
     });
 
-    deleteClient = catchAsync(async (req, res) => {
-        const clientID = +req.params.clientID;
+    // Send notification to the company manager if the client name is updated
+    if (clientData.name && oldClient?.name !== updatedClient?.name) {
+      // get the company manager id
+      const companyManager = await employeesRepository.getCompanyManager({
+        companyID: updatedClient?.company.id as number,
+      });
 
-        await clientsRepository.deleteClient({
-            clientID: clientID
-        });
+      await sendNotification({
+        userID: companyManager?.id as number,
+        title: "تغيير اسم عميل",
+        content: `تم تغيير اسم العميل ${oldClient?.name} إلى ${updatedClient?.name}`,
+      });
+    }
 
-        res.status(200).json({
-            status: "success"
-        });
+    res.status(200).json({
+      status: "success",
+      data: updatedClient,
+    });
+  });
+
+  deleteClient = catchAsync(async (req, res) => {
+    const clientID = +req.params.clientID;
+
+    await clientsRepository.deleteClient({
+      clientID: clientID,
     });
 
-    deactivateClient = catchAsync(async (req, res) => {
-        const clientID = +req.params.clientID;
-        const loggedInUserID = +res.locals.user.id;
+    res.status(200).json({
+      status: "success",
+    });
+  });
 
-        await clientsRepository.deactivateClient({
-            clientID: clientID,
-            deletedByID: loggedInUserID
-        });
+  deactivateClient = catchAsync(async (req, res) => {
+    const clientID = +req.params.clientID;
+    const loggedInUserID = +res.locals.user.id;
 
-        res.status(200).json({
-            status: "success"
-        });
+    await clientsRepository.deactivateClient({
+      clientID: clientID,
+      deletedByID: loggedInUserID,
     });
 
-    reactivateClient = catchAsync(async (req, res) => {
-        const clientID = +req.params.clientID;
-
-        await clientsRepository.reactivateClient({
-            clientID: clientID
-        });
-
-        res.status(200).json({
-            status: "success"
-        });
+    res.status(200).json({
+      status: "success",
     });
+  });
+
+  reactivateClient = catchAsync(async (req, res) => {
+    const clientID = +req.params.clientID;
+
+    await clientsRepository.reactivateClient({
+      clientID: clientID,
+    });
+
+    res.status(200).json({
+      status: "success",
+    });
+  });
 }

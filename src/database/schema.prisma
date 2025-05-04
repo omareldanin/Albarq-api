@@ -308,6 +308,7 @@ model Client {
   repositoryId              Int?
   branchId                  Int?
   receivingAgentId          Int?
+  showNumbers               Boolean                 @default(false)
   // --- RELATIONS --------------------------------------------------------------------------- //
   clientReports             ClientReport[]
   products                  Product[]
