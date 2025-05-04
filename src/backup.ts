@@ -20,7 +20,7 @@ export const automaticBackUpCronJob = cron.schedule("* * * * *", async () => {
   const date = new Date().toISOString().split("T")[0];
   const fileName = `backup-${date}.sql`;
   const filePath = path.join(BACKUP_DIR, fileName);
-  const dumpCommand = `PGPASSWORD=${env.DB_PASSWORD} pg_dump -U ${env.DB_USER} -F p -d ${env.DB_NAME} -f "${filePath}"`;
+  const dumpCommand = `PGPASSWORD=${env.DB_PASSWORD} pg_dump -h albarq-db-do-user-16243774-0.c.db.ondigitalocean.com -p 25060 -U ${env.DB_USER} -F p -d ${env.DB_NAME} -f "${filePath}"`;
 
   exec(dumpCommand, { env: { ...process.env } }, async (error) => {
     if (error) {
