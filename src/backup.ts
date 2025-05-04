@@ -31,7 +31,6 @@ export const automaticBackUpCronJob = cron.schedule("* * * * *", async () => {
     await uploadToDrive(filePath, fileName);
   });
 });
-
 async function uploadToDrive(filePath: string, fileName: string) {
   const auth = new google.auth.GoogleAuth({
     keyFile: CREDENTIALS_PATH,
@@ -55,7 +54,6 @@ async function uploadToDrive(filePath: string, fileName: string) {
 
   const fileMetadata: any = {
     name: fileName,
-    ...(GDRIVE_FOLDER_ID && { parents: [GDRIVE_FOLDER_ID] }),
   };
 
   const media = {
@@ -69,15 +67,21 @@ async function uploadToDrive(filePath: string, fileName: string) {
       // File exists, update it
       response = await drive.files.update({
         fileId: fileId,
-        requestBody: fileMetadata,
+        requestBody: {
+          name: fileName,
+        },
         media,
+        addParents: GDRIVE_FOLDER_ID, // Use addParents for updating parents
         fields: "id",
       });
       console.log("✅ File updated. File ID:", response.data.id);
     } else {
       // File doesn't exist, create a new one
       response = await drive.files.create({
-        requestBody: fileMetadata,
+        requestBody: {
+          name: fileName,
+          parents: [GDRIVE_FOLDER_ID], // Correctly set parents here for new file
+        },
         media,
         fields: "id",
       });
