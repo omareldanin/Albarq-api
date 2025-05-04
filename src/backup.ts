@@ -17,8 +17,8 @@ if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR);
 // ⏰ Run every day at 12:00 AM
 export const automaticBackUpCronJob = cron.schedule("* * * * *", async () => {
   Logger.info("Running backup updates");
-  const date = new Date().toISOString().split("T")[0];
-  const fileName = `backup-${date}.sql`;
+  //   const date = new Date().toISOString().split("T")[0];
+  const fileName = `albarq-backup.sql`;
   const filePath = path.join(BACKUP_DIR, fileName);
   const dumpCommand = `PGPASSWORD=${env.DB_PASSWORD} pg_dump -h albarq-db-do-user-16243774-0.c.db.ondigitalocean.com -p 25060 -U ${env.DB_USER} -F p -d ${env.DB_NAME} -f "${filePath}"`;
 
