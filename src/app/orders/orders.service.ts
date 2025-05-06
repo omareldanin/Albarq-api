@@ -213,8 +213,6 @@ export class OrdersService {
     filters: OrdersFiltersType;
     loggedInUser: loggedInUserType;
   }) => {
-    console.log(data.loggedInUser);
-
     const clientID =
       data.loggedInUser.role === "CLIENT"
         ? data.loggedInUser.id
