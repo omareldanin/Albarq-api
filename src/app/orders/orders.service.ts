@@ -214,9 +214,10 @@ export class OrdersService {
     loggedInUser: loggedInUserType;
   }) => {
     const clientID =
-      data.loggedInUser.role === "CLIENT" ||
-      data.loggedInUser.role === "CLIENT_ASSISTANT"
+      data.loggedInUser.role === "CLIENT"
         ? data.loggedInUser.id
+        : data.loggedInUser.role === "CLIENT_ASSISTANT"
+        ? data.loggedInUser.clientId
         : data.filters.clientID;
     const deliveryAgentID =
       data.loggedInUser.role === EmployeeRole.DELIVERY_AGENT
@@ -361,6 +362,19 @@ export class OrdersService {
       }
     }
 
+    if (data.loggedInUser.role === "CLIENT_ASSISTANT") {
+      const employee = await prisma.employee.findUnique({
+        where: {
+          id: data.loggedInUser.id,
+        },
+        select: {
+          managedStores: true,
+        },
+      });
+      employee?.managedStores.forEach((s) => {
+        inquiryStoresIDs?.push(s.id);
+      });
+    }
     let size = data.filters.size || 500;
 
     if (size > 550 && data.filters.forMobile !== true) {

@@ -766,7 +766,10 @@ export class OrdersRepository {
               // Filter by storeID
               {
                 store: {
-                  id: data.filters.storeID,
+                  id:
+                    data.loggedInUser?.role === "CLIENT_ASSISTANT"
+                      ? { in: data.filters.inquiryStoresIDs }
+                      : data.filters.storeID,
                 },
               },
               {
