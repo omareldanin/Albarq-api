@@ -373,9 +373,7 @@ export class OrdersService {
       });
 
       console.log(employee?.managedStores);
-      employee?.managedStores.forEach((s) => {
-        inquiryStoresIDs?.push(s.id);
-      });
+      inquiryStoresIDs = employee?.managedStores.map((s) => s.id);
     }
     console.log(inquiryStoresIDs);
 
