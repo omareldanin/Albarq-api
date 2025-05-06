@@ -15,6 +15,7 @@ enum AdminRole {
 
 enum EmployeeRole {
   CLIENT
+  CLIENT_ASSISTANT
   COMPANY_MANAGER
   ACCOUNT_MANAGER
   ACCOUNTANT
@@ -25,7 +26,6 @@ enum EmployeeRole {
   DATA_ENTRY
   REPOSITORIY_EMPLOYEE
   INQUIRY_EMPLOYEE
-  CLIENT_ASSISTANT
   ADMIN
   ADMIN_ASSISTANT
 }
@@ -36,6 +36,13 @@ enum ClientRole {
 
 enum Permission {
   ADD_STORE
+  ADD_PRODUCT
+  NOTIFICATIONS
+  MESSAGES
+  MANAGE_ORDERS
+  MANAGE_REPORTS
+  MANAGE_EMPLOYEES
+  MANAGE_TICKETS
   ADD_CLIENT
   ADD_LOCATION
   ADD_DELIVERY_AGENT
@@ -232,9 +239,10 @@ model Employee {
   orderStatus             OrderStatus[]                    @default([REGISTERED, READY_TO_SEND, WITH_DELIVERY_AGENT, DELIVERED, REPLACED, PARTIALLY_RETURNED, RETURNED, POSTPONED, CHANGE_ADDRESS, RESEND, WITH_RECEIVING_AGENT, PROCESSING])
   salary                  Float                            @default(0) // TODO: remove this field
   deliveryCost            Float                            @default(0)
+  clientAssistantRole     String?
   role                    EmployeeRole
-  idCard                  String                           @default("https://w7.pngwing.com/pngs/627/693/png-transparent-computer-icons-user-user-icon.png")
-  residencyCard           String                           @default("https://w7.pngwing.com/pngs/627/693/png-transparent-computer-icons-user-user-icon.png")
+  idCard                  String?                          @default("https://w7.pngwing.com/pngs/627/693/png-transparent-computer-icons-user-user-icon.png")
+  residencyCard           String?                          @default("https://w7.pngwing.com/pngs/627/693/png-transparent-computer-icons-user-user-icon.png")
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //
   branchId                Int?
   repositoryId            Int?
@@ -275,6 +283,8 @@ model Employee {
   // --- OTHER --------------------------------------------------------------------- //
   Department              Department?                      @relation(fields: [departmentId], references: [id])
   departmentId            Int?
+  Client                  Client?                          @relation(fields: [clientId], references: [id])
+  clientId                Int?
 
   @@index([companyId])
   @@index([role])
@@ -333,6 +343,7 @@ model Client {
   // --- OTHER --------------------------------------------------------------------- //
   CustomerOutput            CustomerOutput[]
   ReceivingAgentClients     ReceivingAgentClients[]
+  employees                 Employee[]
 
   @@index([companyId])
 }

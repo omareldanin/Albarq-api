@@ -3,7 +3,7 @@ import { automaticUpdatesTask } from "../app/automatic-updates/tasks/automaticUp
 import { Logger } from "../lib/logger";
 
 export const automaticUpdatesCronJob = cron.schedule(
-  "* * * * *",
+  "0 * * * *",
   // every minute
   // "* * * * *",
   async () => {

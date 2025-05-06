@@ -1,7 +1,12 @@
 import { Router } from "express";
 
 // import { upload } from "../../middlewares/upload.middleware";
-import { AdminRole, ClientRole, EmployeeRole, Permission } from "@prisma/client";
+import {
+  AdminRole,
+  ClientRole,
+  EmployeeRole,
+  Permission,
+} from "@prisma/client";
 import { isAutherized } from "../../middlewares/isAutherized";
 // import { EmployeeRole } from "@prisma/client";
 // import { isAutherized } from "../../middlewares/isAutherized.middleware";
@@ -13,27 +18,29 @@ const router = Router();
 const employeesController = new EmployeesController();
 
 router.route("/employees").post(
-    isLoggedIn,
-    isAutherized(
-        [
-            AdminRole.ADMIN,
-            AdminRole.ADMIN_ASSISTANT,
-            EmployeeRole.COMPANY_MANAGER,
-            EmployeeRole.BRANCH_MANAGER
-        ],
-        [Permission.ADD_DELIVERY_AGENT]
-    ),
-    // upload.single("avatar"),
-    // upload.single("idCard"),
-    // upload.single("residencyCard"),
-    upload.fields([
-        { name: "avatar", maxCount: 1 },
-        { name: "idCard", maxCount: 1 },
-        { name: "residencyCard", maxCount: 1 }
-    ]),
-    // upload.none(),
-    employeesController.createEmployee
-    /*
+  isLoggedIn,
+  isAutherized(
+    [
+      AdminRole.ADMIN,
+      AdminRole.ADMIN_ASSISTANT,
+      EmployeeRole.COMPANY_MANAGER,
+      EmployeeRole.BRANCH_MANAGER,
+      EmployeeRole.CLIENT,
+      EmployeeRole.CLIENT_ASSISTANT,
+    ],
+    [Permission.ADD_DELIVERY_AGENT, Permission.MANAGE_EMPLOYEES]
+  ),
+  // upload.single("avatar"),
+  // upload.single("idCard"),
+  // upload.single("residencyCard"),
+  upload.fields([
+    { name: "avatar", maxCount: 1 },
+    { name: "idCard", maxCount: 1 },
+    { name: "residencyCard", maxCount: 1 },
+  ]),
+  // upload.none(),
+  employeesController.createEmployee
+  /*
         #swagger.tags = ['Employees Routes']
 
         #swagger.requestBody = {
@@ -51,17 +58,17 @@ router.route("/employees").post(
 );
 
 router.route("/employees").get(
-    isLoggedIn,
-    isAutherized([
-        EmployeeRole.COMPANY_MANAGER,
-        AdminRole.ADMIN,
-        AdminRole.ADMIN_ASSISTANT,
-        //TODO: Remove later
-        ...Object.values(EmployeeRole),
-        ...Object.values(ClientRole)
-    ]),
-    employeesController.getAllEmployees
-    /*
+  isLoggedIn,
+  isAutherized([
+    EmployeeRole.COMPANY_MANAGER,
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+    //TODO: Remove later
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  employeesController.getAllEmployees
+  /*
         #swagger.tags = ['Employees Routes']
 
         #swagger.parameters['page'] = {
@@ -85,35 +92,41 @@ router.route("/employees").get(
 );
 
 router.route("/employees/:employeeID").get(
-    isLoggedIn,
-    isAutherized([
-        EmployeeRole.COMPANY_MANAGER,
-        AdminRole.ADMIN,
-        AdminRole.ADMIN_ASSISTANT,
-        // TODO: Remove later
-        ...Object.values(EmployeeRole),
-        ...Object.values(ClientRole)
-    ]),
-    employeesController.getEmployee
-    /*
+  isLoggedIn,
+  isAutherized([
+    EmployeeRole.COMPANY_MANAGER,
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+    // TODO: Remove later
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  employeesController.getEmployee
+  /*
         #swagger.tags = ['Employees Routes']
     */
 );
 
 router.route("/employees/:employeeID").patch(
-    isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
-    // upload.single("avatar"),
-    // upload.single("idCard"),
-    // upload.single("residencyCard"),
-    upload.fields([
-        { name: "avatar", maxCount: 1 },
-        { name: "idCard", maxCount: 1 },
-        { name: "residencyCard", maxCount: 1 }
-    ]),
-    // upload.none(),
-    employeesController.updateEmployee
-    /*
+  isLoggedIn,
+  isAutherized([
+    EmployeeRole.COMPANY_MANAGER,
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+    EmployeeRole.CLIENT,
+    EmployeeRole.CLIENT_ASSISTANT,
+  ]),
+  // upload.single("avatar"),
+  // upload.single("idCard"),
+  // upload.single("residencyCard"),
+  upload.fields([
+    { name: "avatar", maxCount: 1 },
+    { name: "idCard", maxCount: 1 },
+    { name: "residencyCard", maxCount: 1 },
+  ]),
+  // upload.none(),
+  employeesController.updateEmployee
+  /*
         #swagger.tags = ['Employees Routes']
 
         #swagger.requestBody = {
@@ -131,29 +144,43 @@ router.route("/employees/:employeeID").patch(
 );
 
 router.route("/employees/:employeeID").delete(
-    isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
-    employeesController.deleteEmployee
-    /*
+  isLoggedIn,
+  isAutherized([
+    EmployeeRole.COMPANY_MANAGER,
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+    EmployeeRole.CLIENT,
+    EmployeeRole.CLIENT_ASSISTANT,
+  ]),
+  employeesController.deleteEmployee
+  /*
         #swagger.tags = ['Employees Routes']
     */
 );
 
 router.route("/employees/:employeeID/deactivate").patch(
-    isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
-    employeesController.deactivateEmployee
-    /*
+  isLoggedIn,
+  isAutherized([
+    EmployeeRole.COMPANY_MANAGER,
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+  ]),
+  employeesController.deactivateEmployee
+  /*
         #swagger.tags = ['Employees Routes']
     */
 );
 
 router.route("/employees/:employeeID/reactivate").patch(
-    isLoggedIn,
-    //TODO: Maybe add All Employee Roles for profile update
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
-    employeesController.reactivateEmployee
-    /*
+  isLoggedIn,
+  //TODO: Maybe add All Employee Roles for profile update
+  isAutherized([
+    EmployeeRole.COMPANY_MANAGER,
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+  ]),
+  employeesController.reactivateEmployee
+  /*
         #swagger.tags = ['Employees Routes']
     */
 );
