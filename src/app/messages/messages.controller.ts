@@ -6,6 +6,7 @@ import { sendNotification } from "../notifications/helpers/sendNotification";
 import { EmployeesRepository } from "../employees/employees.repository";
 import _ from "lodash";
 import { io } from "../../server";
+import { AppError } from "../../lib/AppError";
 
 const employeesRepository = new EmployeesRepository();
 
@@ -104,6 +105,30 @@ export class MessagesController {
       },
     });
 
+    const clientAssistant = await prisma.employee.findMany({
+      where: {
+        AND: [
+          { role: "CLIENT_ASSISTANT" },
+          { clientId: order?.clientId },
+          {
+            managedStores: {
+              some: {
+                id: order?.storeId,
+              },
+            },
+          },
+          {
+            orderStatus: { has: order?.status },
+          },
+          {
+            permissions: { has: "MESSAGES" },
+          },
+        ],
+      },
+      select: {
+        id: true,
+      },
+    });
     inquiryEmployees.forEach((e) => {
       chatMembers.push(e.id);
     });
@@ -111,6 +136,9 @@ export class MessagesController {
       chatMembers.push(e.id);
     });
     branchManagers.forEach((e) => {
+      chatMembers.push(e.id);
+    });
+    clientAssistant.forEach((e) => {
       chatMembers.push(e.id);
     });
     order?.clientId && chatMembers.push(order?.clientId);
@@ -133,11 +161,14 @@ export class MessagesController {
         id: true,
         role: true,
         branchId: true,
+        managedStores: true,
         inquiryBranches: true,
         inquiryGovernorates: true,
         inquiryStatuses: true,
         inquiryLocations: true,
         inquiryStores: true,
+        permissions: true,
+        orderStatus: true,
       },
     });
 
@@ -181,6 +212,21 @@ export class MessagesController {
       }
     }
 
+    if (
+      user.role === "CLIENT_ASSISTANT" &&
+      !employee?.permissions.includes("MESSAGES")
+    ) {
+      return {
+        totalUnSeened: 0,
+        pageCounts: 0,
+        count: 0,
+        page: 1,
+        chats: [],
+      };
+    }
+    if (user.role === "CLIENT_ASSISTANT") {
+      inquiryStoresIDs = employee?.managedStores.map((s) => s.id);
+    }
     const chats = await prisma.chat.findManyPaginated(
       {
         where: {
@@ -246,6 +292,8 @@ export class MessagesController {
                   status:
                     status && status !== "null"
                       ? (status as OrderStatus)
+                      : user.role === "CLIENT_ASSISTANT"
+                      ? { in: employee?.orderStatus }
                       : undefined,
                   clientId: user.role === "CLIENT" ? user.id : undefined,
                   companyId: user?.companyID || undefined,
@@ -255,6 +303,10 @@ export class MessagesController {
                       : undefined,
                   deliveryAgentId:
                     user.role === "DELIVERY_AGENT" ? user.id : undefined,
+                  storeId:
+                    user.role === "CLIENT_ASSISTANT"
+                      ? { in: inquiryStoresIDs }
+                      : undefined,
                 },
         },
         orderBy: {
@@ -294,7 +346,10 @@ export class MessagesController {
         id: true,
       },
       where: {
-        seenByClient: user.role === "CLIENT" ? false : undefined,
+        seenByClient:
+          user.role === "CLIENT" || user.role === "CLIENT_ASSISTANT"
+            ? false
+            : undefined,
         seenByDelivery: user.role === "DELIVERY_AGENT" ? false : undefined,
         seenByBranchManager: user.role === "BRANCH_MANAGER" ? false : undefined,
         seenByCompanyManager:
@@ -332,8 +387,15 @@ export class MessagesController {
       },
       select: {
         role: true,
+        permissions: true,
       },
     });
+
+    if (employee?.role === "CLIENT_ASSISTANT") {
+      if (!employee?.permissions.includes("MESSAGES")) {
+        return [];
+      }
+    }
 
     await prisma.message.updateMany({
       where: {
@@ -394,6 +456,20 @@ export class MessagesController {
     const loggedInUser = res.locals.user as loggedInUserType;
 
     let image: string | undefined;
+
+    if (loggedInUser.role === "CLIENT_ASSISTANT") {
+      const clientAssistant = await prisma.employee.findUnique({
+        where: {
+          id: loggedInUser.id,
+        },
+        select: {
+          permissions: true,
+        },
+      });
+      if (!clientAssistant?.permissions.includes("MESSAGES")) {
+        throw new AppError("ليس لديك صلاحيه", 400);
+      }
+    }
     if (req.file) {
       const file = req.file as Express.MulterS3.File;
       image = file.location;
