@@ -371,10 +371,14 @@ export class OrdersService {
           managedStores: true,
         },
       });
+
+      console.log(employee?.managedStores);
       employee?.managedStores.forEach((s) => {
         inquiryStoresIDs?.push(s.id);
       });
     }
+    console.log(inquiryStoresIDs);
+
     let size = data.filters.size || 500;
 
     if (size > 550 && data.filters.forMobile !== true) {
