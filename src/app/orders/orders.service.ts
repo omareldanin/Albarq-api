@@ -372,10 +372,8 @@ export class OrdersService {
         },
       });
 
-      console.log(employee?.managedStores);
       inquiryStoresIDs = employee?.managedStores.map((s) => s.id);
     }
-    console.log(inquiryStoresIDs);
 
     let size = data.filters.size || 500;
 
@@ -1397,9 +1395,7 @@ export class OrdersService {
           managedStores: true,
         },
       });
-      employee?.managedStores.forEach((s) => {
-        inquiryStoresIDs?.push(s.id);
-      });
+      inquiryStoresIDs = employee?.managedStores.map((s) => s.id);
     }
     // show orders/statistics without client reports to the client unless he searches for them
     let clientReport = data.filters.clientReport;
