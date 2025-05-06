@@ -164,6 +164,8 @@ router.route("/employees/:employeeID/deactivate").patch(
     EmployeeRole.COMPANY_MANAGER,
     AdminRole.ADMIN,
     AdminRole.ADMIN_ASSISTANT,
+    EmployeeRole.CLIENT,
+    EmployeeRole.CLIENT_ASSISTANT,
   ]),
   employeesController.deactivateEmployee
   /*

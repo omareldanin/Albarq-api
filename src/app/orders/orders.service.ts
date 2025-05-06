@@ -458,8 +458,8 @@ export class OrdersService {
       throw new AppError("ليس لديك صلاحية تأكيد الطلب", 403);
     }
 
-    const oldOrderData = await ordersRepository.getOrder({
-      orderID: data.params.orderID,
+    const oldOrderData = await ordersRepository.getOrderByReceiptNumber({
+      orderReceiptNumber: data.params.orderID,
     });
 
     if (!oldOrderData) {
@@ -619,7 +619,7 @@ export class OrdersService {
     }
 
     const newOrder = await ordersRepository.updateOrder({
-      orderID: data.params.orderID,
+      orderID: oldOrderData.id,
       loggedInUser: data.loggedInUser,
       orderData: data.orderData,
     });
