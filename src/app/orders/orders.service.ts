@@ -1116,9 +1116,10 @@ export class OrdersService {
     loggedInUser: loggedInUserType;
   }) => {
     const clientID =
-      data.loggedInUser.role === "CLIENT" ||
-      data.loggedInUser.role === "CLIENT_ASSISTANT"
+      data.loggedInUser.role === "CLIENT"
         ? data.loggedInUser.id
+        : data.loggedInUser.role === "CLIENT_ASSISTANT"
+        ? data.loggedInUser.clientId
         : data.filters.clientID;
     const deliveryAgentID =
       data.loggedInUser.role === EmployeeRole.DELIVERY_AGENT
@@ -1371,6 +1372,19 @@ export class OrdersService {
           ? inquiryEmployeeStuff.inquiryClients
           : undefined;
     }
+    if (data.loggedInUser.role === "CLIENT_ASSISTANT") {
+      const employee = await prisma.employee.findUnique({
+        where: {
+          id: data.loggedInUser.id,
+        },
+        select: {
+          managedStores: true,
+        },
+      });
+      employee?.managedStores.forEach((s) => {
+        inquiryStoresIDs?.push(s.id);
+      });
+    }
     // show orders/statistics without client reports to the client unless he searches for them
     let clientReport = data.filters.clientReport;
     if (
@@ -1465,6 +1479,23 @@ export class OrdersService {
       };
     }
 
+    if (data.loggedInUser.role === "CLIENT_ASSISTANT") {
+      const employee = await prisma.employee.findUnique({
+        where: {
+          id: data.loggedInUser.id,
+        },
+        select: {
+          orderStatus: true,
+        },
+      });
+      return {
+        ...statistics,
+        ordersStatisticsByStatus: statistics.ordersStatisticsByStatus.filter(
+          (status) => employee?.orderStatus.includes(status.status)
+        ),
+      };
+    }
+
     let ordersStatisticsByStatus = statistics.ordersStatisticsByStatus;
 
     let deliveredOrders = ordersStatisticsByStatus.find(
@@ -1514,10 +1545,7 @@ export class OrdersService {
       ordersStatisticsByStatus: ordersStatisticsByStatus,
     };
 
-    if (
-      data.loggedInUser.role === "CLIENT" ||
-      data.loggedInUser.role === "CLIENT_ASSISTANT"
-    ) {
+    if (data.loggedInUser.role === "CLIENT") {
       let newStatusStatistics = statistics.ordersStatisticsByStatus;
 
       let updatedStatusStatistics = newStatusStatistics.filter(

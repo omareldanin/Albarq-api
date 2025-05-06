@@ -1919,7 +1919,10 @@ export class OrdersRepository {
                   : undefined,
               },
               {
-                storeId: data.filters.storeID,
+                storeId:
+                  data.loggedInUser.role === "CLIENT_ASSISTANT"
+                    ? { in: data.filters.inquiryStoresIDs }
+                    : data.filters.storeID,
               },
               {
                 clientReport: data.filters.clientReport

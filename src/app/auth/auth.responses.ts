@@ -1,78 +1,90 @@
-import type { AdminRole, ClientRole, EmployeeRole, Prisma } from "@prisma/client";
+import type {
+  AdminRole,
+  ClientRole,
+  EmployeeRole,
+  Prisma,
+} from "@prisma/client";
 
 export const userSelect = {
-    id: true,
-    password: true,
-    username: true,
-    name: true,
-    admin: {
-        select: {
-            role: true
-        }
+  id: true,
+  password: true,
+  username: true,
+  name: true,
+  admin: {
+    select: {
+      role: true,
     },
-    employee: {
+  },
+  employee: {
+    select: {
+      role: true,
+      permissions: true,
+      orderStatus: true,
+      branchId: true,
+      clientId: true,
+      company: {
         select: {
-            role: true,
-            permissions: true,
-            orderStatus: true,
-            branchId:true,
-            company: {
-                select: {
-                    id: true,
-                    name: true,
-                    logo: true,
-                    mainCompany: true
-                }
-            },
-            repository:{
-                select:{
-                    id:true,
-                    mainRepository:true,
-                    type:true
-                }
-            }
-        }
-    },
-    client: {
+          id: true,
+          name: true,
+          logo: true,
+          mainCompany: true,
+        },
+      },
+      repository: {
         select: {
-            role: true,
-            company: {
-                select: {
-                    id: true,
-                    name: true,
-                    logo: true,
-                    mainCompany: true
-                }
-            }
-        }
+          id: true,
+          mainRepository: true,
+          type: true,
+        },
+      },
     },
+  },
+  client: {
+    select: {
+      role: true,
+      company: {
+        select: {
+          id: true,
+          name: true,
+          logo: true,
+          mainCompany: true,
+        },
+      },
+    },
+  },
 } satisfies Prisma.UserSelect;
 
 export const userReform = (
-    user: Prisma.UserGetPayload<{
-        select: typeof userSelect;
-    }> | null
+  user: Prisma.UserGetPayload<{
+    select: typeof userSelect;
+  }> | null
 ) => {
-    if (!user) {
-        return null;
-    }
-    return {
-        id: user.id,
-        username: user.username,
-        password: user.password,
-        name: user.name,
-        companyID: user.employee?.company.id || user.client?.company.id || null,
-        companyName: user.employee?.company.name || user.client?.company.name || null,
-        mainCompany: user.employee?.company.mainCompany ?? user.client?.company.mainCompany ?? null,
-        branchId: user.employee?.branchId ?? user.employee?.branchId ?? null,
-        repositoryId: user.employee?.repository?.id ?? user.employee?.repository?.id ?? null,
-        mainRepository:user.employee?.repository?.mainRepository,
-        type:user.employee?.repository?.type,
-        role: (user.admin?.role || user.employee?.role || user.client?.role) as
-            | AdminRole
-            | EmployeeRole
-            | ClientRole,
-        permissions: user.employee?.permissions || [],
-        orderStatus: user.employee?.orderStatus || []
-    };
+  if (!user) {
+    return null;
+  }
+  return {
+    id: user.id,
+    username: user.username,
+    password: user.password,
+    name: user.name,
+    clientId: user.employee?.clientId,
+    companyID: user.employee?.company.id || user.client?.company.id || null,
+    companyName:
+      user.employee?.company.name || user.client?.company.name || null,
+    mainCompany:
+      user.employee?.company.mainCompany ??
+      user.client?.company.mainCompany ??
+      null,
+    branchId: user.employee?.branchId ?? user.employee?.branchId ?? null,
+    repositoryId:
+      user.employee?.repository?.id ?? user.employee?.repository?.id ?? null,
+    mainRepository: user.employee?.repository?.mainRepository,
+    type: user.employee?.repository?.type,
+    role: (user.admin?.role || user.employee?.role || user.client?.role) as
+      | AdminRole
+      | EmployeeRole
+      | ClientRole,
+    permissions: user.employee?.permissions || [],
+    orderStatus: user.employee?.orderStatus || [],
+  };
 };

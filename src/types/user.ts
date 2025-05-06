@@ -1,4 +1,9 @@
-import type { AdminRole, ClientRole, EmployeeRole, Permission } from "@prisma/client";
+import type {
+  AdminRole,
+  ClientRole,
+  EmployeeRole,
+  Permission,
+} from "@prisma/client";
 
 // export type loggedInUserType = {
 //     id: number;
@@ -11,22 +16,23 @@ import type { AdminRole, ClientRole, EmployeeRole, Permission } from "@prisma/cl
 // };
 
 export type AdminUserType = {
-    role: AdminRole;
-    companyID: null;
-    companyName: null;
-    mainCompany: null;
+  role: AdminRole;
+  companyID: null;
+  companyName: null;
+  mainCompany: null;
 };
 
 export type NonAdminUserType = {
-    role: EmployeeRole | ClientRole;
-    companyID: number;
-    companyName: string;
-    mainCompany: boolean;
+  role: EmployeeRole | ClientRole;
+  companyID: number;
+  companyName: string;
+  mainCompany: boolean;
 };
 
 export type loggedInUserType = {
-    id: number;
-    name: string;
-    username: string;
-    permissions: Permission[];
+  id: number;
+  name: string;
+  username: string;
+  clientId: number;
+  permissions: Permission[];
 } & (AdminUserType | NonAdminUserType);
