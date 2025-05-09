@@ -466,9 +466,9 @@ export class OrdersService {
       throw new AppError("الطلب غير موجود", 404);
     }
 
-    if (!oldOrderData?.confirmed && data.orderData.confirmed === undefined) {
-      throw new AppError("لم يتم تاكيد الطلب من الشركه", 403);
-    }
+    // if (!oldOrderData?.confirmed && data.orderData.confirmed === undefined) {
+    //   throw new AppError("لم يتم تاكيد الطلب من الشركه", 403);
+    // }
     // Cant process order unless INQUIRY_EMPLOYEE or EMERGENCY_EMPLOYEE
     if (
       data.orderData.processed !== undefined &&
