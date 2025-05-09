@@ -756,6 +756,7 @@ export class OrdersController {
         },
         where: {
           clientId: loggedInUser.id,
+          deleted: false,
           status: { in: ["REGISTERED", "READY_TO_SEND"] },
         },
       });
@@ -787,6 +788,7 @@ export class OrdersController {
         },
         where: {
           clientId: loggedInUser.id,
+          deleted: false,
           status: {
             in: [
               "WITH_RECEIVING_AGENT",
@@ -819,6 +821,7 @@ export class OrdersController {
       });
     }
   });
+
   getOrderTimeline = catchAsync(async (req, res) => {
     const params = {
       orderID: req.params.orderID,

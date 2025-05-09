@@ -18,7 +18,7 @@ export const ReportCreateSchema = z
   .discriminatedUnion("type", [
     z.object({
       type: z.literal(ReportType.COMPANY),
-      repositoryID: z.coerce.number(),
+      repositoryID: z.coerce.number().optional(),
       companyID: z.coerce.number(),
       baghdadDeliveryCost: z.coerce.number().optional(),
       governoratesDeliveryCost: z.coerce.number().optional(),
@@ -45,7 +45,7 @@ export const ReportCreateSchema = z
     z.object({
       type: z.literal(ReportType.CLIENT),
       clientID: z.coerce.number().optional(),
-      repositoryID: z.coerce.number(),
+      repositoryID: z.coerce.number().optional(),
       storeID: z.coerce.number(),
       baghdadDeliveryCost: z.coerce.number().optional(),
       governoratesDeliveryCost: z.coerce.number().optional(),
@@ -56,7 +56,7 @@ export const ReportCreateSchema = z
     }),
     z.object({
       type: z.literal(ReportType.REPOSITORY),
-      repositoryID: z.coerce.number(),
+      repositoryID: z.coerce.number().optional(),
       secondaryType: z
         .nativeEnum(SecondaryReportType)
         .optional()
@@ -241,6 +241,7 @@ export const ReportsFiltersSchema = z.object({
   governorate: z.nativeEnum(Governorate).optional(),
   status: z.nativeEnum(ReportStatus).optional(),
   type: z.nativeEnum(ReportType).optional(),
+  secondaryType: z.nativeEnum(SecondaryReportType).optional(),
   types: z.preprocess((val) => {
     if (typeof val === "string") {
       return val.split(",");

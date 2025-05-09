@@ -358,7 +358,7 @@ export class ReportsService {
     }
 
     // Only show reports of the same branch as the employee
-    let branch: number | undefined;
+    let branch: number | undefined, secondaryType: boolean | undefined;
     if (
       (data.filters.type === ReportType.CLIENT ||
         data.filters.type === ReportType.REPOSITORY ||
@@ -374,6 +374,11 @@ export class ReportsService {
       });
       if (!employee?.repository?.mainRepository) {
         branch = employee?.branch?.id;
+      }
+      if (employee?.repository?.type === "RETURN") {
+        data.filters.secondaryType = "RETURNED";
+      } else if (employee?.repository?.type === "EXPORT") {
+        data.filters.secondaryType = "DELIVERED";
       }
     } else if (data.filters.branch) {
       branch = +data.filters.branch;

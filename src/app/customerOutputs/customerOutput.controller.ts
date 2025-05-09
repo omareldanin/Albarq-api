@@ -38,6 +38,25 @@ export class CustomerOutputController {
       throw new AppError("هذا الطلب غير تابع لهذا المتجر", 404);
     }
 
+    if (type === "repository") {
+      const repositoryData = await prisma.repository.findUnique({
+        where: {
+          id: repository,
+        },
+        select: {
+          id: true,
+          branchId: true,
+          mainRepository: true,
+        },
+      });
+      if (
+        !repositoryData?.mainRepository &&
+        repositoryData?.branchId !== order.branch?.id
+      ) {
+        throw new AppError("هذا الطلب غير تابع لهذا الفرع", 404);
+      }
+    }
+
     const store = await prisma.store.findUnique({
       where: {
         id: storeId,

@@ -71,11 +71,13 @@ export class ReportsRepository {
               id: data.reportData.storeID,
             },
           },
-          repository: {
-            connect: {
-              id: data.reportData.repositoryID,
-            },
-          },
+          repository: data.reportData.repositoryID
+            ? {
+                connect: {
+                  id: data.reportData.repositoryID,
+                },
+              }
+            : undefined,
           orders: orders,
           baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
           governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
@@ -200,6 +202,30 @@ export class ReportsRepository {
                 : undefined,
             },
             {
+              clientReport: data.filters.branch
+                ? {
+                    orders: {
+                      some: {
+                        branch: {
+                          id: data.filters.branch,
+                        },
+                      },
+                    },
+                  }
+                : undefined,
+            },
+            {
+              clientReport: data.filters.branch
+                ? {
+                    client: {
+                      branch: {
+                        id: data.filters.branch,
+                      },
+                    },
+                  }
+                : undefined,
+            },
+            {
               repositoryReport: data.filters.branch
                 ? {
                     orders: {
@@ -244,12 +270,28 @@ export class ReportsRepository {
         },
         {
           clientReport: {
+            secondaryType:
+              data.filters.type === "CLIENT"
+                ? data.filters.secondaryType
+                : undefined,
+          },
+        },
+        {
+          clientReport: {
             storeId: data.filters.storeID,
           },
         },
         {
           repositoryReport: {
             repositoryId: data.filters.repositoryID,
+          },
+        },
+        {
+          repositoryReport: {
+            secondaryType:
+              data.filters.type === "REPOSITORY"
+                ? data.filters.secondaryType
+                : undefined,
           },
         },
         {
@@ -274,6 +316,14 @@ export class ReportsRepository {
                 companyId: data.filters.companyID,
               }
             : undefined,
+        },
+        {
+          companyReport: {
+            secondaryType:
+              data.filters.type === "COMPANY"
+                ? data.filters.secondaryType
+                : undefined,
+          },
         },
         {
           status: data.filters.status,
