@@ -130,6 +130,7 @@ export class OrdersController {
       secondaryStatus,
       status,
       getIncoming,
+      getOutComing,
     } = req.query;
 
     const loggedInUser = res.locals.user as loggedInUserType;
@@ -189,7 +190,9 @@ export class OrdersController {
     const results = await prisma.order.findManyPaginated(
       {
         where: {
-          repositoryId: repository_id
+          repositoryId: getOutComing
+            ? undefined
+            : repository_id
             ? Number(repository_id)
             : secondaryStatus === "IN_CAR"
             ? undefined
@@ -204,7 +207,9 @@ export class OrdersController {
           storeId: store_id ? Number(store_id) : undefined,
           clientId: client_id ? Number(client_id) : undefined,
           governorate: governorate ? (governorate as Governorate) : undefined,
-          forwardedRepo: getIncoming
+          forwardedRepo: getOutComing
+            ? returnRepo?.id
+            : getIncoming
             ? undefined
             : secondaryStatus === "IN_CAR"
             ? exportRepo?.id
