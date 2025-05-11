@@ -444,7 +444,7 @@ export class OrdersController {
 
     const order = await ordersService.updateOrder({
       params: {
-        orderID: oldOrder?.id,
+        orderID: oldOrder?.receiptNumber,
       },
       orderData: orderData,
       loggedInUser: loggedInUser,
