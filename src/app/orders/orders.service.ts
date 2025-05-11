@@ -137,16 +137,6 @@ export class OrdersService {
         throw new AppError("تم اضافه الوصل مسبق", 500);
       }
 
-      const clientId = await clientsRepository.getClientIDByStoreID({
-        storeID: clientReceipt?.storeId || 0,
-      });
-
-      if (
-        data.loggedInUser.role === "CLIENT" &&
-        clientId !== data.loggedInUser.id
-      ) {
-        throw new AppError("هذا الايصال غير صالح", 500);
-      }
       data.orderOrOrdersData.receiptNumber = clientReceipt?.receiptNumber;
       data.orderOrOrdersData.clientOrderReceiptId = clientReceipt?.id + "";
     }

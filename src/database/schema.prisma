@@ -776,10 +776,10 @@ model ClientOrderReceipt {
   // --- IDENTIFICATION --------------------------------------------------------------------- //
   id            Int      @id @default(autoincrement())
   receiptNumber String   @default("") // TODO
-  storeId       Int
+  storeId       Int?
   branchId      Int
   // --- RELATIONS --------------------------------------------------------------------- //
-  store         Store    @relation(fields: [storeId], references: [id])
+  store         Store?   @relation(fields: [storeId], references: [id])
   branch        Branch   @relation(fields: [branchId], references: [id])
   order         Order?
   // --- OTHER --------------------------------------------------------------------- //
