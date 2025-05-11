@@ -1037,45 +1037,45 @@ export class OrdersRepository {
                 },
               },
               // inquiry filters
-              // {
-              //   branch: data.filters.inquiryBranchesIDs
-              //     ? {
-              //         id: {
-              //           in: data.filters.inquiryBranchesIDs,
-              //         },
-              //       }
-              //     : {
-              //         id: data.filters.branchID,
-              //       },
-              // },
               {
-                OR: [
-                  !data.filters.repositoryID &&
-                  data.loggedInUser?.role !== "CLIENT" &&
-                  data.loggedInUser?.role !== "CLIENT_ASSISTANT"
-                    ? {
-                        repository: {
-                          branchId: data.filters.branchID,
-                        },
-                        status: {
-                          in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
-                        },
-                        // secondaryStatus: "IN_REPOSITORY",
-                      }
-                    : {},
-                  {
-                    branch: data.filters.inquiryBranchesIDs
-                      ? {
-                          id: {
-                            in: data.filters.inquiryBranchesIDs,
-                          },
-                        }
-                      : {
-                          id: data.filters.branchID,
-                        },
-                  },
-                ],
+                branch: data.filters.inquiryBranchesIDs
+                  ? {
+                      id: {
+                        in: data.filters.inquiryBranchesIDs,
+                      },
+                    }
+                  : {
+                      id: data.filters.branchID,
+                    },
               },
+              // {
+              //   OR: [
+              //     !data.filters.repositoryID &&
+              //     data.loggedInUser?.role !== "CLIENT" &&
+              //     data.loggedInUser?.role !== "CLIENT_ASSISTANT"
+              //       ? {
+              //           repository: {
+              //             branchId: data.filters.branchID,
+              //           },
+              //           status: {
+              //             in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
+              //           },
+              //           // secondaryStatus: "IN_REPOSITORY",
+              //         }
+              //       : {},
+              //     {
+              //       branch: data.filters.inquiryBranchesIDs
+              //         ? {
+              //             id: {
+              //               in: data.filters.inquiryBranchesIDs,
+              //             },
+              //           }
+              //         : {
+              //             id: data.filters.branchID,
+              //           },
+              //     },
+              //   ],
+              // },
               {
                 OR: [
                   {
