@@ -234,6 +234,7 @@ export class OrdersService {
       const branch = await branchesRepository.getBranchManagerBranch({
         branchManagerID: data.loggedInUser.id,
       });
+
       if (!branch) {
         throw new AppError("انت غير مرتبط بفرع", 500);
       }

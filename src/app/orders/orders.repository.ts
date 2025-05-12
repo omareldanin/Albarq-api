@@ -36,7 +36,7 @@ export class OrdersRepository {
     const datePart = `${month}${day}`;
     const randomPart = Math.floor(10000 + Math.random() * 90000);
 
-    return `${datePart}-${randomPart}`;
+    return `${datePart}${randomPart}`;
   }
   async createOrder(data: {
     companyID: number;
@@ -1037,45 +1037,43 @@ export class OrdersRepository {
                 },
               },
               // inquiry filters
-              {
-                branch: data.filters.inquiryBranchesIDs
-                  ? {
-                      id: {
-                        in: data.filters.inquiryBranchesIDs,
-                      },
-                    }
-                  : {
-                      id: data.filters.branchID,
-                    },
-              },
               // {
-              //   OR: [
-              //     !data.filters.repositoryID &&
-              //     data.loggedInUser?.role !== "CLIENT" &&
-              //     data.loggedInUser?.role !== "CLIENT_ASSISTANT"
-              //       ? {
-              //           repository: {
-              //             branchId: data.filters.branchID,
-              //           },
-              //           status: {
-              //             in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
-              //           },
-              //           // secondaryStatus: "IN_REPOSITORY",
-              //         }
-              //       : {},
-              //     {
-              //       branch: data.filters.inquiryBranchesIDs
-              //         ? {
-              //             id: {
-              //               in: data.filters.inquiryBranchesIDs,
-              //             },
-              //           }
-              //         : {
-              //             id: data.filters.branchID,
-              //           },
-              //     },
-              //   ],
+              //   branch: data.filters.inquiryBranchesIDs
+              //     ? {
+              //         id: {
+              //           in: data.filters.inquiryBranchesIDs,
+              //         },
+              //       }
+              //     : {
+              //         id: data.filters.branchID,
+              //       },
               // },
+              {
+                OR: [
+                  (!data.filters.repositoryID &&
+                    data.loggedInUser?.role === "REPOSITORIY_EMPLOYEE") ||
+                  (!data.filters.repositoryID &&
+                    data.loggedInUser?.role !== "BRANCH_MANAGER")
+                    ? {
+                        repository: {
+                          branchId: data.filters.branchID,
+                        },
+                        // secondaryStatus: "IN_REPOSITORY",
+                      }
+                    : {},
+                  {
+                    branch: data.filters.inquiryBranchesIDs
+                      ? {
+                          id: {
+                            in: data.filters.inquiryBranchesIDs,
+                          },
+                        }
+                      : {
+                          id: data.filters.branchID,
+                        },
+                  },
+                ],
+              },
               {
                 OR: [
                   {
@@ -1734,6 +1732,7 @@ export class OrdersRepository {
             ? false
             : data.orderData.forwardedToMainRepo,
         forwardedToGov: data.orderData.forwardedToGov,
+        forwardedBranchId: data.orderData.forwardedBranchId,
         forwardedRepo:
           data.orderData.secondaryStatus === "IN_REPOSITORY"
             ? null

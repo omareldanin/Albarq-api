@@ -17,12 +17,7 @@ import {
 import { OrdersService } from "./orders.service";
 import { EmployeesRepository } from "../employees/employees.repository";
 import { Governorate, OrderStatus, SecondaryStatus } from "@prisma/client";
-import {
-  orderReform,
-  orderSelect,
-  OrderStatusData,
-  statisticsReformed,
-} from "./orders.responses";
+import { orderReform, orderSelect, OrderStatusData } from "./orders.responses";
 import { AppError } from "../../lib/AppError";
 import { OrdersRepository } from "./orders.repository";
 const employeesRepository = new EmployeesRepository();
@@ -402,6 +397,7 @@ export class OrdersController {
             branchId: true,
           },
         });
+
         if (repository?.branchId !== oldOrder?.branch?.id) {
           throw new AppError("الطلب غير مرتبط بهذا الفرع", 400);
         }

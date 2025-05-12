@@ -645,6 +645,7 @@ model Order {
   clientOrderReceiptId   Int?                     @unique
   branchId               Int?
   automaticUpdateId      Int?
+  forwardedBranchId      Int?
   // --- RELATIONS --------------------------------------------------------------------------- //
   orderProducts          OrderProducts[]
   ordersInquiryEmployees OrdersInquiryEmployees[]
