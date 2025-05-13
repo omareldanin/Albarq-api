@@ -486,6 +486,7 @@ model Location {
   // --- DETAILS --------------------------------------------------------------------------- //
   name                    String
   governorate             Governorate
+  governorateAr           String?
   remote                  Boolean                     @default(false)
   // --- INQUIRY EMPLOYEE --------------------------------------------------------------------- //
   // inquiryEmployee         Employee?                 @relation("inquiryLocations", fields: [inquiryEmployeeId], references: [id])

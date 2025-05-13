@@ -20,7 +20,6 @@ import { Governorate, OrderStatus, SecondaryStatus } from "@prisma/client";
 import { orderReform, orderSelect, OrderStatusData } from "./orders.responses";
 import { AppError } from "../../lib/AppError";
 import { OrdersRepository } from "./orders.repository";
-import ExcelJS from "exceljs";
 const XlsxPopulate = require("xlsx-populate");
 
 const employeesRepository = new EmployeesRepository();
@@ -30,47 +29,27 @@ const ordersService = new OrdersService();
 const ordersRepository = new OrdersRepository();
 
 const governorate = [
-  "AL_ANBAR",
-  "BABIL",
-  "BAGHDAD",
-  "BASRA",
-  "AL_QADISIYYAH",
-  "DHI_QAR",
-  "DIYALA",
-  "DUHOK",
-  "KARBALA",
-  "KIRKUK",
-  "MAYSAN",
-  "MUTHANNA",
-  "NAJAF",
-  "NINAWA",
-  "SALAH_AL_DIN",
-  "SULAYMANIYAH",
-  "WASIT",
-  "ERBIL",
-  "BABIL_COMPANIES",
+  "الأنبار",
+  "بابل",
+  "بغداد",
+  "البصرة",
+  "ذي قار",
+  "القادسية",
+  "ديالى",
+  "دهوك",
+  "أربيل",
+  "كربلاء",
+  "كركوك",
+  "ميسان",
+  "المثنى",
+  "النجف",
+  "نينوى",
+  "صلاح الدين",
+  "السليمانية",
+  "واسط",
+  "شركات بابل",
 ];
-export const governorateArabicNames = {
-  AL_ANBAR: "الأنبار",
-  BABIL: "بابل",
-  BAGHDAD: "بغداد",
-  BASRA: "البصرة",
-  DHI_QAR: "ذي قار",
-  AL_QADISIYYAH: "القادسية",
-  DIYALA: "ديالى",
-  DUHOK: "دهوك",
-  ERBIL: "أربيل",
-  KARBALA: "كربلاء",
-  KIRKUK: "كركوك",
-  MAYSAN: "ميسان",
-  MUTHANNA: "المثنى",
-  NAJAF: "النجف",
-  NINAWA: "نينوى",
-  SALAH_AL_DIN: "صلاح الدين",
-  SULAYMANIYAH: "السليمانية",
-  WASIT: "واسط",
-  BABIL_COMPANIES: "شركات بابل",
-};
+
 export class OrdersController {
   createOrder = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
@@ -983,13 +962,13 @@ export class OrdersController {
     const listSheet = workbook.addSheet("Lists");
     // Simulate location list (replace with real DB values)
     let locations = await prisma.location.findMany({
-      select: { name: true, governorate: true },
+      select: { id: true, name: true, governorateAr: true },
     });
 
     const grouped = governorate.reduce(
       (acc: { [key: string]: string[] }, gov) => {
         acc[gov] = locations
-          .filter((l) => l.governorate === gov)
+          .filter((l) => l.governorateAr === gov)
           .map((l) => l.name);
         return acc;
       },
