@@ -650,6 +650,7 @@ model Order {
   orderProducts          OrderProducts[]
   ordersInquiryEmployees OrdersInquiryEmployees[]
   tickets                Ticket[]
+  notification           Notification[]
   deliveryAgent          Employee?                @relation(fields: [deliveryAgentId], references: [id], onDelete: SetNull)
   location               Location                 @relation(fields: [locationId], references: [id])
   client                 Client                   @relation(fields: [clientId], references: [id])
@@ -1160,6 +1161,8 @@ model Notification {
   seen      Boolean  @default(false)
   // --- OTHER --------------------------------------------------------------------- //
   createdAt DateTime @default(now())
+  Order     Order?   @relation(fields: [orderId], references: [id])
+  orderId   String?
 
   @@index([userId])
 }

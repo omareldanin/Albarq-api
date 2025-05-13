@@ -449,8 +449,8 @@ export class OrdersService {
       throw new AppError("ليس لديك صلاحية تأكيد الطلب", 403);
     }
 
-    const oldOrderData = await ordersRepository.getOrderByReceiptNumber({
-      orderReceiptNumber: data.params.orderID,
+    const oldOrderData = await ordersRepository.getOrder({
+      orderID: data.params.orderID,
     });
 
     if (!oldOrderData) {
@@ -626,6 +626,7 @@ export class OrdersService {
       if (data.orderData.status && oldOrderData.status !== newOrder.status) {
         // send notification to client
         await sendNotification({
+          orderId: newOrder.id,
           userID: newOrder.client.id,
           title: "تم تغيير حالة الطلب",
           content: `تم تغيير حالة الطلب رقم ${

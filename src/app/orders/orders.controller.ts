@@ -20,12 +20,57 @@ import { Governorate, OrderStatus, SecondaryStatus } from "@prisma/client";
 import { orderReform, orderSelect, OrderStatusData } from "./orders.responses";
 import { AppError } from "../../lib/AppError";
 import { OrdersRepository } from "./orders.repository";
+import ExcelJS from "exceljs";
+const XlsxPopulate = require("xlsx-populate");
+
 const employeesRepository = new EmployeesRepository();
 
 const ordersService = new OrdersService();
 
 const ordersRepository = new OrdersRepository();
 
+const governorate = [
+  "AL_ANBAR",
+  "BABIL",
+  "BAGHDAD",
+  "BASRA",
+  "AL_QADISIYYAH",
+  "DHI_QAR",
+  "DIYALA",
+  "DUHOK",
+  "KARBALA",
+  "KIRKUK",
+  "MAYSAN",
+  "MUTHANNA",
+  "NAJAF",
+  "NINAWA",
+  "SALAH_AL_DIN",
+  "SULAYMANIYAH",
+  "WASIT",
+  "ERBIL",
+  "BABIL_COMPANIES",
+];
+export const governorateArabicNames = {
+  AL_ANBAR: "الأنبار",
+  BABIL: "بابل",
+  BAGHDAD: "بغداد",
+  BASRA: "البصرة",
+  DHI_QAR: "ذي قار",
+  AL_QADISIYYAH: "القادسية",
+  DIYALA: "ديالى",
+  DUHOK: "دهوك",
+  ERBIL: "أربيل",
+  KARBALA: "كربلاء",
+  KIRKUK: "كركوك",
+  MAYSAN: "ميسان",
+  MUTHANNA: "المثنى",
+  NAJAF: "النجف",
+  NINAWA: "نينوى",
+  SALAH_AL_DIN: "صلاح الدين",
+  SULAYMANIYAH: "السليمانية",
+  WASIT: "واسط",
+  BABIL_COMPANIES: "شركات بابل",
+};
 export class OrdersController {
   createOrder = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
@@ -920,5 +965,99 @@ export class OrdersController {
     res.status(200).json({
       status: "success",
     });
+  });
+
+  generateExcelSheet = catchAsync(async (req, res) => {
+    const workbook = await XlsxPopulate.fromBlankAsync();
+    const sheet = workbook.sheet(0).name("Template");
+    const listSheet = workbook.addSheet("Lists");
+    // Simulate location list (replace with real DB values)
+    let locations = await prisma.location.findMany({
+      select: { name: true, governorate: true },
+    });
+
+    const grouped = governorate.reduce(
+      (acc: { [key: string]: string[] }, gov) => {
+        acc[gov] = locations
+          .filter((l) => l.governorate === gov)
+          .map((l) => l.name);
+        return acc;
+      },
+      {}
+    );
+
+    // Add governorate list to Lists sheet
+    governorate.forEach((gov, i) => {
+      listSheet.cell(`A${i + 1}`).value(gov);
+    });
+
+    workbook.definedName("Governorates", `Lists!$A$1:$A$${governorate.length}`);
+
+    let col = 2;
+    for (let gov of governorate) {
+      const govSafe = gov.replace(/\s/g, "_"); // Excel named range can't have spaces
+      const locationList = grouped[gov] || [];
+
+      locationList.forEach((loc, i) => {
+        listSheet.cell(i + 1, col).value(loc);
+      });
+
+      const endRow = locationList.length || 1;
+      const colLetter = String.fromCharCode(65 + col - 1); // B, C, D...
+      workbook.definedName(
+        govSafe,
+        `Lists!$${colLetter}$1:$${colLetter}$${endRow}`
+      );
+
+      col++;
+    }
+
+    // Setup Template headers
+    sheet.cell("A1").value("رقم الهاتف");
+    sheet.column("A").width(15);
+
+    sheet.cell("B1").value("المحافظة");
+    sheet.column("B").width(20);
+
+    sheet.cell("C1").value("المنطقة");
+    sheet.column("C").width(20);
+
+    sheet.cell("D1").value("العنوان");
+    sheet.column("D").width(30);
+
+    sheet.cell("E1").value("الاجمالي");
+    sheet.column("E").width(15);
+
+    sheet.cell("F1").value("الملاحظات");
+    sheet.column("F").width(25);
+
+    // Add validation to "المحافظة"
+    for (let row = 2; row <= 11; row++) {
+      sheet.cell(`B${row}`).dataValidation({
+        type: "list",
+        showInputMessage: true,
+        formula1: "=Governorates",
+        allowBlank: true,
+      });
+
+      // Data validation to location column using INDIRECT
+      sheet.cell(`C${row}`).dataValidation({
+        type: "list",
+        showInputMessage: true,
+        formula1: `=INDIRECT(SUBSTITUTE(B${row}," ","_"))`,
+        allowBlank: true,
+      });
+    }
+
+    listSheet.hidden(true); // hide Lists sheet
+
+    // Write and send
+    const buffer = await workbook.outputAsync();
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", "attachment; filename=template.xlsx");
+    res.send(Buffer.from(buffer));
   });
 }

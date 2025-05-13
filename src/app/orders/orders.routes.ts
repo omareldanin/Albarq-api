@@ -350,6 +350,10 @@ router.route("/orders/repositoryOrders").get(
   ordersController.getRepositoryOrders
 );
 
+router
+  .route("/orders/getOrdersSheet")
+  .get(isLoggedIn, ordersController.generateExcelSheet);
+
 router.route("/orders/pdf").post(
   isLoggedIn,
   isAutherized([
