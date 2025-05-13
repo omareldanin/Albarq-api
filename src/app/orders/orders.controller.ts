@@ -424,12 +424,17 @@ export class OrdersController {
       throw new AppError("لا يوجد مخزن وارد لهذا الفرع!", 404);
     }
 
-    const oldOrder = await ordersRepository.getOrderByReceiptNumber({
+    let oldOrder = await ordersRepository.getOrderByReceiptNumber({
       orderReceiptNumber: params.orderReceiptNumber,
     });
 
     if (!oldOrder) {
-      throw new AppError("الطلب غير موجود", 404);
+      oldOrder = await ordersRepository.getOrder({
+        orderID: params.orderReceiptNumber,
+      });
+      if (!oldOrder) {
+        throw new AppError("الطلب غير موجود", 404);
+      }
     }
 
     if (orderData.secondaryStatus === "IN_CAR") {
@@ -538,12 +543,17 @@ export class OrdersController {
       throw new AppError("لا يوجد مخزن راوجع لهذا الفرع!", 404);
     }
 
-    const oldOrder = await ordersRepository.getOrderByReceiptNumber({
+    let oldOrder = await ordersRepository.getOrderByReceiptNumber({
       orderReceiptNumber: params.orderReceiptNumber,
     });
 
     if (!oldOrder) {
-      throw new AppError("الطلب غير موجود", 404);
+      oldOrder = await ordersRepository.getOrder({
+        orderID: params.orderReceiptNumber,
+      });
+      if (!oldOrder) {
+        throw new AppError("الطلب غير موجود", 404);
+      }
     }
 
     if (!orderData.repositoryID) {

@@ -449,12 +449,17 @@ export class OrdersService {
       throw new AppError("ليس لديك صلاحية تأكيد الطلب", 403);
     }
 
-    const oldOrderData = await ordersRepository.getOrder({
+    let oldOrderData = await ordersRepository.getOrder({
       orderID: data.params.orderID,
     });
 
     if (!oldOrderData) {
-      throw new AppError("الطلب غير موجود", 404);
+      oldOrderData = await ordersRepository.getOrderByReceiptNumber({
+        orderReceiptNumber: data.params.orderID,
+      });
+      if (!oldOrderData) {
+        throw new AppError("الطلب غير موجود", 404);
+      }
     }
 
     // if (!oldOrderData?.confirmed && data.orderData.confirmed === undefined) {
