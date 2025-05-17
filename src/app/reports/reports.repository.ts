@@ -153,11 +153,11 @@ export class ReportsRepository {
               id: data.reportData.companyID,
             },
           },
-          repository: {
+          repository:data.reportData.repositoryID ? {
             connect: {
               id: data.reportData.repositoryID,
             },
-          },
+          }:undefined,
           orders: orders,
           baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
           governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
