@@ -42,6 +42,19 @@ export class EmployeesService {
       throw new AppError("ليس مصرح لك القيام بهذا الفعل", 403);
     }
 
+    const checkIfUserNameExist = await prisma.user.findFirst({
+      where: {
+        username: data.employeeData.username,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (checkIfUserNameExist) {
+      throw new AppError("اسم المستخدم موجود!", 403);
+    }
+
     const hashedPassword = bcrypt.hashSync(
       data.employeeData.password + (env.PASSWORD_SALT as string),
       12

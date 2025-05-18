@@ -19,7 +19,7 @@ export class AuthController {
     const returnedUser = await authModel.signin(user);
 
     if (!returnedUser) {
-      throw new AppError("رقم الهاتف غير صحيح", 401);
+      throw new AppError("اسم المستخدم غير صحيح", 401);
     }
 
     const isValidPassword = bcrypt.compareSync(
