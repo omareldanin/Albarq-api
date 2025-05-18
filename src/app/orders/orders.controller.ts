@@ -1014,14 +1014,14 @@ export class OrdersController {
     sheet.cell("D1").value("العنوان");
     sheet.column("D").width(30);
 
-    sheet.cell("E1").value("الاجمالي");
+    sheet.cell("E1").value("المبلغ الكلي");
     sheet.column("E").width(15);
 
     sheet.cell("F1").value("الملاحظات");
     sheet.column("F").width(25);
 
     // Add validation to "المحافظة"
-    for (let row = 2; row <= 11; row++) {
+    for (let row = 2; row <= 1000; row++) {
       sheet.cell(`B${row}`).dataValidation({
         type: "list",
         showInputMessage: true,
@@ -1036,6 +1036,7 @@ export class OrdersController {
         formula1: `=INDIRECT(SUBSTITUTE(B${row}," ","_"))`,
         allowBlank: true,
       });
+      sheet.cell(`E${row}`).style("numberFormat", "#,##0");
     }
 
     listSheet.hidden(true); // hide Lists sheet
