@@ -73,9 +73,7 @@ export class ClientsController {
     if (
       loggedInUser.role !== EmployeeRole.COMPANY_MANAGER &&
       loggedInUser.role !== AdminRole.ADMIN &&
-      loggedInUser.role !== AdminRole.ADMIN_ASSISTANT &&
-      loggedInUser.role !== EmployeeRole.BRANCH_MANAGER &&
-      loggedInUser.role !== EmployeeRole.REPOSITORIY_EMPLOYEE
+      loggedInUser.role !== AdminRole.ADMIN_ASSISTANT
     ) {
       const employee = await employeesRepository.getEmployee({
         employeeID: loggedInUser.id,
