@@ -63,7 +63,7 @@ export class RepositoriesController {
       : undefined;
 
     // Branch manager can only see repositories of his branch
-    let branchID = req.query.branch_id ? +req.query.branch_id : undefined;
+    let branchID = req.query.branchId ? +req.query.branchId : undefined;
     // if (loggedInUser.role === EmployeeRole.BRANCH_MANAGER) {
     //     const branch = await branchesRepository.getBranchManagerBranch({
     //         branchManagerID: loggedInUser.id
