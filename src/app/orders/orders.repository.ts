@@ -47,7 +47,28 @@ export class OrdersRepository {
     let totalCost = 0;
     let quantity = 0;
     let weight = (data.orderData.weight as number) || 0;
+    let status: OrderStatus = "REGISTERED";
 
+    if (
+      data.loggedInUser.role !== "CLIENT" &&
+      data.loggedInUser.role !== "CLIENT_ASSISTANT"
+    ) {
+      const repository = await prisma.repository.findFirst({
+        where: {
+          branchId: data.loggedInUser.branchId,
+          type: "EXPORT",
+        },
+        select: {
+          mainRepository: true,
+          id: true,
+          type: true,
+        },
+      });
+      if (!repository) {
+        throw new AppError("لا يوجد مخزن فرز مرتبط بالفرع", 404);
+      }
+      data.orderData.repositoryID = repository.id;
+    }
     if (data.orderData.withProducts === true) {
       for (const product of data.orderData.products) {
         const productData = await prisma.product.findUnique({
@@ -176,7 +197,6 @@ export class OrdersRepository {
     }
 
     // Calculate delivery cost
-
     let deliveryCost = 0;
 
     const client = await prisma.client.findUnique({
@@ -277,6 +297,7 @@ export class OrdersRepository {
         notes: data.orderData.notes,
         details: data.orderData.details,
         deliveryType: data.orderData.deliveryType,
+        printed: data.orderData.clientOrderReceiptId ? true : false,
         clientOrderReceipt: data.orderData.clientOrderReceiptId
           ? {
               connect: {
@@ -353,8 +374,10 @@ export class OrdersRepository {
         confirmed: data.orderData.forwardedCompanyID
           ? false
           : data.orderData.confirmed,
-        status: "REGISTERED",
-        secondaryStatus: "WITH_CLIENT",
+        status: status,
+        secondaryStatus: data.orderData.repositoryID
+          ? "IN_REPOSITORY"
+          : "WITH_CLIENT",
         deliveryAgent: undefined,
         orderProducts:
           data.orderData.withProducts === false

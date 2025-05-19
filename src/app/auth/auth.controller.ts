@@ -161,6 +161,7 @@ export class AuthController {
           companyName: user.companyName,
           mainCompany: user.mainCompany,
           clientId: user.clientId,
+          branchId: user.branchId,
         } as loggedInUserType,
         env.ACCESS_TOKEN_SECRET as string,
         { expiresIn: env.ACCESS_TOKEN_EXPIRES_IN }

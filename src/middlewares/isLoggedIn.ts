@@ -27,6 +27,7 @@ export const isLoggedIn = (req: Request, res: Response, next: NextFunction) => {
       companyName,
       mainCompany,
       clientId,
+      branchId,
     } = jwt.verify(
       token,
       env.ACCESS_TOKEN_SECRET as string
@@ -47,6 +48,7 @@ export const isLoggedIn = (req: Request, res: Response, next: NextFunction) => {
       companyName,
       mainCompany,
       clientId,
+      branchId,
     } as loggedInUserType;
 
     // GRANT ACCESS

@@ -34,5 +34,6 @@ export type loggedInUserType = {
   name: string;
   username: string;
   clientId: number;
+  branchId: number;
   permissions: Permission[];
 } & (AdminUserType | NonAdminUserType);
