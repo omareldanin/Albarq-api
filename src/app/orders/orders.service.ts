@@ -1480,11 +1480,14 @@ export class OrdersService {
           inquiryStatuses: true,
         },
       });
+      const newStatistics = statistics.ordersStatisticsByStatus.filter(
+        (status) => employee?.inquiryStatuses.includes(status.status)
+      );
       return {
         ...statistics,
-        ordersStatisticsByStatus: statistics.ordersStatisticsByStatus.filter(
-          (status) => employee?.inquiryStatuses.includes(status.status)
-        ),
+        ordersStatisticsByStatus: employee?.inquiryStatuses
+          ? newStatistics
+          : [],
       };
     }
 
@@ -1497,11 +1500,13 @@ export class OrdersService {
           orderStatus: true,
         },
       });
+
+      const newStatistics = statistics.ordersStatisticsByStatus.filter(
+        (status) => employee?.orderStatus.includes(status.status)
+      );
       return {
         ...statistics,
-        ordersStatisticsByStatus: statistics.ordersStatisticsByStatus.filter(
-          (status) => employee?.orderStatus.includes(status.status)
-        ),
+        ordersStatisticsByStatus: employee?.orderStatus ? newStatistics : [],
       };
     }
 
