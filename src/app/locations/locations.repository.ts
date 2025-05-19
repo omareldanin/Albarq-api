@@ -31,6 +31,8 @@ export class LocationsRepository {
     loggedInUser: loggedInUserType,
     data: LocationCreateType
   ) {
+    const companyID = loggedInUser.companyID;
+
     const createdLocation = await prisma.location.create({
       data: {
         name: data.name,
@@ -60,11 +62,13 @@ export class LocationsRepository {
               }),
             }
           : undefined,
-        // company: {
-        //     connect: {
-        //         id: companyID
-        //     }
-        // }
+        company: companyID
+          ? {
+              connect: {
+                id: companyID,
+              },
+            }
+          : undefined,
       },
       select: locationSelect,
     });
@@ -107,11 +111,11 @@ export class LocationsRepository {
               }
             : undefined,
         },
-        // {
-        //     company: {
-        //         id: filters.companyID
-        //     }
-        // }
+        {
+          company: {
+            id: filters.companyID,
+          },
+        },
       ],
     } satisfies Prisma.LocationWhereInput;
 
@@ -139,9 +143,9 @@ export class LocationsRepository {
     const paginatedLocations = await prisma.location.findManyPaginated(
       {
         where: where,
-        // orderBy: {
-        //     id: "desc"
-        // },
+        orderBy: {
+          id: "desc",
+        },
         select: {
           ...locationSelect,
           // This makes sure that only delivery agents that belong to the loggedin user company are returned

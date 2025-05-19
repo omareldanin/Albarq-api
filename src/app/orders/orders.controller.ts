@@ -957,11 +957,16 @@ export class OrdersController {
   });
 
   generateExcelSheet = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+
     const workbook = await XlsxPopulate.fromBlankAsync();
     const sheet = workbook.sheet(0).name("Template");
     const listSheet = workbook.addSheet("Lists");
     // Simulate location list (replace with real DB values)
     let locations = await prisma.location.findMany({
+      where: {
+        companyId: loggedInUser.companyID,
+      },
       select: { id: true, name: true, governorateAr: true },
     });
 

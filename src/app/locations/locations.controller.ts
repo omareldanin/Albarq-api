@@ -21,11 +21,11 @@ export class LocationsController {
     // const companyID = +res.locals.user.companyID;
     const loggedInUser = res.locals.user as loggedInUserType;
 
-    // TODO: maybe make this a middleware
-    // only main company can employees can create locations
-    if (!loggedInUser.mainCompany) {
-      throw new AppError("فقط الشركة الرئيسية يمكنها إضافة مناطق جديدة", 403);
-    }
+    // // TODO: maybe make this a middleware
+    // // only main company can employees can create locations
+    // if (!loggedInUser.mainCompany) {
+    //   throw new AppError("فقط الشركة الرئيسية يمكنها إضافة مناطق جديدة", 403);
+    // }
 
     const createdLocation = await locationsRepository.createLocation(
       loggedInUser,

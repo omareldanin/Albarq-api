@@ -2,7 +2,10 @@ import { AdminRole, EmployeeRole, RepositoryType } from "@prisma/client";
 import { catchAsync } from "../../lib/catchAsync";
 import type { loggedInUserType } from "../../types/user";
 import { BranchesRepository } from "../branches/branches.repository";
-import { RepositoryCreateSchema, RepositoryUpdateSchema } from "./repositories.dto";
+import {
+  RepositoryCreateSchema,
+  RepositoryUpdateSchema,
+} from "./repositories.dto";
 import { RepositoriesRepository } from "./repositories.repository";
 import { prisma } from "../../database/db";
 import { AppError } from "../../lib/AppError";
@@ -11,118 +14,133 @@ const repositoriesRepository = new RepositoriesRepository();
 const branchesRepository = new BranchesRepository();
 
 export class RepositoriesController {
-    createRepository = catchAsync(async (req, res) => {
-        const repositoryData = RepositoryCreateSchema.parse(req.body);
-        const companyID = +res.locals.user.companyID;
+  createRepository = catchAsync(async (req, res) => {
+    const repositoryData = RepositoryCreateSchema.parse(req.body);
+    const companyID = +res.locals.user.companyID;
 
-        const repository=await prisma.repository.findFirst({
-            where: {
-                branchId:repositoryData.branchID,
-                type:repositoryData.type
-            },
-            select:{
-                id:true
-            }
-        })
-
-        if(repository){
-            throw new AppError(repositoryData.type === "EXPORT" ? "لقد تم انشاء مخزن صادر لهذا الفرع مسبقا":"لقد تم انشاء مخزن راجع لهذا الفرع مسبقا", 404);
-        }
-        const createdRepository = await repositoriesRepository.createRepository(companyID, repositoryData);
-
-        res.status(200).json({
-            status: "success",
-            data: createdRepository
-        });
+    const repository = await prisma.repository.findFirst({
+      where: {
+        branchId: repositoryData.branchID,
+        type: repositoryData.type,
+      },
+      select: {
+        id: true,
+      },
     });
 
-    getAllRepositories = catchAsync(async (req, res) => {
-        // Filters
-        const {type}=req.query
-        const loggedInUser = res.locals.user as loggedInUserType;
-        let companyID: number | undefined;
-        if (Object.keys(AdminRole).includes(loggedInUser.role)) {
-            companyID = req.query.company_id ? +req.query.company_id : undefined;
-        } else if (loggedInUser.companyID) {
-            companyID = loggedInUser.companyID;
-        }
+    if (repository) {
+      throw new AppError(
+        repositoryData.type === "EXPORT"
+          ? "لقد تم انشاء مخزن صادر لهذا الفرع مسبقا"
+          : "لقد تم انشاء مخزن راجع لهذا الفرع مسبقا",
+        404
+      );
+    }
+    const createdRepository = await repositoriesRepository.createRepository(
+      companyID,
+      repositoryData
+    );
 
-        const minified = req.query.minified ? req.query.minified === "true" : undefined;
+    res.status(200).json({
+      status: "success",
+      data: createdRepository,
+    });
+  });
 
-        // Branch manager can only see repositories of his branch
-        let branchID = req.query.branch_id ? +req.query.branch_id : undefined;
-        if (loggedInUser.role === EmployeeRole.BRANCH_MANAGER) {
-            const branch = await branchesRepository.getBranchManagerBranch({
-                branchManagerID: loggedInUser.id
-            });
-            branchID = branch?.id;
-        }
+  getAllRepositories = catchAsync(async (req, res) => {
+    // Filters
+    const { type } = req.query;
+    const loggedInUser = res.locals.user as loggedInUserType;
+    let companyID: number | undefined;
+    if (Object.keys(AdminRole).includes(loggedInUser.role)) {
+      companyID = req.query.company_id ? +req.query.company_id : undefined;
+    } else if (loggedInUser.companyID) {
+      companyID = loggedInUser.companyID;
+    }
 
-        let size = req.query.size ? +req.query.size : 10;
-        if (size > 500 && minified !== true) {
-            size = 10;
-        }
+    const minified = req.query.minified
+      ? req.query.minified === "true"
+      : undefined;
 
-        let page = 1;
-        if (req.query.page && !Number.isNaN(+req.query.page) && +req.query.page > 0) {
-            page = +req.query.page;
-        }
+    // Branch manager can only see repositories of his branch
+    let branchID = req.query.branch_id ? +req.query.branch_id : undefined;
+    // if (loggedInUser.role === EmployeeRole.BRANCH_MANAGER) {
+    //     const branch = await branchesRepository.getBranchManagerBranch({
+    //         branchManagerID: loggedInUser.id
+    //     });
+    //     branchID = branch?.id;
+    // }
 
-        const { repositories, pagesCount } = await repositoriesRepository.getAllRepositoriesPaginated({
-            page: page,
-            size: size,
-            companyID: companyID,
-            branchID: branchID,
-            minified: minified,
-            type:type as RepositoryType
-        });
+    let size = req.query.size ? +req.query.size : 10;
+    if (size > 500 && minified !== true) {
+      size = 10;
+    }
 
-        res.status(200).json({
-            status: "success",
-            page: page,
-            pagesCount: pagesCount,
-            data: repositories
-        });
+    let page = 1;
+    if (
+      req.query.page &&
+      !Number.isNaN(+req.query.page) &&
+      +req.query.page > 0
+    ) {
+      page = +req.query.page;
+    }
+
+    const { repositories, pagesCount } =
+      await repositoriesRepository.getAllRepositoriesPaginated({
+        page: page,
+        size: size,
+        companyID: companyID,
+        branchID: branchID,
+        minified: minified,
+        type: type as RepositoryType,
+      });
+
+    res.status(200).json({
+      status: "success",
+      page: page,
+      pagesCount: pagesCount,
+      data: repositories,
+    });
+  });
+
+  getRepository = catchAsync(async (req, res) => {
+    const repositoryID = +req.params.repositoryID;
+
+    const repository = await repositoriesRepository.getRepository({
+      repositoryID: repositoryID,
     });
 
-    getRepository = catchAsync(async (req, res) => {
-        const repositoryID = +req.params.repositoryID;
+    res.status(200).json({
+      status: "success",
+      data: repository,
+    });
+  });
 
-        const repository = await repositoriesRepository.getRepository({
-            repositoryID: repositoryID
-        });
+  updateRepository = catchAsync(async (req, res) => {
+    const repositoryID = +req.params.repositoryID;
 
-        res.status(200).json({
-            status: "success",
-            data: repository
-        });
+    const repositoryData = RepositoryUpdateSchema.parse(req.body);
+
+    const repository = await repositoriesRepository.updateRepository({
+      repositoryID: repositoryID,
+      repositoryData: repositoryData,
     });
 
-    updateRepository = catchAsync(async (req, res) => {
-        const repositoryID = +req.params.repositoryID;
+    res.status(200).json({
+      status: "success",
+      data: repository,
+    });
+  });
 
-        const repositoryData = RepositoryUpdateSchema.parse(req.body);
+  deleteRepository = catchAsync(async (req, res) => {
+    const repositoryID = +req.params.repositoryID;
 
-        const repository = await repositoriesRepository.updateRepository({
-            repositoryID: repositoryID,
-            repositoryData: repositoryData
-        });
-
-        res.status(200).json({
-            status: "success",
-            data: repository
-        });
+    await repositoriesRepository.deleteRepository({
+      repositoryID: repositoryID,
     });
 
-    deleteRepository = catchAsync(async (req, res) => {
-        const repositoryID = +req.params.repositoryID;
-
-        await repositoriesRepository.deleteRepository({
-            repositoryID: repositoryID
-        });
-
-        res.status(200).json({
-            status: "success"
-        });
+    res.status(200).json({
+      status: "success",
     });
+  });
 }
