@@ -544,33 +544,6 @@ export class OrdersService {
       data.orderData.deliveryAgentID = null;
       data.orderData.oldDeliveryAgentId = oldOrderData?.deliveryAgent?.id;
     }
-    // if secondary status is changed to with_delivery_agent, link the delivery agent
-    // or if old order secondary status is in repository and new status is resend, link the delivery agent
-    // if (
-    //     (oldOrderData?.secondaryStatus !== data.orderData.secondaryStatus &&
-    //         data.orderData.secondaryStatus === "WITH_AGENT") ||
-    //     (oldOrderData?.status !== data.orderData.status &&
-    //         data.orderData.status === "RESEND" &&
-    //         oldOrderData?.secondaryStatus === "IN_REPOSITORY")
-    // ) {
-    //     if (oldOrderData?.oldDeliveryAgentId) {
-    //         data.orderData.deliveryAgentID = oldOrderData?.oldDeliveryAgentId;
-    //     } else {
-    //         if (!oldOrderData?.location) {
-    //             throw new AppError(`لا يوجد منطقة مرتبطة بالطلب ${oldOrderData?.id}`, 400);
-    //         }
-    //         const deliveryAgentID = await employeesRepository.getDeliveryAgentIDByLocationID({
-    //             locationID: oldOrderData?.location.id
-    //         });
-    //         if (!deliveryAgentID) {
-    //             throw new AppError(
-    //                 `لا يوجد مندوب توصيل مرتبط بمنطقة (${oldOrderData?.location.name})`,
-    //                 400
-    //             );
-    //         }
-    //         data.orderData.deliveryAgentID = deliveryAgentID;
-    //     }
-    // }
 
     // If the order is being forwarded to the company, change branch to the branch connected to the order location
     if (data.orderData.forwardedCompanyID) {
@@ -633,7 +606,11 @@ export class OrdersService {
         await sendNotification({
           orderId: newOrder.id,
           userID: newOrder.client.id,
-          title: "تم تغيير حالة الطلب",
+          title: `تم تغيير حالة الطلب رقم ${
+            newOrder.id
+          } إلى ${localizeOrderStatus(newOrder.status)} ${
+            newOrder.notes ? `(${newOrder.notes})` : ""
+          }`,
           content: `تم تغيير حالة الطلب رقم ${
             newOrder.id
           } إلى ${localizeOrderStatus(newOrder.status)} ${
