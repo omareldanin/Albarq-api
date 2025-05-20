@@ -280,9 +280,6 @@ export class OrdersController {
     const loggedInUser = res.locals.user as loggedInUserType;
     const orderData = OrderUpdateSchema.parse(req.body);
 
-    if (orderData.status === "PARTIALLY_RETURNED" && req.query.for_mobile) {
-      orderData.paidAmount = orderData.quantity;
-    }
     const order = await ordersService.updateOrder({
       params: params,
       orderData: orderData,
