@@ -49,12 +49,13 @@ export class CustomerOutputController {
           mainRepository: true,
         },
       });
-      if (
-        !repositoryData?.mainRepository &&
-        repositoryData?.branchId !== order.branch?.id
-      ) {
-        throw new AppError("هذا الطلب غير تابع لهذا الفرع", 404);
-      }
+
+      // if (
+      //   !repositoryData?.mainRepository &&
+      //   repositoryData?.branchId !== order.client.branchId
+      // ) {
+      //   throw new AppError("هذا الطلب غير تابع لهذا الفرع", 404);
+      // }
     }
 
     const store = await prisma.store.findUnique({

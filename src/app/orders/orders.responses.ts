@@ -123,6 +123,7 @@ export const orderSelect = {
   client: {
     select: {
       showNumbers: true,
+      branchId: true,
       user: {
         select: {
           id: true,
