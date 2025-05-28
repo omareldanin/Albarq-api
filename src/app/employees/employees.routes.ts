@@ -115,6 +115,7 @@ router.route("/employees/:employeeID").patch(
     AdminRole.ADMIN_ASSISTANT,
     EmployeeRole.CLIENT,
     EmployeeRole.CLIENT_ASSISTANT,
+    EmployeeRole.BRANCH_MANAGER,
   ]),
   // upload.single("avatar"),
   // upload.single("idCard"),

@@ -462,10 +462,6 @@ export class OrdersService {
       }
     }
 
-    // if (!oldOrderData?.confirmed && data.orderData.confirmed === undefined) {
-    //   throw new AppError("لم يتم تاكيد الطلب من الشركه", 403);
-    // }
-    // Cant process order unless INQUIRY_EMPLOYEE or EMERGENCY_EMPLOYEE
     if (
       data.orderData.processed !== undefined &&
       oldOrderData?.processed !== data.orderData.processed &&
@@ -505,6 +501,7 @@ export class OrdersService {
     if (
       oldOrderData?.status !== data.orderData.status &&
       !data.orderData.paidAmount &&
+      data.orderData.paidAmount !== 0 &&
       (data.orderData.status === OrderStatus.DELIVERED ||
         data.orderData.status === OrderStatus.PARTIALLY_RETURNED ||
         data.orderData.status === OrderStatus.REPLACED)
@@ -534,7 +531,7 @@ export class OrdersService {
       oldOrderData?.secondaryStatus !== data.orderData.secondaryStatus &&
       data.orderData.secondaryStatus === "IN_REPOSITORY"
     ) {
-      data.orderData.deliveryAgentID = oldOrderData?.deliveryAgent?.id;
+      data.orderData.deliveryAgentID = null;
       data.orderData.oldDeliveryAgentId = oldOrderData?.deliveryAgent?.id;
     }
     if (

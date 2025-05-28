@@ -812,19 +812,6 @@ export class OrdersRepository {
                   id: data.filters.locationID,
                 },
               },
-              // {
-              //     AND:data.loggedInUser?.role === "DELIVERY_AGENT" ?
-              //     [
-              //         {status:{notIn:["RETURNED","REGISTERED"]}},
-              //         {
-              //             OR: [
-              //             { secondaryStatus: { notIn: ["IN_REPOSITORY", "WITH_CLIENT"] } },
-              //             { secondaryStatus: null }
-              //             ]
-              //         }
-              //     ]:undefined
-              // },
-              // Filter by receiptNumber
               {
                 receiptNumber: data.filters.receiptNumber,
               },
@@ -1060,30 +1047,15 @@ export class OrdersRepository {
                 },
               },
               {
-                OR: [
-                  (!data.filters.repositoryID &&
-                    data.loggedInUser?.role === "REPOSITORIY_EMPLOYEE") ||
-                  (!data.filters.repositoryID &&
-                    data.loggedInUser?.role !== "BRANCH_MANAGER")
-                    ? {
-                        repository: {
-                          branchId: data.filters.branchID,
-                        },
-                        // secondaryStatus: "IN_REPOSITORY",
-                      }
-                    : {},
-                  {
-                    branch: data.filters.inquiryBranchesIDs
-                      ? {
-                          id: {
-                            in: data.filters.inquiryBranchesIDs,
-                          },
-                        }
-                      : {
-                          id: data.filters.branchID,
-                        },
-                  },
-                ],
+                branch: data.filters.inquiryBranchesIDs
+                  ? {
+                      id: {
+                        in: data.filters.inquiryBranchesIDs,
+                      },
+                    }
+                  : {
+                      id: data.filters.branchID,
+                    },
               },
               {
                 OR: [
@@ -1281,7 +1253,31 @@ export class OrdersRepository {
 
     const paginatedOrders = await prisma.order.findManyPaginated(
       {
-        where: where,
+        where: {
+          OR: [
+            where,
+            data.loggedInUser?.role === "BRANCH_MANAGER"
+              ? {
+                  deliveryAgent: {
+                    branch: {
+                      id: data.loggedInUser.branchId,
+                    },
+                  },
+                }
+              : {},
+            (!data.filters.repositoryID &&
+              data.loggedInUser?.role === "REPOSITORIY_EMPLOYEE") ||
+            (!data.filters.repositoryID &&
+              data.loggedInUser?.role === "BRANCH_MANAGER")
+              ? {
+                  repository: {
+                    branchId: data.filters.branchID,
+                  },
+                  // secondaryStatus: "IN_REPOSITORY",
+                }
+              : {},
+          ],
+        },
         orderBy: {
           [data.filters.sort.split(":")[0]]:
             data.filters.sort.split(":")[1] === "desc" ? "desc" : "asc",
