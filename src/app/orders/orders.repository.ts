@@ -589,7 +589,9 @@ export class OrdersRepository {
                         in: data.filters.inquiryBranchesIDs,
                       },
                     }
-                  : undefined,
+                  : {
+                      id: data.loggedInUser.branchId,
+                    },
               },
               {
                 store: data.filters.inquiryStoresIDs

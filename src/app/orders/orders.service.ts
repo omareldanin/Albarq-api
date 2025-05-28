@@ -512,8 +512,12 @@ export class OrdersService {
 
     // update order total amount and paid amount if new status is returned
     if (
-      oldOrderData?.status !== data.orderData.status &&
-      data.orderData.status === OrderStatus.RETURNED
+      (oldOrderData?.status !== data.orderData.status &&
+        data.orderData.status === OrderStatus.RETURNED) ||
+      (data.orderData.paidAmount &&
+        data.orderData.status !== OrderStatus.PARTIALLY_RETURNED &&
+        data.orderData.status !== OrderStatus.REPLACED &&
+        data.orderData.status !== OrderStatus.DELIVERED)
     ) {
       // data.orderData.totalCost = 0;
       data.orderData.paidAmount = 0;
