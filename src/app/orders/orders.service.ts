@@ -515,6 +515,7 @@ export class OrdersService {
       (oldOrderData?.status !== data.orderData.status &&
         data.orderData.status === OrderStatus.RETURNED) ||
       (data.orderData.paidAmount &&
+        data.orderData.status &&
         data.orderData.status !== OrderStatus.PARTIALLY_RETURNED &&
         data.orderData.status !== OrderStatus.REPLACED &&
         data.orderData.status !== OrderStatus.DELIVERED)

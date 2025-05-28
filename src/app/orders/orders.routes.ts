@@ -12,39 +12,28 @@ import { isLoggedIn } from "../../middlewares/isLoggedIn";
 import { OrdersController } from "./orders.controller";
 import { preventDuplicateRequests } from "../../middlewares/preventDuplicateRequests";
 
+import multer from "multer";
+const upload = multer();
 const router = Router();
 const ordersController = new OrdersController();
 
-router.route("/orders").post(
-  isLoggedIn,
-  isAutherized(
-    [
-      EmployeeRole.COMPANY_MANAGER,
-      EmployeeRole.DATA_ENTRY,
-      EmployeeRole.ACCOUNTANT,
-      ClientRole.CLIENT,
-      EmployeeRole.CLIENT_ASSISTANT,
-    ],
-    [Permission.ADD_ORDER]
-  ),
-  preventDuplicateRequests,
-  ordersController.createOrder
-  /*
-        #swagger.tags = ['Orders Routes']
-
-        #swagger.requestBody = {
-            required: true,
-            content: {
-                "application/json": {
-                    "schema": { $ref: "#/components/schemas/OrderCreateSchema" },
-                    "examples": {
-                        "OrderCreateExample": { $ref: "#/components/examples/OrderCreateExample" }
-                    }
-                }
-            }
-        }
-    */
-);
+router
+  .route("/orders")
+  .post(
+    isLoggedIn,
+    isAutherized(
+      [
+        EmployeeRole.COMPANY_MANAGER,
+        EmployeeRole.DATA_ENTRY,
+        EmployeeRole.ACCOUNTANT,
+        ClientRole.CLIENT,
+        EmployeeRole.CLIENT_ASSISTANT,
+      ],
+      [Permission.ADD_ORDER]
+    ),
+    preventDuplicateRequests,
+    ordersController.createOrder
+  );
 
 router.route("/orders").get(
   isLoggedIn,
@@ -460,6 +449,7 @@ router.route("/orders/receipts").post(
 );
 
 router.route("/orders/:orderID").patch(
+  upload.none(), // Handles form-data without files
   isLoggedIn,
   isAutherized(
     [
