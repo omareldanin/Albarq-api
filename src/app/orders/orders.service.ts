@@ -1312,6 +1312,21 @@ export class OrdersService {
       };
     }
 
+    if (data.loggedInUser.role === "DELIVERY_AGENT") {
+      const ordersStatisticsByStatus =
+        statistics.ordersStatisticsByStatus.filter(
+          (status) =>
+            status.status !== "REGISTERED" &&
+            status.status !== "IN_GOV_REPOSITORY" &&
+            status.status !== "IN_MAIN_REPOSITORY" &&
+            status.status !== "WITH_RECEIVING_AGENT" &&
+            status.status !== "READY_TO_SEND"
+        );
+      return {
+        ...statistics,
+        ordersStatisticsByStatus: ordersStatisticsByStatus,
+      };
+    }
     let ordersStatisticsByStatus = statistics.ordersStatisticsByStatus;
 
     let deliveredOrders = ordersStatisticsByStatus.find(
@@ -1434,21 +1449,6 @@ export class OrdersService {
       return {
         ...statistics,
         ordersStatisticsByStatus: updatedStatusStatistics,
-      };
-    }
-    if (data.loggedInUser.role === "DELIVERY_AGENT") {
-      const ordersStatisticsByStatus =
-        statistics.ordersStatisticsByStatus.filter(
-          (status) =>
-            status.status !== "REGISTERED" &&
-            status.status !== "IN_GOV_REPOSITORY" &&
-            status.status !== "IN_MAIN_REPOSITORY" &&
-            status.status !== "WITH_RECEIVING_AGENT" &&
-            status.status !== "READY_TO_SEND"
-        );
-      return {
-        ...statistics,
-        ordersStatisticsByStatus: ordersStatisticsByStatus,
       };
     }
 
