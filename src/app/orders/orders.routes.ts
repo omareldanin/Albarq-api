@@ -10,6 +10,7 @@ import { Router } from "express";
 import { isAutherized } from "../../middlewares/isAutherized";
 import { isLoggedIn } from "../../middlewares/isLoggedIn";
 import { OrdersController } from "./orders.controller";
+import { preventDuplicateRequests } from "../../middlewares/preventDuplicateRequests";
 
 const router = Router();
 const ordersController = new OrdersController();
@@ -26,6 +27,7 @@ router.route("/orders").post(
     ],
     [Permission.ADD_ORDER]
   ),
+  preventDuplicateRequests,
   ordersController.createOrder
   /*
         #swagger.tags = ['Orders Routes']
