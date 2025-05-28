@@ -375,7 +375,8 @@ export class OrdersService {
     if (
       data.filters.forMobile &&
       data.filters.status === "DELIVERED" &&
-      data.loggedInUser.role !== "INQUIRY_EMPLOYEE"
+      (data.loggedInUser.role === "CLIENT" ||
+        data.loggedInUser.role === "CLIENT_ASSISTANT")
     ) {
       data.filters.statuses = ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"];
       data.filters.status = undefined;
