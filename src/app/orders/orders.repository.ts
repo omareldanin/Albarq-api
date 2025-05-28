@@ -1059,18 +1059,6 @@ export class OrdersRepository {
                   id: data.filters.forwardedFromID,
                 },
               },
-              // inquiry filters
-              // {
-              //   branch: data.filters.inquiryBranchesIDs
-              //     ? {
-              //         id: {
-              //           in: data.filters.inquiryBranchesIDs,
-              //         },
-              //       }
-              //     : {
-              //         id: data.filters.branchID,
-              //       },
-              // },
               {
                 OR: [
                   (!data.filters.repositoryID &&

@@ -19,7 +19,10 @@ export class AuthController {
     const returnedUser = await authModel.signin(user);
 
     if (!returnedUser) {
-      throw new AppError("اسم المستخدم غير صحيح", 401);
+      throw new AppError(
+        "حطأ في البيانات تاكد من ادخال البيانات بشكل صحيح",
+        401
+      );
     }
 
     const isValidPassword = bcrypt.compareSync(
@@ -28,7 +31,10 @@ export class AuthController {
     );
 
     if (!isValidPassword) {
-      throw new AppError("كلمة المرور غير صحيحة", 401);
+      throw new AppError(
+        "حطأ في البيانات تاكد من ادخال البيانات بشكل صحيح",
+        401
+      );
     }
 
     const token = jwt.sign(

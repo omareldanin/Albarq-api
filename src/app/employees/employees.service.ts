@@ -96,7 +96,7 @@ export class EmployeesService {
 
     // Only show delivery agents from the branch of the logged in branch manager
     let branchID: number | undefined, clientId: number | undefined;
-    let role: EmployeeRole | undefined;
+    let roles: EmployeeRole[] | undefined = data.filters.roles;
     if (
       data.loggedInUser.role === EmployeeRole.BRANCH_MANAGER ||
       data.loggedInUser.role === EmployeeRole.REPOSITORIY_EMPLOYEE
@@ -105,7 +105,7 @@ export class EmployeesService {
         branchManagerID: data.loggedInUser.id,
       });
       branchID = branch?.id;
-      role = EmployeeRole.DELIVERY_AGENT;
+      roles = data.filters.roles || ["DELIVERY_AGENT", "RECEIVING_AGENT"];
     } else {
       branchID = data.filters.branchID;
     }
@@ -129,7 +129,7 @@ export class EmployeesService {
     const { employees, pagesCount } =
       await employeesRepository.getAllEmployeesPaginated({
         loggedInUser: data.loggedInUser,
-        filters: { ...data.filters, companyID, branchID, role, clientId },
+        filters: { ...data.filters, companyID, branchID, roles, clientId },
       });
 
     return { employees, pagesCount };

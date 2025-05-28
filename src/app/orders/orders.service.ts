@@ -587,6 +587,13 @@ export class OrdersService {
       throw new AppError("هذا الطلب غير جاهز للارسال", 403);
     }
 
+    if (
+      data.orderData.status === "WITH_RECEIVING_AGENT" &&
+      data.loggedInUser.role === "RECEIVING_AGENT"
+    ) {
+      data.orderData.deliveryAgentID = data.loggedInUser.id;
+    }
+
     const newOrder = await ordersRepository.updateOrder({
       orderID: oldOrderData.id,
       loggedInUser: data.loggedInUser,

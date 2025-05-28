@@ -194,7 +194,12 @@ export class OrdersController {
       throw new AppError("لا يوجد مخزن راوجع للفرع الخاص بك ", 404);
     }
 
-    if (loggedInUser.role === "BRANCH_MANAGER" && !repository_id) {
+    if (
+      (loggedInUser.role === "BRANCH_MANAGER" &&
+        !repository_id &&
+        getIncoming) ||
+      (loggedInUser.role === "BRANCH_MANAGER" && !repository_id && getOutComing)
+    ) {
       throw res.status(200).json({
         status: "success",
         data: {
@@ -300,6 +305,7 @@ export class OrdersController {
       const count = await prisma.order.count({
         where: {
           status: "REGISTERED",
+          deleted: false,
           printed: false,
           client: {
             id: loggedInUser.id,
@@ -315,6 +321,7 @@ export class OrdersController {
         },
         where: {
           status: "REGISTERED",
+          deleted: false,
           client: {
             id: loggedInUser.id,
           },
@@ -327,6 +334,7 @@ export class OrdersController {
       const count = await prisma.order.count({
         where: {
           status: "REGISTERED",
+          deleted: false,
           printed: false,
           id: {
             in: ordersIDs.ordersIDs,
@@ -345,6 +353,7 @@ export class OrdersController {
         },
         where: {
           status: "REGISTERED",
+          deleted: false,
           client: {
             id: loggedInUser.id,
           },
@@ -432,6 +441,11 @@ export class OrdersController {
         const mainRepository = await prisma.repository.findFirst({
           where: {
             mainRepository: true,
+            company: loggedInUser.companyID
+              ? {
+                  id: loggedInUser.companyID,
+                }
+              : undefined,
             type: "EXPORT",
           },
           select: {
