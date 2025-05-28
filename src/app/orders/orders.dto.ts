@@ -81,7 +81,14 @@ export const OrderUpdateSchema = z
     oldDeliveryAgentId: z.coerce.number().or(z.literal(null)).optional(),
     deliveryDate: z.coerce.date(),
     recipientName: z.string(),
-    recipientPhones: z.array(z.string().min(6)),
+    recipientPhones: z
+      .preprocess((val) => {
+        if (typeof val === "string") {
+          return val.split(",").map((s) => s.trim());
+        }
+        return val;
+      }, z.array(z.string().min(6)))
+      .optional(),
     recipientPhone: z.string().min(6),
     recipientAddress: z.string(),
     notes: z.string(),
