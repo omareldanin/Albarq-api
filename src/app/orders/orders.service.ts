@@ -995,6 +995,7 @@ export class OrdersService {
       const orders = await prisma.order.findMany({
         where: {
           status: "REGISTERED",
+          deleted: false,
           client: {
             id: data.loggedInUser.id,
           },
@@ -1008,6 +1009,7 @@ export class OrdersService {
       await prisma.order.updateMany({
         where: {
           status: "REGISTERED",
+          deleted: false,
           client: {
             id: data.loggedInUser.id,
           },
