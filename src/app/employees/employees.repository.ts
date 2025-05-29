@@ -51,7 +51,12 @@ export class EmployeesRepository {
         residencyCard: data.employeeData.residencyCard,
         clientAssistantRole: data.employeeData.clientAssistantRole,
         salary: data.employeeData.salary,
-        role: data.employeeData.role,
+        role:
+          data.employeeData.role === "EMERGENCY_EMPLOYEE"
+            ? "INQUIRY_EMPLOYEE"
+            : data.employeeData.role,
+        emergency:
+          data.employeeData.role === "EMERGENCY_EMPLOYEE" ? true : false,
         Client: clientConnect,
         company: {
           connect: {
@@ -139,17 +144,6 @@ export class EmployeesRepository {
               },
             }
           : undefined,
-        // inquiryDeliveryAgents: data.employeeData.inquiryDeliveryAgentsIDs
-        //     ? {
-        //           createMany: {
-        //               data: data.employeeData.inquiryDeliveryAgentsIDs.map((deliveryAgentID) => {
-        //                   return {
-        //                       deliveryAgentId: deliveryAgentID
-        //                   };
-        //               })
-        //           }
-        //       }
-        //     : undefined,
         inquiryGovernorates: data.employeeData.inquiryGovernorates
           ? {
               set: data.employeeData.inquiryGovernorates,
@@ -175,6 +169,12 @@ export class EmployeesRepository {
     filters: EmployeesFiltersType;
     loggedInUser: loggedInUserType;
   }) {
+    let emergency = false;
+
+    if (data.filters.roles?.includes("EMERGENCY_EMPLOYEE")) {
+      emergency = true;
+    }
+
     const where = {
       AND: [
         {
@@ -200,7 +200,16 @@ export class EmployeesRepository {
               ? { not: "CLIENT_ASSISTANT" }
               : { in: data.filters.roles },
         },
-        { role: data.filters.role },
+        {
+          role: data.filters.role,
+        },
+        {
+          emergency:
+            data.filters.role === "INQUIRY_EMPLOYEE" ||
+            data.filters.roles?.includes("INQUIRY_EMPLOYEE")
+              ? false
+              : undefined,
+        },
         {
           branch: {
             id: data.filters.branchID,
@@ -266,7 +275,12 @@ export class EmployeesRepository {
 
     const employees = await prisma.employee.findManyPaginated(
       {
-        where: where,
+        where: {
+          OR: [
+            where,
+            emergency ? { emergency: true, role: "INQUIRY_EMPLOYEE" } : {},
+          ],
+        },
         orderBy: {
           id: "asc",
         },
@@ -426,14 +440,12 @@ export class EmployeesRepository {
         residencyCard: data.employeeData.residencyCard,
         clientAssistantRole: data.employeeData.clientAssistantRole,
         salary: data.employeeData.salary,
-        role: data.employeeData.role,
-        // company: data.employeeData.companyID
-        //     ? {
-        //           connect: {
-        //               id: data.employeeData.companyID
-        //           }
-        //       }
-        //     : undefined,
+        role:
+          data.employeeData.role === "EMERGENCY_EMPLOYEE"
+            ? "INQUIRY_EMPLOYEE"
+            : data.employeeData.role,
+        emergency:
+          data.employeeData.role === "EMERGENCY_EMPLOYEE" ? true : false,
         permissions: data.employeeData.permissions,
         orderStatus: data.employeeData.orderStatus,
         branch: data.employeeData.branchID
@@ -519,20 +531,6 @@ export class EmployeesRepository {
               },
             }
           : undefined,
-        // inquiryDeliveryAgents: data.employeeData.inquiryDeliveryAgentsIDs
-        //     ? {
-        //           deleteMany: {
-        //               inquiryEmployeeId: data.employeeID
-        //           },
-        //           createMany: {
-        //               data: data.employeeData.inquiryDeliveryAgentsIDs.map((deliveryAgentID) => {
-        //                   return {
-        //                       deliveryAgentId: deliveryAgentID
-        //                   };
-        //               })
-        //           }
-        //       }
-        //     : undefined,
         inquiryGovernorates: data.employeeData.inquiryGovernorates
           ? {
               set: data.employeeData.inquiryGovernorates,

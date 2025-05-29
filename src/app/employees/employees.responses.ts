@@ -11,6 +11,7 @@ export const employeeSelect = {
   idCard: true,
   residencyCard: true,
   clientAssistantRole: true,
+  emergency: true,
   user: {
     select: {
       id: true,
@@ -163,6 +164,7 @@ export const employeeReform = (
     clientAssistantRole: employee.clientAssistantRole,
     salary: employee.salary,
     role: employee.role,
+    emergency: employee.emergency,
     permissions: employee.permissions,
     orderStatus: employee.orderStatus,
     deliveryCost: employee.deliveryCost,

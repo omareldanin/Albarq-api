@@ -110,6 +110,12 @@ export class EmployeesService {
       branchID = data.filters.branchID;
     }
 
+    if (
+      data.loggedInUser.role !== "ACCOUNT_MANAGER" &&
+      data.loggedInUser.role !== "COMPANY_MANAGER"
+    ) {
+      branchID = data.loggedInUser.branchId;
+    }
     if (data.loggedInUser.role === "CLIENT") {
       clientId = data.loggedInUser.id;
     }

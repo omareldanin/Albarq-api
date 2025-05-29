@@ -241,6 +241,7 @@ model Employee {
   deliveryCost            Float                            @default(0)
   clientAssistantRole     String?
   role                    EmployeeRole
+  emergency               Boolean                          @default(false)
   idCard                  String?                          @default("https://w7.pngwing.com/pngs/627/693/png-transparent-computer-icons-user-user-icon.png")
   residencyCard           String?                          @default("https://w7.pngwing.com/pngs/627/693/png-transparent-computer-icons-user-user-icon.png")
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //
