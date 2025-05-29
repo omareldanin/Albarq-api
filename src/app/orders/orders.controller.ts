@@ -282,7 +282,6 @@ export class OrdersController {
     const params = {
       orderID: req.params.orderID,
     };
-    console.log(req.body);
     const loggedInUser = res.locals.user as loggedInUserType;
     const orderData = OrderUpdateSchema.parse(req.body);
 
@@ -754,6 +753,7 @@ export class OrdersController {
         id: true,
       },
       where: {
+        deleted: false,
         status:
           status === "RETURNED"
             ? { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] }
