@@ -11,12 +11,12 @@ import { AppError } from "../../lib/AppError";
 const employeesRepository = new EmployeesRepository();
 
 export class MessagesController {
-  getOrderChatMembers = async (receiptNumber: string | undefined) => {
+  getOrderChatMembers = async (orderId: string) => {
     let chatMembers: number[] = [];
 
-    const order = await prisma.order.findFirst({
+    const order = await prisma.order.findUnique({
       where: {
-        receiptNumber: receiptNumber,
+        id: orderId,
       },
       select: {
         id: true,
@@ -380,7 +380,7 @@ export class MessagesController {
     };
   };
 
-  getChatMessages = async (orderId: string | undefined, userId: number) => {
+  getChatMessages = async (orderId: string, userId: number) => {
     const employee = await prisma.employee.findUnique({
       where: {
         id: +userId,
@@ -486,7 +486,7 @@ export class MessagesController {
 
     let chat = await prisma.chat.findFirst({
       where: {
-        orderId: order?.receiptNumber,
+        orderId: orderId,
       },
       select: {
         id: true,
@@ -498,7 +498,7 @@ export class MessagesController {
     if (!chat) {
       chat = await prisma.chat.create({
         data: {
-          orderId: order?.receiptNumber,
+          orderId: orderId,
           numberOfMessages: 0,
         },
         select: {
@@ -555,11 +555,11 @@ export class MessagesController {
       },
     });
 
-    let chatMembers = await this.getOrderChatMembers(order?.receiptNumber);
+    let chatMembers = await this.getOrderChatMembers(orderId);
     chatMembers = chatMembers.filter((e) => +e !== +loggedInUser.id);
 
     const initialMessages = await this.getChatMessages(
-      order?.receiptNumber,
+      orderId,
       loggedInUser.id
     );
 

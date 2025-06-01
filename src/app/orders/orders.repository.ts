@@ -414,7 +414,7 @@ export class OrdersRepository {
 
     await prisma.chat.create({
       data: {
-        orderId: createdOrder.receiptNumber,
+        orderId: createdOrder.id,
         numberOfMessages: 0,
       },
     });
