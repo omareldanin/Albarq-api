@@ -606,6 +606,7 @@ export class OrdersService {
     if (!newOrder) {
       throw new AppError("فشل تحديث الطلب", 500);
     }
+    console.log(newOrder);
 
     // TODO: Move this to a separate function and call it in the controller after the response
     // Update Order Timeline
@@ -613,16 +614,17 @@ export class OrdersService {
       // Update status
       if (data.orderData.status && oldOrderData.status !== newOrder.status) {
         // send notification to client
+
         await sendNotification({
           orderId: newOrder.receiptNumber,
           userID: newOrder.client.id,
           title: `تم تغيير حالة الطلب رقم ${
-            newOrder.id
+            newOrder.receiptNumber
           } إلى ${localizeOrderStatus(newOrder.status)} ${
             newOrder.notes ? `(${newOrder.notes})` : ""
           }`,
           content: `تم تغيير حالة الطلب رقم ${
-            newOrder.id
+            newOrder.receiptNumber
           } إلى ${localizeOrderStatus(newOrder.status)} ${
             newOrder.notes ? `(${newOrder.notes})` : ""
           }`,

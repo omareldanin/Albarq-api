@@ -10,26 +10,11 @@ import {
 
 export class NotificationsRepository {
   async createNotification(data: NotificationCreateType) {
-    const order = await prisma.order.findFirst({
-      where: {
-        receiptNumber: data.orderId,
-      },
-      select: {
-        id: true,
-      },
-    });
-
     const createdNotification = await prisma.notification.create({
       data: {
         title: data.title,
         content: data.content,
-        Order: order
-          ? {
-              connect: {
-                id: order.id,
-              },
-            }
-          : undefined,
+        receiptNumber: data.orderId ? data.orderId : undefined,
         user: {
           connect: {
             id: data.userID,
