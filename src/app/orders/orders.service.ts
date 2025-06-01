@@ -614,7 +614,7 @@ export class OrdersService {
       if (data.orderData.status && oldOrderData.status !== newOrder.status) {
         // send notification to client
         await sendNotification({
-          orderId: newOrder.id,
+          orderId: newOrder.receiptNumber,
           userID: newOrder.client.id,
           title: `تم تغيير حالة الطلب رقم ${
             newOrder.id

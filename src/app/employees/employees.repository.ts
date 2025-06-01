@@ -278,7 +278,13 @@ export class EmployeesRepository {
         where: {
           OR: [
             where,
-            emergency ? { emergency: true, role: "INQUIRY_EMPLOYEE" } : {},
+            emergency
+              ? {
+                  emergency: true,
+                  role: "INQUIRY_EMPLOYEE",
+                  companyId: data.loggedInUser.companyID ?? undefined,
+                }
+              : {},
           ],
         },
         orderBy: {

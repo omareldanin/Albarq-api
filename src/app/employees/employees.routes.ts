@@ -30,9 +30,6 @@ router.route("/employees").post(
     ],
     [Permission.ADD_DELIVERY_AGENT, Permission.MANAGE_EMPLOYEES]
   ),
-  // upload.single("avatar"),
-  // upload.single("idCard"),
-  // upload.single("residencyCard"),
   upload.fields([
     { name: "avatar", maxCount: 1 },
     { name: "idCard", maxCount: 1 },

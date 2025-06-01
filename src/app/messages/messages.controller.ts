@@ -11,12 +11,12 @@ import { AppError } from "../../lib/AppError";
 const employeesRepository = new EmployeesRepository();
 
 export class MessagesController {
-  getOrderChatMembers = async (orderId: string) => {
+  getOrderChatMembers = async (receiptNumber: string | undefined) => {
     let chatMembers: number[] = [];
 
-    const order = await prisma.order.findUnique({
+    const order = await prisma.order.findFirst({
       where: {
-        id: orderId,
+        receiptNumber: receiptNumber,
       },
       select: {
         id: true,
@@ -380,7 +380,7 @@ export class MessagesController {
     };
   };
 
-  getChatMessages = async (orderId: string, userId: number) => {
+  getChatMessages = async (orderId: string | undefined, userId: number) => {
     const employee = await prisma.employee.findUnique({
       where: {
         id: +userId,
@@ -457,6 +457,15 @@ export class MessagesController {
 
     let image: string | undefined;
 
+    const order = await prisma.order.findUnique({
+      where: {
+        id: orderId,
+      },
+      select: {
+        receiptNumber: true,
+      },
+    });
+
     if (loggedInUser.role === "CLIENT_ASSISTANT") {
       const clientAssistant = await prisma.employee.findUnique({
         where: {
@@ -477,7 +486,7 @@ export class MessagesController {
 
     let chat = await prisma.chat.findFirst({
       where: {
-        orderId: orderId,
+        orderId: order?.receiptNumber,
       },
       select: {
         id: true,
@@ -489,7 +498,7 @@ export class MessagesController {
     if (!chat) {
       chat = await prisma.chat.create({
         data: {
-          orderId: orderId,
+          orderId: order?.receiptNumber,
           numberOfMessages: 0,
         },
         select: {
@@ -546,11 +555,11 @@ export class MessagesController {
       },
     });
 
-    let chatMembers = await this.getOrderChatMembers(orderId);
+    let chatMembers = await this.getOrderChatMembers(order?.receiptNumber);
     chatMembers = chatMembers.filter((e) => +e !== +loggedInUser.id);
 
     const initialMessages = await this.getChatMessages(
-      orderId,
+      order?.receiptNumber,
       loggedInUser.id
     );
 
@@ -566,6 +575,7 @@ export class MessagesController {
         title: `رساله جديده "${content}"`,
         content: `هناك رساله جديده للطلب رقم ${orderId}`,
         userID: e,
+        orderId: order?.receiptNumber,
       });
     });
 
