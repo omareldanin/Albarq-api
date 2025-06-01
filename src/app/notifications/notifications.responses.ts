@@ -6,7 +6,7 @@ export const notificationSelect = {
   content: true,
   seen: true,
   createdAt: true,
-  orderId: true,
+  receiptNumber: true,
   user: {
     select: {
       id: true,
@@ -29,6 +29,7 @@ export const notificationReform = (
     content: notification.content,
     seen: notification.seen,
     createdAt: notification.createdAt,
+    orderId: notification.receiptNumber,
     user: {
       id: notification.user.id,
       fcm: notification.user.fcm,
