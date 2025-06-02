@@ -214,6 +214,7 @@ export class OrdersController {
     const results = await prisma.order.findManyPaginated(
       {
         where: {
+          deleted: false,
           repositoryId: getOutComing
             ? undefined
             : repository_id

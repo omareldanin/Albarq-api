@@ -56,7 +56,10 @@ export class ReportsRepository {
         companyNet: data.reportMetaData.companyNet,
       },
     };
-    if (data.reportData.type === ReportType.CLIENT) {
+    if (
+      data.reportData.type === ReportType.CLIENT &&
+      data.reportData.secondaryType === "DELIVERED"
+    ) {
       const createdReport = await prisma.clientReport.create({
         data: {
           secondaryType: data.reportData.secondaryType,
@@ -86,8 +89,64 @@ export class ReportsRepository {
       });
       return createdReport;
     }
-    if (data.reportData.type === ReportType.REPOSITORY) {
+    if (
+      data.reportData.type === ReportType.CLIENT &&
+      data.reportData.secondaryType === "RETURNED"
+    ) {
+      const createdReport = await prisma.returnedClientReport.create({
+        data: {
+          secondaryType: data.reportData.secondaryType,
+          client: {
+            connect: {
+              id: data.reportData.clientID,
+            },
+          },
+          // TODO
+          store: {
+            connect: {
+              id: data.reportData.storeID,
+            },
+          },
+          repository: data.reportData.repositoryID
+            ? {
+                connect: {
+                  id: data.reportData.repositoryID,
+                },
+              }
+            : undefined,
+          orders: orders,
+          baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
+          governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
+          report: report,
+        },
+      });
+      return createdReport;
+    }
+    if (
+      data.reportData.type === ReportType.REPOSITORY &&
+      data.reportData.secondaryType === "DELIVERED"
+    ) {
       const createdReport = await prisma.repositoryReport.create({
+        data: {
+          secondaryType: data.reportData.secondaryType,
+          targetRepositoryId: data.reportData.targetRepositoryId,
+          targetRepositoryName: data.reportData.repositoryName,
+          repository: {
+            connect: {
+              id: data.reportData.repositoryID,
+            },
+          },
+          orders: orders,
+          report: report,
+        },
+      });
+      return createdReport;
+    }
+    if (
+      data.reportData.type === ReportType.REPOSITORY &&
+      data.reportData.secondaryType === "RETURNED"
+    ) {
+      const createdReport = await prisma.returnedRepositoryReport.create({
         data: {
           secondaryType: data.reportData.secondaryType,
           targetRepositoryId: data.reportData.targetRepositoryId,
@@ -144,7 +203,10 @@ export class ReportsRepository {
       });
       return createdReport;
     }
-    if (data.reportData.type === ReportType.COMPANY) {
+    if (
+      data.reportData.type === ReportType.COMPANY &&
+      data.reportData.secondaryType === "DELIVERED"
+    ) {
       const createdReport = await prisma.companyReport.create({
         data: {
           secondaryType: data.reportData.secondaryType,
@@ -153,11 +215,40 @@ export class ReportsRepository {
               id: data.reportData.companyID,
             },
           },
-          repository:data.reportData.repositoryID ? {
+          repository: data.reportData.repositoryID
+            ? {
+                connect: {
+                  id: data.reportData.repositoryID,
+                },
+              }
+            : undefined,
+          orders: orders,
+          baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
+          governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
+          report: report,
+        },
+      });
+      return createdReport;
+    }
+    if (
+      data.reportData.type === ReportType.COMPANY &&
+      data.reportData.secondaryType === "RETURNED"
+    ) {
+      const createdReport = await prisma.returnedCompanyReport.create({
+        data: {
+          secondaryType: data.reportData.secondaryType,
+          company: {
             connect: {
-              id: data.reportData.repositoryID,
+              id: data.reportData.companyID,
             },
-          }:undefined,
+          },
+          repository: data.reportData.repositoryID
+            ? {
+                connect: {
+                  id: data.reportData.repositoryID,
+                },
+              }
+            : undefined,
           orders: orders,
           baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
           governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
@@ -524,11 +615,11 @@ export class ReportsRepository {
 
     if (
       (report?.type === "CLIENT" &&
-        report.clientReport?.secondaryType === "RETURNED") ||
+        report.ReturnedClientReport?.secondaryType === "RETURNED") ||
       (report?.type === "REPOSITORY" &&
-        report.repositoryReport?.secondaryType === "RETURNED") ||
+        report.ReturnedRepositoryReport?.secondaryType === "RETURNED") ||
       (report?.type === "COMPANY" &&
-        report.companyReport?.secondaryType === "RETURNED")
+        report.ReturnedCompanyReport?.secondaryType === "RETURNED")
     ) {
       if (report?.type === "REPOSITORY") {
         await prisma.order.updateMany({
@@ -536,7 +627,7 @@ export class ReportsRepository {
             repositoryReportId: report.id,
           },
           data: {
-            repositoryId: report.repositoryReport?.repository.id,
+            repositoryId: report.ReturnedRepositoryReport?.repository.id,
             secondaryStatus: "IN_REPOSITORY",
           },
         });
@@ -547,7 +638,7 @@ export class ReportsRepository {
             clientReportId: report.id,
           },
           data: {
-            repositoryId: report.clientReport?.repository?.id,
+            repositoryId: report.ReturnedClientReport?.repository?.id,
             secondaryStatus: "IN_REPOSITORY",
           },
         });
@@ -558,7 +649,7 @@ export class ReportsRepository {
             companyReportId: report.id,
           },
           data: {
-            repositoryId: report.companyReport?.repository?.id,
+            repositoryId: report.ReturnedCompanyReport?.repository?.id,
             secondaryStatus: "IN_REPOSITORY",
           },
         });

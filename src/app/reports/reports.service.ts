@@ -25,7 +25,7 @@ import type {
   ReportsReportPDFCreateType,
 } from "./reports.dto";
 import { ReportsRepository } from "./reports.repository";
-import type { reportReform } from "./reports.responses";
+import { reportSelect, type reportReform } from "./reports.responses";
 import { prisma } from "../../database/db";
 
 const reportsRepository = new ReportsRepository();
@@ -70,9 +70,23 @@ export class ReportsService {
     // Check if orders are not in another report
     if (data.reportData.type === ReportType.CLIENT) {
       for (const order of orders) {
-        if (order?.clientReport && order?.clientReport.deleted !== true) {
+        if (
+          order?.clientReport &&
+          order?.clientReport.deleted !== true &&
+          data.reportData.secondaryType === "DELIVERED"
+        ) {
           throw new AppError(
-            `الطلب ${order.receiptNumber} يوجد في كشف عملاء اخر رقمه ${order.clientReport.id}`,
+            `الطلب ${order.receiptNumber} يوجد في كشف عملاء واصل اخر رقمه ${order.clientReport.id}`,
+            400
+          );
+        }
+        if (
+          order?.ReturnedClientReport &&
+          order?.ReturnedClientReport.deleted !== true &&
+          data.reportData.secondaryType === "RETURNED"
+        ) {
+          throw new AppError(
+            `الطلب ${order.receiptNumber} يوجد في كشف عملاء راجع اخر رقمه ${order.ReturnedClientReport.id}`,
             400
           );
         }
@@ -81,10 +95,21 @@ export class ReportsService {
       for (const order of orders) {
         if (
           order?.repositoryReport &&
-          order?.repositoryReport.deleted !== true
+          order?.repositoryReport.deleted !== true &&
+          data.reportData.secondaryType === "DELIVERED"
         ) {
           throw new AppError(
-            `الطلب ${order.receiptNumber} يوجد في كشف مخازن اخر رقمه ${order.repositoryReport.id}`,
+            `الطلب ${order.receiptNumber} يوجد في كشف مخازن واصل اخر رقمه ${order.repositoryReport.id}`,
+            400
+          );
+        }
+        if (
+          order?.ReturnedRepositoryReport &&
+          order?.ReturnedRepositoryReport.deleted !== true &&
+          data.reportData.secondaryType === "RETURNED"
+        ) {
+          throw new AppError(
+            `الطلب ${order.receiptNumber} يوجد في كشف مخازن راجع اخر رقمه ${order.ReturnedRepositoryReport.id}`,
             400
           );
         }
@@ -124,9 +149,24 @@ export class ReportsService {
       }
     } else if (data.reportData.type === ReportType.COMPANY) {
       for (const order of orders) {
-        if (order?.companyReport && order?.companyReport.deleted !== true) {
+        if (
+          order?.companyReport &&
+          order?.companyReport.deleted !== true &&
+          data.reportData.secondaryType === "DELIVERED"
+        ) {
           throw new AppError(
-            `الطلب ${order.receiptNumber} يوجد في كشف شركة اخر رقمه ${order.companyReport.id}`,
+            `الطلب ${order.receiptNumber} يوجد في كشف شركة واصل اخر رقمه ${order.companyReport.id}`,
+            400
+          );
+        }
+
+        if (
+          order?.ReturnedCompanyReport &&
+          order?.ReturnedCompanyReport.deleted !== true &&
+          data.reportData.secondaryType === "RETURNED"
+        ) {
+          throw new AppError(
+            `الطلب ${order.receiptNumber} يوجد في كشف شركة راجع اخر رقمه ${order.ReturnedCompanyReport.id}`,
             400
           );
         }
@@ -476,6 +516,12 @@ export class ReportsService {
       : reportData?.companyReport
       ? // @tts-expect-error: Unreachable code error
         reportData?.companyReport.companyReportOrders
+      : reportData?.ReturnedClientReport
+      ? reportData?.ReturnedClientReport.clientReportOrders
+      : reportData?.ReturnedRepositoryReport
+      ? reportData?.ReturnedRepositoryReport.repositoryReportOrders
+      : reportData?.ReturnedCompanyReport
+      ? reportData?.ReturnedCompanyReport.companyReportOrders
       : [];
 
     const ordersIDs = orders.map((order) => order.id);
@@ -606,17 +652,24 @@ export class ReportsService {
     });
 
     const orders =
-      report?.type === ReportType.CLIENT
+      report?.type === ReportType.CLIENT && report?.clientReport
         ? report.clientReport?.clientReportOrders
-        : report?.type === ReportType.REPOSITORY
+        : report?.type === ReportType.CLIENT && report?.ReturnedClientReport
+        ? report.ReturnedClientReport?.clientReportOrders
+        : report?.type === ReportType.REPOSITORY && report.repositoryReport
         ? report?.repositoryReport?.repositoryReportOrders
+        : report?.type === ReportType.REPOSITORY &&
+          report.ReturnedRepositoryReport
+        ? report?.ReturnedRepositoryReport?.repositoryReportOrders
         : report?.type === ReportType.BRANCH
         ? report?.branchReport?.branchReportOrders
         : report?.type === ReportType.GOVERNORATE
         ? report?.governorateReport?.governorateReportOrders
         : report?.type === ReportType.DELIVERY_AGENT
         ? report?.deliveryAgentReport?.deliveryAgentReportOrders
-        : report?.type === ReportType.COMPANY
+        : report?.type === ReportType.COMPANY && report.companyReport
+        ? report?.companyReport?.companyReportOrders
+        : report?.type === ReportType.COMPANY && report.ReturnedCompanyReport
         ? report?.companyReport?.companyReportOrders
         : [];
 

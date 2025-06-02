@@ -185,7 +185,32 @@ export const orderSelect = {
       },
     },
   },
+  ReturnedClientReport: {
+    select: {
+      id: true,
+      secondaryType: true,
+      clientId: true,
+      storeId: true,
+      report: {
+        select: {
+          deleted: true,
+        },
+      },
+    },
+  },
   repositoryReport: {
+    select: {
+      id: true,
+      secondaryType: true,
+      repositoryId: true,
+      report: {
+        select: {
+          deleted: true,
+        },
+      },
+    },
+  },
+  ReturnedRepositoryReport: {
     select: {
       id: true,
       secondaryType: true,
@@ -231,6 +256,18 @@ export const orderSelect = {
     },
   },
   companyReport: {
+    select: {
+      id: true,
+      secondaryType: true,
+      companyId: true,
+      report: {
+        select: {
+          deleted: true,
+        },
+      },
+    },
+  },
+  ReturnedCompanyReport: {
     select: {
       id: true,
       secondaryType: true,
@@ -313,11 +350,24 @@ export const orderReform = (
       storeId: order.clientReport?.storeId,
       deleted: order.clientReport?.report.deleted,
     },
+    ReturnedClientReport: order.ReturnedClientReport && {
+      id: order.ReturnedClientReport?.id,
+      secondaryType: order.ReturnedClientReport?.secondaryType,
+      clientId: order.ReturnedClientReport?.clientId,
+      storeId: order.ReturnedClientReport?.storeId,
+      deleted: order.ReturnedClientReport?.report.deleted,
+    },
     repositoryReport: order.repositoryReport && {
       id: order.repositoryReport?.id,
       secondaryType: order.repositoryReport?.secondaryType,
       repositoryId: order.repositoryReport?.repositoryId,
       deleted: order.repositoryReport?.report.deleted,
+    },
+    ReturnedRepositoryReport: order.ReturnedRepositoryReport && {
+      id: order.ReturnedRepositoryReport?.id,
+      secondaryType: order.ReturnedRepositoryReport?.secondaryType,
+      repositoryId: order.ReturnedRepositoryReport?.repositoryId,
+      deleted: order.ReturnedRepositoryReport?.report.deleted,
     },
     branchReport: order.branchReport && {
       id: order.branchReport?.id,
@@ -339,6 +389,12 @@ export const orderReform = (
       secondaryType: order.companyReport?.secondaryType,
       companyId: order.companyReport?.companyId,
       deleted: order.companyReport?.report.deleted,
+    },
+    ReturnedCompanyReport: order.ReturnedCompanyReport && {
+      id: order.ReturnedCompanyReport?.id,
+      secondaryType: order.ReturnedCompanyReport?.secondaryType,
+      companyId: order.ReturnedCompanyReport?.companyId,
+      deleted: order.ReturnedCompanyReport?.report.deleted,
     },
   };
   return orderReformed;

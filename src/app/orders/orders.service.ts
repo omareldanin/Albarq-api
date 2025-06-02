@@ -480,22 +480,22 @@ export class OrdersService {
       data.loggedInUser.permissions?.includes("CHANGE_CLOSED_ORDER_STATUS") !==
         true
     ) {
-      if (
-        (oldOrderData?.clientReport &&
-          oldOrderData?.clientReport.deleted !== true) ||
-        (oldOrderData?.deliveryAgentReport &&
-          oldOrderData?.deliveryAgentReport.deleted !== true) ||
-        (oldOrderData?.companyReport &&
-          oldOrderData?.companyReport.deleted !== true) ||
-        (oldOrderData?.branchReport &&
-          oldOrderData?.branchReport.deleted !== true) ||
-        (oldOrderData?.repositoryReport &&
-          oldOrderData?.repositoryReport.deleted !== true) ||
-        (oldOrderData?.governorateReport &&
-          oldOrderData?.governorateReport.deleted !== true)
-      ) {
-        throw new AppError("لا يمكن تغيير حالة الطلب بعد عمل كشف به", 403);
-      }
+      // if (
+      //   (oldOrderData?.clientReport &&
+      //     oldOrderData?.clientReport.deleted !== true) ||
+      //   (oldOrderData?.deliveryAgentReport &&
+      //     oldOrderData?.deliveryAgentReport.deleted !== true) ||
+      //   (oldOrderData?.companyReport &&
+      //     oldOrderData?.companyReport.deleted !== true) ||
+      //   (oldOrderData?.branchReport &&
+      //     oldOrderData?.branchReport.deleted !== true) ||
+      //   (oldOrderData?.repositoryReport &&
+      //     oldOrderData?.repositoryReport.deleted !== true) ||
+      //   (oldOrderData?.governorateReport &&
+      //     oldOrderData?.governorateReport.deleted !== true)
+      // ) {
+      //   throw new AppError("لا يمكن تغيير حالة الطلب بعد عمل كشف به", 403);
+      // }
     }
 
     // update order paid amount if new status is delivered or partially returned or replaced

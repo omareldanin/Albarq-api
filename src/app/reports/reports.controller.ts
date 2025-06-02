@@ -56,26 +56,6 @@ export class ReportController {
     console.log("PDF size:", pdfBuffer.length);
 
     res.send(pdfBuffer);
-
-    // const chunks: Uint8Array[] = [];
-    // let result: Buffer;
-
-    // pdf.on("data", (chunk) => {
-    //     chunks.push(chunk);
-    // });
-
-    // pdf.on("end", () => {
-    //     result = Buffer.concat(chunks);
-    //     res.contentType("application/pdf");
-    //     res.send(result);
-    // });
-
-    // pdf.end();
-
-    // res.status(200).json({
-    //     status: "success",
-    //     data: createdReport
-    // });
   });
 
   getAllReports = catchAsync(async (req, res) => {

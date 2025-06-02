@@ -1265,6 +1265,7 @@ export class OrdersRepository {
                       id: data.loggedInUser.branchId,
                     },
                   },
+                  deleted: false,
                 }
               : {},
             (!data.filters.repositoryID &&
@@ -1275,6 +1276,7 @@ export class OrdersRepository {
                   repository: {
                     branchId: data.filters.branchID,
                   },
+                  deleted: false,
                   // secondaryStatus: "IN_REPOSITORY",
                 }
               : {},
