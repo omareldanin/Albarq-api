@@ -487,7 +487,11 @@ export class ReportsRepository {
       });
       const orders = await prisma.order.findMany({
         where: {
-          repositoryReportId: data.reportID,
+          repositoryReport: {
+            some: {
+              id: data.reportID,
+            },
+          },
         },
         select: {
           id: true,
@@ -537,7 +541,11 @@ export class ReportsRepository {
       if (report?.type === "REPOSITORY") {
         await prisma.order.updateMany({
           where: {
-            repositoryReportId: report.id,
+            repositoryReport: {
+              some: {
+                id: report.repositoryReport?.id,
+              },
+            },
           },
           data: {
             repositoryId: report.repositoryReport?.repository.id,
@@ -563,7 +571,11 @@ export class ReportsRepository {
       if (report?.type === "COMPANY" && report.confirmed === false) {
         await prisma.order.updateMany({
           where: {
-            companyReportId: report.id,
+            companyReport: {
+              some: {
+                id: data.reportID,
+              },
+            },
           },
           data: {
             repositoryId: report.companyReport?.repository?.id,

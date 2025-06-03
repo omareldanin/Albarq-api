@@ -565,12 +565,14 @@ export class OrdersController {
     ) {
       throw new AppError("هذا الطلب موجود في مخزن!", 400);
     }
-
+    const returnedReport = oldOrder.repositoryReport.find(
+      (r) => r.secondaryType === "RETURNED"
+    );
     // Remove the order from the repository report
-    if (oldOrder.repositoryReport) {
+    if (returnedReport) {
       await ordersRepository.removeOrderFromRepositoryReport({
         orderID: oldOrder.id,
-        repositoryReportID: oldOrder.repositoryReport.id,
+        repositoryReportID: returnedReport.id,
         orderData: {
           totalCost: oldOrder.totalCost,
           paidAmount: oldOrder.paidAmount,
@@ -764,15 +766,15 @@ export class OrdersController {
             in: inquiryClientsIDs,
           },
         },
-        AND:
-          loggedInUser.role === "RECEIVING_AGENT" && status === "RETURNED"
-            ? [
-                { clientReport: { isNot: null } },
-                { clientReport: { secondaryType: "RETURNED" } },
-                { clientReport: { report: { deleted: false } } },
-                { clientReport: { report: { confirmed: false } } },
-              ]
-            : undefined,
+        // AND:
+        //   loggedInUser.role === "RECEIVING_AGENT" && status === "RETURNED"
+        //     ? [
+        //         { clientReport: { isNot: null } },
+        //         { clientReport: { secondaryType: "RETURNED" } },
+        //         { clientReport: { report: { deleted: false } } },
+        //         { clientReport: { report: { confirmed: false } } },
+        //       ]
+        //     : undefined,
       },
     });
 

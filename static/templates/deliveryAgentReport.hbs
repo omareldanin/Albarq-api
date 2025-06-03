@@ -67,17 +67,18 @@
 				</tr>
 				{{/each}}
 			</tbody>
-			<tfoot>
+		</table>
+		<div style="page-break-inside: avoid; break-inside: avoid;">
+			<table>
 				<tr>
-					<td colspan="5">المجموع</td>
+					<td colspan="7" style="font-weight: bold;width:30%" >المجموع</td>
 					<td>اجمالي صافي الشركة: {{currency reportData.companyNet}}</td>
 					<td>اجمالي مبلغ الوصل: {{currency reportData.totalCost}}</td>
 					<td>اجمالي المبلغ المستلم: {{currency reportData.paidAmount}}</td>
 					<td>اجمالي صافي المندوب: {{currency reportData.deliveryAgentNet}}</td>
-					<td></td>
 				</tr>
-			</tfoot>
-		</table>
+			</table>
+		</div>
 	</main>
 	<footer>التوقيع: <span class="light">______________________________________________</span></footer>
 	<section class="watermark">{{reportData.company.name}}</section>

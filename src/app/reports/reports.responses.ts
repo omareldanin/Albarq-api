@@ -85,7 +85,6 @@ export const reportSelect = {
         select: {
           id: true,
           receiptNumber: true,
-          repositoryReportId: true,
         },
       },
     },
@@ -166,7 +165,6 @@ export const reportSelect = {
         select: {
           id: true,
           receiptNumber: true,
-          companyReportId: true,
         },
       },
       baghdadDeliveryCost: true,

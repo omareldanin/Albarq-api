@@ -321,12 +321,12 @@ export const orderReform = (
         storeId: report?.storeId,
         deleted: report?.report.deleted,
       })),
-    repositoryReport: order.repositoryReport && {
-      id: order.repositoryReport?.id,
-      secondaryType: order.repositoryReport?.secondaryType,
-      repositoryId: order.repositoryReport?.repositoryId,
-      deleted: order.repositoryReport?.report.deleted,
-    },
+    repositoryReport: order.repositoryReport.map((report) => ({
+      id: report?.id,
+      secondaryType: report?.secondaryType,
+      repositoryId: report?.repositoryId,
+      deleted: report.report.deleted,
+    })),
     branchReport: order.branchReport && {
       id: order.branchReport?.id,
       branchId: order.branchReport?.branchId,
@@ -342,12 +342,12 @@ export const orderReform = (
       governorate: order.governorateReport?.governorate,
       deleted: order.governorateReport?.report.deleted,
     },
-    companyReport: order.companyReport && {
-      id: order.companyReport?.id,
-      secondaryType: order.companyReport?.secondaryType,
-      companyId: order.companyReport?.companyId,
-      deleted: order.companyReport?.report.deleted,
-    },
+    companyReport: order.companyReport.map((report) => ({
+      id: report?.id,
+      secondaryType: report?.secondaryType,
+      companyId: report?.companyId,
+      deleted: report.report.deleted,
+    })),
   };
   return orderReformed;
 };
@@ -385,12 +385,7 @@ export const mobileOrderReform = (
     deletedBy: order.deleted && order.deletedBy,
     deletedAt: order.deletedAt?.toISOString(),
     clientReport: null,
-    repositoryReport: order.repositoryReport && {
-      id: order.repositoryReport?.id,
-      secondaryType: order.repositoryReport?.secondaryType,
-      repositoryId: order.repositoryReport?.repositoryId,
-      deleted: order.repositoryReport?.report.deleted,
-    },
+    repositoryReport: null,
     branchReport: order.branchReport && {
       id: order.branchReport?.id,
       branchId: order.branchReport?.branchId,
@@ -406,12 +401,7 @@ export const mobileOrderReform = (
       governorate: order.governorateReport?.governorate,
       deleted: order.governorateReport?.report.deleted,
     },
-    companyReport: order.companyReport && {
-      id: order.companyReport?.id,
-      secondaryType: order.companyReport?.secondaryType,
-      companyId: order.companyReport?.companyId,
-      deleted: order.companyReport?.report.deleted,
-    },
+    companyReport: null,
   };
   return orderReformed;
 };

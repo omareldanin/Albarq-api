@@ -489,15 +489,6 @@ export class OrdersRepository {
                       : undefined,
                   },
                   {
-                    repositoryReportId: data.filters.search
-                      ? Number.isNaN(+data.filters.search)
-                        ? undefined
-                        : data.filters.search.length > 9
-                        ? undefined
-                        : +data.filters.search
-                      : undefined,
-                  },
-                  {
                     branchReportId: data.filters.search
                       ? Number.isNaN(+data.filters.search)
                         ? undefined
@@ -517,15 +508,6 @@ export class OrdersRepository {
                   },
                   {
                     governorateReportId: data.filters.search
-                      ? Number.isNaN(+data.filters.search)
-                        ? undefined
-                        : data.filters.search.length > 9
-                        ? undefined
-                        : +data.filters.search
-                      : undefined,
-                  },
-                  {
-                    companyReportId: data.filters.search
                       ? Number.isNaN(+data.filters.search)
                         ? undefined
                         : data.filters.search.length > 9
@@ -621,15 +603,6 @@ export class OrdersRepository {
                       : undefined,
                   },
                   {
-                    repositoryReportId: data.filters.search
-                      ? Number.isNaN(+data.filters.search)
-                        ? undefined
-                        : data.filters.search.length > 9
-                        ? undefined
-                        : +data.filters.search
-                      : undefined,
-                  },
-                  {
                     branchReportId: data.filters.search
                       ? Number.isNaN(+data.filters.search)
                         ? undefined
@@ -649,15 +622,6 @@ export class OrdersRepository {
                   },
                   {
                     governorateReportId: data.filters.search
-                      ? Number.isNaN(+data.filters.search)
-                        ? undefined
-                        : data.filters.search.length > 9
-                        ? undefined
-                        : +data.filters.search
-                      : undefined,
-                  },
-                  {
-                    companyReportId: data.filters.search
                       ? Number.isNaN(+data.filters.search)
                         ? undefined
                         : data.filters.search.length > 9
@@ -884,38 +848,36 @@ export class OrdersRepository {
                   },
                 ],
               },
-              // {
-              //   OR:
-              //     data.filters.secondaryStatus === "IN_REPOSITORY"
-              //       ? [
-              //           {
-              //             secondaryStatus: { not: "WITH_CLIENT" },
-              //           },
-              //           { clientReport: { is: null } },
-              //           { clientReport: { report: { deleted: true } } },
-              //         ]
-              //       : undefined,
-              // },
               // Filter by repositoryReport
               {
                 AND: [
-                  {
-                    AND:
-                      data.filters.repositoryReport === "true"
-                        ? [
-                            { repositoryReport: { isNot: null } },
-                            {
-                              repositoryReport: { report: { deleted: false } },
-                            },
-                          ]
-                        : undefined,
-                  },
+                  data.filters.repositoryReport === "true"
+                    ? {
+                        repositoryReport: {
+                          every: {
+                            secondaryType: "DELIVERED",
+                          },
+                        },
+                      }
+                    : {},
                   {
                     OR:
                       data.filters.repositoryReport === "false"
                         ? [
-                            { repositoryReport: { is: null } },
-                            { repositoryReport: { report: { deleted: true } } },
+                            {
+                              repositoryReport: {
+                                none: {
+                                  secondaryType: "DELIVERED",
+                                },
+                              },
+                            },
+                            {
+                              repositoryReport: {
+                                none: {
+                                  secondaryType: "RETURNED",
+                                },
+                              },
+                            },
                           ]
                         : undefined,
                   },
@@ -1005,21 +967,33 @@ export class OrdersRepository {
               // Filter by companyReport
               {
                 AND: [
-                  {
-                    AND:
-                      data.filters.companyReport === "true"
-                        ? [
-                            { companyReport: { isNot: null } },
-                            { companyReport: { report: { deleted: false } } },
-                          ]
-                        : undefined,
-                  },
+                  data.filters.companyReport === "true"
+                    ? {
+                        companyReport: {
+                          every: {
+                            secondaryType: "DELIVERED",
+                          },
+                        },
+                      }
+                    : {},
                   {
                     OR:
                       data.filters.companyReport === "false"
                         ? [
-                            { companyReport: { is: null } },
-                            { companyReport: { report: { deleted: true } } },
+                            {
+                              companyReport: {
+                                none: {
+                                  secondaryType: "DELIVERED",
+                                },
+                              },
+                            },
+                            {
+                              companyReport: {
+                                none: {
+                                  secondaryType: "RETURNED",
+                                },
+                              },
+                            },
                           ]
                         : undefined,
                   },
@@ -1201,8 +1175,34 @@ export class OrdersRepository {
                           { branchReport: { report: { deleted: true } } },
                         ]
                       : [
-                          { companyReport: { is: null } },
-                          { companyReport: { report: { deleted: true } } },
+                          {
+                            companyReport: {
+                              none: {
+                                secondaryType: "DELIVERED",
+                              },
+                            },
+                            status: {
+                              in: [
+                                "DELIVERED",
+                                "REPLACED",
+                                "PARTIALLY_RETURNED",
+                              ],
+                            },
+                          },
+                          {
+                            companyReport: {
+                              none: {
+                                secondaryType: "RETURNED",
+                              },
+                            },
+                            status: {
+                              in: [
+                                "RETURNED",
+                                "REPLACED",
+                                "PARTIALLY_RETURNED",
+                              ],
+                            },
+                          },
                         ],
                 },
           select: orderSelect,
@@ -2023,20 +2023,20 @@ export class OrdersRepository {
                   ? { is: null }
                   : undefined,
               },
-              {
-                repositoryReport: data.filters.repositoryReport
-                  ? { isNot: null }
-                  : data.filters.repositoryReport
-                  ? { is: null }
-                  : undefined,
-              },
-              {
-                companyReport: data.filters.companyReport
-                  ? { isNot: null }
-                  : data.filters.companyReport
-                  ? { is: null }
-                  : undefined,
-              },
+              // {
+              //   repositoryReport: data.filters.repositoryReport
+              //     ? { isNot: null }
+              //     : data.filters.repositoryReport
+              //     ? { is: null }
+              //     : undefined,
+              // },
+              // {
+              //   companyReport: data.filters.companyReport
+              //     ? { isNot: null }
+              //     : data.filters.companyReport
+              //     ? { is: null }
+              //     : undefined,
+              // },
               {
                 governorate: data.filters.governorate,
               },
@@ -2181,8 +2181,26 @@ export class OrdersRepository {
                 { branchReport: { report: { deleted: true } } },
               ]
             : [
-                { companyReport: { is: null } },
-                { companyReport: { report: { deleted: true } } },
+                {
+                  companyReport: {
+                    none: {
+                      secondaryType: "DELIVERED",
+                    },
+                  },
+                  status: {
+                    in: ["DELIVERED", "REPLACED", "PARTIALLY_RETURNED"],
+                  },
+                },
+                {
+                  companyReport: {
+                    none: {
+                      secondaryType: "RETURNED",
+                    },
+                  },
+                  status: {
+                    in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
+                  },
+                },
               ],
       },
     });
@@ -2293,8 +2311,16 @@ export class OrdersRepository {
         where: {
           ...filtersReformed,
           OR: [
-            { companyReport: { is: null } },
-            { companyReport: { report: { deleted: true } } },
+            {
+              companyReport: {
+                none: {
+                  secondaryType: "DELIVERED",
+                },
+              },
+              status: {
+                in: ["DELIVERED", "REPLACED", "PARTIALLY_RETURNED"],
+              },
+            },
           ],
           status: {
             in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
@@ -2640,7 +2666,13 @@ export class OrdersRepository {
           id: data.orderID,
         },
         data: {
-          repositoryReportId: null,
+          repositoryReport: data.repositoryReportID
+            ? {
+                disconnect: {
+                  id: data.repositoryReportID,
+                },
+              }
+            : undefined,
         },
       }),
       prisma.report.update({

@@ -679,16 +679,14 @@ model Order {
   forwardedFromId        Int?
   // --- REPORTS --------------------------------------------------------------------------- //
   clientReport           ClientReport[]
-  repositoryReport       RepositoryReport?        @relation(fields: [repositoryReportId], references: [id], onDelete: SetNull)
-  repositoryReportId     Int?
+  repositoryReport       RepositoryReport[]
   branchReport           BranchReport?            @relation(fields: [branchReportId], references: [id], onDelete: SetNull)
   branchReportId         Int?
   deliveryAgentReport    DeliveryAgentReport?     @relation(fields: [deliveryAgentReportId], references: [id], onDelete: SetNull)
   deliveryAgentReportId  Int?
   governorateReport      GovernorateReport?       @relation(fields: [governorateReportId], references: [id], onDelete: SetNull)
   governorateReportId    Int?
-  companyReport          CompanyReport?           @relation(fields: [companyReportId], references: [id], onDelete: SetNull)
-  companyReportId        Int?
+  companyReport          CompanyReport[]
   // --- TENANT --------------------------------------------------------------------- //
   company                Company                  @relation(fields: [companyId], references: [id])
   companyId              Int

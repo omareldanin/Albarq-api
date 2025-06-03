@@ -100,12 +100,30 @@ export class ReportsService {
       }
     } else if (data.reportData.type === ReportType.REPOSITORY) {
       for (const order of orders) {
+        const returnedReport = order?.repositoryReport.find(
+          (r) => r.secondaryType === "RETURNED"
+        );
+        const deliveredReport = order?.clientReport.find(
+          (r) => r.secondaryType === "DELIVERED"
+        );
+
         if (
-          order?.repositoryReport &&
-          order?.repositoryReport.deleted !== true
+          deliveredReport &&
+          deliveredReport.deleted !== true &&
+          data.reportData.secondaryType === "DELIVERED"
         ) {
           throw new AppError(
-            `الطلب ${order.receiptNumber} يوجد في كشف مخازن اخر رقمه ${order.repositoryReport.id}`,
+            `الطلب ${order?.receiptNumber} يوجد في كشف مخازن واصل اخر رقمه ${deliveredReport.id}`,
+            400
+          );
+        }
+        if (
+          returnedReport &&
+          returnedReport.deleted !== true &&
+          data.reportData.secondaryType === "RETURNED"
+        ) {
+          throw new AppError(
+            `الطلب ${order?.receiptNumber} يوجد في كشف مخازن راجع اخر رقمه ${returnedReport.id}`,
             400
           );
         }
@@ -145,9 +163,30 @@ export class ReportsService {
       }
     } else if (data.reportData.type === ReportType.COMPANY) {
       for (const order of orders) {
-        if (order?.companyReport && order?.companyReport.deleted !== true) {
+        const returnedReport = order?.companyReport.find(
+          (r) => r.secondaryType === "RETURNED"
+        );
+        const deliveredReport = order?.companyReport.find(
+          (r) => r.secondaryType === "DELIVERED"
+        );
+
+        if (
+          deliveredReport &&
+          deliveredReport.deleted !== true &&
+          data.reportData.secondaryType === "DELIVERED"
+        ) {
           throw new AppError(
-            `الطلب ${order.receiptNumber} يوجد في كشف شركة اخر رقمه ${order.companyReport.id}`,
+            `الطلب ${order?.receiptNumber} يوجد في كشف شركة واصل اخر رقمه ${deliveredReport.id}`,
+            400
+          );
+        }
+        if (
+          returnedReport &&
+          returnedReport.deleted !== true &&
+          data.reportData.secondaryType === "RETURNED"
+        ) {
+          throw new AppError(
+            `الطلب ${order?.receiptNumber} يوجد في كشف شركة راجع اخر رقمه ${returnedReport.id}`,
             400
           );
         }

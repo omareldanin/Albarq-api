@@ -83,6 +83,17 @@
 				</tr>
 			</tfoot>
 		</table>
+									<!-- Force page break before totals, if needed -->
+		<div style="page-break-inside: avoid; break-inside: avoid;">
+			<table>
+				<tr>
+					<td colspan="7" style="font-weight: bold;width:30%" >المجموع</td>
+					<td style="font-weight: bold">مبلغ الوصل :  {{currency reportData.totalCost}}</td>
+					<td style="font-weight: bold">المبلغ المدفوع :  {{currency reportData.paidAmount}}</td>
+					<td style="font-weight: bold">صافي المندوب :  {{currency reportData.deliveryAgentNet}}</td>
+				</tr>
+			</table>
+		</div>
 	</main>
 	<footer>التوقيع: <span class="light">______________________________________________</span></footer>
 	<section class="watermark">{{reportData.company.name}}</section>
