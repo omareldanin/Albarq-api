@@ -56,10 +56,7 @@ export class ReportsRepository {
         companyNet: data.reportMetaData.companyNet,
       },
     };
-    if (
-      data.reportData.type === ReportType.CLIENT &&
-      data.reportData.secondaryType === "DELIVERED"
-    ) {
+    if (data.reportData.type === ReportType.CLIENT) {
       const createdReport = await prisma.clientReport.create({
         data: {
           secondaryType: data.reportData.secondaryType,
@@ -89,43 +86,7 @@ export class ReportsRepository {
       });
       return createdReport;
     }
-    if (
-      data.reportData.type === ReportType.CLIENT &&
-      data.reportData.secondaryType === "RETURNED"
-    ) {
-      const createdReport = await prisma.returnedClientReport.create({
-        data: {
-          secondaryType: data.reportData.secondaryType,
-          client: {
-            connect: {
-              id: data.reportData.clientID,
-            },
-          },
-          // TODO
-          store: {
-            connect: {
-              id: data.reportData.storeID,
-            },
-          },
-          repository: data.reportData.repositoryID
-            ? {
-                connect: {
-                  id: data.reportData.repositoryID,
-                },
-              }
-            : undefined,
-          orders: orders,
-          baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
-          governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
-          report: report,
-        },
-      });
-      return createdReport;
-    }
-    if (
-      data.reportData.type === ReportType.REPOSITORY &&
-      data.reportData.secondaryType === "DELIVERED"
-    ) {
+    if (data.reportData.type === ReportType.REPOSITORY) {
       const createdReport = await prisma.repositoryReport.create({
         data: {
           secondaryType: data.reportData.secondaryType,
@@ -142,26 +103,7 @@ export class ReportsRepository {
       });
       return createdReport;
     }
-    if (
-      data.reportData.type === ReportType.REPOSITORY &&
-      data.reportData.secondaryType === "RETURNED"
-    ) {
-      const createdReport = await prisma.returnedRepositoryReport.create({
-        data: {
-          secondaryType: data.reportData.secondaryType,
-          targetRepositoryId: data.reportData.targetRepositoryId,
-          targetRepositoryName: data.reportData.repositoryName,
-          repository: {
-            connect: {
-              id: data.reportData.repositoryID,
-            },
-          },
-          orders: orders,
-          report: report,
-        },
-      });
-      return createdReport;
-    }
+
     if (data.reportData.type === ReportType.BRANCH) {
       const createdReport = await prisma.branchReport.create({
         data: {
@@ -203,10 +145,7 @@ export class ReportsRepository {
       });
       return createdReport;
     }
-    if (
-      data.reportData.type === ReportType.COMPANY &&
-      data.reportData.secondaryType === "DELIVERED"
-    ) {
+    if (data.reportData.type === ReportType.COMPANY) {
       const createdReport = await prisma.companyReport.create({
         data: {
           secondaryType: data.reportData.secondaryType,
@@ -230,33 +169,7 @@ export class ReportsRepository {
       });
       return createdReport;
     }
-    if (
-      data.reportData.type === ReportType.COMPANY &&
-      data.reportData.secondaryType === "RETURNED"
-    ) {
-      const createdReport = await prisma.returnedCompanyReport.create({
-        data: {
-          secondaryType: data.reportData.secondaryType,
-          company: {
-            connect: {
-              id: data.reportData.companyID,
-            },
-          },
-          repository: data.reportData.repositoryID
-            ? {
-                connect: {
-                  id: data.reportData.repositoryID,
-                },
-              }
-            : undefined,
-          orders: orders,
-          baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
-          governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
-          report: report,
-        },
-      });
-      return createdReport;
-    }
+
     throw new AppError("Invalid report type", 400);
   }
 
@@ -615,11 +528,11 @@ export class ReportsRepository {
 
     if (
       (report?.type === "CLIENT" &&
-        report.ReturnedClientReport?.secondaryType === "RETURNED") ||
+        report.clientReport?.secondaryType === "RETURNED") ||
       (report?.type === "REPOSITORY" &&
-        report.ReturnedRepositoryReport?.secondaryType === "RETURNED") ||
+        report.repositoryReport?.secondaryType === "RETURNED") ||
       (report?.type === "COMPANY" &&
-        report.ReturnedCompanyReport?.secondaryType === "RETURNED")
+        report.companyReport?.secondaryType === "RETURNED")
     ) {
       if (report?.type === "REPOSITORY") {
         await prisma.order.updateMany({
@@ -627,7 +540,7 @@ export class ReportsRepository {
             repositoryReportId: report.id,
           },
           data: {
-            repositoryId: report.ReturnedRepositoryReport?.repository.id,
+            repositoryId: report.repositoryReport?.repository.id,
             secondaryStatus: "IN_REPOSITORY",
           },
         });
@@ -635,10 +548,14 @@ export class ReportsRepository {
       if (report?.type === "CLIENT" && report.confirmed === false) {
         await prisma.order.updateMany({
           where: {
-            clientReportId: report.id,
+            clientReport: {
+              some: {
+                id: report.clientReport?.id,
+              },
+            },
           },
           data: {
-            repositoryId: report.ReturnedClientReport?.repository?.id,
+            repositoryId: report.clientReport?.repository?.id,
             secondaryStatus: "IN_REPOSITORY",
           },
         });
@@ -649,25 +566,16 @@ export class ReportsRepository {
             companyReportId: report.id,
           },
           data: {
-            repositoryId: report.ReturnedCompanyReport?.repository?.id,
+            repositoryId: report.companyReport?.repository?.id,
             secondaryStatus: "IN_REPOSITORY",
           },
         });
       }
     }
 
-    const deletedReport = await prisma.report.update({
+    const deletedReport = await prisma.report.delete({
       where: {
         id: data.reportID,
-      },
-      data: {
-        deleted: true,
-        deletedAt: new Date(),
-        deletedBy: {
-          connect: {
-            id: data.deletedByID,
-          },
-        },
       },
       select: reportSelect,
     });

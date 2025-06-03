@@ -15,30 +15,20 @@ export const generateReport = async (
 ) => {
   try {
     let templatePath = "";
-    if (reportType === "CLIENT" && reportData?.clientReport) {
+    if (reportType === "CLIENT") {
       templatePath = path.join(
         __dirname,
         "../../../../static/templates/clientReport.hbs"
-      );
-    } else if (reportType === "CLIENT" && reportData?.ReturnedClientReport) {
-      templatePath = path.join(
-        __dirname,
-        "../../../../static/templates/returnedClientReport.hbs"
       );
     } else if (reportType === "BRANCH") {
       templatePath = path.join(
         __dirname,
         "../../../../static/templates/branchReport.hbs"
       );
-    } else if (reportType === "COMPANY" && reportData?.companyReport) {
+    } else if (reportType === "COMPANY") {
       templatePath = path.join(
         __dirname,
         "../../../../static/templates/companyReport.hbs"
-      );
-    } else if (reportType === "COMPANY" && reportData?.ReturnedCompanyReport) {
-      templatePath = path.join(
-        __dirname,
-        "../../../../static/templates/returnedCompanyReport.hbs"
       );
     } else if (reportType === "DELIVERY_AGENT") {
       templatePath = path.join(
@@ -50,18 +40,10 @@ export const generateReport = async (
         __dirname,
         "../../../../static/templates/governorateReport.hbs"
       );
-    } else if (reportType === "REPOSITORY" && reportData?.repositoryReport) {
+    } else if (reportType === "REPOSITORY") {
       templatePath = path.join(
         __dirname,
         "../../../../static/templates/repositoryReport.hbs"
-      );
-    } else if (
-      reportType === "REPOSITORY" &&
-      reportData?.ReturnedRepositoryReport
-    ) {
-      templatePath = path.join(
-        __dirname,
-        "../../../../static/templates/returnedRepositoryReport.hbs"
       );
     } else {
       throw new Error("لا يوجد قالب لهذا التقرير");

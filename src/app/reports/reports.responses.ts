@@ -63,51 +63,6 @@ export const reportSelect = {
         select: {
           id: true,
           receiptNumber: true,
-          clientReportId: true,
-        },
-      },
-      baghdadDeliveryCost: true,
-      governoratesDeliveryCost: true,
-    },
-  },
-  ReturnedClientReport: {
-    select: {
-      id: true,
-      secondaryType: true,
-      repository: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      client: {
-        select: {
-          branch: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-          user: {
-            select: {
-              id: true,
-              name: true,
-              phone: true,
-            },
-          },
-        },
-      },
-      store: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      orders: {
-        select: {
-          id: true,
-          receiptNumber: true,
-          clientReportId: true,
         },
       },
       baghdadDeliveryCost: true,
@@ -115,27 +70,6 @@ export const reportSelect = {
     },
   },
   repositoryReport: {
-    select: {
-      id: true,
-      secondaryType: true,
-      targetRepositoryId: true,
-      targetRepositoryName: true,
-      repository: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      orders: {
-        select: {
-          id: true,
-          receiptNumber: true,
-          repositoryReportId: true,
-        },
-      },
-    },
-  },
-  ReturnedRepositoryReport: {
     select: {
       id: true,
       secondaryType: true,
@@ -239,33 +173,6 @@ export const reportSelect = {
       governoratesDeliveryCost: true,
     },
   },
-  ReturnedCompanyReport: {
-    select: {
-      id: true,
-      secondaryType: true,
-      repository: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      company: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      orders: {
-        select: {
-          id: true,
-          receiptNumber: true,
-          companyReportId: true,
-        },
-      },
-      baghdadDeliveryCost: true,
-      governoratesDeliveryCost: true,
-    },
-  },
   company: {
     select: {
       id: true,
@@ -304,17 +211,6 @@ export const reportReform = (
       governoratesDeliveryCost: report.clientReport.governoratesDeliveryCost,
       secondaryType: report.clientReport.secondaryType,
     },
-    ReturnedClientReport: report.ReturnedClientReport && {
-      reportNumber: report.ReturnedClientReport.id,
-      clientReportOrders: report.ReturnedClientReport.orders,
-      client: report.ReturnedClientReport.client.user,
-      store: report.ReturnedClientReport.store,
-      branch: report.ReturnedClientReport.client.branch,
-      baghdadDeliveryCost: report.ReturnedClientReport.baghdadDeliveryCost,
-      governoratesDeliveryCost:
-        report.ReturnedClientReport.governoratesDeliveryCost,
-      secondaryType: report.ReturnedClientReport.secondaryType,
-    },
     repositoryReport: report.repositoryReport && {
       reportNumber: report.repositoryReport.id,
       repositoryReportOrders: report.repositoryReport.orders,
@@ -322,15 +218,6 @@ export const reportReform = (
       secondaryType: report.repositoryReport.secondaryType,
       targetRepositoryId: report.repositoryReport.targetRepositoryId,
       targetRepositoryName: report.repositoryReport.targetRepositoryName,
-    },
-    ReturnedRepositoryReport: report.ReturnedRepositoryReport && {
-      reportNumber: report.ReturnedRepositoryReport.id,
-      repositoryReportOrders: report.ReturnedRepositoryReport.orders,
-      repository: report.ReturnedRepositoryReport.repository,
-      secondaryType: report.ReturnedRepositoryReport.secondaryType,
-      targetRepositoryId: report.ReturnedRepositoryReport.targetRepositoryId,
-      targetRepositoryName:
-        report.ReturnedRepositoryReport.targetRepositoryName,
     },
     branchReport: report.branchReport && {
       reportNumber: report.branchReport.id,
@@ -359,15 +246,6 @@ export const reportReform = (
       baghdadDeliveryCost: report.companyReport.baghdadDeliveryCost,
       governoratesDeliveryCost: report.companyReport.governoratesDeliveryCost,
       secondaryType: report.companyReport.secondaryType,
-    },
-    ReturnedCompanyReport: report.ReturnedCompanyReport && {
-      reportNumber: report.ReturnedCompanyReport.id,
-      companyReportOrders: report.ReturnedCompanyReport.orders,
-      company: report.ReturnedCompanyReport.company,
-      baghdadDeliveryCost: report.ReturnedCompanyReport.baghdadDeliveryCost,
-      governoratesDeliveryCost:
-        report.ReturnedCompanyReport.governoratesDeliveryCost,
-      secondaryType: report.ReturnedCompanyReport.secondaryType,
     },
     company: report.company,
     deleted: report.deleted,

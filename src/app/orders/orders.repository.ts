@@ -533,15 +533,6 @@ export class OrdersRepository {
                       : undefined,
                   },
                   {
-                    clientReportId: data.filters.search
-                      ? Number.isNaN(+data.filters.search)
-                        ? undefined
-                        : data.filters.search.length > 9
-                        ? undefined
-                        : +data.filters.search
-                      : undefined,
-                  },
-                  {
                     recipientName: {
                       contains: data.filters.search,
                       mode: "insensitive",
@@ -666,15 +657,6 @@ export class OrdersRepository {
                   },
                   {
                     companyReportId: data.filters.search
-                      ? Number.isNaN(+data.filters.search)
-                        ? undefined
-                        : data.filters.search.length > 9
-                        ? undefined
-                        : +data.filters.search
-                      : undefined,
-                  },
-                  {
-                    clientReportId: data.filters.search
                       ? Number.isNaN(+data.filters.search)
                         ? undefined
                         : data.filters.search.length > 9
@@ -864,38 +846,55 @@ export class OrdersRepository {
               // Filter by clientReport
               {
                 AND: [
-                  {
-                    AND:
-                      data.filters.clientReport === "true"
-                        ? [
-                            { clientReport: { isNot: null } },
-                            { clientReport: { report: { deleted: false } } },
-                          ]
-                        : undefined,
-                  },
+                  data.filters.clientReport === "true"
+                    ? {
+                        clientReport: {
+                          every: {
+                            secondaryType: "DELIVERED",
+                            report: {
+                              deleted: false,
+                            },
+                          },
+                        },
+                      }
+                    : {},
                   {
                     OR:
                       data.filters.clientReport === "false"
                         ? [
-                            { clientReport: { is: null } },
-                            { clientReport: { report: { deleted: true } } },
+                            {
+                              clientReport: {
+                                none: {
+                                  secondaryType: "DELIVERED",
+                                },
+                              },
+                            },
+                            {
+                              clientReport: {
+                                some: {
+                                  report: {
+                                    deleted: true,
+                                  },
+                                },
+                              },
+                            },
                           ]
                         : undefined,
                   },
                 ],
               },
-              {
-                OR:
-                  data.filters.secondaryStatus === "IN_REPOSITORY"
-                    ? [
-                        {
-                          secondaryStatus: { not: "WITH_CLIENT" },
-                        },
-                        { clientReport: { is: null } },
-                        { clientReport: { report: { deleted: true } } },
-                      ]
-                    : undefined,
-              },
+              // {
+              //   OR:
+              //     data.filters.secondaryStatus === "IN_REPOSITORY"
+              //       ? [
+              //           {
+              //             secondaryStatus: { not: "WITH_CLIENT" },
+              //           },
+              //           { clientReport: { is: null } },
+              //           { clientReport: { report: { deleted: true } } },
+              //         ]
+              //       : undefined,
+              // },
               // Filter by repositoryReport
               {
                 AND: [
@@ -1152,10 +1151,6 @@ export class OrdersRepository {
                         },
                       },
                     },
-                    { clientReport: { isNot: null } },
-                    { clientReport: { secondaryType: "RETURNED" } },
-                    { clientReport: { report: { deleted: false } } },
-                    { clientReport: { report: { confirmed: false } } },
                   ],
                 }
               : {
@@ -1163,9 +1158,31 @@ export class OrdersRepository {
                   OR:
                     data.loggedInUser?.role === "CLIENT"
                       ? [
-                          { clientReport: { is: null } },
-                          { clientReport: { report: { deleted: true } } },
-                          { clientReport: { report: { confirmed: false } } },
+                          {
+                            clientReport: {
+                              none: {
+                                secondaryType: "DELIVERED",
+                              },
+                            },
+                          },
+                          {
+                            clientReport: {
+                              some: {
+                                report: {
+                                  deleted: true,
+                                },
+                              },
+                            },
+                          },
+                          {
+                            clientReport: {
+                              some: {
+                                report: {
+                                  confirmed: false,
+                                },
+                              },
+                            },
+                          },
                         ]
                       : data.loggedInUser?.role === "DELIVERY_AGENT"
                       ? [
@@ -1623,6 +1640,7 @@ export class OrdersRepository {
         clientNet: true,
         companyNet: true,
         deliveryAgentNet: true,
+        paidAmount: true,
         weight: true,
         deliveryAgent: {
           select: {
@@ -1702,6 +1720,13 @@ export class OrdersRepository {
         deliveryAgentCost += weight * 250;
         companyNet = data.orderData.paidAmount - deliveryAgentCost;
       }
+    } else {
+      const deliveryCost = newDeliveryCost
+        ? newDeliveryCost
+        : ((orderData?.deliveryCost || 0) as number);
+      clientNet = orderData
+        ? +orderData?.paidAmount - deliveryCost
+        : -deliveryCost;
     }
 
     const order = await prisma.order.update({
@@ -1965,13 +1990,13 @@ export class OrdersRepository {
                     ? { in: data.filters.inquiryStoresIDs }
                     : data.filters.storeID,
               },
-              {
-                clientReport: data.filters.clientReport
-                  ? { isNot: null }
-                  : data.filters.clientReport
-                  ? { is: null }
-                  : undefined,
-              },
+              // {
+              //   clientReport: data.filters.clientReport
+              //     ? { isNot: null }
+              //     : data.filters.clientReport
+              //     ? { is: null }
+              //     : undefined,
+              // },
               {
                 governorateReport: data.filters.governorateReport
                   ? { isNot: null }
@@ -2119,9 +2144,31 @@ export class OrdersRepository {
         OR:
           data.loggedInUser.role === "CLIENT"
             ? [
-                { clientReport: { is: null } },
-                { clientReport: { report: { deleted: true } } },
-                { clientReport: { report: { confirmed: false } } },
+                {
+                  clientReport: {
+                    none: {
+                      secondaryType: "DELIVERED",
+                    },
+                  },
+                },
+                {
+                  clientReport: {
+                    some: {
+                      report: {
+                        deleted: true,
+                      },
+                    },
+                  },
+                },
+                {
+                  clientReport: {
+                    some: {
+                      report: {
+                        confirmed: false,
+                      },
+                    },
+                  },
+                },
               ]
             : data.loggedInUser.role === "DELIVERY_AGENT"
             ? [
@@ -2176,8 +2223,22 @@ export class OrdersRepository {
         where: {
           ...filtersReformed,
           OR: [
-            { clientReport: { is: null } },
-            { clientReport: { report: { deleted: true } } },
+            {
+              clientReport: {
+                none: {
+                  secondaryType: "DELIVERED",
+                },
+              },
+            },
+            {
+              clientReport: {
+                some: {
+                  report: {
+                    deleted: true,
+                  },
+                },
+              },
+            },
           ],
           status: {
             in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],

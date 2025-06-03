@@ -66,7 +66,7 @@
 				</tr>
 				{{/each}}
 			</tbody>
-		
+{{!-- 		
 			<tfoot style="display: table-footer-group;">
 				<tr>
 					<td colspan="5">المجموع</td>
@@ -76,8 +76,20 @@
 					<td>{{currency reportData.clientNet}}</td>
 					<td colspan="2"></td>
 				</tr>
-			</tfoot>
+			</tfoot> --}}
 		</table>
+			<!-- Force page break before totals, if needed -->
+		<div style="page-break-inside: avoid; break-inside: avoid;">
+			<table>
+				<tr>
+					<td colspan="7" style="font-weight: bold;width:20%" >المجموع</td>
+					<td style="font-weight: bold">مبلغ الوصل :  {{currency reportData.totalCost}}</td>
+					<td style="font-weight: bold">المبلغ المدفوع :  {{currency reportData.paidAmount}}</td>
+					<td style="font-weight: bold">اجور التوصيل :  {{currency reportData.deliveryCost}}</td>
+					<td style="font-weight: bold">صافي العميل :  {{currency reportData.clientNet}}</td>
+				</tr>
+			</table>
+		</div>
 	</main>
 	<footer>التوقيع: <span class="light">______________________________________________</span></footer>
 	<section class="watermark">{{reportData.company.name}}</section>

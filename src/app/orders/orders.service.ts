@@ -1248,12 +1248,6 @@ export class OrdersService {
               in: inquiryClientsIDs,
             },
           },
-          AND: [
-            { clientReport: { isNot: null } },
-            { clientReport: { secondaryType: "RETURNED" } },
-            { clientReport: { report: { deleted: false } } },
-            { clientReport: { report: { confirmed: false } } },
-          ],
         },
       });
 
