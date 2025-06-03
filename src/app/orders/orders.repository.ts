@@ -1160,7 +1160,30 @@ export class OrdersRepository {
                       ? [
                           {
                             clientReport: {
-                              none: {},
+                              none: {
+                                secondaryType: "DELIVERED",
+                              },
+                            },
+                            status: {
+                              in: [
+                                "DELIVERED",
+                                "REPLACED",
+                                "PARTIALLY_RETURNED",
+                              ],
+                            },
+                          },
+                          {
+                            clientReport: {
+                              none: {
+                                secondaryType: "RETURNED",
+                              },
+                            },
+                            status: {
+                              in: [
+                                "RETURNED",
+                                "REPLACED",
+                                "PARTIALLY_RETURNED",
+                              ],
                             },
                           },
                         ]
@@ -2130,23 +2153,18 @@ export class OrdersRepository {
                       secondaryType: "DELIVERED",
                     },
                   },
-                },
-                {
-                  clientReport: {
-                    some: {
-                      report: {
-                        deleted: true,
-                      },
-                    },
+                  status: {
+                    in: ["DELIVERED", "REPLACED", "PARTIALLY_RETURNED"],
                   },
                 },
                 {
                   clientReport: {
-                    some: {
-                      report: {
-                        confirmed: false,
-                      },
+                    none: {
+                      secondaryType: "RETURNED",
                     },
+                  },
+                  status: {
+                    in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
                   },
                 },
               ]
