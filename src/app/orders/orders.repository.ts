@@ -2229,14 +2229,8 @@ export class OrdersRepository {
                   secondaryType: "DELIVERED",
                 },
               },
-            },
-            {
-              clientReport: {
-                some: {
-                  report: {
-                    deleted: true,
-                  },
-                },
+              status: {
+                in: ["DELIVERED", "REPLACED", "PARTIALLY_RETURNED"],
               },
             },
           ],
