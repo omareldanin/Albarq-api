@@ -17,6 +17,7 @@ import type {
   OrdersStatisticsFiltersType,
 } from "./orders.dto";
 import {
+  mobileOrderReform,
   orderReform,
   orderSelect,
   orderTimelineReform,
@@ -1216,6 +1217,7 @@ export class OrdersRepository {
       );
 
       const ordersReformed = paginatedOrders.data.map(orderReform);
+      const mobileOrdersReformed = paginatedOrders.data.map(mobileOrderReform);
 
       const ordersMetaDataAggregate = await prisma.order.aggregate({
         where: where,
@@ -1265,10 +1267,9 @@ export class OrdersRepository {
         deliveryCost: ordersMetaDataAggregate._sum.deliveryCost || 0,
         countByStatus: ordersMetaDataGroupByStatusReformed,
       };
-      console.log(ordersReformed);
 
       return {
-        orders: ordersReformed,
+        orders: data.filters.forMobile ? mobileOrderReform : ordersReformed,
         ordersMetaData: ordersMetaDataReformed,
         pagesCount: paginatedOrders.pagesCount,
       };

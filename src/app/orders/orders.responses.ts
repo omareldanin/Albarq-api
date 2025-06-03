@@ -352,6 +352,69 @@ export const orderReform = (
   return orderReformed;
 };
 
+export const mobileOrderReform = (
+  order: Prisma.OrderGetPayload<{
+    select: typeof orderSelect;
+  }> | null
+) => {
+  if (!order) {
+    return null;
+  }
+  const orderReformed = {
+    ...order,
+    // TODO
+    client: {
+      id: order.client.user.id,
+      name: order.client.user.name,
+      phone: order.client.user.phone,
+      company: order.client.company.name,
+      showNumbers: order.client.showNumbers,
+    },
+    deliveryAgent: order.deliveryAgent && {
+      id: order.deliveryAgent.user.id,
+      name: order.deliveryAgent.user.name,
+      phone: order.deliveryAgent.user.phone,
+      deliveryCost: order.deliveryAgent.deliveryCost,
+    },
+    processedBy: {
+      ...order.processedBy?.user,
+      role: order.processedBy?.role,
+    },
+    forwardedBy: order.forwardedBy?.user,
+    deleted: order.deleted,
+    deletedBy: order.deleted && order.deletedBy,
+    deletedAt: order.deletedAt?.toISOString(),
+    clientReport: null,
+    repositoryReport: order.repositoryReport && {
+      id: order.repositoryReport?.id,
+      secondaryType: order.repositoryReport?.secondaryType,
+      repositoryId: order.repositoryReport?.repositoryId,
+      deleted: order.repositoryReport?.report.deleted,
+    },
+    branchReport: order.branchReport && {
+      id: order.branchReport?.id,
+      branchId: order.branchReport?.branchId,
+      deleted: order.branchReport?.report.deleted,
+    },
+    deliveryAgentReport: order.deliveryAgentReport && {
+      id: order.deliveryAgentReport?.id,
+      deliveryAgentId: order.deliveryAgentReport?.deliveryAgentId,
+      deleted: order.deliveryAgentReport?.report.deleted,
+    },
+    governorateReport: order.governorateReport && {
+      id: order.governorateReport?.id,
+      governorate: order.governorateReport?.governorate,
+      deleted: order.governorateReport?.report.deleted,
+    },
+    companyReport: order.companyReport && {
+      id: order.companyReport?.id,
+      secondaryType: order.companyReport?.secondaryType,
+      companyId: order.companyReport?.companyId,
+      deleted: order.companyReport?.report.deleted,
+    },
+  };
+  return orderReformed;
+};
 /* --------------------------------------------------------------- */
 
 export const statisticsReformed = (statistics: {
