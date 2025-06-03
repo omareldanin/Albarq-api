@@ -1160,27 +1160,7 @@ export class OrdersRepository {
                       ? [
                           {
                             clientReport: {
-                              none: {
-                                secondaryType: "DELIVERED",
-                              },
-                            },
-                          },
-                          {
-                            clientReport: {
-                              some: {
-                                report: {
-                                  deleted: true,
-                                },
-                              },
-                            },
-                          },
-                          {
-                            clientReport: {
-                              some: {
-                                report: {
-                                  confirmed: false,
-                                },
-                              },
+                              none: {},
                             },
                           },
                         ]
