@@ -263,13 +263,13 @@ export class ReportsService {
       throw new AppError("حدث خطأ اثناء عمل الكشف", 500);
     }
 
-    // if client report, make secondary status WITH_CLIENT
-    if (data.reportData.type === ReportType.CLIENT) {
-      await ordersRepository.updateOrdersSecondaryStatus({
-        ordersIDs,
-        secondaryStatus: "WITH_CLIENT",
-      });
-    }
+    // // if client report, make secondary status WITH_CLIENT
+    // if (data.reportData.type === ReportType.CLIENT) {
+    //   await ordersRepository.updateOrdersSecondaryStatus({
+    //     ordersIDs,
+    //     secondaryStatus: "WITH_CLIENT",
+    //   });
+    // }
 
     // Update company treasury
     if (
