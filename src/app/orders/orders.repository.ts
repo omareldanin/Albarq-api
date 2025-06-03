@@ -1269,7 +1269,7 @@ export class OrdersRepository {
       };
 
       return {
-        orders: data.filters.forMobile ? mobileOrderReform : ordersReformed,
+        orders: data.filters.forMobile ? mobileOrdersReformed : ordersReformed,
         ordersMetaData: ordersMetaDataReformed,
         pagesCount: paginatedOrders.pagesCount,
       };
