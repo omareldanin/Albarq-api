@@ -1265,6 +1265,7 @@ export class OrdersRepository {
         deliveryCost: ordersMetaDataAggregate._sum.deliveryCost || 0,
         countByStatus: ordersMetaDataGroupByStatusReformed,
       };
+      console.log(ordersReformed);
 
       return {
         orders: ordersReformed,
