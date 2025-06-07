@@ -524,9 +524,9 @@ export const statisticsReformed = (statistics: {
   const sortingOrder = [
     "REGISTERED",
     "READY_TO_SEND",
+    "DELIVERED",
     "WITH_RECEIVING_AGENT",
     "WITH_DELIVERY_AGENT",
-    "DELIVERED",
     "POSTPONED",
     "RESEND",
     "PROCESSING",

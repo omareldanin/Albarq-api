@@ -1343,9 +1343,9 @@ export class OrdersService {
       status: "DELIVERED",
       count: 0,
       totalCost: 0,
-      name: "تم التوصيل",
+      name: "قيد التوصيل",
       icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/delivered.png",
-      inside: false,
+      inside: true,
     };
 
     const pReturedOrders = ordersStatisticsByStatus.find(
