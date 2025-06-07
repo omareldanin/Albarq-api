@@ -1352,6 +1352,10 @@ export class OrdersService {
         (status) => status.status === "PARTIALLY_RETURNED"
       );
 
+      const deOrders = newStatusStatistics.find(
+        (status) => status.status === "DELIVERED"
+      );
+
       const replacedOrders = newStatusStatistics.find(
         (status) => status.status === "REPLACED"
       );
@@ -1368,6 +1372,11 @@ export class OrdersService {
         : 0;
       deliveredOrders.totalCost += replacedOrders?.totalCost
         ? replacedOrders?.totalCost
+        : 0;
+
+      deliveredOrders.count += deOrders?.count ? deOrders?.count : 0;
+      deliveredOrders.totalCost += deOrders?.totalCost
+        ? deOrders?.totalCost
         : 0;
 
       let reg = newStatusStatistics.find(

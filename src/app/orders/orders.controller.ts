@@ -884,6 +884,25 @@ export class OrdersController {
           status: {
             in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
           },
+          OR: [
+            {
+              clientReport: {
+                none: {
+                  secondaryType: "DELIVERED",
+                },
+              },
+            },
+            {
+              clientReport: {
+                none: {
+                  secondaryType: "RETURNED",
+                },
+              },
+              status: {
+                in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
+              },
+            },
+          ],
         },
       });
       const statuses: OrderStatus[] = [
