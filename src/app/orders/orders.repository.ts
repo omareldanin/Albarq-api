@@ -52,12 +52,10 @@ export class OrdersRepository {
 
     if (
       data.loggedInUser.role !== "CLIENT" &&
-      data.loggedInUser.role !== "CLIENT_ASSISTANT" &&
-      data.loggedInUser.branchId
+      data.loggedInUser.role !== "CLIENT_ASSISTANT"
     ) {
       const repository = await prisma.repository.findFirst({
         where: {
-          branchId: data.loggedInUser.branchId,
           type: "EXPORT",
         },
         select: {
