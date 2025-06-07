@@ -1140,13 +1140,9 @@ export class OrdersRepository {
                                 secondaryType: "DELIVERED",
                               },
                             },
-                            // status: {
-                            //   in: [
-                            //     "DELIVERED",
-                            //     "REPLACED",
-                            //     "PARTIALLY_RETURNED",
-                            //   ],
-                            // },
+                            status: {
+                              notIn: ["RETURNED"],
+                            },
                           },
                           {
                             clientReport: {
@@ -1183,11 +1179,7 @@ export class OrdersRepository {
                               },
                             },
                             status: {
-                              in: [
-                                "DELIVERED",
-                                "REPLACED",
-                                "PARTIALLY_RETURNED",
-                              ],
+                              notIn: ["RETURNED"],
                             },
                           },
                           {
@@ -2190,7 +2182,7 @@ export class OrdersRepository {
                     },
                   },
                   status: {
-                    in: ["DELIVERED", "REPLACED", "PARTIALLY_RETURNED"],
+                    notIn: ["RETURNED"],
                   },
                 },
                 {
