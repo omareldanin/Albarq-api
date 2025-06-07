@@ -372,16 +372,6 @@ export class OrdersService {
       size = 10;
     }
 
-    if (
-      data.filters.forMobile &&
-      data.filters.status === "DELIVERED" &&
-      (data.loggedInUser.role === "CLIENT" ||
-        data.loggedInUser.role === "CLIENT_ASSISTANT")
-    ) {
-      data.filters.statuses = ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"];
-      data.filters.status = undefined;
-    }
-
     const { orders, ordersMetaData, pagesCount } =
       await ordersRepository.getAllOrdersPaginated({
         filters: {

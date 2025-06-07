@@ -8,6 +8,7 @@ export const NotificationCreateSchema = z.object({
   seen: z.boolean().default(false).optional(),
   userID: z.coerce.number(),
   orderId: z.coerce.string().optional(),
+  forChat: z.boolean().optional(),
 });
 
 export type NotificationCreateType = z.infer<typeof NotificationCreateSchema>;

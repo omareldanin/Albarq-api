@@ -2157,9 +2157,9 @@ export class OrdersRepository {
                       secondaryType: "DELIVERED",
                     },
                   },
-                  // status: {
-                  //   in: ["DELIVERED", "REPLACED", "PARTIALLY_RETURNED"],
-                  // },
+                  status: {
+                    notIn: ["RETURNED"],
+                  },
                 },
                 {
                   clientReport: {

@@ -7,6 +7,7 @@ import { clientReceiptsRepository } from "./clientReceipts.repository";
 import { AppError } from "../../lib/AppError";
 import { generateReceipts } from "./helpers/generateReceipts";
 import { prisma } from "../../database/db";
+import { loggedInUserType } from "../../types/user";
 
 const clientReceiptRepository = new clientReceiptsRepository();
 
@@ -26,7 +27,7 @@ export class ClientReceiptController {
   }
   createReceipts = catchAsync(async (req, res) => {
     let receipts: clientReceiptCreateType[];
-
+    const user = res.locals.user as loggedInUserType;
     receipts = req.body.map((receipt: unknown) =>
       clientReceiptCreateSchema.parse(receipt)
     );
@@ -51,11 +52,23 @@ export class ClientReceiptController {
         }
       }
 
+      const client = await prisma.client.findUnique({
+        where: {
+          id: user.id,
+        },
+        select: {
+          branchId: true,
+        },
+      });
+
       const createdReceipt = await clientReceiptRepository.createClientReceipt({
         storeId: receipt.storeId,
         receiptData: {
           storeId: receipt.storeId,
-          branchId: receipt.branchId,
+          branchId:
+            user.role === "CLIENT" && client?.branchId
+              ? client?.branchId
+              : receipt.branchId,
           receiptNumber: receiptId,
         },
       });

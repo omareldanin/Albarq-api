@@ -64,12 +64,25 @@ export class RepositoriesController {
 
     // Branch manager can only see repositories of his branch
     let branchID = req.query.branchId ? +req.query.branchId : undefined;
-    // if (loggedInUser.role === EmployeeRole.BRANCH_MANAGER) {
-    //     const branch = await branchesRepository.getBranchManagerBranch({
-    //         branchManagerID: loggedInUser.id
-    //     });
-    //     branchID = branch?.id;
-    // }
+    let mainRepository: boolean | undefined;
+    if (loggedInUser.role !== EmployeeRole.COMPANY_MANAGER) {
+      const branch = await prisma.branch.findUnique({
+        where: {
+          id: loggedInUser.branchId,
+        },
+        select: {
+          id: true,
+          repositories: {
+            select: {
+              mainRepository: true,
+            },
+          },
+        },
+      });
+      if (!branch?.repositories[0].mainRepository) {
+        mainRepository = true;
+      }
+    }
 
     let size = req.query.size ? +req.query.size : 10;
     if (size > 500 && minified !== true) {
@@ -92,6 +105,7 @@ export class RepositoriesController {
         companyID: companyID,
         branchID: branchID,
         minified: minified,
+        mainRepository,
         type: type as RepositoryType,
       });
 

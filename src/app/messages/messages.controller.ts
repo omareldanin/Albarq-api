@@ -581,6 +581,7 @@ export class MessagesController {
         content: `هناك رساله جديده للطلب رقم ${orderId}`,
         userID: e,
         orderId: order?.receiptNumber,
+        forChat: true,
       });
     });
 
