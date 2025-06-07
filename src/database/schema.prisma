@@ -127,6 +127,12 @@ enum SecondaryStatus {
   IN_CAR
 }
 
+enum ProcessingStatus {
+  processed
+  not_processed
+  confirmed
+}
+
 enum DeliveryType {
   NORMAL
   REPLACEMENT
@@ -632,6 +638,7 @@ model Order {
   // --- STATUS --------------------------------------------------------------------------- //
   status                 OrderStatus              @default(REGISTERED)
   secondaryStatus        SecondaryStatus?
+  processingStatus       ProcessingStatus         @default(not_processed)
   confirmed              Boolean                  @default(false)
   printed                Boolean                  @default(false)
   forwardedToMainRepo    Boolean?                 @default(false)

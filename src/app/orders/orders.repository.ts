@@ -1140,13 +1140,13 @@ export class OrdersRepository {
                                 secondaryType: "DELIVERED",
                               },
                             },
-                            status: {
-                              in: [
-                                "DELIVERED",
-                                "REPLACED",
-                                "PARTIALLY_RETURNED",
-                              ],
-                            },
+                            // status: {
+                            //   in: [
+                            //     "DELIVERED",
+                            //     "REPLACED",
+                            //     "PARTIALLY_RETURNED",
+                            //   ],
+                            // },
                           },
                           {
                             clientReport: {
@@ -1744,6 +1744,7 @@ export class OrdersRepository {
         totalCost: data.orderData.totalCost,
         paidAmount: data.orderData.paidAmount,
         receiptNumber: data.orderData.receiptNumber,
+        processingStatus: data.orderData.processingStatus,
         clientNet: clientNet,
         deliveryCost: newDeliveryCost,
         deliveryAgentNet: deliveryAgentCost,
@@ -2156,9 +2157,9 @@ export class OrdersRepository {
                       secondaryType: "DELIVERED",
                     },
                   },
-                  status: {
-                    in: ["DELIVERED", "REPLACED", "PARTIALLY_RETURNED"],
-                  },
+                  // status: {
+                  //   in: ["DELIVERED", "REPLACED", "PARTIALLY_RETURNED"],
+                  // },
                 },
                 {
                   clientReport: {

@@ -530,6 +530,7 @@ export class OrdersService {
     ) {
       // data.orderData.totalCost = 0;
       data.orderData.processed = false;
+      data.orderData.processingStatus = "not_processed";
     }
 
     // if secondary status is changed to in_reposiroty, unlink the delivery agent
@@ -947,11 +948,14 @@ export class OrdersService {
       );
     }
 
+    const repositoryReport = oldOrderData.repositoryReport.find(
+      (r) => r.secondaryType === "RETURNED"
+    );
     // Remove the order from the repository report
-    if (oldOrderData.repositoryReport) {
+    if (repositoryReport) {
       await ordersRepository.removeOrderFromRepositoryReport({
         orderID: oldOrderData.id,
-        repositoryReportID: oldOrderData.repositoryReport.id,
+        repositoryReportID: repositoryReport.id,
         orderData: {
           totalCost: oldOrderData.totalCost,
           paidAmount: oldOrderData.paidAmount,

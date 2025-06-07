@@ -5,6 +5,7 @@ import {
   Governorate,
   OrderStatus,
   OrderTimelineType,
+  ProcessingStatus,
   ReportType,
   SecondaryStatus,
 } from "@prisma/client";
@@ -76,6 +77,7 @@ export const OrderUpdateSchema = z
     confirmed: z.coerce.boolean(),
     discount: z.coerce.number(),
     status: z.nativeEnum(OrderStatus),
+    processingStatus: z.nativeEnum(ProcessingStatus),
     secondaryStatus: z.nativeEnum(SecondaryStatus),
     deliveryAgentID: z.coerce.number().or(z.literal(null)).optional(),
     oldDeliveryAgentId: z.coerce.number().or(z.literal(null)).optional(),
