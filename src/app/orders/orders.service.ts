@@ -1335,66 +1335,40 @@ export class OrdersService {
         ordersStatisticsByStatus: ordersStatisticsByStatus,
       };
     }
-    let ordersStatisticsByStatus = statistics.ordersStatisticsByStatus;
-
-    let deliveredOrders = ordersStatisticsByStatus.find(
-      (status) => status.status === "DELIVERED"
-    ) || {
-      status: "DELIVERED",
-      count: 0,
-      totalCost: 0,
-      name: "قيد التوصيل",
-      icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/delivered.png",
-      inside: true,
-    };
-
-    const pReturedOrders = ordersStatisticsByStatus.find(
-      (status) => status.status === "PARTIALLY_RETURNED"
-    );
-
-    const replacedOrders = ordersStatisticsByStatus.find(
-      (status) => status.status === "REPLACED"
-    );
-
-    deliveredOrders.count += pReturedOrders?.count ? pReturedOrders?.count : 0;
-    deliveredOrders.totalCost += pReturedOrders?.totalCost
-      ? pReturedOrders?.totalCost
-      : 0;
-
-    deliveredOrders.count += replacedOrders?.count ? replacedOrders?.count : 0;
-    deliveredOrders.totalCost += replacedOrders?.totalCost
-      ? replacedOrders?.totalCost
-      : 0;
-
-    ordersStatisticsByStatus = ordersStatisticsByStatus.filter(
-      (status) => status.status !== "PARTIALLY_RETURNED"
-    );
-    ordersStatisticsByStatus = ordersStatisticsByStatus.filter(
-      (status) => status.status !== "REPLACED"
-    );
-
-    let deliveredIndex = ordersStatisticsByStatus.findIndex(
-      (status) => status.status === "DELIVERED"
-    );
-
-    ordersStatisticsByStatus[deliveredIndex] = deliveredOrders;
-
-    statistics = {
-      ...statistics,
-      ordersStatisticsByStatus: ordersStatisticsByStatus,
-    };
 
     if (data.loggedInUser.role === "CLIENT") {
       let newStatusStatistics = statistics.ordersStatisticsByStatus;
 
-      let updatedStatusStatistics = newStatusStatistics.filter(
-        (status) =>
-          status.status !== "REGISTERED" &&
-          status.status !== "READY_TO_SEND" &&
-          status.status !== "WITH_RECEIVING_AGENT" &&
-          status.status !== "IN_GOV_REPOSITORY" &&
-          status.status !== "IN_MAIN_REPOSITORY"
+      let deliveredOrders = {
+        status: "DELIVERED" as OrderStatus,
+        count: 0,
+        totalCost: 0,
+        name: "تم التوصيل",
+        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/delivered.png",
+        inside: true,
+      };
+
+      const pReturedOrders = newStatusStatistics.find(
+        (status) => status.status === "PARTIALLY_RETURNED"
       );
+
+      const replacedOrders = newStatusStatistics.find(
+        (status) => status.status === "REPLACED"
+      );
+
+      deliveredOrders.count += pReturedOrders?.count
+        ? pReturedOrders?.count
+        : 0;
+      deliveredOrders.totalCost += pReturedOrders?.totalCost
+        ? pReturedOrders?.totalCost
+        : 0;
+
+      deliveredOrders.count += replacedOrders?.count
+        ? replacedOrders?.count
+        : 0;
+      deliveredOrders.totalCost += replacedOrders?.totalCost
+        ? replacedOrders?.totalCost
+        : 0;
 
       let reg = newStatusStatistics.find(
         (status) => status.status === "REGISTERED"
@@ -1430,6 +1404,20 @@ export class OrdersService {
       dtotal += withR?.totalCost ? withR.totalCost : 0;
       dtotal += inGov?.totalCost ? inGov.totalCost : 0;
       dtotal += inMain?.totalCost ? inMain.totalCost : 0;
+
+      let updatedStatusStatistics = newStatusStatistics.filter(
+        (status) =>
+          status.status !== "REGISTERED" &&
+          status.status !== "READY_TO_SEND" &&
+          status.status !== "WITH_RECEIVING_AGENT" &&
+          status.status !== "DELIVERED" &&
+          status.status !== "PARTIALLY_RETURNED" &&
+          status.status !== "REPLACED" &&
+          status.status !== "IN_GOV_REPOSITORY" &&
+          status.status !== "IN_MAIN_REPOSITORY"
+      );
+
+      updatedStatusStatistics.unshift(deliveredOrders);
 
       updatedStatusStatistics.unshift({
         name: "قيد التوصيل",
