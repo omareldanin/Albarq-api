@@ -52,7 +52,8 @@ export class OrdersRepository {
 
     if (
       data.loggedInUser.role !== "CLIENT" &&
-      data.loggedInUser.role !== "CLIENT_ASSISTANT"
+      data.loggedInUser.role !== "CLIENT_ASSISTANT" &&
+      data.loggedInUser.branchId
     ) {
       const repository = await prisma.repository.findFirst({
         where: {
@@ -376,9 +377,11 @@ export class OrdersRepository {
           ? false
           : data.orderData.confirmed,
         status: status,
-        secondaryStatus: data.orderData.repositoryID
-          ? "IN_REPOSITORY"
-          : "WITH_CLIENT",
+        secondaryStatus:
+          data.loggedInUser.role !== "CLIENT" &&
+          data.loggedInUser.role !== "CLIENT_ASSISTANT"
+            ? "IN_REPOSITORY"
+            : "WITH_CLIENT",
         deliveryAgent: undefined,
         orderProducts:
           data.orderData.withProducts === false

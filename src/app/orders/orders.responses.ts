@@ -58,6 +58,32 @@ export const OrderStatusData = {
     icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/inRepo.png",
   },
 };
+
+export const orderSecondaryStatusArabicNames = {
+  WITH_CLIENT: "مع العميل",
+  WITH_AGENT: "مع المندوب",
+  IN_CAR: "في الطريق",
+  IN_REPOSITORY: "في المخزن",
+  WITH_RECEIVING_AGENT: "مع مندوب الاستلام",
+};
+
+export const orderStatusArabicNames = {
+  REGISTERED: "تم الطلب",
+  READY_TO_SEND: "جاهز للأرسال",
+  WITH_DELIVERY_AGENT: "بالطريق مع المندوب",
+  DELIVERED: "تم التوصيل",
+  REPLACED: "تم الاستبدال",
+  PARTIALLY_RETURNED: "مرتجع جزئي",
+  RETURNED: "راجع كلي",
+  POSTPONED: "مؤجل",
+  CHANGE_ADDRESS: "تغيير عنوان",
+  RESEND: "إعادة إرسال",
+  WITH_RECEIVING_AGENT: "مع مندوب الاستلام",
+  PROCESSING: "قيد المعالجه",
+  IN_MAIN_REPOSITORY: "مخزن الفرز الرئيسي",
+  IN_GOV_REPOSITORY: "مخزن فرز المحافظه",
+};
+
 export const orderSelect = {
   id: true,
   totalCost: true,
@@ -288,8 +314,21 @@ export const orderReform = (
   if (!order) {
     return null;
   }
+  let formedStatus = "";
+
+  formedStatus = orderStatusArabicNames[order.status];
+
+  if (order.secondaryStatus) {
+    formedStatus +=
+      " - " + orderSecondaryStatusArabicNames[order.secondaryStatus];
+  }
+
+  if (order.secondaryStatus === "IN_REPOSITORY") {
+    formedStatus += " - " + order.repository?.name;
+  }
   const orderReformed = {
     ...order,
+    formedStatus,
     // TODO
     client: {
       id: order.client.user.id,

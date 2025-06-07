@@ -315,6 +315,11 @@ export class MessagesController {
         select: {
           id: true,
           orderId: true,
+          Order: {
+            select: {
+              receiptNumber: true,
+            },
+          },
           messages: {
             orderBy: {
               createdAt: "desc", // Order messages descending

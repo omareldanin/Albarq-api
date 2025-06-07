@@ -173,7 +173,6 @@ export class AuthController {
         { expiresIn: env.ACCESS_TOKEN_EXPIRES_IN }
       );
 
-      console.log(token);
       res.cookie("jwt", token, {
         httpOnly: true,
         secure: true,
