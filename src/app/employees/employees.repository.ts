@@ -211,9 +211,11 @@ export class EmployeesRepository {
               : undefined,
         },
         {
-          branch: {
-            id: data.filters.branchID,
-          },
+          branch: data.filters.branchID
+            ? {
+                id: data.filters.branchID,
+              }
+            : undefined,
         },
         {
           Client: {

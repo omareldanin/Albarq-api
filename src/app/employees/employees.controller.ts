@@ -32,7 +32,6 @@ export class EmployeesController {
           : undefined,
       };
     }
-    console.log(employeeInput);
 
     const employeeData = EmployeeCreateSchema.parse(employeeInput);
 
