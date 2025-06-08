@@ -373,6 +373,7 @@ export class MessagesController {
         unseenMessages:
           unSeenChats.find((c) => c.chatId === e.id)?._count.id || 0,
         orderId: e.orderId,
+        receiptNumber: e.Order?.receiptNumber,
         lastMessage: e.messages[0],
       };
     });
