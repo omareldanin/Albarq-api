@@ -4,8 +4,8 @@ import { ClientRole, EmployeeRole } from "@prisma/client";
 import { isAutherized } from "../../middlewares/isAutherized";
 import { isLoggedIn } from "../../middlewares/isLoggedIn";
 import { MessagesController } from "./messages.controller";
-import multer from "multer";
-const upload = multer();
+import { upload } from "../../middlewares/upload";
+
 const router = Router();
 
 const messageController = new MessagesController();
