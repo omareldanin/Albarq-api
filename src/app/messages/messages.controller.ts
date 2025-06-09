@@ -489,12 +489,17 @@ export class MessagesController {
       }
     }
     console.log(req.file);
-    console.log(req.files);
 
     if (req.file) {
       const file = req.file as Express.MulterS3.File;
+      console.log("0000000000000000000");
+
+      console.log(file);
+
       image = file.location;
     }
+
+    console.log(image);
 
     let chat = await prisma.chat.findFirst({
       where: {
