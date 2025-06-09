@@ -14,6 +14,9 @@ export class MessagesController {
   getOrderChatMembers = async (orderId: string) => {
     let chatMembers: number[] = [];
 
+    if (!orderId) {
+      return chatMembers;
+    }
     const order = await prisma.order.findUnique({
       where: {
         id: orderId,
