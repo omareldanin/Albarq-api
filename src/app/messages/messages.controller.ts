@@ -455,6 +455,8 @@ export class MessagesController {
         createdAt: "asc",
       },
     });
+    console.log(messages);
+
     return {
       data: messages,
     };
@@ -488,18 +490,11 @@ export class MessagesController {
         throw new AppError("ليس لديك صلاحيه", 400);
       }
     }
-    console.log(req.file);
 
     if (req.file) {
       const file = req.file as Express.MulterS3.File;
-      console.log("0000000000000000000");
-
-      console.log(file);
-
       image = file.location;
     }
-
-    console.log(image);
 
     let chat = await prisma.chat.findFirst({
       where: {
