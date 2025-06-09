@@ -330,6 +330,7 @@ export const orderReform = (
   const orderReformed = {
     ...order,
     formedStatus,
+    status: formedStatus,
     // TODO
     client: {
       id: order.client.user.id,
