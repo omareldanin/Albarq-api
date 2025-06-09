@@ -316,6 +316,9 @@ export class MessagesController {
           id: true,
           orderId: true,
           Order: {
+            where: {
+              deleted: false,
+            },
             select: {
               receiptNumber: true,
             },
@@ -485,6 +488,9 @@ export class MessagesController {
         throw new AppError("ليس لديك صلاحيه", 400);
       }
     }
+    console.log(req.file);
+    console.log(req.files);
+
     if (req.file) {
       const file = req.file as Express.MulterS3.File;
       image = file.location;
