@@ -21,8 +21,6 @@ export const io = new Server(newServer, {
 
 io.on("connection", (socket) => {
   socket.on("joinChat", async (data) => {
-    console.log(data);
-
     socket.join(`chat_${data.orderId}`);
     const initialMessages = await messageController.getChatMessages(
       data.orderId,
@@ -34,7 +32,6 @@ io.on("connection", (socket) => {
   });
   socket.on("saveUserId", (data) => {
     socket.join(`${data.userId}`);
-    console.log(`Socket ${data} joined room saveUserId${data.userId}`);
   });
   // Leave room
   socket.on("leaveChat", (orderId) => {
