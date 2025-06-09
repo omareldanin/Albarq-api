@@ -30,8 +30,8 @@ io.on("connection", (socket) => {
     socket.emit("chatMessages", initialMessages);
     console.log(`Socket ${socket.id} joined room chat_${data.orderId}`);
   });
-  socket.on("saveUserId", (id) => {
-    socket.join(`${id}`);
+  socket.on("saveUserId", (data) => {
+    socket.join(`${data.userId}`);
   });
   // Leave room
   socket.on("leaveChat", (orderId) => {
