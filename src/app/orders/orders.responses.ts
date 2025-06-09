@@ -110,6 +110,7 @@ export const orderSelect = {
   createdAt: true,
   updatedAt: true,
   // timeline: true,
+  processingStatus: true,
   processed: true,
   processedAt: true,
   forwardedRepo: true,

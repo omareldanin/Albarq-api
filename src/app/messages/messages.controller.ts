@@ -455,7 +455,6 @@ export class MessagesController {
         createdAt: "asc",
       },
     });
-    console.log(messages);
 
     return {
       data: messages,
