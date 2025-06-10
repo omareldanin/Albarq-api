@@ -25,10 +25,7 @@ io.on("connection", (socket) => {
 
   socket.on("joinChat", async (data) => {
     socket.join(`chat_${data.orderId}`);
-    const initialMessages = await messageController.getChatMessages(
-      data.orderId,
-      data.userId
-    );
+    const initialMessages = { data: [] };
     console.log(data);
     console.log(initialMessages);
     socket.emit("chatMessages", initialMessages);
