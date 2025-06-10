@@ -341,6 +341,7 @@ export const OrdersFiltersSchema = z.object({
   }, z.array(z.nativeEnum(SecondaryStatus)).optional()),
   secondaryStatus: z.nativeEnum(SecondaryStatus).optional(),
   status: z.nativeEnum(OrderStatus).optional(),
+  processingStatus: z.nativeEnum(ProcessingStatus).optional(),
   deliveryType: z.nativeEnum(DeliveryType).optional(),
   storeID: z.coerce.number().optional(),
   repositoryID: z.coerce.number().optional(),

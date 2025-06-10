@@ -552,6 +552,9 @@ export class OrdersRepository {
                 processed: data.filters.processed,
               },
               {
+                processingStatus: data.filters.processingStatus,
+              },
+              {
                 status: data.filters.status,
               },
               {
@@ -687,6 +690,9 @@ export class OrdersRepository {
               },
               {
                 processed: data.filters.processed,
+              },
+              {
+                processingStatus: data.filters.processingStatus,
               },
               // Filter by orderID
               {

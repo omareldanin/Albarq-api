@@ -116,6 +116,7 @@ export class OrdersController {
       forwardedByID: req.query.forwarded_by_id,
       forwardedFromID: req.query.forwarded_from_id,
       processed: req.query.processed,
+      processingStatus: req.query.processingStatus,
       secondaryStatus: req.query.secondaryStatus,
       clientOrderReceiptId: req.query.clientOrderReceiptId,
       printed: req.query.printed,
@@ -468,15 +469,15 @@ export class OrdersController {
       throw new AppError("هذا الطلب مرتجع!", 400);
     }
 
-    if (oldOrder?.repository && oldOrder.repository.id !== exportRepo?.id) {
-      throw new AppError("هذا الطلب لم يتم تحويله اليك!", 404);
-    }
+    // if (oldOrder?.repository && oldOrder.repository.id !== exportRepo?.id) {
+    //   throw new AppError("هذا الطلب لم يتم تحويله اليك!", 404);
+    // }
 
-    if (orderData.forwardedToMainRepo) {
-      if (oldOrder?.repository?.id !== exportRepo?.id) {
-        throw new AppError("هذا الطلب غير موجود بالمخزن", 404);
-      }
-    }
+    // if (orderData.forwardedToMainRepo) {
+    //   if (oldOrder?.repository?.id !== exportRepo?.id) {
+    //     throw new AppError("هذا الطلب غير موجود بالمخزن", 404);
+    //   }
+    // }
     orderData.confirmed = true;
 
     const order = await ordersService.updateOrder({
