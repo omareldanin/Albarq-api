@@ -1863,7 +1863,7 @@ export class OrdersRepository {
     // const initialMessages=await this.getChatMessages(orderId,userId)
 
     chatMembers.forEach((member) => {
-      io.to(`${member}`).emit("newUpdate", "");
+      io.to(`${member}`).emit("newUpdate", { id: order.id });
     });
 
     return orderReform(order);
