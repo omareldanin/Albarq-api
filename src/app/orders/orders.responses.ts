@@ -400,8 +400,23 @@ export const mobileOrderReform = (
   if (!order) {
     return null;
   }
+
+  let formedStatus = "";
+
+  formedStatus = orderStatusArabicNames[order.status];
+
+  if (order.secondaryStatus) {
+    formedStatus +=
+      " - " + orderSecondaryStatusArabicNames[order.secondaryStatus];
+  }
+
+  if (order.secondaryStatus === "IN_REPOSITORY") {
+    formedStatus += " - " + order.repository?.name;
+  }
+
   const orderReformed = {
     ...order,
+    formedStatus,
     // TODO
     client: {
       id: order.client.user.id,

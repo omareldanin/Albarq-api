@@ -1223,6 +1223,7 @@ export class OrdersRepository {
       );
 
       const ordersReformed = paginatedOrders.data.map(orderReform);
+      const mobileOrdersReformed = paginatedOrders.data.map(mobileOrderReform);
 
       const ordersMetaDataAggregate = await prisma.order.aggregate({
         where: where,
@@ -1274,7 +1275,7 @@ export class OrdersRepository {
       };
 
       return {
-        orders: ordersReformed,
+        orders: data.filters.forMobile ? mobileOrdersReformed : ordersReformed,
         ordersMetaData: ordersMetaDataReformed,
         pagesCount: paginatedOrders.pagesCount,
       };
