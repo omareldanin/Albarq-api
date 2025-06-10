@@ -21,9 +21,8 @@ export const io = new Server(newServer, {
 
 io.on("connection", (socket) => {
   socket.emit("newConnect", { message: "you are connected" });
-  socket.on("connect", () => {
-    console.log("🔥 Client connected:", socket.id);
-  });
+  console.log("✅ User connected:", socket.id);
+
   socket.on("joinChat", async (data) => {
     socket.join(`chat_${data.orderId}`);
     const initialMessages = await messageController.getChatMessages(
