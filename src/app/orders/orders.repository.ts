@@ -24,6 +24,10 @@ import {
   orderTimelineSelect,
   statisticsReformed,
 } from "./orders.responses";
+import { io } from "../../server";
+import { MessagesController } from "../messages/messages.controller";
+
+const messageController = new MessagesController();
 
 export class OrdersRepository {
   generateRandomId() {
@@ -1853,6 +1857,15 @@ export class OrdersRepository {
       },
       select: orderSelect,
     });
+
+    let chatMembers = await messageController.getOrderChatMembers(order.id);
+
+    // const initialMessages=await this.getChatMessages(orderId,userId)
+
+    chatMembers.forEach((member) => {
+      io.to(`${member}`).emit("newUpdate", "");
+    });
+
     return orderReform(order);
   }
 
