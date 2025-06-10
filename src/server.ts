@@ -25,10 +25,13 @@ io.on("connection", (socket) => {
 
   socket.on("joinChat", async (data) => {
     socket.join(`chat_${data.orderId}`);
-    const initialMessages = { data: [] };
-    socket.emit("chatMessages", initialMessages);
+    const initialMessages = await messageController.getChatMessages(
+      data.orderId,
+      data.userId
+    );
     console.log(data);
     console.log(initialMessages);
+    socket.emit("chatMessages", initialMessages);
     socket.join(`${data.userId}`);
     console.log(`Socket ${socket.id} joined room chat_${data.orderId}`);
   });
