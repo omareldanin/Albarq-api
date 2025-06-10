@@ -20,6 +20,8 @@ export const io = new Server(newServer, {
 });
 
 io.on("connection", (socket) => {
+  socket.emit("connect", { message: "you are connected" });
+
   socket.on("joinChat", async (data) => {
     socket.join(`chat_${data.orderId}`);
     const initialMessages = await messageController.getChatMessages(
@@ -28,8 +30,8 @@ io.on("connection", (socket) => {
     );
     console.log(data);
     console.log(initialMessages);
-    socket.join(`${data.userId}`);
     socket.emit("chatMessages", initialMessages);
+    socket.join(`${data.userId}`);
     console.log(`Socket ${socket.id} joined room chat_${data.orderId}`);
   });
   socket.on("saveUserId", (data) => {

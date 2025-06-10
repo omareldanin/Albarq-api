@@ -44,4 +44,21 @@ router
     ]),
     messageController.getUserChatStatics
   );
+
+router
+  .route("/chats/:orderId")
+  .get(
+    isLoggedIn,
+    isAutherized([
+      EmployeeRole.COMPANY_MANAGER,
+      EmployeeRole.BRANCH_MANAGER,
+      EmployeeRole.ACCOUNT_MANAGER,
+      EmployeeRole.DATA_ENTRY,
+      EmployeeRole.INQUIRY_EMPLOYEE,
+      EmployeeRole.DELIVERY_AGENT,
+      EmployeeRole.CLIENT_ASSISTANT,
+      ClientRole.CLIENT,
+    ]),
+    messageController.getUserChatStatics
+  );
 export default router;
