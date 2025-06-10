@@ -20,7 +20,7 @@ export const io = new Server(newServer, {
 });
 
 io.on("connection", (socket) => {
-  socket.emit("connect", { message: "you are connected" });
+  socket.emit("newConnect", { message: "you are connected" });
 
   socket.on("joinChat", async (data) => {
     socket.join(`chat_${data.orderId}`);
