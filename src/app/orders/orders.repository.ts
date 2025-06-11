@@ -1880,11 +1880,11 @@ export class OrdersRepository {
       io.to(`${member}`).emit("newUpdate", { id: order.id });
     });
 
+    console.log(
+      "orderData?.client.receivingAgentId",
+      orderData?.client.receivingAgentId
+    );
     if (orderData?.client.receivingAgentId) {
-      console.log(
-        "orderData?.client.receivingAgentId",
-        orderData?.client.receivingAgentId
-      );
       io.to(`${orderData?.client.receivingAgentId}`).emit("newUpdate", {
         id: order.id,
       });
