@@ -1663,6 +1663,11 @@ export class OrdersRepository {
             id: true,
           },
         },
+        client: {
+          select: {
+            receivingAgentId: true,
+          },
+        },
       },
     });
 
@@ -1874,6 +1879,12 @@ export class OrdersRepository {
     chatMembers.forEach((member) => {
       io.to(`${member}`).emit("newUpdate", { id: order.id });
     });
+
+    if (orderData?.client.receivingAgentId) {
+      io.to(`${orderData?.client.receivingAgentId}`).emit("newUpdate", {
+        id: order.id,
+      });
+    }
 
     return orderReform(order);
   }

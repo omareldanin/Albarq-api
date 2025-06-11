@@ -29,8 +29,6 @@ io.on("connection", (socket) => {
       data.orderId,
       data.userId
     );
-    console.log(data);
-    console.log(initialMessages);
     socket.emit("chatMessages", initialMessages);
     socket.join(`${data.userId}`);
     console.log(`Socket ${socket.id} joined room chat_${data.orderId}`);
