@@ -1663,11 +1663,6 @@ export class OrdersRepository {
             id: true,
           },
         },
-        client: {
-          select: {
-            receivingAgentId: true,
-          },
-        },
       },
     });
 
@@ -1880,15 +1875,23 @@ export class OrdersRepository {
       io.to(`${member}`).emit("newUpdate", { id: order.id });
     });
 
-    console.log(
-      "orderData?.client.receivingAgentId",
-      orderData?.client.receivingAgentId
-    );
-    if (orderData?.client.receivingAgentId) {
-      io.to(`${orderData?.client.receivingAgentId}`).emit("newUpdate", {
-        id: order.id,
-      });
-    }
+    const RECEIVING_AGENT = await prisma.employee.findMany({
+      where: {
+        role: "RECEIVING_AGENT",
+        inquiryClients: {
+          some: {
+            clientId: order.client.user.id,
+          },
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    RECEIVING_AGENT.map((e) => {
+      io.to(`${e.id}`).emit("newUpdate", { id: order.id });
+    });
 
     return orderReform(order);
   }
@@ -2054,20 +2057,6 @@ export class OrdersRepository {
                   ? { is: null }
                   : undefined,
               },
-              // {
-              //   repositoryReport: data.filters.repositoryReport
-              //     ? { isNot: null }
-              //     : data.filters.repositoryReport
-              //     ? { is: null }
-              //     : undefined,
-              // },
-              // {
-              //   companyReport: data.filters.companyReport
-              //     ? { isNot: null }
-              //     : data.filters.companyReport
-              //     ? { is: null }
-              //     : undefined,
-              // },
               {
                 governorate: data.filters.governorate,
               },

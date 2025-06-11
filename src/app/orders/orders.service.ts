@@ -597,7 +597,6 @@ export class OrdersService {
     if (!newOrder) {
       throw new AppError("فشل تحديث الطلب", 500);
     }
-    console.log(newOrder);
 
     // TODO: Move this to a separate function and call it in the controller after the response
     // Update Order Timeline
