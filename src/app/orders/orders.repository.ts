@@ -1881,6 +1881,10 @@ export class OrdersRepository {
     });
 
     if (orderData?.client.receivingAgentId) {
+      console.log(
+        "orderData?.client.receivingAgentId",
+        orderData?.client.receivingAgentId
+      );
       io.to(`${orderData?.client.receivingAgentId}`).emit("newUpdate", {
         id: order.id,
       });
