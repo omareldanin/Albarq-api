@@ -1286,7 +1286,8 @@ export class OrdersRepository {
         where: {
           OR: [
             where,
-            data.loggedInUser?.role === "BRANCH_MANAGER"
+            data.loggedInUser?.role === "BRANCH_MANAGER" ||
+            data.loggedInUser?.role === "REPOSITORIY_EMPLOYEE"
               ? {
                   deliveryAgent: {
                     branch: {
