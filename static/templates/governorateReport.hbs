@@ -80,7 +80,7 @@
 				</tr>
 				{{/each}}
 			</tbody>
-			<tfoot>
+			{{!-- <tfoot>
 				<tr>
 					<td colspan="8">المجموع</td>
 					<td>{{currency reportData.totalCost}}</td>
@@ -88,8 +88,19 @@
 					<td>{{currency reportData.deliveryAgentNet}}</td>
 					<td></td>
 				</tr>
-			</tfoot>
+			</tfoot> --}}
 		</table>
+		<div style="page-break-inside: avoid; break-inside: avoid;">
+			<table>
+				<tr>
+				<td colspan="8">المجموع</td>
+					<td>{{currency reportData.totalCost}}</td>
+					<td>{{currency reportData.paidAmount}}</td>
+					<td>{{currency reportData.deliveryAgentNet}}</td>
+					<td></td>
+				</tr>
+			</table>
+		</div>
 	</main>
 	<footer>التوقيع: <span class="light">______________________________________________</span></footer>
 	<section class="watermark">{{reportData.company.name}}</section>
