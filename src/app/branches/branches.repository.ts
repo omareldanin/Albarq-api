@@ -54,8 +54,8 @@ export class BranchesRepository {
           },
         },
         {
-          page: filters.page,
-          size: filters.size,
+          page: 1,
+          size: 10000,
         }
       );
       return {

@@ -130,8 +130,8 @@ export class LocationsRepository {
           },
         },
         {
-          page: filters.page,
-          size: filters.size,
+          page: 1,
+          size:10000,
         }
       );
       return {
