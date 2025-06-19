@@ -30,7 +30,7 @@ export class BranchesRepository {
     branchID?: number;
   }) {
     const where = {
-      id: filters.branchID,
+      id: filters.branchID ? filters.branchID : undefined,
       company: {
         id: filters.companyID,
       },
