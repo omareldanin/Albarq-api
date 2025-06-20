@@ -273,10 +273,19 @@ export class OrdersController {
     const order = await ordersService.getOrder({
       params: params,
     });
+    const orderTimeline = await ordersService.getOrderTimeline({
+      params: { orderID: params.orderID },
+      filters: {},
+    });
+    const orderInquiryEmployees = await ordersService.getOrderInquiryEmployees({
+      params: params,
+    });
 
     res.status(200).json({
       status: "success",
       data: order,
+      orderTimeline,
+      orderInquiryEmployees,
     });
   });
 
@@ -811,6 +820,7 @@ export class OrdersController {
           status: { in: ["REGISTERED", "READY_TO_SEND"] },
         },
       });
+
       const statuses: OrderStatus[] = ["REGISTERED", "READY_TO_SEND"];
       res.status(200).json({
         status: "success",

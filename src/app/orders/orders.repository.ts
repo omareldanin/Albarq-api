@@ -2378,7 +2378,7 @@ export class OrdersRepository {
   }
 
   async getOrderTimeline(data: {
-    params: { orderID: string };
+    params: { orderID: string | undefined };
     filters: OrderTimelineFiltersType;
   }) {
     const orderTimeline = await prisma.orderTimeline.findMany({
