@@ -455,7 +455,7 @@ export class MessagesController {
         },
       },
       orderBy: {
-        createdAt: "asc",
+        createdAt: "desc",
       },
     });
 
