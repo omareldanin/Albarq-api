@@ -578,7 +578,7 @@ export class MessagesController {
       loggedInUser.id
     );
 
-    io.to(`chat_${chat.orderId}`).emit("chatMessages", initialMessages);
+    io.to(`chat_${chat.orderId}`).emit("newChatMessage", initialMessages);
 
     chatMembers.forEach((member) => {
       io.to(`${member}`).emit("newMessage", message);
