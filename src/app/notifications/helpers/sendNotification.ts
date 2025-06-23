@@ -15,31 +15,32 @@ admin.initializeApp({
 const notificationsRepository = new NotificationsRepository();
 
 export const sendNotification = async (data: NotificationCreateType) => {
-  const createdNotification = await notificationsRepository.createNotification(
-    data
-  );
+  try {
+    const createdNotification =
+      await notificationsRepository.createNotification(data);
+    const user = createdNotification?.user;
 
-  const user = createdNotification?.user;
-
-  if (!user?.fcm) {
-    return;
-  }
-
-  const message = {
-    notification: {
-      title: data.title,
-      body: data.content,
-    },
-    token: user.fcm,
-  };
-
-  await admin
-    .messaging()
-    .send(message)
-    .then((response) => {
-      Logger.info("Successfully sent message to token:", response);
-    })
-    .catch((error) => {
-      Logger.error("Error sending message to token:", error);
+    if (!user?.fcm) {
+      return;
+    }
+    const response = await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Accept-Encoding": "gzip, deflate",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to: user.fcm,
+        sound: "default",
+        title: data.title,
+        body: data.content,
+      }),
     });
+
+    const responseData = await response.json();
+    console.log("✅ Push response:", responseData);
+  } catch (error) {
+    Logger.error("Error sending message to token:", error);
+  }
 };
