@@ -17,7 +17,7 @@ router.route("/profile").get(
 
 router.route("/update-profile").patch(
   isLoggedIn,
-  usersController.getProfile
+  usersController.updateProfile
   /*
         #swagger.tags = ['Users Routes']
     */
