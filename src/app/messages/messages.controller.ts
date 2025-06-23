@@ -427,13 +427,13 @@ export class MessagesController {
       },
     });
 
-    let chatMembers = await this.getOrderChatMembers(orderId);
+    // let chatMembers = await this.getOrderChatMembers(orderId);
 
     // const initialMessages=await this.getChatMessages(orderId,userId)
 
-    chatMembers.forEach((member) => {
-      io.to(`${member}`).emit("newMessage", "");
-    });
+    // chatMembers.forEach((member) => {
+    //   io.to(`${member}`).emit("newMessage", "");
+    // });
     // io.to(`chat_${orderId}`).emit("chatMessages", initialMessages);
 
     const messages = await prisma.message.findMany({
@@ -555,6 +555,7 @@ export class MessagesController {
       select: {
         id: true,
         content: true,
+        image: true,
         seenByBranchManager: true,
         seenByCompanyManager: true,
         seenByClient: true,
@@ -605,6 +606,21 @@ export class MessagesController {
       size ? +size : 20,
       page ? +page : 1,
       typeof status === "string" ? status : undefined
+    );
+
+    res.status(201).json({ ...chats });
+  });
+
+  getUserChatMessages = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+    const { size, page, orderId } = req.query;
+
+    if (!orderId) {
+      return;
+    }
+    const chats = await this.getChatMessages(
+      orderId?.toString(),
+      loggedInUser.id
     );
 
     res.status(201).json({ ...chats });

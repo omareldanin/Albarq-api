@@ -46,7 +46,7 @@ router
   );
 
 router
-  .route("/chats/:orderId")
+  .route("/chats/messages")
   .get(
     isLoggedIn,
     isAutherized([
@@ -59,6 +59,6 @@ router
       EmployeeRole.CLIENT_ASSISTANT,
       ClientRole.CLIENT,
     ]),
-    messageController.getUserChatStatics
+    messageController.getUserChatMessages
   );
 export default router;
