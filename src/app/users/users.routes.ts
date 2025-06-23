@@ -15,7 +15,7 @@ router.route("/profile").get(
     */
 );
 
-router.route("/update-profile").get(
+router.route("/update-profile").patch(
   isLoggedIn,
   usersController.getProfile
   /*
