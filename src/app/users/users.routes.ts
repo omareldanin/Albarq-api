@@ -8,18 +8,30 @@ const router = Router();
 const usersController = new UsersController();
 
 router.route("/profile").get(
-    isLoggedIn,
-    usersController.getProfile
-    /*
+  isLoggedIn,
+  usersController.getProfile
+  /*
+        #swagger.tags = ['Users Routes']
+    */
+);
+
+router.route("/update-profile").get(
+  isLoggedIn,
+  usersController.getProfile
+  /*
         #swagger.tags = ['Users Routes']
     */
 );
 
 router.route("/users/login-history").get(
-    isLoggedIn,
-    isAutherized([AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT, EmployeeRole.COMPANY_MANAGER]),
-    usersController.getUsersLoginHistory
-    /*
+  isLoggedIn,
+  isAutherized([
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+    EmployeeRole.COMPANY_MANAGER,
+  ]),
+  usersController.getUsersLoginHistory
+  /*
         #swagger.tags = ['Users Routes']
     */
 );
