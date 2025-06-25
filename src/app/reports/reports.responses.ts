@@ -199,6 +199,14 @@ export const reportReform = (
   const reportData = {
     ...report,
     createdBy: report.createdBy.user,
+    secondaryType:
+      report.type === "CLIENT"
+        ? report.clientReport?.secondaryType
+        : report.type === "COMPANY"
+        ? report.companyReport?.secondaryType
+        : report.type === "REPOSITORY"
+        ? report.repositoryReport?.secondaryType
+        : "DELIVERED",
     clientReport: report.clientReport && {
       reportNumber: report.clientReport.id,
       clientReportOrders: report.clientReport.orders,
