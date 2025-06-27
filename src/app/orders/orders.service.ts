@@ -1322,6 +1322,8 @@ export class OrdersService {
       return {
         ...statistics,
         ordersStatisticsByStatus: ordersStatisticsByStatus,
+        allOrdersStatisticsWithoutClientReport:
+          statistics.allOrdersStatisticsWithoutDeliveryReport,
       };
     }
 
