@@ -638,7 +638,8 @@ export class OrdersService {
       // Update delivery agent
       if (
         data.orderData.deliveryAgentID &&
-        oldOrderData.deliveryAgent?.id !== newOrder.deliveryAgent?.id
+        oldOrderData.deliveryAgent?.id !== newOrder.deliveryAgent?.id &&
+        oldOrderData.status !== "READY_TO_SEND"
       ) {
         await ordersRepository.updateOrderTimeline({
           orderID: data.params.orderID,
