@@ -273,25 +273,20 @@ export class OrdersController {
     const order = await ordersService.getOrder({
       params: params,
     });
-    if (order) {
-      const orderTimeline = await ordersService.getOrderTimeline({
-        params: { orderID: order.id },
-        filters: {},
-      });
-      const orderInquiryEmployees =
-        await ordersService.getOrderInquiryEmployees({
-          params: {
-            orderID: order?.id,
-          },
-        });
+    const orderTimeline = await ordersService.getOrderTimeline({
+      params: { orderID: params.orderID },
+      filters: {},
+    });
+    const orderInquiryEmployees = await ordersService.getOrderInquiryEmployees({
+      params: params,
+    });
 
-      res.status(200).json({
-        status: "success",
-        data: order,
-        orderTimeline,
-        orderInquiryEmployees,
-      });
-    }
+    res.status(200).json({
+      status: "success",
+      data: order,
+      orderTimeline,
+      orderInquiryEmployees,
+    });
   });
 
   updateOrder = catchAsync(async (req, res) => {

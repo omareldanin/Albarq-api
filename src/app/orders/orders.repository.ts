@@ -2383,7 +2383,9 @@ export class OrdersRepository {
   }) {
     const orderTimeline = await prisma.orderTimeline.findMany({
       where: {
-        orderId: data.params.orderID,
+        order: {
+          receiptNumber: data.params.orderID,
+        },
         type: data.filters.types
           ? { in: data.filters.types }
           : data.filters.type,
@@ -2532,9 +2534,9 @@ export class OrdersRepository {
   }
 
   async getOrderInquiryEmployees(data: { orderID: string | undefined }) {
-    const order = await prisma.order.findUnique({
+    const order = await prisma.order.findFirst({
       where: {
-        id: data.orderID,
+        receiptNumber: data.orderID,
       },
       select: {
         branchId: true,
