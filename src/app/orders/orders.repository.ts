@@ -1397,9 +1397,9 @@ export class OrdersRepository {
   }
 
   async getOrder(data: { orderID: string }) {
-    const order = await prisma.order.findUnique({
+    const order = await prisma.order.findFirst({
       where: {
-        id: data.orderID,
+        receiptNumber: data.orderID,
       },
       select: orderSelect,
     });
