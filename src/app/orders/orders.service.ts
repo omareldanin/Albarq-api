@@ -462,32 +462,6 @@ export class OrdersService {
       throw new AppError("لا يمكنك معالجة الطلب", 403);
     }
 
-    // Cant change order status if it's included in a report
-    if (
-      oldOrderData?.status !== data.orderData.status &&
-      data.loggedInUser.role !== "COMPANY_MANAGER" &&
-      data.loggedInUser.role !== "BRANCH_MANAGER" &&
-      data.loggedInUser.permissions?.includes("CHANGE_CLOSED_ORDER_STATUS") !==
-        true
-    ) {
-      // if (
-      //   (oldOrderData?.clientReport &&
-      //     oldOrderData?.clientReport.deleted !== true) ||
-      //   (oldOrderData?.deliveryAgentReport &&
-      //     oldOrderData?.deliveryAgentReport.deleted !== true) ||
-      //   (oldOrderData?.companyReport &&
-      //     oldOrderData?.companyReport.deleted !== true) ||
-      //   (oldOrderData?.branchReport &&
-      //     oldOrderData?.branchReport.deleted !== true) ||
-      //   (oldOrderData?.repositoryReport &&
-      //     oldOrderData?.repositoryReport.deleted !== true) ||
-      //   (oldOrderData?.governorateReport &&
-      //     oldOrderData?.governorateReport.deleted !== true)
-      // ) {
-      //   throw new AppError("لا يمكن تغيير حالة الطلب بعد عمل كشف به", 403);
-      // }
-    }
-
     // update order paid amount if new status is delivered or partially returned or replaced
     if (
       oldOrderData?.status !== data.orderData.status &&
@@ -604,7 +578,26 @@ export class OrdersService {
       // Update status
       if (data.orderData.status && oldOrderData.status !== newOrder.status) {
         // send notification to client
-
+        const orderInquiryEmployees =
+          await ordersRepository.getOrderInquiryEmployees({
+            orderID: oldOrderData.receiptNumber,
+          });
+        orderInquiryEmployees.forEach(async (e) => {
+          await sendNotification({
+            orderId: newOrder.receiptNumber,
+            userID: e.id,
+            title: `تم تغيير حالة الطلب رقم ${
+              newOrder.receiptNumber
+            } إلى ${localizeOrderStatus(newOrder.status)} ${
+              newOrder.notes ? `(${newOrder.notes})` : ""
+            }`,
+            content: `تم تغيير حالة الطلب رقم ${
+              newOrder.receiptNumber
+            } إلى ${localizeOrderStatus(newOrder.status)} ${
+              newOrder.notes ? `(${newOrder.notes})` : ""
+            }`,
+          });
+        });
         await sendNotification({
           orderId: newOrder.receiptNumber,
           userID: newOrder.client.id,
