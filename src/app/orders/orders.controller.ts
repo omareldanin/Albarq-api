@@ -771,20 +771,26 @@ export class OrdersController {
           status === "RETURNED"
             ? { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] }
             : (status as OrderStatus),
-        client: {
-          id: {
-            in: inquiryClientsIDs,
-          },
-        },
-        // AND:
-        //   loggedInUser.role === "RECEIVING_AGENT" && status === "RETURNED"
-        //     ? [
-        //         { clientReport: { isNot: null } },
-        //         { clientReport: { secondaryType: "RETURNED" } },
-        //         { clientReport: { report: { deleted: false } } },
-        //         { clientReport: { report: { confirmed: false } } },
-        //       ]
-        //     : undefined,
+        clientReport:
+          status === "RETURNED"
+            ? {
+                some: {
+                  receivingAgentId: loggedInUser.id,
+                  report: {
+                    confirmed: false,
+                    deleted: false,
+                  },
+                },
+              }
+            : undefined,
+        client:
+          status === "RETURNED"
+            ? undefined
+            : {
+                id: {
+                  in: inquiryClientsIDs,
+                },
+              },
       },
     });
 
