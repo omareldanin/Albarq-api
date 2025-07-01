@@ -2284,6 +2284,7 @@ export class OrdersRepository {
       await prisma.order.aggregate({
         _sum: {
           paidAmount: true,
+          deliveryAgentNet: true,
         },
         _count: {
           id: true,

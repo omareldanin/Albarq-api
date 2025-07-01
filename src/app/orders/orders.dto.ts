@@ -106,6 +106,9 @@ export const OrderUpdateSchema = z
     forwardedRepo: z.coerce.number().optional(),
     type: z.string().optional(),
     forwardedBranchId: z.number().optional(),
+    governorate: z.nativeEnum(Governorate),
+    locationID: z.coerce.number(),
+    storeID: z.coerce.number(),
   })
   .partial();
 
