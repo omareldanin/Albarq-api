@@ -93,9 +93,12 @@ export class LocationsRepository {
           },
         },
         {
-          branch: {
-            id: filters.branchID,
-          },
+          branch:
+            filters.minified === true
+              ? undefined
+              : {
+                  id: filters.branchID,
+                },
         },
         {
           governorate: filters.governorate,
@@ -131,7 +134,7 @@ export class LocationsRepository {
         },
         {
           page: 1,
-          size:10000,
+          size: 10000,
         }
       );
       return {
