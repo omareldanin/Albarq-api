@@ -278,7 +278,9 @@ export class OrdersController {
       filters: {},
     });
     const orderInquiryEmployees = await ordersService.getOrderInquiryEmployees({
-      params: params,
+      params: {
+        orderID: order?.id,
+      },
     });
 
     res.status(200).json({

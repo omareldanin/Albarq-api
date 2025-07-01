@@ -2531,7 +2531,7 @@ export class OrdersRepository {
     return chatMembers;
   }
 
-  async getOrderInquiryEmployees(data: { orderID: string }) {
+  async getOrderInquiryEmployees(data: { orderID: string | undefined }) {
     const order = await prisma.order.findUnique({
       where: {
         id: data.orderID,

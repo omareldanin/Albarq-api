@@ -1479,7 +1479,7 @@ export class OrdersService {
 
   getOrderInquiryEmployees = async (data: {
     params: {
-      orderID: string;
+      orderID: string | undefined;
     };
   }) => {
     const orderInquiryEmployees =
