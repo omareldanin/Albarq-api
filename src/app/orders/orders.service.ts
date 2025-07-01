@@ -1233,6 +1233,10 @@ export class OrdersService {
           clientReport: {
             some: {
               receivingAgentId: data.loggedInUser.id,
+              report: {
+                confirmed: false,
+                deleted: false,
+              },
             },
           },
         },
