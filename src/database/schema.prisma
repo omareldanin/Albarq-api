@@ -326,6 +326,7 @@ model Client {
   branchId                  Int?
   receivingAgentId          Int?
   showNumbers               Boolean                 @default(false)
+  showDeliveryNumber        Boolean                 @default(false)
   // --- RELATIONS --------------------------------------------------------------------------- //
   clientReports             ClientReport[]
   products                  Product[]

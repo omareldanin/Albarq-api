@@ -39,6 +39,7 @@ export class ClientsRepository {
         role: data.role,
         token: data.token,
         showNumbers: data.showNumbers,
+        showDeliveryNumber: data.showDeliveryNumber,
         branch: data.branchID
           ? {
               connect: {
@@ -217,6 +218,7 @@ export class ClientsRepository {
         role: data.clientData.role,
         token: data.clientData.token,
         showNumbers: data.clientData.showNumbers,
+        showDeliveryNumber: data.clientData.showDeliveryNumber,
         branch: data.clientData.branchID
           ? {
               connect: {

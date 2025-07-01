@@ -12,6 +12,7 @@ export const clientSelect = {
   },
   role: true,
   showNumbers: true,
+  showDeliveryNumber: true,
   governoratesDeliveryCosts: true,
   createdBy: {
     select: {
@@ -66,6 +67,7 @@ export const clientReform = (
     avatar: client.user.avatar,
     role: client.role,
     showNumbers: client.showNumbers,
+    showDeliveryNumber: client.showDeliveryNumber,
     company: client.company,
     repository: client.repository,
     branch: client.branch,

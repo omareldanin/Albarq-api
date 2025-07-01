@@ -14,6 +14,11 @@ export const ClientCreateSchema = z.object({
     if (val === "false") return false;
     return val;
   }, z.boolean().optional()),
+  showDeliveryNumber: z.preprocess((val) => {
+    if (val === "true") return true;
+    if (val === "false") return false;
+    return val;
+  }, z.boolean().optional()),
   password: z.string().min(6),
   fcm: z.string().optional(),
   branchID: z.coerce.number().optional(),
