@@ -292,13 +292,6 @@ export class OrdersController {
         orderInquiryEmployees,
       });
     }
-
-    res.status(200).json({
-      status: "success",
-      data: order,
-      orderTimeline: [],
-      orderInquiryEmployees: [],
-    });
   });
 
   updateOrder = catchAsync(async (req, res) => {
