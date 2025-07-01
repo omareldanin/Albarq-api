@@ -949,6 +949,7 @@ model ClientReport {
   baghdadDeliveryCost      Float               @default(0)
   governoratesDeliveryCost Float               @default(0)
   secondaryType            SecondaryReportType @default(DELIVERED)
+  receivingAgentId         Int?
 
   @@index([clientId])
   @@index([storeId])

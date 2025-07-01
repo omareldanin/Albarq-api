@@ -49,6 +49,7 @@ export const ReportCreateSchema = z
       storeID: z.coerce.number(),
       baghdadDeliveryCost: z.coerce.number().optional(),
       governoratesDeliveryCost: z.coerce.number().optional(),
+      receivingAgentId: z.coerce.number().optional(),
       secondaryType: z
         .nativeEnum(SecondaryReportType)
         .optional()

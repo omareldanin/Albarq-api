@@ -1230,9 +1230,13 @@ export class OrdersService {
         },
         where: {
           status: { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] },
-          client: {
-            id: {
-              in: inquiryClientsIDs,
+          clientReport: {
+            some: {
+              receivingAgentId: data.loggedInUser.id,
+              report: {
+                confirmed: false,
+                deleted: false,
+              },
             },
           },
         },
@@ -1256,7 +1260,7 @@ export class OrdersService {
             status: "RETURNED",
             totalCost: total,
             count: count,
-            name: OrderStatusData["RETURNED"].name,
+            name: "الرواجع",
             icon: OrderStatusData["RETURNED"].icon,
           },
         ],

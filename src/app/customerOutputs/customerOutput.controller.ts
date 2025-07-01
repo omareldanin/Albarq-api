@@ -75,6 +75,7 @@ export class CustomerOutputController {
         orderId: order.id,
       },
     });
+    console.log(checkIfExist);
 
     const userRepository = await prisma.employee.findUnique({
       where: {
@@ -200,7 +201,14 @@ export class CustomerOutputController {
   });
 
   saveAndCreateReport = catchAsync(async (req, res) => {
-    const { companyId, type, storeId, repositoryId, repositoryName } = req.body;
+    const {
+      companyId,
+      type,
+      storeId,
+      repositoryId,
+      repositoryName,
+      receivingAgentId,
+    } = req.body;
 
     let ordersIDs: string[] = [];
 
@@ -329,6 +337,7 @@ export class CustomerOutputController {
         repositoryName: repositoryName,
         targetRepositoryId: repositoryId,
         ordersIDs: ordersIDs,
+        receivingAgentId: receivingAgentId,
       },
       reportMetaData: reportMetaData,
     });

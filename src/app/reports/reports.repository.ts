@@ -81,6 +81,7 @@ export class ReportsRepository {
           orders: orders,
           baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
           governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
+          receivingAgentId: data.reportData.receivingAgentId,
           report: report,
         },
       });
