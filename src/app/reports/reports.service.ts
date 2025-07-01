@@ -480,6 +480,14 @@ export class ReportsService {
       page = +data.filters.page;
     }
 
+    if (data.loggedInUser.role === "RECEIVING_AGENT") {
+      return {
+        page: 1,
+        pagesCount: 1,
+        reports: [],
+        reportsMetaData: {},
+      };
+    }
     const { reports, reportsMetaData, pagesCount } =
       await reportsRepository.getAllReportsPaginated({
         filters: {
