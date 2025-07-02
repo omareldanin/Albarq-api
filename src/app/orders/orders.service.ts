@@ -1500,7 +1500,10 @@ export class OrdersService {
       const order = await ordersRepository.getOrderStatus({
         orderID: data.params.orderID,
       });
-      if (order?.status !== OrderStatus.REGISTERED) {
+      if (
+        order?.status !== OrderStatus.REGISTERED &&
+        order?.status !== OrderStatus.READY_TO_SEND
+      ) {
         throw new AppError("لا يمكن حذف الطلب", 403);
       }
     }
