@@ -426,6 +426,7 @@ export class OrdersService {
 
     if (
       data.loggedInUser.role !== "COMPANY_MANAGER" &&
+      data.loggedInUser.role !== "BRANCH_MANAGER" &&
       data.loggedInUser.permissions?.includes("CHANGE_ORDER_DATA") !== true &&
       data.loggedInUser.role !== "CLIENT"
     ) {
@@ -440,7 +441,7 @@ export class OrdersService {
       throw new AppError("ليس لديك صلاحية تأكيد الطلب", 403);
     }
 
-    let oldOrderData = await ordersRepository.getOrder({
+    let oldOrderData = await ordersRepository.getOrderById({
       orderID: data.params.orderID,
     });
 
