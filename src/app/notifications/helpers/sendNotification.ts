@@ -3,6 +3,7 @@ import { env } from "../../../config";
 import { Logger } from "../../../lib/logger";
 import type { NotificationCreateType } from "../notifications.dto";
 import { NotificationsRepository } from "../notifications.repository";
+import { prisma } from "../../../database/db";
 
 admin.initializeApp({
   credential: admin.credential.cert({
@@ -16,9 +17,33 @@ const notificationsRepository = new NotificationsRepository();
 
 export const sendNotification = async (data: NotificationCreateType) => {
   try {
-    const createdNotification =
-      await notificationsRepository.createNotification(data);
-    const user = createdNotification?.user;
+    let createdNotification: {
+      id: number;
+      title: string;
+      content: string;
+      seen: boolean;
+      createdAt: Date;
+      orderId: string | null;
+      user: {
+        id: number;
+        fcm: string;
+      };
+    } | null = null;
+
+    if (!data.content.includes("رساله")) {
+      createdNotification = await notificationsRepository.createNotification(
+        data
+      );
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: data.userID,
+      },
+      select: {
+        fcm: true,
+      },
+    });
 
     if (!user?.fcm) {
       return;
