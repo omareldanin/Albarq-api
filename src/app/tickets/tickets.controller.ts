@@ -93,6 +93,8 @@ const ticketSelect = {
   },
   Client: {
     select: {
+      showNumbers: true,
+      showDeliveryNumber: true,
       user: {
         select: {
           id: true,
