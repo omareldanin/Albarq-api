@@ -118,6 +118,7 @@ export class EmployeesService {
     }
     if (data.loggedInUser.role === "CLIENT") {
       clientId = data.loggedInUser.id;
+      branchID = undefined;
     }
 
     if (data.loggedInUser.role === "CLIENT_ASSISTANT") {
