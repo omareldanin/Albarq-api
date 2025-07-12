@@ -37,6 +37,8 @@ enum ClientRole {
 enum Permission {
   ADD_STORE
   ADD_PRODUCT
+  PRINT_ORDER
+  SEND_ORDER
   NOTIFICATIONS
   MESSAGES
   MANAGE_ORDERS
