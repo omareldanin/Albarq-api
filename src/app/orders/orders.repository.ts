@@ -2403,6 +2403,9 @@ export class OrdersRepository {
           : data.filters.type,
       },
       select: orderTimelineSelect,
+      orderBy: {
+        createdAt: "asc",
+      },
     });
     return orderTimeline.map(orderTimelineReform);
   }
