@@ -85,6 +85,32 @@ export class ReportController {
       secondaryType: undefined,
     });
 
+    if (
+      loggedInUser.role === "INQUIRY_EMPLOYEE" ||
+      loggedInUser.role === "RECEIVING_AGENT"
+    ) {
+      res.status(200).json({
+        status: "success",
+        page: 1,
+        pagesCount: 1,
+        data: {
+          reports: [],
+          reportsMetaData: {
+            reportsCount: 0,
+            totalCost: 0,
+            paidAmount: 0,
+            deliveryCost: 0,
+            baghdadOrdersCount: 0,
+            governoratesOrdersCount: 0,
+            clientNet: 0,
+            deliveryAgentNet: 0,
+            companyNet: 0,
+          },
+        },
+      });
+      return;
+    }
+
     const { page, pagesCount, reports, reportsMetaData } =
       await reportsService.getAllReports({
         loggedInUser: loggedInUser,
