@@ -615,7 +615,7 @@ export class OrdersService {
         });
 
         await ordersRepository.updateOrderTimeline({
-          orderID: data.params.orderID,
+          orderID: oldOrderData.id,
           data: {
             type: "STATUS_CHANGE",
             date: newOrder.updatedAt,
@@ -636,7 +636,7 @@ export class OrdersService {
         oldOrderData.status !== "READY_TO_SEND"
       ) {
         await ordersRepository.updateOrderTimeline({
-          orderID: data.params.orderID,
+          orderID: oldOrderData.id,
           data: {
             type: "DELIVERY_AGENT_CHANGE",
             date: newOrder.updatedAt,
@@ -670,7 +670,7 @@ export class OrdersService {
         oldOrderData.client?.id !== newOrder.client.id
       ) {
         await ordersRepository.updateOrderTimeline({
-          orderID: data.params.orderID,
+          orderID: oldOrderData.id,
           data: {
             type: "CLIENT_CHANGE",
             date: newOrder.updatedAt,
@@ -697,7 +697,7 @@ export class OrdersService {
         oldOrderData?.repository?.id !== newOrder.repository?.id
       ) {
         await ordersRepository.updateOrderTimeline({
-          orderID: data.params.orderID,
+          orderID: oldOrderData.id,
           data: {
             type: "REPOSITORY_CHANGE",
             date: newOrder.updatedAt,
@@ -731,7 +731,7 @@ export class OrdersService {
         oldOrderData?.branch?.id !== newOrder.branch?.id
       ) {
         await ordersRepository.updateOrderTimeline({
-          orderID: data.params.orderID,
+          orderID: oldOrderData.id,
           data: {
             type: "BRANCH_CHANGE",
             date: newOrder.updatedAt,
@@ -765,7 +765,7 @@ export class OrdersService {
         oldOrderData.currentLocation !== newOrder.currentLocation
       ) {
         await ordersRepository.updateOrderTimeline({
-          orderID: data.params.orderID,
+          orderID: oldOrderData.id,
           data: {
             type: "CURRENT_LOCATION_CHANGE",
             date: newOrder.updatedAt,
@@ -790,7 +790,7 @@ export class OrdersService {
         +oldOrderData.paidAmount !== +newOrder.paidAmount
       ) {
         await ordersRepository.updateOrderTimeline({
-          orderID: data.params.orderID,
+          orderID: oldOrderData.id,
           data: {
             type: "PAID_AMOUNT_CHANGE",
             date: newOrder.updatedAt,
@@ -816,7 +816,7 @@ export class OrdersService {
           newOrder.deliveryDate?.toString()
       ) {
         await ordersRepository.updateOrderTimeline({
-          orderID: data.params.orderID,
+          orderID: oldOrderData.id,
           data: {
             type: "ORDER_DELIVERY",
             date: newOrder.updatedAt,
@@ -837,7 +837,7 @@ export class OrdersService {
         oldOrderData?.company?.id !== newOrder.company?.id
       ) {
         await ordersRepository.updateOrderTimeline({
-          orderID: data.params.orderID,
+          orderID: oldOrderData.id,
           data: {
             type: "COMPANY_CHANGE",
             date: newOrder.updatedAt,
@@ -861,7 +861,7 @@ export class OrdersService {
       // Confirm order
       if (data.orderData.confirmed && !oldOrderData.confirmed) {
         await ordersRepository.updateOrderTimeline({
-          orderID: data.params.orderID,
+          orderID: oldOrderData.id,
           data: {
             type: "ORDER_CONFIRMATION",
             date: newOrder.updatedAt,
@@ -879,7 +879,7 @@ export class OrdersService {
       // Process order
       if (data.orderData.processed && !oldOrderData.processed) {
         await ordersRepository.updateOrderTimeline({
-          orderID: data.params.orderID,
+          orderID: oldOrderData.id,
           data: {
             type: "ORDER_PROCESS",
             date: newOrder.updatedAt,
