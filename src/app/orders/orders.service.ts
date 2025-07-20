@@ -1054,7 +1054,10 @@ export class OrdersService {
       return pdf;
     } else {
       const orders = await ordersRepository.getOrdersByIDs(data.ordersIDs);
-      if (data.loggedInUser.role === "CLIENT") {
+      if (
+        data.loggedInUser.role === "CLIENT" ||
+        data.loggedInUser.role === "CLIENT_ASSISTANT"
+      ) {
         await prisma.order.updateMany({
           where: {
             id: {
