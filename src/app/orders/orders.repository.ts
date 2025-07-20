@@ -1145,7 +1145,8 @@ export class OrdersRepository {
               : {
                   ...where,
                   OR:
-                    data.loggedInUser?.role === "CLIENT"
+                    data.loggedInUser?.role === "CLIENT" ||
+                    data.loggedInUser?.role === "CLIENT_ASSISTANT"
                       ? [
                           {
                             clientReport: {
@@ -2179,7 +2180,8 @@ export class OrdersRepository {
       where: {
         ...filtersReformed,
         OR:
-          data.loggedInUser.role === "CLIENT"
+          data.loggedInUser.role === "CLIENT" ||
+          data.loggedInUser.role === "CLIENT_ASSISTANT"
             ? [
                 {
                   clientReport: {

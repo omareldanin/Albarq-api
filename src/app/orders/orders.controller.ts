@@ -366,7 +366,10 @@ export class OrdersController {
           status: "REGISTERED",
           deleted: false,
           client: {
-            id: loggedInUser.id,
+            id:
+              loggedInUser.role === "CLIENT"
+                ? loggedInUser.id
+                : loggedInUser.clientId,
           },
           id: {
             in: ordersIDs.ordersIDs,
