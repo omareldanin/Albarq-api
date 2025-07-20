@@ -7,9 +7,9 @@ const notificationsRepository = new NotificationsRepository();
 export class NotificationsController {
   getAllNotifications = catchAsync(async (req, res) => {
     const userID = +res.locals.user.id as number;
-    let seen = false;
-    if (req.query.seen && req.query.seen === "true") {
-      seen = true;
+    let seen = true;
+    if (req.query.unRead && req.query.unRead === "true") {
+      seen = false;
     }
 
     let size = req.query.size ? +req.query.size : 10;

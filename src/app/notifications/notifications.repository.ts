@@ -46,6 +46,7 @@ export class NotificationsRepository {
           user: {
             id: userID,
           },
+          seen: seen ? undefined : false,
         },
         orderBy: {
           id: "desc",
