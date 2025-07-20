@@ -583,6 +583,37 @@ export class OrdersService {
           await ordersRepository.getOrderInquiryEmployees({
             orderID: oldOrderData.receiptNumber,
           });
+        const clientAssitants = await prisma.employee.findMany({
+          where: {
+            clientId: oldOrderData.client.id,
+          },
+          select: {
+            id: true,
+            orderStatus: true,
+          },
+        });
+
+        clientAssitants.forEach(async (e) => {
+          if (
+            data.orderData.status &&
+            e.orderStatus.includes(data.orderData.status)
+          ) {
+            await sendNotification({
+              orderId: newOrder.receiptNumber,
+              userID: e.id,
+              title: `تم تغيير حالة الطلب رقم ${
+                newOrder.receiptNumber
+              } إلى ${localizeOrderStatus(newOrder.status)} ${
+                newOrder.notes ? `(${newOrder.notes})` : ""
+              }`,
+              content: `تم تغيير حالة الطلب رقم ${
+                newOrder.receiptNumber
+              } إلى ${localizeOrderStatus(newOrder.status)} ${
+                newOrder.notes ? `(${newOrder.notes})` : ""
+              }`,
+            });
+          }
+        });
         orderInquiryEmployees.forEach(async (e) => {
           await sendNotification({
             orderId: newOrder.receiptNumber,
