@@ -64,7 +64,6 @@ export const sendNotification = async (data: NotificationCreateType) => {
     });
 
     const responseData = await response.json();
-    console.log("✅ Push response:", responseData);
   } catch (error) {
     Logger.error("Error sending message to token:", error);
   }

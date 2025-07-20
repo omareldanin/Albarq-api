@@ -447,13 +447,12 @@ export class ReportsService {
     }
 
     let clientID: number | undefined;
-    if (
-      data.loggedInUser.role === "CLIENT" ||
-      data.loggedInUser.role === "CLIENT_ASSISTANT"
-    ) {
+    if (data.loggedInUser.role === "CLIENT") {
       clientID = +data.loggedInUser.id;
     } else if (data.filters.clientID) {
       clientID = +data.filters.clientID;
+    } else if (data.loggedInUser.role === "CLIENT_ASSISTANT") {
+      clientID = +data.loggedInUser.clientId;
     } else {
       clientID = undefined;
     }
