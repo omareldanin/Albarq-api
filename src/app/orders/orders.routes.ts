@@ -513,6 +513,7 @@ router
         Permission.CHANGE_ORDER_PAID_AMOUNT,
         Permission.CHANGE_ORDER_RECEIPT_NUMBER,
         Permission.CHANGE_ORDER_RECEPIENT_NUMBER,
+        Permission.SEND_ORDER,
       ]
     ),
     ordersController.sendOrdersToReceivingAgent

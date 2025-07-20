@@ -583,6 +583,22 @@ export class OrdersService {
           await ordersRepository.getOrderInquiryEmployees({
             orderID: oldOrderData.receiptNumber,
           });
+        orderInquiryEmployees.forEach(async (e) => {
+          await sendNotification({
+            orderId: newOrder.receiptNumber,
+            userID: e.id,
+            title: `تم تغيير حالة الطلب رقم ${
+              newOrder.receiptNumber
+            } إلى ${localizeOrderStatus(newOrder.status)} ${
+              newOrder.notes ? `(${newOrder.notes})` : ""
+            }`,
+            content: `تم تغيير حالة الطلب رقم ${
+              newOrder.receiptNumber
+            } إلى ${localizeOrderStatus(newOrder.status)} ${
+              newOrder.notes ? `(${newOrder.notes})` : ""
+            }`,
+          });
+        });
         if (
           data.orderData.status === "DELIVERED" ||
           data.orderData.status === "PARTIALLY_RETURNED" ||
@@ -590,22 +606,6 @@ export class OrdersService {
           data.orderData.status === "RETURNED" ||
           data.orderData.status === "PROCESSING"
         ) {
-          orderInquiryEmployees.forEach(async (e) => {
-            await sendNotification({
-              orderId: newOrder.receiptNumber,
-              userID: e.id,
-              title: `تم تغيير حالة الطلب رقم ${
-                newOrder.receiptNumber
-              } إلى ${localizeOrderStatus(newOrder.status)} ${
-                newOrder.notes ? `(${newOrder.notes})` : ""
-              }`,
-              content: `تم تغيير حالة الطلب رقم ${
-                newOrder.receiptNumber
-              } إلى ${localizeOrderStatus(newOrder.status)} ${
-                newOrder.notes ? `(${newOrder.notes})` : ""
-              }`,
-            });
-          });
           await sendNotification({
             orderId: newOrder.receiptNumber,
             userID: newOrder.client.id,
