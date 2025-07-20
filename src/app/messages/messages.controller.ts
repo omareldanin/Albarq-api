@@ -154,7 +154,8 @@ export class MessagesController {
     user: loggedInUserType,
     size: number,
     page: number,
-    status: string | undefined
+    status: string | undefined,
+    unRead?: string
   ) => {
     const employee = await prisma.employee.findUnique({
       where: {
@@ -233,9 +234,26 @@ export class MessagesController {
     const chats = await prisma.chat.findManyPaginated(
       {
         where: {
-          messages: {
-            some: {}, // Only include chats that have at least one message
-          },
+          messages: unRead
+            ? {
+                some: {
+                  seenByClient:
+                    user.role === "CLIENT" || user.role === "CLIENT_ASSISTANT"
+                      ? false
+                      : undefined,
+                  seenByDelivery:
+                    user.role === "DELIVERY_AGENT" ? false : undefined,
+                  seenByBranchManager:
+                    user.role === "BRANCH_MANAGER" ? false : undefined,
+                  seenByCompanyManager:
+                    user.role === "COMPANY_MANAGER" ? false : undefined,
+                  seenByCallCenter:
+                    user.role === "INQUIRY_EMPLOYEE" ? false : undefined,
+                },
+              }
+            : {
+                some: {}, // Only include chats that have at least one message
+              },
           Order:
             user.role === "INQUIRY_EMPLOYEE"
               ? {
@@ -595,12 +613,13 @@ export class MessagesController {
 
   getUserChatStatics = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
-    const { size, page, status } = req.query;
+    const { size, page, status, unRead } = req.query;
     const chats = await this.getUserChats(
       loggedInUser,
       size ? +size : 20,
       page ? +page : 1,
-      typeof status === "string" ? status : undefined
+      typeof status === "string" ? status : undefined,
+      unRead + ""
     );
 
     res.status(201).json({ ...chats });
