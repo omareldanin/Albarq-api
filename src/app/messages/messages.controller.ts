@@ -234,9 +234,27 @@ export class MessagesController {
     const chats = await prisma.chat.findManyPaginated(
       {
         where: {
-          messages: {
-            some: {}, // Only include chats that have at least one message
-          },
+          messages:
+            unRead === "true"
+              ? {
+                  some: {
+                    seenByClient:
+                      user.role === "CLIENT" || user.role === "CLIENT_ASSISTANT"
+                        ? false
+                        : undefined,
+                    seenByDelivery:
+                      user.role === "DELIVERY_AGENT" ? false : undefined,
+                    seenByBranchManager:
+                      user.role === "BRANCH_MANAGER" ? false : undefined,
+                    seenByCompanyManager:
+                      user.role === "COMPANY_MANAGER" ? false : undefined,
+                    seenByCallCenter:
+                      user.role === "INQUIRY_EMPLOYEE" ? false : undefined,
+                  },
+                }
+              : {
+                  some: {}, // Only include chats that have at least one message
+                },
           Order:
             user.role === "INQUIRY_EMPLOYEE"
               ? {
