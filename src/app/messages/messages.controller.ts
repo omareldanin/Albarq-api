@@ -238,10 +238,9 @@ export class MessagesController {
             unRead === "true"
               ? {
                   some: {
-                    seenByClient:
-                      user.role === "CLIENT" || user.role === "CLIENT_ASSISTANT"
-                        ? false
-                        : undefined,
+                    seenByClient: user.role === "CLIENT" ? false : undefined,
+                    seenByClientAssistant:
+                      user.role === "CLIENT_ASSISTANT" ? false : undefined,
                     seenByDelivery:
                       user.role === "DELIVERY_AGENT" ? false : undefined,
                     seenByBranchManager:
@@ -376,10 +375,9 @@ export class MessagesController {
         id: true,
       },
       where: {
-        seenByClient:
-          user.role === "CLIENT" || user.role === "CLIENT_ASSISTANT"
-            ? false
-            : undefined,
+        seenByClient: user.role === "CLIENT" ? false : undefined,
+        seenByClientAssistant:
+          user.role === "CLIENT_ASSISTANT" ? false : undefined,
         seenByDelivery: user.role === "DELIVERY_AGENT" ? false : undefined,
         seenByBranchManager: user.role === "BRANCH_MANAGER" ? false : undefined,
         seenByCompanyManager:

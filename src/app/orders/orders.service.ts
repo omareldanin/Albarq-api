@@ -579,25 +579,50 @@ export class OrdersService {
       // Update status
       if (data.orderData.status && oldOrderData.status !== newOrder.status) {
         // send notification to client
-        const orderInquiryEmployees =
-          await ordersRepository.getOrderInquiryEmployees({
-            orderID: oldOrderData.receiptNumber,
-          });
-        const clientAssitants = await prisma.employee.findMany({
-          where: {
-            clientId: oldOrderData.client.id,
-          },
-          select: {
-            id: true,
-            orderStatus: true,
-          },
-        });
 
-        clientAssitants.forEach(async (e) => {
-          if (
-            data.orderData.status &&
-            e.orderStatus.includes(data.orderData.status)
-          ) {
+        if (
+          data.orderData.status === "DELIVERED" ||
+          data.orderData.status === "PARTIALLY_RETURNED" ||
+          data.orderData.status === "REPLACED" ||
+          data.orderData.status === "RETURNED" ||
+          data.orderData.status === "RESEND" ||
+          data.orderData.status === "PROCESSING"
+        ) {
+          const orderInquiryEmployees =
+            await ordersRepository.getOrderInquiryEmployees({
+              orderID: oldOrderData.receiptNumber,
+            });
+          const clientAssitants = await prisma.employee.findMany({
+            where: {
+              clientId: oldOrderData.client.id,
+            },
+            select: {
+              id: true,
+              orderStatus: true,
+            },
+          });
+          clientAssitants.forEach(async (e) => {
+            if (
+              data.orderData.status &&
+              e.orderStatus.includes(data.orderData.status)
+            ) {
+              await sendNotification({
+                orderId: newOrder.receiptNumber,
+                userID: e.id,
+                title: `تم تغيير حالة الطلب رقم ${
+                  newOrder.receiptNumber
+                } إلى ${localizeOrderStatus(newOrder.status)} ${
+                  newOrder.notes ? `(${newOrder.notes})` : ""
+                }`,
+                content: `تم تغيير حالة الطلب رقم ${
+                  newOrder.receiptNumber
+                } إلى ${localizeOrderStatus(newOrder.status)} ${
+                  newOrder.notes ? `(${newOrder.notes})` : ""
+                }`,
+              });
+            }
+          });
+          orderInquiryEmployees.forEach(async (e) => {
             await sendNotification({
               orderId: newOrder.receiptNumber,
               userID: e.id,
@@ -612,31 +637,7 @@ export class OrdersService {
                 newOrder.notes ? `(${newOrder.notes})` : ""
               }`,
             });
-          }
-        });
-        orderInquiryEmployees.forEach(async (e) => {
-          await sendNotification({
-            orderId: newOrder.receiptNumber,
-            userID: e.id,
-            title: `تم تغيير حالة الطلب رقم ${
-              newOrder.receiptNumber
-            } إلى ${localizeOrderStatus(newOrder.status)} ${
-              newOrder.notes ? `(${newOrder.notes})` : ""
-            }`,
-            content: `تم تغيير حالة الطلب رقم ${
-              newOrder.receiptNumber
-            } إلى ${localizeOrderStatus(newOrder.status)} ${
-              newOrder.notes ? `(${newOrder.notes})` : ""
-            }`,
           });
-        });
-        if (
-          data.orderData.status === "DELIVERED" ||
-          data.orderData.status === "PARTIALLY_RETURNED" ||
-          data.orderData.status === "REPLACED" ||
-          data.orderData.status === "RETURNED" ||
-          data.orderData.status === "PROCESSING"
-        ) {
           await sendNotification({
             orderId: newOrder.receiptNumber,
             userID: newOrder.client.id,
@@ -826,7 +827,9 @@ export class OrdersService {
       // Update paid amount
       if (
         data.orderData.paidAmount &&
-        +oldOrderData.paidAmount !== +newOrder.paidAmount
+        +oldOrderData.paidAmount !== +newOrder.paidAmount &&
+        data.orderData.status !== "DELIVERED" &&
+        data.orderData.paidAmount !== +oldOrderData.totalCost
       ) {
         await ordersRepository.updateOrderTimeline({
           orderID: oldOrderData.id,

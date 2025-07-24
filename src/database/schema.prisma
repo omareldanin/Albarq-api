@@ -746,15 +746,16 @@ model Chat {
 }
 
 model Message {
-  id                   Int          @id @default(autoincrement())
-  content              String
-  image                String?
-  sendFor              MessageType?
-  seenByClient         Boolean      @default(false)
-  seenByDelivery       Boolean      @default(false)
-  seenByCallCenter     Boolean      @default(false)
-  seenByBranchManager  Boolean      @default(false)
-  seenByCompanyManager Boolean      @default(false)
+  id                    Int          @id @default(autoincrement())
+  content               String
+  image                 String?
+  sendFor               MessageType?
+  seenByClient          Boolean      @default(false)
+  seenByClientAssistant Boolean      @default(false)
+  seenByDelivery        Boolean      @default(false)
+  seenByCallCenter      Boolean      @default(false)
+  seenByBranchManager   Boolean      @default(false)
+  seenByCompanyManager  Boolean      @default(false)
 
   // --- OTHER --------------------------------------------------------------------- //
   createdAt DateTime @default(now())
