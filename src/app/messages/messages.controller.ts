@@ -435,6 +435,8 @@ export class MessagesController {
       data: {
         seenByClient: employee ? undefined : true,
         seenByDelivery: employee?.role === "DELIVERY_AGENT" ? true : undefined,
+        seenByClientAssistant:
+          employee?.role === "CLIENT_ASSISTANT" ? true : undefined,
         seenByBranchManager:
           employee?.role === "BRANCH_MANAGER" ? true : undefined,
         seenByCompanyManager:
@@ -564,6 +566,7 @@ export class MessagesController {
           },
         },
         seenByClient: loggedInUser.role === "CLIENT",
+        seenByClientAssistant: loggedInUser.role === "CLIENT_ASSISTANT",
         seenByDelivery: loggedInUser.role === "DELIVERY_AGENT",
         seenByBranchManager: loggedInUser.role === "BRANCH_MANAGER",
         seenByCompanyManager: loggedInUser.role === "COMPANY_MANAGER",
@@ -578,6 +581,7 @@ export class MessagesController {
         seenByClient: true,
         seenByDelivery: true,
         seenByCallCenter: true,
+        seenByClientAssistant: true,
         createdBy: {
           select: {
             id: true,
