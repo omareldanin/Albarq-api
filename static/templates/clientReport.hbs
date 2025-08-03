@@ -12,6 +12,11 @@
 		<table>
 			<tr>
 				<td style="width: 25%">رقم الكشف: <span>{{reportData.id}}</span></td>
+				{{#if (eq reportData.clientReport.secondaryType)}}
+					<td style="width: 25%;font-size:15px" class="{{colorizeTitle reportData.clientReport.secondaryType}}">كشف الواصل للعميل</td>
+				{{else}}
+					<td style="width: 25%;font-size:15px" class="{{colorizeTitle reportData.clientReport.secondaryType}}">كشف الراجع للعميل</td>
+				{{/if}}
 				<td style="width: 25%;font-size:15px" class="{{colorizeTitle reportData.clientReport.secondaryType}}">كشف عميل</td>
 				<td style="width: 25%">عدد الطلبيات: <span>{{add reportData.baghdadOrdersCount
 						reportData.governoratesOrdersCount}}</span></td>
