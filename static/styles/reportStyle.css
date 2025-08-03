@@ -1,14 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap');
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: "Amiri", serif;
+  font-family: "Cairo", sans-serif;
 }
 
 body {
     color: #000;
     background: #ffffff;
-    font-size: 16px;
+    font-size: 13px;
     /* direction: rtl; */
     text-align: center;
 }
@@ -20,15 +21,14 @@ header {
     text-align: center;
     /* border-top: 1px solid #000;
     border-bottom: 1px solid #000; */
-    border: 1px solid #000;
-    margin-bottom: 20px;
-    padding-block: 20px;
+    margin-bottom: 10px;
+    padding-block: 10px;
     font-weight: bolder;
-    font-size: 18px;
+    font-size: 13px;
 }
 
 header table td span {
-    font-size: 16px;
+    font-size: 13px;
     font-weight: normal;
 }
 
@@ -47,8 +47,9 @@ header table td {
 			} */
 
 header img {
-    max-width: 100px;
-    max-height: 100px;
+    max-width: 90px;
+    max-height: 90px;
+    border-radius: 10px;
 }
 
 /* header small {
@@ -71,21 +72,21 @@ main table {
 
 main table th,
 main table td {
-    padding: 10px;
+    padding: 7px;
     /* Increased padding */
     align-items: center;
     /* Center vertically */
     justify-content: center;
     /* Center horizontally */
 
-    border: 1px solid #000;
+    border: 1px solid #ccc;
 }
 
 main table th,
 main table tfoot td {
     /* border-bottom: 1px solid #000; */
-    font-weight: bolder;
-    font-size: 18px;
+    font-weight: bold;
+    font-size: 11px;
     background: #e1e1e1;
 }
 
@@ -98,6 +99,7 @@ main table tr {
 main table td {
     page-break-inside: avoid;
     page-break-after: auto;
+    font-size: 12px;
 }
 
 main table thead {
@@ -130,7 +132,7 @@ footer {
     text-align: right;
     /* border-top: 1px solid #000;
     border-bottom: 1px solid #000; */
-    border: 1px solid #000;
+    border: 1px solid #ccc;
     padding-block: 20px;
     font-weight: bolder;
     font-size: 18px;
@@ -154,11 +156,6 @@ footer {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) rotate(-45deg);
-}
-
-.title {
-    /* text-decoration: underline; */
-    transform: scale(1.4);
 }
 
 .bg-green,

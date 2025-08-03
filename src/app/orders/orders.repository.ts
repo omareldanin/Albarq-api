@@ -1753,6 +1753,11 @@ export class OrdersRepository {
         : -deliveryCost;
     }
 
+    if (data.orderData.status === "RETURNED") {
+      newDeliveryCost = 0;
+      clientNet = 0;
+    }
+
     const order = await prisma.order.update({
       where: {
         id: data.orderID,

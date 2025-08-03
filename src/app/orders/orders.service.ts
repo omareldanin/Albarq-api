@@ -470,7 +470,8 @@ export class OrdersService {
       data.orderData.paidAmount !== 0 &&
       (data.orderData.status === OrderStatus.DELIVERED ||
         data.orderData.status === OrderStatus.PARTIALLY_RETURNED ||
-        data.orderData.status === OrderStatus.REPLACED)
+        data.orderData.status === OrderStatus.REPLACED) &&
+      oldOrderData.paidAmount !== 0
     ) {
       data.orderData.paidAmount = oldOrderData?.totalCost;
     }
@@ -501,7 +502,9 @@ export class OrdersService {
     // if secondary status is changed to in_reposiroty, unlink the delivery agent
     if (
       oldOrderData?.secondaryStatus !== data.orderData.secondaryStatus &&
-      data.orderData.secondaryStatus === "IN_REPOSITORY"
+      data.orderData.secondaryStatus === "IN_REPOSITORY" &&
+      (data.orderData.status === "IN_GOV_REPOSITORY" ||
+        data.orderData.status === "IN_MAIN_REPOSITORY")
     ) {
       data.orderData.deliveryAgentID = null;
       data.orderData.oldDeliveryAgentId = oldOrderData?.deliveryAgent?.id;
@@ -561,6 +564,7 @@ export class OrdersService {
       data.loggedInUser.role === "RECEIVING_AGENT"
     ) {
       data.orderData.deliveryAgentID = data.loggedInUser.id;
+      data.orderData.secondaryStatus = "WITH_AGENT";
     }
 
     const newOrder = await ordersRepository.updateOrder({
