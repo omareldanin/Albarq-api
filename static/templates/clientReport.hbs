@@ -86,12 +86,12 @@
 		<div style="page-break-inside: avoid; break-inside: avoid;">
 			<table>
 				<tr>
-					<td colspan="7" style="font-weight: bold;width:20%" >المجموع</td>
-					<td style="font-weight: bold">مبلغ الوصل :  {{currency reportData.totalCost}}</td>
-					<td style="font-weight: bold">المبلغ المدفوع :  {{currency reportData.paidAmount}}</td>
 					{{#if (eq reportData.clientReport.secondaryType)}}
-						<td style="font-weight: bold">اجور التوصيل :  {{currency reportData.deliveryCost}}</td>
-						<td style="font-weight: bold">صافي العميل :  {{currency reportData.clientNet}}</td>
+						<td colspan="7" style="font-weight: bold;width:20%">صافي العميل</td>
+						<td style="font-weight: bold">{{currency reportData.clientNet}}</td>
+					{{else}}
+						<td colspan="7" style="font-weight: bold;width:20%">صافي العميل</td>
+						<td style="font-weight: bold">0</td>
 					{{/if}}
 				</tr>
 			</table>
