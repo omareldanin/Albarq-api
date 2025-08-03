@@ -27,18 +27,22 @@
 			</tr>
 	
 			<tr>
-				<td style="width: 25%">صافي العميل: <span>{{currency reportData.clientNet}}</span></td>
+				{{#if (eq reportData.clientReport.secondaryType)}}
+					<td style="width: 25%">صافي العميل: <span>{{currency reportData.clientNet}}</span></td>
+				{{else}}
+					<td style="width: 25%"></td>
+				{{/if}}
 				<td style="width: 25%">الصفحة: <span>{{reportData.clientReport.store.name}}</span></td>
 				<td style="width: 25%">عدد طلبيات المحافظات: <span>{{reportData.governoratesOrdersCount}}</span></td>
 				<td style="width: 25%"></td>
 			</tr>
 			<tr>
-					<td style="width: 25%"></td>
-					<td style="width: 25%">
-						<span style="display: block;color:#000;font-size:11px">ساحب الكشف : {{reportData.createdBy.name}} </span>
-					</td>
-					<td style="width: 25%"></td>
-					<td style="width: 25%"></td>
+				<td style="width: 25%"></td>
+				<td style="width: 25%">
+					<span style="display: block;color:#000;font-size:11px">ساحب الكشف : {{reportData.createdBy.name}} </span>
+				</td>
+				<td style="width: 25%"></td>
+				<td style="width: 25%"></td>
 			</tr>
 		</table>
 	</header>
@@ -87,11 +91,8 @@
 			<table>
 				<tr>
 					{{#if (eq reportData.clientReport.secondaryType)}}
-						<td colspan="7" style="font-weight: bold;width:20%">صافي العميل</td>
+						<td colspan="7" style="font-weight: bold;width:50%">صافي العميل</td>
 						<td style="font-weight: bold">{{currency reportData.clientNet}}</td>
-					{{else}}
-						<td colspan="7" style="font-weight: bold;width:20%">صافي العميل</td>
-						<td style="font-weight: bold">0</td>
 					{{/if}}
 				</tr>
 			</table>
