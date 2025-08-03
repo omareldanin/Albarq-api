@@ -75,7 +75,7 @@
 			</thead>
 			<tbody>
 				{{#each orders}}
-					<tr class="{{changed status totalCost paidAmount}}">
+					<tr class="{{changed status totalCost paidAmount @root.reportData.clientReport.secondaryType}}">
 						<td class="nowrap">{{inc @index}}</td>
 						<td>{{receiptNumber}}</td>
 						<td>{{date createdAt}}</td>

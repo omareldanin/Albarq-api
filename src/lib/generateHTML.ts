@@ -53,17 +53,23 @@ export const generateHTML = async (template: string, data: object) => {
       return "";
     });
 
-    hb.registerHelper("changed", (status, totalCost, paidAmount) => {
-      if (
-        (status === OrderStatus.PARTIALLY_RETURNED ||
-          status === OrderStatus.REPLACED) &&
-        +totalCost !== +paidAmount
-      ) {
-        return "bg-orange";
-      }
+    hb.registerHelper(
+      "changed",
+      (status, totalCost, paidAmount, secondaryReportType) => {
+        if (secondaryReportType === SecondaryReportType.RETURNED) {
+          return "";
+        }
+        if (
+          (status === OrderStatus.PARTIALLY_RETURNED ||
+            status === OrderStatus.REPLACED) &&
+          +totalCost !== +paidAmount
+        ) {
+          return "bg-orange";
+        }
 
-      return "";
-    });
+        return "";
+      }
+    );
 
     hb.registerHelper("colorizeHeader", (secondaryReportType) => {
       if (secondaryReportType === SecondaryReportType.RETURNED) {
