@@ -52,6 +52,19 @@ export const generateHTML = async (template: string, data: object) => {
       }
       return "";
     });
+
+    hb.registerHelper("changed", (status, totalCost, paidAmount) => {
+      if (
+        (status === OrderStatus.PARTIALLY_RETURNED ||
+          status === OrderStatus.REPLACED) &&
+        +totalCost !== +paidAmount
+      ) {
+        return "bg-orange";
+      }
+
+      return "";
+    });
+
     hb.registerHelper("colorizeHeader", (secondaryReportType) => {
       if (secondaryReportType === SecondaryReportType.RETURNED) {
         return "bg-red";

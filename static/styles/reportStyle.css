@@ -179,6 +179,9 @@ footer {
     color: #fff !important;
 }
 
+.bg-orange td{
+    background-color: rgb(255, 136, 0) !important;
+}
 .blue {
     color: rgb(0, 0, 165);
 }

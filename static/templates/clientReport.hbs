@@ -75,22 +75,22 @@
 			</thead>
 			<tbody>
 				{{#each orders}}
-				<tr>
-					<td class="nowrap">{{inc @index}}</td>
-					<td>{{receiptNumber}}</td>
-					<td>{{date createdAt}}</td>
-					<td>{{mapPhones recipientPhones}}</td>
-					<td>{{localizeGovernorate governorate}} - {{location.name}}</td>
-					<td>{{currency totalCost}}</td>
-					<td>{{currency paidAmount}}</td>
-					{{#if (eq @root.reportData.clientReport.secondaryType)}}
-						<td>{{currency deliveryCost}}</td>
-						<td>{{currency clientNet}}</td>
-					{{/if}}
-					{{!-- <td class="{{colorizeRow2 ../reportData.clientReport.secondaryType status}}">{{localizeOrderStatus status}}</td> --}}
-					<td class="{{colorizeRow2 status}}">{{localizeOrderStatus status}}</td>
-					<td>{{notes}}</td>
-				</tr>
+					<tr class="{{changed status totalCost paidAmount}}">
+						<td class="nowrap">{{inc @index}}</td>
+						<td>{{receiptNumber}}</td>
+						<td>{{date createdAt}}</td>
+						<td>{{mapPhones recipientPhones}}</td>
+						<td>{{localizeGovernorate governorate}} - {{location.name}}</td>
+						<td>{{currency totalCost}}</td>
+						<td>{{currency paidAmount}}</td>
+						{{#if (eq @root.reportData.clientReport.secondaryType)}}
+							<td>{{currency deliveryCost}}</td>
+							<td>{{currency clientNet}}</td>
+						{{/if}}
+						{{!-- <td class="{{colorizeRow2 ../reportData.clientReport.secondaryType status}}">{{localizeOrderStatus status}}</td> --}}
+						<td class="{{colorizeRow2 status}}">{{localizeOrderStatus status}}</td>
+						<td>{{notes}}</td>
+					</tr>
 				{{/each}}
 			</tbody>
 		</table>
