@@ -552,6 +552,7 @@ export class OrdersService {
         throw new AppError("هذا الطلب غير مرتبط بهذا الفرع", 403);
       }
     }
+
     if (
       data.orderData.status === "WITH_RECEIVING_AGENT" &&
       oldOrderData.status !== "READY_TO_SEND"
@@ -567,6 +568,21 @@ export class OrdersService {
       data.orderData.secondaryStatus = "WITH_AGENT";
     }
 
+    if (
+      data.orderData.governorate &&
+      data.orderData.locationID &&
+      (oldOrderData.status === "REGISTERED" ||
+        oldOrderData.status === "READY_TO_SEND")
+    ) {
+      const branch = await branchesRepository.getBranchByLocation({
+        locationID: data.orderData.locationID,
+      });
+
+      if (!branch) {
+        throw new AppError("لا يوجد فرع مرتبط بالموقع", 500);
+      }
+      data.orderData.branchID = branch.id;
+    }
     const newOrder = await ordersRepository.updateOrder({
       orderID: oldOrderData.id,
       loggedInUser: data.loggedInUser,

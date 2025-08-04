@@ -1768,6 +1768,16 @@ export class OrdersRepository {
         paidAmount: data.orderData.paidAmount,
         receiptNumber: data.orderData.receiptNumber,
         processingStatus: data.orderData.processingStatus,
+        governorate: data.orderData.governorate
+          ? data.orderData.governorate
+          : undefined,
+        location: data.orderData.locationID
+          ? {
+              connect: {
+                id: data.orderData.locationID,
+              },
+            }
+          : undefined,
         clientNet: clientNet,
         deliveryCost: newDeliveryCost,
         deliveryAgentNet: deliveryAgentCost,
