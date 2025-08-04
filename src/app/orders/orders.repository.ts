@@ -2391,9 +2391,18 @@ export class OrdersRepository {
       where: {
         ...filtersReformed,
         // deleted: false,
-        createdAt: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0)),
-        },
+        deliveryDate:
+          data.loggedInUser.role === "DELIVERY_AGENT"
+            ? {
+                gte: new Date(new Date().setHours(0, 0, 0, 0)),
+              }
+            : undefined,
+        createdAt:
+          data.loggedInUser.role !== "DELIVERY_AGENT"
+            ? {
+                gte: new Date(new Date().setHours(0, 0, 0, 0)),
+              }
+            : undefined,
       },
     });
 
