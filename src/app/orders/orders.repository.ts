@@ -1802,7 +1802,9 @@ export class OrdersRepository {
           ? false
           : data.orderData.confirmed,
         details: data.orderData.details,
-        deliveryDate: data.orderData.deliveryDate,
+        deliveryDate: data.orderData.deliveryAgentID
+          ? new Date()
+          : data.orderData.deliveryDate,
         forwardedToMainRepo:
           data.orderData.status === "IN_MAIN_REPOSITORY"
             ? false
@@ -1854,6 +1856,7 @@ export class OrdersRepository {
                 },
               }
             : undefined,
+
         repository: data.orderData.repositoryID
           ? {
               connect: {
