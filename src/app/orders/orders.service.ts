@@ -464,10 +464,14 @@ export class OrdersService {
     }
 
     // update order paid amount if new status is delivered or partially returned or replaced
+    console.log(data.orderData);
+    console.log(!data.orderData.paidAmount);
+    console.log(data.orderData.paidAmount !== 0 );
+    
     if (
       oldOrderData?.status !== data.orderData.status &&
       !data.orderData.paidAmount &&
-      data.orderData.paidAmount !== 0 &&
+      data.orderData.paidAmount !== 0 &&  
       (data.orderData.status === OrderStatus.DELIVERED ||
         data.orderData.status === OrderStatus.PARTIALLY_RETURNED ||
         data.orderData.status === OrderStatus.REPLACED) &&
