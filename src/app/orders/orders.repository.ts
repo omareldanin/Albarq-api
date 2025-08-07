@@ -1661,6 +1661,7 @@ export class OrdersRepository {
       },
       select: {
         deliveryCost: true,
+        oldDeliveryCost:true,
         clientNet: true,
         companyNet: true,
         deliveryAgentNet: true,
@@ -1683,7 +1684,8 @@ export class OrdersRepository {
     let deliveryAgentCost = orderData?.deliveryAgentNet;
     let companyNet = orderData?.companyNet;
     let clientNet = orderData?.clientNet;
-    let newDeliveryCost = orderData?.deliveryCost;
+    let newDeliveryCost = orderData?.deliveryCost ? orderData?.deliveryCost :orderData?.oldDeliveryCost;
+    let oldDeliveryCost=orderData?.deliveryCost ? orderData?.deliveryCost :orderData?.oldDeliveryCost
     let weight = (data.orderData.weight as number) || orderData?.weight || 0;
 
     if (weight) {
@@ -1780,6 +1782,7 @@ export class OrdersRepository {
           : undefined,
         clientNet: clientNet,
         deliveryCost: newDeliveryCost,
+        oldDeliveryCost:oldDeliveryCost,
         deliveryAgentNet: deliveryAgentCost,
         weight: weight,
         companyNet: companyNet,

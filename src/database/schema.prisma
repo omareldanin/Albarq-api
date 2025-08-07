@@ -634,6 +634,7 @@ model Order {
   totalCost              Float                    @default(0)
   paidAmount             Float                    @default(0)
   deliveryCost           Float                    @default(0)
+  oldDeliveryCost        Float                    @default(0)
   clientNet              Float                    @default(0)
   deliveryAgentNet       Float                    @default(0) // TODO: remove this field
   companyNet             Float                    @default(0)
