@@ -1,12 +1,12 @@
-import { Governorate, OrderStatus } from "@prisma/client";
-import { prisma } from "../../database/db";
-import { catchAsync } from "../../lib/catchAsync";
-import { loggedInUserType } from "../../types/user";
-import { sendNotification } from "../notifications/helpers/sendNotification";
-import { EmployeesRepository } from "../employees/employees.repository";
+import {Governorate, OrderStatus} from "@prisma/client";
+import {prisma} from "../../database/db";
+import {catchAsync} from "../../lib/catchAsync";
+import {loggedInUserType} from "../../types/user";
+import {sendNotification} from "../notifications/helpers/sendNotification";
+import {EmployeesRepository} from "../employees/employees.repository";
 import _ from "lodash";
-import { io } from "../../server";
-import { AppError } from "../../lib/AppError";
+import {io} from "../../server";
+import {AppError} from "../../lib/AppError";
 
 const employeesRepository = new EmployeesRepository();
 
@@ -55,9 +55,9 @@ export class MessagesController {
     const inquiryEmployees = await prisma.employee.findMany({
       where: {
         AND: [
-          { role: "INQUIRY_EMPLOYEE" },
+          {role: "INQUIRY_EMPLOYEE"},
           {
-            inquiryStatuses: order?.status ? { has: order.status } : undefined,
+            inquiryStatuses: order?.status ? {has: order.status} : undefined,
           },
           {
             inquiryBranches: order?.branchId
@@ -98,7 +98,7 @@ export class MessagesController {
           // TODO
           {
             inquiryGovernorates: order?.governorate
-              ? { has: order.governorate }
+              ? {has: order.governorate}
               : undefined,
           },
         ],
@@ -111,8 +111,8 @@ export class MessagesController {
     const clientAssistant = await prisma.employee.findMany({
       where: {
         AND: [
-          { role: "CLIENT_ASSISTANT" },
-          { clientId: order?.clientId },
+          {role: "CLIENT_ASSISTANT"},
+          {clientId: order?.clientId},
           {
             managedStores: {
               some: {
@@ -121,10 +121,10 @@ export class MessagesController {
             },
           },
           {
-            orderStatus: { has: order?.status },
+            orderStatus: {has: order?.status},
           },
           {
-            permissions: { has: "MESSAGES" },
+            permissions: {has: "MESSAGES"},
           },
         ],
       },
@@ -314,7 +314,7 @@ export class MessagesController {
                     status && status !== "null"
                       ? (status as OrderStatus)
                       : user.role === "CLIENT_ASSISTANT"
-                      ? { in: employee?.orderStatus }
+                      ? {in: employee?.orderStatus}
                       : undefined,
                   clientId: user.role === "CLIENT" ? user.id : undefined,
                   companyId: user?.companyID || undefined,
@@ -326,7 +326,7 @@ export class MessagesController {
                     user.role === "DELIVERY_AGENT" ? user.id : undefined,
                   storeId:
                     user.role === "CLIENT_ASSISTANT"
-                      ? { in: inquiryStoresIDs }
+                      ? {in: inquiryStoresIDs}
                       : undefined,
                 },
         },
@@ -484,7 +484,7 @@ export class MessagesController {
   };
 
   sendMessage = catchAsync(async (req, res) => {
-    const { content, orderId } = req.body;
+    const {content, orderId} = req.body;
     const loggedInUser = res.locals.user as loggedInUserType;
 
     let image: string | undefined;
@@ -611,12 +611,12 @@ export class MessagesController {
       });
     });
 
-    res.status(201).json({ message: "success" });
+    res.status(201).json({message: "success"});
   });
 
   getUserChatStatics = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
-    const { size, page, status, unRead } = req.query;
+    const {size, page, status, unRead} = req.query;
     const chats = await this.getUserChats(
       loggedInUser,
       size ? +size : 20,
@@ -625,12 +625,12 @@ export class MessagesController {
       unRead + ""
     );
 
-    res.status(201).json({ ...chats });
+    res.status(201).json({...chats});
   });
 
   getUserChatMessages = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
-    const { size, page, orderId } = req.query;
+    const {size, page, orderId} = req.query;
 
     if (!orderId) {
       return;
@@ -640,6 +640,163 @@ export class MessagesController {
       loggedInUser.id
     );
 
-    res.status(201).json({ ...chats });
+    res.status(201).json({...chats});
+  });
+
+  markAllSeen = catchAsync(async (req, res) => {
+    const user = res.locals.user as loggedInUserType;
+
+    const employee = await prisma.employee.findUnique({
+      where: {
+        id: +user.id,
+      },
+      select: {
+        id: true,
+        role: true,
+        branchId: true,
+        managedStores: true,
+        inquiryBranches: true,
+        inquiryGovernorates: true,
+        inquiryStatuses: true,
+        inquiryLocations: true,
+        inquiryStores: true,
+        permissions: true,
+        orderStatus: true,
+      },
+    });
+
+    let inquiryStatuses: OrderStatus[] | undefined = undefined;
+    let inquiryGovernorates: Governorate[] | undefined = undefined;
+    let inquiryLocationsIDs: number[] | undefined = undefined;
+    let inquiryBranchesIDs: number[] | undefined = undefined;
+    let inquiryStoresIDs: number[] | undefined = undefined;
+
+    if (user.role === "INQUIRY_EMPLOYEE") {
+      const inquiryEmployeeStuff =
+        await employeesRepository.getInquiryEmployeeStuff({
+          employeeID: +user.id,
+        });
+      if (inquiryEmployeeStuff) {
+        inquiryStatuses =
+          inquiryEmployeeStuff.inquiryStatuses &&
+          inquiryEmployeeStuff.inquiryStatuses.length > 0
+            ? inquiryEmployeeStuff.inquiryStatuses
+            : undefined;
+        inquiryGovernorates =
+          inquiryEmployeeStuff.inquiryGovernorates &&
+          inquiryEmployeeStuff.inquiryGovernorates.length > 0
+            ? inquiryEmployeeStuff.inquiryGovernorates
+            : undefined;
+        inquiryLocationsIDs =
+          inquiryEmployeeStuff.inquiryLocations &&
+          inquiryEmployeeStuff.inquiryLocations.length > 0
+            ? inquiryEmployeeStuff.inquiryLocations
+            : undefined;
+        inquiryBranchesIDs =
+          inquiryEmployeeStuff.inquiryBranches &&
+          inquiryEmployeeStuff.inquiryBranches.length > 0
+            ? inquiryEmployeeStuff.inquiryBranches
+            : undefined;
+        inquiryStoresIDs =
+          inquiryEmployeeStuff.inquiryStores &&
+          inquiryEmployeeStuff.inquiryStores.length > 0
+            ? inquiryEmployeeStuff.inquiryStores
+            : undefined;
+      }
+    }
+    if (user.role === "CLIENT_ASSISTANT") {
+      inquiryStoresIDs = employee?.managedStores.map((s) => s.id);
+    }
+    const result = await prisma.message.updateMany({
+      where: {
+        seenByClient: user.role === "CLIENT" ? false : undefined,
+        seenByClientAssistant:
+          user.role === "CLIENT_ASSISTANT" ? false : undefined,
+        seenByDelivery: user.role === "DELIVERY_AGENT" ? false : undefined,
+        seenByBranchManager: user.role === "BRANCH_MANAGER" ? false : undefined,
+        seenByCompanyManager:
+          user.role === "COMPANY_MANAGER" ? false : undefined,
+        seenByCallCenter: user.role === "INQUIRY_EMPLOYEE" ? false : undefined,
+        Chat: {
+          Order:
+            user.role === "INQUIRY_EMPLOYEE"
+              ? {
+                  AND: [
+                    {
+                      status: inquiryStatuses
+                        ? {
+                            in: inquiryStatuses,
+                          }
+                        : undefined,
+                    },
+                    {
+                      governorate: inquiryGovernorates
+                        ? {
+                            in: inquiryGovernorates,
+                          }
+                        : undefined,
+                    },
+                    {
+                      branch: inquiryBranchesIDs
+                        ? {
+                            id: {
+                              in: inquiryBranchesIDs,
+                            },
+                          }
+                        : undefined,
+                    },
+                    {
+                      store: inquiryStoresIDs
+                        ? {
+                            id: {
+                              in: inquiryStoresIDs,
+                            },
+                          }
+                        : undefined,
+                    },
+                    {
+                      company: {
+                        id: user.companyID,
+                      },
+                    },
+                    {
+                      location: inquiryLocationsIDs
+                        ? {
+                            id: {
+                              in: inquiryLocationsIDs,
+                            },
+                          }
+                        : undefined,
+                    },
+                  ],
+                }
+              : {
+                  clientId: user.role === "CLIENT" ? user.id : undefined,
+                  companyId: user?.companyID || undefined,
+                  branchId:
+                    user.role === "BRANCH_MANAGER"
+                      ? employee?.branchId
+                      : undefined,
+                  deliveryAgentId:
+                    user.role === "DELIVERY_AGENT" ? user.id : undefined,
+                  storeId:
+                    user.role === "CLIENT_ASSISTANT"
+                      ? {in: inquiryStoresIDs}
+                      : undefined,
+                },
+        },
+      },
+      data: {
+        seenByClient: user.role === "CLIENT" ? true : undefined,
+        seenByClientAssistant:
+          user.role === "CLIENT_ASSISTANT" ? true : undefined,
+        seenByDelivery: user.role === "DELIVERY_AGENT" ? true : undefined,
+        seenByBranchManager: user.role === "BRANCH_MANAGER" ? true : undefined,
+        seenByCompanyManager:
+          user.role === "COMPANY_MANAGER" ? true : undefined,
+        seenByCallCenter: user.role === "INQUIRY_EMPLOYEE" ? true : undefined,
+      },
+    });
+    res.status(200).json({message: "success"});
   });
 }

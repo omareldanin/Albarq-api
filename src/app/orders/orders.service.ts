@@ -463,11 +463,7 @@ export class OrdersService {
       throw new AppError("لا يمكنك معالجة الطلب", 403);
     }
 
-    // update order paid amount if new status is delivered or partially returned or replaced
-    console.log(data.orderData);
-    console.log(!data.orderData.paidAmount);
-    console.log(data.orderData.paidAmount !== 0 );
-    
+    // update order paid amount if new status is delivered or partially returned or replaced      
     if (
       oldOrderData?.status !== data.orderData.status &&
       !data.orderData.paidAmount &&
