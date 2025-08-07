@@ -383,14 +383,83 @@ export class MessagesController {
         seenByCompanyManager:
           user.role === "COMPANY_MANAGER" ? false : undefined,
         seenByCallCenter: user.role === "INQUIRY_EMPLOYEE" ? false : undefined,
+        Chat: {
+          Order:
+            user.role === "INQUIRY_EMPLOYEE"
+              ? {
+                  AND: [
+                    {
+                      status: inquiryStatuses
+                        ? {
+                            in: inquiryStatuses,
+                          }
+                        : undefined,
+                    },
+                    {
+                      governorate: inquiryGovernorates
+                        ? {
+                            in: inquiryGovernorates,
+                          }
+                        : undefined,
+                    },
+                    {
+                      branch: inquiryBranchesIDs
+                        ? {
+                            id: {
+                              in: inquiryBranchesIDs,
+                            },
+                          }
+                        : undefined,
+                    },
+                    {
+                      store: inquiryStoresIDs
+                        ? {
+                            id: {
+                              in: inquiryStoresIDs,
+                            },
+                          }
+                        : undefined,
+                    },
+                    {
+                      company: {
+                        id: user.companyID,
+                      },
+                    },
+                    {
+                      location: inquiryLocationsIDs
+                        ? {
+                            id: {
+                              in: inquiryLocationsIDs,
+                            },
+                          }
+                        : undefined,
+                    },
+                  ],
+                }
+              : {
+                  clientId: user.role === "CLIENT" ? user.id : undefined,
+                  companyId: user?.companyID || undefined,
+                  branchId:
+                    user.role === "BRANCH_MANAGER"
+                      ? employee?.branchId
+                      : undefined,
+                  deliveryAgentId:
+                    user.role === "DELIVERY_AGENT" ? user.id : undefined,
+                  storeId:
+                    user.role === "CLIENT_ASSISTANT"
+                      ? {in: inquiryStoresIDs}
+                      : undefined,
+                },
+        },
       },
     });
 
     let totalUnSeened = 0;
+    unSeenChats.forEach((c) => {
+      totalUnSeened += c._count.id;
+    });
 
     const allStatistics = chats.data.map((e) => {
-      totalUnSeened +=
-        unSeenChats.find((c) => c.chatId === e.id)?._count.id || 0;
       return {
         id: e.id,
         unseenMessages:
