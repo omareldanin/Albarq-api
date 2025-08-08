@@ -61,7 +61,7 @@ export class OrdersRepository {
         where: {
           type: "EXPORT",
           branch: {
-            governorate: data.orderData.governorate,
+            id: data.orderData.branchID,
           },
         },
         select: {
