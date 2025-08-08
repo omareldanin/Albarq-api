@@ -4,10 +4,10 @@ import {
   type Prisma,
   type SecondaryStatus,
 } from "@prisma/client";
-import { prisma } from "../../database/db";
-import { AppError } from "../../lib/AppError";
-import type { loggedInUserType } from "../../types/user";
-import type { ReportCreateOrdersFiltersType } from "../reports/reports.dto";
+import {prisma} from "../../database/db";
+import {AppError} from "../../lib/AppError";
+import type {loggedInUserType} from "../../types/user";
+import type {ReportCreateOrdersFiltersType} from "../reports/reports.dto";
 import type {
   OrderCreateType,
   OrderTimelineFiltersType,
@@ -24,15 +24,15 @@ import {
   orderTimelineSelect,
   statisticsReformed,
 } from "./orders.responses";
-import { io } from "../../server";
-import { MessagesController } from "../messages/messages.controller";
+import {io} from "../../server";
+import {MessagesController} from "../messages/messages.controller";
 
 const messageController = new MessagesController();
 
 export class OrdersRepository {
   generateRandomId() {
     const now = new Date(
-      new Date().toLocaleString("en-US", { timeZone: "Asia/Gaza" })
+      new Date().toLocaleString("en-US", {timeZone: "Asia/Gaza"})
     );
 
     // Format date as YYMMDD
@@ -53,7 +53,6 @@ export class OrdersRepository {
     let quantity = 0;
     let weight = (data.orderData.weight as number) || 0;
     let status: OrderStatus = "REGISTERED";
-
     if (
       data.loggedInUser.role !== "CLIENT" &&
       data.loggedInUser.role !== "CLIENT_ASSISTANT"
@@ -61,14 +60,12 @@ export class OrdersRepository {
       const repository = await prisma.repository.findFirst({
         where: {
           type: "EXPORT",
-          companyId: data.loggedInUser.companyID
-            ? data.loggedInUser.companyID
-            : undefined,
+          branch: {
+            governorate: data.orderData.governorate,
+          },
         },
         select: {
-          mainRepository: true,
           id: true,
-          type: true,
         },
       });
       if (!repository) {
@@ -385,7 +382,7 @@ export class OrdersRepository {
         secondaryStatus:
           data.loggedInUser.role !== "CLIENT" &&
           data.loggedInUser.role !== "CLIENT_ASSISTANT"
-            ? "IN_REPOSITORY"
+            ? "IN_CAR"
             : "WITH_CLIENT",
         deliveryAgent: undefined,
         orderProducts:
@@ -704,14 +701,14 @@ export class OrdersRepository {
               // Filter by status
               {
                 status: data.filters.statuses
-                  ? { in: data.filters.statuses }
+                  ? {in: data.filters.statuses}
                   : undefined,
               },
               {
                 status:
                   data.filters.status === "RETURNED" &&
                   data.loggedInUser?.role === "RECEIVING_AGENT"
-                    ? { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] }
+                    ? {in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"]}
                     : data.filters.status,
               },
               // Filter by deliveryType
@@ -754,7 +751,7 @@ export class OrdersRepository {
                 store: {
                   id:
                     data.loggedInUser?.role === "CLIENT_ASSISTANT"
-                      ? { in: data.filters.inquiryStoresIDs }
+                      ? {in: data.filters.inquiryStoresIDs}
                       : data.filters.storeID,
                 },
               },
@@ -783,7 +780,7 @@ export class OrdersRepository {
               },
               {
                 receiptNumber: data.filters.receiptNumbers
-                  ? { in: data.filters.receiptNumbers }
+                  ? {in: data.filters.receiptNumbers}
                   : undefined,
               },
               // Filter by recipientName
@@ -904,8 +901,8 @@ export class OrdersRepository {
                     AND:
                       data.filters.branchReport === "true"
                         ? [
-                            { branchReport: { isNot: null } },
-                            { branchReport: { report: { deleted: false } } },
+                            {branchReport: {isNot: null}},
+                            {branchReport: {report: {deleted: false}}},
                           ]
                         : undefined,
                   },
@@ -913,8 +910,8 @@ export class OrdersRepository {
                     OR:
                       data.filters.branchReport === "false"
                         ? [
-                            { branchReport: { is: null } },
-                            { branchReport: { report: { deleted: true } } },
+                            {branchReport: {is: null}},
+                            {branchReport: {report: {deleted: true}}},
                           ]
                         : undefined,
                   },
@@ -927,10 +924,10 @@ export class OrdersRepository {
                     AND:
                       data.filters.deliveryAgentReport === "true"
                         ? [
-                            { deliveryAgentReport: { isNot: null } },
+                            {deliveryAgentReport: {isNot: null}},
                             {
                               deliveryAgentReport: {
-                                report: { deleted: false },
+                                report: {deleted: false},
                               },
                             },
                           ]
@@ -940,10 +937,10 @@ export class OrdersRepository {
                     OR:
                       data.filters.deliveryAgentReport === "false"
                         ? [
-                            { deliveryAgentReport: { is: null } },
+                            {deliveryAgentReport: {is: null}},
                             {
                               deliveryAgentReport: {
-                                report: { deleted: true },
+                                report: {deleted: true},
                               },
                             },
                           ]
@@ -958,9 +955,9 @@ export class OrdersRepository {
                     AND:
                       data.filters.governorateReport === "true"
                         ? [
-                            { governorateReport: { isNot: null } },
+                            {governorateReport: {isNot: null}},
                             {
-                              governorateReport: { report: { deleted: false } },
+                              governorateReport: {report: {deleted: false}},
                             },
                           ]
                         : undefined,
@@ -969,9 +966,9 @@ export class OrdersRepository {
                     OR:
                       data.filters.governorateReport === "false"
                         ? [
-                            { governorateReport: { is: null } },
+                            {governorateReport: {is: null}},
                             {
-                              governorateReport: { report: { deleted: true } },
+                              governorateReport: {report: {deleted: true}},
                             },
                           ]
                         : undefined,
@@ -1175,15 +1172,15 @@ export class OrdersRepository {
                         ]
                       : data.loggedInUser?.role === "DELIVERY_AGENT"
                       ? [
-                          { deliveryAgentReport: { is: null } },
+                          {deliveryAgentReport: {is: null}},
                           {
-                            deliveryAgentReport: { report: { deleted: true } },
+                            deliveryAgentReport: {report: {deleted: true}},
                           },
                         ]
                       : data.loggedInUser?.role === "BRANCH_MANAGER"
                       ? [
-                          { branchReport: { is: null } },
-                          { branchReport: { report: { deleted: true } } },
+                          {branchReport: {is: null}},
+                          {branchReport: {report: {deleted: true}}},
                         ]
                       : [
                           {
@@ -1253,7 +1250,7 @@ export class OrdersRepository {
         Object.keys(OrderStatus) as Array<keyof typeof OrderStatus>
       ).map((status) => {
         const statusCount = ordersMetaDataGroupByStatus.find(
-          (orderStatus: { status: string }) => {
+          (orderStatus: {status: string}) => {
             return orderStatus.status === status;
           }
         );
@@ -1353,7 +1350,7 @@ export class OrdersRepository {
       Object.keys(OrderStatus) as Array<keyof typeof OrderStatus>
     ).map((status) => {
       const statusCount = ordersMetaDataGroupByStatus.find(
-        (orderStatus: { status: string }) => {
+        (orderStatus: {status: string}) => {
           return orderStatus.status === status;
         }
       );
@@ -1382,7 +1379,7 @@ export class OrdersRepository {
     };
   }
 
-  async getOrdersByIDs(data: { ordersIDs: string[] }) {
+  async getOrdersByIDs(data: {ordersIDs: string[]}) {
     const orders = await prisma.order.findMany({
       where: {
         id: {
@@ -1397,7 +1394,7 @@ export class OrdersRepository {
     return orders.map(orderReform);
   }
 
-  async getOrder(data: { orderID: string }) {
+  async getOrder(data: {orderID: string}) {
     const order = await prisma.order.findFirst({
       where: {
         receiptNumber: data.orderID,
@@ -1480,7 +1477,7 @@ export class OrdersRepository {
     //     inquiryEmployees: [...(reformedOrder?.inquiryEmployees || []), ...inquiryEmployees]
     // };
   }
-  async getOrderById(data: { orderID: string }) {
+  async getOrderById(data: {orderID: string}) {
     const order = await prisma.order.findUnique({
       where: {
         id: data.orderID,
@@ -1492,7 +1489,7 @@ export class OrdersRepository {
     return reformedOrder;
   }
 
-  async getOrderByReceiptNumber(data: { orderReceiptNumber: string }) {
+  async getOrderByReceiptNumber(data: {orderReceiptNumber: string}) {
     const order = await prisma.order.findFirst({
       where: {
         receiptNumber: data.orderReceiptNumber,
@@ -1661,7 +1658,7 @@ export class OrdersRepository {
       },
       select: {
         deliveryCost: true,
-        oldDeliveryCost:true,
+        oldDeliveryCost: true,
         clientNet: true,
         companyNet: true,
         deliveryAgentNet: true,
@@ -1684,8 +1681,12 @@ export class OrdersRepository {
     let deliveryAgentCost = orderData?.deliveryAgentNet;
     let companyNet = orderData?.companyNet;
     let clientNet = orderData?.clientNet;
-    let newDeliveryCost = orderData?.deliveryCost ? orderData?.deliveryCost :orderData?.oldDeliveryCost;
-    let oldDeliveryCost=orderData?.deliveryCost ? orderData?.deliveryCost :orderData?.oldDeliveryCost
+    let newDeliveryCost = orderData?.deliveryCost
+      ? orderData?.deliveryCost
+      : orderData?.oldDeliveryCost;
+    let oldDeliveryCost = orderData?.deliveryCost
+      ? orderData?.deliveryCost
+      : orderData?.oldDeliveryCost;
     let weight = (data.orderData.weight as number) || orderData?.weight || 0;
 
     if (weight) {
@@ -1782,7 +1783,7 @@ export class OrdersRepository {
           : undefined,
         clientNet: clientNet,
         deliveryCost: newDeliveryCost,
-        oldDeliveryCost:oldDeliveryCost,
+        oldDeliveryCost: oldDeliveryCost,
         deliveryAgentNet: deliveryAgentCost,
         weight: weight,
         companyNet: companyNet,
@@ -1844,7 +1845,7 @@ export class OrdersRepository {
         processed: data.orderData.processed,
         processedAt: data.orderData.processed ? new Date() : undefined,
         processedBy: data.orderData.processed
-          ? { connect: { id: data.loggedInUser.id } }
+          ? {connect: {id: data.loggedInUser.id}}
           : undefined,
         deliveryAgent:
           // unlink delivery agent if null
@@ -1906,7 +1907,7 @@ export class OrdersRepository {
     // const initialMessages=await this.getChatMessages(orderId,userId)
 
     chatMembers.forEach((member) => {
-      io.to(`${member}`).emit("newUpdate", { id: order.id });
+      io.to(`${member}`).emit("newUpdate", {id: order.id});
     });
 
     const RECEIVING_AGENT = await prisma.employee.findMany({
@@ -1924,13 +1925,13 @@ export class OrdersRepository {
     });
 
     RECEIVING_AGENT.map((e) => {
-      io.to(`${e.id}`).emit("newUpdate", { id: order.id });
+      io.to(`${e.id}`).emit("newUpdate", {id: order.id});
     });
 
     return orderReform(order);
   }
 
-  async deleteOrder(data: { orderID: string }) {
+  async deleteOrder(data: {orderID: string}) {
     const deletedOrder = await prisma.order.delete({
       where: {
         id: data.orderID,
@@ -1939,7 +1940,7 @@ export class OrdersRepository {
     return deletedOrder;
   }
 
-  async deactivateOrder(data: { orderID: string; deletedByID: number }) {
+  async deactivateOrder(data: {orderID: string; deletedByID: number}) {
     const deletedOrder = await prisma.order.update({
       where: {
         id: data.orderID,
@@ -1957,7 +1958,7 @@ export class OrdersRepository {
     return deletedOrder;
   }
 
-  async reactivateOrder(data: { orderID: string }) {
+  async reactivateOrder(data: {orderID: string}) {
     const deletedOrder = await prisma.order.update({
       where: {
         id: data.orderID,
@@ -2060,7 +2061,7 @@ export class OrdersRepository {
               {
                 storeId:
                   data.loggedInUser.role === "CLIENT_ASSISTANT"
-                    ? { in: data.filters.inquiryStoresIDs }
+                    ? {in: data.filters.inquiryStoresIDs}
                     : data.filters.storeID,
               },
               // {
@@ -2072,23 +2073,23 @@ export class OrdersRepository {
               // },
               {
                 governorateReport: data.filters.governorateReport
-                  ? { isNot: null }
+                  ? {isNot: null}
                   : data.filters.governorateReport
-                  ? { is: null }
+                  ? {is: null}
                   : undefined,
               },
               {
                 branchReport: data.filters.branchReport
-                  ? { isNot: null }
+                  ? {isNot: null}
                   : data.filters.branchReport
-                  ? { is: null }
+                  ? {is: null}
                   : undefined,
               },
               {
                 deliveryAgentReport: data.filters.deliveryAgentReport
-                  ? { isNot: null }
+                  ? {isNot: null}
                   : data.filters.deliveryAgentReport
-                  ? { is: null }
+                  ? {is: null}
                   : undefined,
               },
               {
@@ -2227,13 +2228,13 @@ export class OrdersRepository {
               ]
             : data.loggedInUser.role === "DELIVERY_AGENT"
             ? [
-                { deliveryAgentReport: { is: null } },
-                { deliveryAgentReport: { report: { deleted: true } } },
+                {deliveryAgentReport: {is: null}},
+                {deliveryAgentReport: {report: {deleted: true}}},
               ]
             : data.loggedInUser.role === "BRANCH_MANAGER"
             ? [
-                { branchReport: { is: null } },
-                { branchReport: { report: { deleted: true } } },
+                {branchReport: {is: null}},
+                {branchReport: {report: {deleted: true}}},
               ]
             : [
                 {
@@ -2326,8 +2327,8 @@ export class OrdersRepository {
         where: {
           ...filtersReformed,
           OR: [
-            { deliveryAgentReport: { is: null } },
-            { deliveryAgentReport: { report: { deleted: true } } },
+            {deliveryAgentReport: {is: null}},
+            {deliveryAgentReport: {report: {deleted: true}}},
           ],
           status: {
             in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
@@ -2346,8 +2347,8 @@ export class OrdersRepository {
         where: {
           ...filtersReformed,
           OR: [
-            { branchReport: { is: null } },
-            { branchReport: { report: { deleted: true } } },
+            {branchReport: {is: null}},
+            {branchReport: {report: {deleted: true}}},
           ],
           status: {
             in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
@@ -2422,7 +2423,7 @@ export class OrdersRepository {
   }
 
   async getOrderTimeline(data: {
-    params: { orderID: string | undefined };
+    params: {orderID: string | undefined};
     filters: OrderTimelineFiltersType;
   }) {
     const orderTimeline = await prisma.orderTimeline.findMany({
@@ -2430,9 +2431,7 @@ export class OrdersRepository {
         order: {
           receiptNumber: data.params.orderID,
         },
-        type: data.filters.types
-          ? { in: data.filters.types }
-          : data.filters.type,
+        type: data.filters.types ? {in: data.filters.types} : data.filters.type,
       },
       select: orderTimelineSelect,
       orderBy: {
@@ -2480,7 +2479,7 @@ export class OrdersRepository {
     });
   }
 
-  async getOrderChatMembers(data: { orderID: string }) {
+  async getOrderChatMembers(data: {orderID: string}) {
     const order = await prisma.order.findUnique({
       where: {
         id: data.orderID,
@@ -2580,7 +2579,7 @@ export class OrdersRepository {
     return chatMembers;
   }
 
-  async getOrderInquiryEmployees(data: { orderID: string | undefined }) {
+  async getOrderInquiryEmployees(data: {orderID: string | undefined}) {
     const order = await prisma.order.findFirst({
       where: {
         receiptNumber: data.orderID,
@@ -2616,7 +2615,7 @@ export class OrdersRepository {
         await prisma.employee.findMany({
           where: {
             AND: [
-              { role: "INQUIRY_EMPLOYEE" },
+              {role: "INQUIRY_EMPLOYEE"},
               {
                 inquiryBranches: order?.branchId
                   ? {
@@ -2688,7 +2687,7 @@ export class OrdersRepository {
     return orderInquiryEmployees;
   }
 
-  async getOrderStatus(data: { orderID: string }) {
+  async getOrderStatus(data: {orderID: string}) {
     const order = await prisma.order.findUnique({
       where: {
         id: data.orderID,

@@ -1,14 +1,14 @@
-import { catchAsync } from "../../lib/catchAsync";
-import { prisma } from "../../database/db";
-import { orderReform, orderSelect } from "../orders/orders.responses";
-import { AppError } from "../../lib/AppError";
-import { loggedInUserType } from "../../types/user";
-import { ReportsRepository } from "../reports/reports.repository";
-import { sendNotification } from "../notifications/helpers/sendNotification";
-import { OrdersRepository } from "../orders/orders.repository";
-import { ReportType } from "@prisma/client";
-import { localizeReportType } from "../../lib/localize";
-import { generateReport } from "../reports/helpers/generateReport";
+import {catchAsync} from "../../lib/catchAsync";
+import {prisma} from "../../database/db";
+import {orderReform, orderSelect} from "../orders/orders.responses";
+import {AppError} from "../../lib/AppError";
+import {loggedInUserType} from "../../types/user";
+import {ReportsRepository} from "../reports/reports.repository";
+import {sendNotification} from "../notifications/helpers/sendNotification";
+import {OrdersRepository} from "../orders/orders.repository";
+import {ReportType} from "@prisma/client";
+import {localizeReportType} from "../../lib/localize";
+import {generateReport} from "../reports/helpers/generateReport";
 
 const reportsRepository = new ReportsRepository();
 const ordersRepository = new OrdersRepository();
@@ -17,7 +17,7 @@ export class CustomerOutputController {
   saveOrderInCache = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
 
-    const { orderId, companyId, type, repository, storeId } = req.body;
+    const {orderId, companyId, type, repository, storeId} = req.body;
 
     let order = await prisma.order.findFirst({
       where: {
@@ -47,15 +47,6 @@ export class CustomerOutputController {
       },
     });
 
-    const checkIfExist = await prisma.customerOutput.findFirst({
-      select: {
-        id: true,
-      },
-      where: {
-        orderId: order.id,
-      },
-    });
-
     const userRepository = await prisma.employee.findUnique({
       where: {
         id: loggedInUser.id,
@@ -76,10 +67,6 @@ export class CustomerOutputController {
         },
       },
     });
-
-    if (checkIfExist) {
-      throw new AppError("هذا الطلب موجود بالفعل", 404);
-    }
 
     const returnsRepo = userRepository?.branch?.repositories.find(
       (repo) => repo.type === "RETURN"
@@ -142,7 +129,7 @@ export class CustomerOutputController {
   });
 
   getCustomerOldData = catchAsync(async (req, res) => {
-    const { companyId, size, page, type, repository, storeId } = req.query;
+    const {companyId, size, page, type, repository, storeId} = req.query;
 
     const loggedInUser = res.locals.user as loggedInUserType;
 
@@ -179,12 +166,12 @@ export class CustomerOutputController {
       {
         where: {
           AND: [
-            { repositoryId: returnsRepo.id },
+            {repositoryId: returnsRepo.id},
             type === "client"
-              ? { storeId: storeId ? +storeId : undefined }
+              ? {storeId: storeId ? +storeId : undefined}
               : type === "company"
-              ? { companyId: companyId ? +companyId : undefined }
-              : { targetRepositoryId: repository ? +repository : undefined },
+              ? {companyId: companyId ? +companyId : undefined}
+              : {targetRepositoryId: repository ? +repository : undefined},
           ],
         },
         orderBy: {
@@ -271,13 +258,13 @@ export class CustomerOutputController {
       {
         where: {
           AND: [
-            { repositoryId: returnsRepo.id },
-            type === "client" ? { storeId: storeId ? +storeId : null } : {},
+            {repositoryId: returnsRepo.id},
+            type === "client" ? {storeId: storeId ? +storeId : null} : {},
             type === "client"
-              ? { clientId: store ? +store.clientId : null }
+              ? {clientId: store ? +store.clientId : null}
               : type === "company"
-              ? { companyId: companyId ? +companyId : null }
-              : { targetRepositoryId: repositoryId },
+              ? {companyId: companyId ? +companyId : null}
+              : {targetRepositoryId: repositoryId},
           ],
         },
         select: {
@@ -415,13 +402,13 @@ export class CustomerOutputController {
     await prisma.customerOutput.deleteMany({
       where: {
         AND: [
-          { repositoryId: returnsRepo.id },
-          type === "client" ? { storeId: storeId ? +storeId : null } : {},
+          {repositoryId: returnsRepo.id},
+          type === "client" ? {storeId: storeId ? +storeId : null} : {},
           type === "client"
-            ? { clientId: store ? +store.clientId : null }
+            ? {clientId: store ? +store.clientId : null}
             : type === "company"
-            ? { companyId: companyId ? +companyId : null }
-            : { targetRepositoryId: repositoryId },
+            ? {companyId: companyId ? +companyId : null}
+            : {targetRepositoryId: repositoryId},
         ],
       },
     });

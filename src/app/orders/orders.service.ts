@@ -6,17 +6,17 @@ import {
   type Governorate,
   type Order,
 } from "@prisma/client";
-import { AppError } from "../../lib/AppError";
-import { localizeOrderStatus } from "../../lib/localize";
-import { Logger } from "../../lib/logger";
-import type { loggedInUserType } from "../../types/user";
+import {AppError} from "../../lib/AppError";
+import {localizeOrderStatus} from "../../lib/localize";
+import {Logger} from "../../lib/logger";
+import type {loggedInUserType} from "../../types/user";
 // import { generateReceipts } from "./helpers/generateReceipts";
-import { BranchesRepository } from "../branches/branches.repository";
-import { ClientsRepository } from "../clients/clients.repository";
-import { EmployeesRepository } from "../employees/employees.repository";
-import { sendNotification } from "../notifications/helpers/sendNotification";
-import { generateOrdersReport } from "./helpers/generateOrdersReport";
-import { generateReceipts } from "./helpers/generateReceipts";
+import {BranchesRepository} from "../branches/branches.repository";
+import {ClientsRepository} from "../clients/clients.repository";
+import {EmployeesRepository} from "../employees/employees.repository";
+import {sendNotification} from "../notifications/helpers/sendNotification";
+import {generateOrdersReport} from "./helpers/generateOrdersReport";
+import {generateReceipts} from "./helpers/generateReceipts";
 import type {
   OrderChatNotificationCreateType,
   OrderCreateType,
@@ -30,9 +30,9 @@ import type {
   // OrdersReceiptsCreateType,
   OrdersStatisticsFiltersType,
 } from "./orders.dto";
-import { OrdersRepository } from "./orders.repository";
-import { orderReform, orderSelect, OrderStatusData } from "./orders.responses";
-import { prisma } from "../../database/db";
+import {OrdersRepository} from "./orders.repository";
+import {orderReform, orderSelect, OrderStatusData} from "./orders.responses";
+import {prisma} from "../../database/db";
 
 const ordersRepository = new OrdersRepository();
 const employeesRepository = new EmployeesRepository();
@@ -81,7 +81,7 @@ export class OrdersService {
           companyID: data.loggedInUser.companyID as number,
           clientID,
           loggedInUser: data.loggedInUser,
-          orderData: { ...order, confirmed, status, branchID },
+          orderData: {...order, confirmed, status, branchID},
         });
         if (!createdOrder) {
           throw new AppError("Failed to create order", 500);
@@ -168,7 +168,7 @@ export class OrdersService {
       companyID: data.loggedInUser.companyID as number,
       clientID,
       loggedInUser: data.loggedInUser,
-      orderData: { ...data.orderOrOrdersData, confirmed, status, branchID },
+      orderData: {...data.orderOrOrdersData, confirmed, status, branchID},
     });
 
     // Update Order Timeline
@@ -372,7 +372,7 @@ export class OrdersService {
       size = 10;
     }
 
-    const { orders, ordersMetaData, pagesCount } =
+    const {orders, ordersMetaData, pagesCount} =
       await ordersRepository.getAllOrdersPaginated({
         filters: {
           ...data.filters,
@@ -463,11 +463,11 @@ export class OrdersService {
       throw new AppError("لا يمكنك معالجة الطلب", 403);
     }
 
-    // update order paid amount if new status is delivered or partially returned or replaced      
+    // update order paid amount if new status is delivered or partially returned or replaced
     if (
       oldOrderData?.status !== data.orderData.status &&
       !data.orderData.paidAmount &&
-      data.orderData.paidAmount !== 0 &&  
+      data.orderData.paidAmount !== 0 &&
       (data.orderData.status === OrderStatus.DELIVERED ||
         data.orderData.status === OrderStatus.PARTIALLY_RETURNED ||
         data.orderData.status === OrderStatus.REPLACED) &&
@@ -599,6 +599,25 @@ export class OrdersService {
       // Update status
       if (data.orderData.status && oldOrderData.status !== newOrder.status) {
         // send notification to client
+        if (
+          data.loggedInUser.role !== "DELIVERY_AGENT" &&
+          newOrder.deliveryAgent
+        ) {
+          await sendNotification({
+            orderId: newOrder.receiptNumber,
+            userID: newOrder.deliveryAgent?.id,
+            title: `تم تغيير حالة الطلب رقم ${
+              newOrder.receiptNumber
+            } إلى ${localizeOrderStatus(newOrder.status)} ${
+              newOrder.notes ? `(${newOrder.notes})` : ""
+            }`,
+            content: `تم تغيير حالة الطلب رقم ${
+              newOrder.receiptNumber
+            } إلى ${localizeOrderStatus(newOrder.status)} ${
+              newOrder.notes ? `(${newOrder.notes})` : ""
+            }`,
+          });
+        }
 
         if (
           data.orderData.status === "DELIVERED" ||
@@ -679,9 +698,9 @@ export class OrdersService {
           data: {
             type: "STATUS_CHANGE",
             date: newOrder.updatedAt,
-            old: { value: oldOrderData.status },
-            new: { value: newOrder.status },
-            by: { id: data.loggedInUser.id, name: data.loggedInUser.name },
+            old: {value: oldOrderData.status},
+            new: {value: newOrder.status},
+            by: {id: data.loggedInUser.id, name: data.loggedInUser.name},
             message: `تم تغيير حالة الطلب من ${localizeOrderStatus(
               oldOrderData.status
             )} إلى ${localizeOrderStatus(newOrder.status)}`,
@@ -1108,7 +1127,7 @@ export class OrdersService {
     if (data.ordersData.ordersIDs === "*") {
       orders = (
         await ordersRepository.getAllOrdersPaginated({
-          filters: { ...data.ordersFilters, size: 5000 },
+          filters: {...data.ordersFilters, size: 5000},
           loggedInUser: undefined,
         })
       ).orders as ReturnType<typeof orderReform>[];
@@ -1295,7 +1314,7 @@ export class OrdersService {
           id: true,
         },
         where: {
-          status: { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] },
+          status: {in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"]},
           clientReport: {
             some: {
               receivingAgentId: data.loggedInUser.id,
