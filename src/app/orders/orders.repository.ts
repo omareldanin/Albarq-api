@@ -71,6 +71,7 @@ export class OrdersRepository {
         throw new AppError("لا يوجد مخزن فرز مرتبط بالفرع", 404);
       }
       data.orderData.repositoryID = repository.id;
+      status = "IN_GOV_REPOSITORY";
     }
     if (data.orderData.withProducts === true) {
       for (const product of data.orderData.products) {
