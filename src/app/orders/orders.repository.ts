@@ -34,7 +34,6 @@ export class OrdersRepository {
     const now = new Date(
       new Date().toLocaleString("en-US", {timeZone: "Asia/Gaza"})
     );
-
     // Format date as YYMMDD
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
