@@ -481,7 +481,8 @@ export class OrdersRepository {
     filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
     loggedInUser: loggedInUserType | undefined;
   }) {
-    console.log(data.filters);
+    const startDate = new Date(data.filters.startDate);
+    startDate.setUTCHours(0, 0, 0, 0);
 
     const where =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
@@ -808,7 +809,7 @@ export class OrdersRepository {
               // Filter by startDate
               {
                 createdAt: {
-                  gte: data.filters.startDate,
+                  gte: startDate,
                 },
               },
               // Filter by endDate
