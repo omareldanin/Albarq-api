@@ -481,7 +481,8 @@ export class OrdersRepository {
     filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
     loggedInUser: loggedInUserType | undefined;
   }) {
-    const startDate = new Date(data.filters.startDate);
+    const [day, month, year] = orderFilters.start_date.split("-");
+    const startDate = new Date(+year, month - 1, +day);
     startDate.setHours(0, 0, 0, 0);
 
     const where =
