@@ -29,6 +29,19 @@ import {MessagesController} from "../messages/messages.controller";
 
 const messageController = new MessagesController();
 
+function adjustStartDate(dateInput: string | Date): Date {
+  // Ensure it's a Date object
+  const date = new Date(dateInput);
+
+  // Subtract 1 day
+  date.setDate(date.getDate() - 1);
+
+  // Set time to 11:59:59 PM
+  date.setHours(23, 59, 59, 999);
+
+  return date;
+}
+
 export class OrdersRepository {
   generateRandomId() {
     const now = new Date(
@@ -42,19 +55,6 @@ export class OrdersRepository {
 
     return `${datePart}${randomPart}`;
   }
-
-  function adjustStartDate(dateInput: string | Date): Date {
-  // Ensure it's a Date object
-  const date = new Date(dateInput);
-
-  // Subtract 1 day
-  date.setDate(date.getDate() - 1);
-
-  // Set time to 11:59:59 PM
-  date.setHours(23, 59, 59, 999);
-
-  return date;
-}
 
   async createOrder(data: {
     companyID: number;
@@ -498,9 +498,8 @@ export class OrdersRepository {
     let startDate = new Date();
 
     if (data.filters.startDate) {
-      startDate = adjustStartDate(data.filters.startDate)
+      startDate = adjustStartDate(data.filters.startDate);
       console.log(startDate);
-      
     }
 
     const where =
