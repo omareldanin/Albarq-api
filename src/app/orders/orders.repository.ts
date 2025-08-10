@@ -507,7 +507,7 @@ export class OrdersRepository {
           inputDate.getUTCDate()
         )
       );
-      console.log(startDate);
+      console.log("startDate", startDate);
     }
 
     const where =
