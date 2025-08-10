@@ -482,7 +482,7 @@ export class OrdersRepository {
     loggedInUser: loggedInUserType | undefined;
   }) {
     const startDate = new Date(data.filters.startDate);
-    startDate.setUTCHours(0, 0, 0, 0);
+    startDate.setUTCHours(23, 59, 59, 999);
 
     const where =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
