@@ -42,6 +42,20 @@ export class OrdersRepository {
 
     return `${datePart}${randomPart}`;
   }
+
+  function adjustStartDate(dateInput: string | Date): Date {
+  // Ensure it's a Date object
+  const date = new Date(dateInput);
+
+  // Subtract 1 day
+  date.setDate(date.getDate() - 1);
+
+  // Set time to 11:59:59 PM
+  date.setHours(23, 59, 59, 999);
+
+  return date;
+}
+
   async createOrder(data: {
     companyID: number;
     clientID: number;
@@ -484,9 +498,9 @@ export class OrdersRepository {
     let startDate = new Date();
 
     if (data.filters.startDate) {
-      const [day, month, year] = data.filters.startDate.split("-");
-      startDate = new Date(+year, month - 1, +day);
-      startDate.setHours(0, 0, 0, 0);
+      startDate = adjustStartDate(data.filters.startDate)
+      console.log(startDate);
+      
     }
 
     const where =
