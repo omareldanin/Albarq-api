@@ -808,7 +808,7 @@ export class OrdersRepository {
               },
               // Filter by startDate
               {
-                createdAt: startDate
+                createdAt: data.filters.startDate
                   ? {
                       gte: startDate,
                     }
