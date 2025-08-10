@@ -820,7 +820,9 @@ export class OrdersRepository {
               {
                 createdAt: data.filters.startDate
                   ? {
-                      gte: data.filters.startDate,
+                      gte: new Date(
+                        data.filters.startDate.setHours(0, 0, 0, 0)
+                      ),
                     }
                   : undefined,
               },
