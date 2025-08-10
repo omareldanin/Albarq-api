@@ -494,6 +494,11 @@ export class OrdersRepository {
     filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
     loggedInUser: loggedInUserType | undefined;
   }) {
+    let startDate = new Date();
+    if (data.filters.startDate) {
+      startDate = new Date(data.filters.startDate);
+      startDate.setUTCDate(startDate.getUTCDate() - 1);
+    }
     const where =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
         ? ({
@@ -820,13 +825,16 @@ export class OrdersRepository {
               {
                 createdAt: data.filters.startDate
                   ? {
-                      gte: new Date(
-                        data.filters.startDate.setHours(0, 0, 0, 0)
-                      ),
+                      gte: startDate,
                     }
                   : undefined,
               },
-
+              // Filter by endDate
+              {
+                createdAt: {
+                  lte: data.filters.endDate,
+                },
+              },
               // Filter by deleted
               {
                 deleted: data.filters.deleted,
