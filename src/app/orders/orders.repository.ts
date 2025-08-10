@@ -481,9 +481,13 @@ export class OrdersRepository {
     filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
     loggedInUser: loggedInUserType | undefined;
   }) {
-    const [day, month, year] = data.filters.startDate.split("-");
-    const startDate = new Date(+year, month - 1, +day);
-    startDate.setHours(0, 0, 0, 0);
+    let startDate = new Date();
+
+    if (data.filters.startDate) {
+      const [day, month, year] = data.filters.startDate.split("-");
+      startDate = new Date(+year, month - 1, +day);
+      startDate.setHours(0, 0, 0, 0);
+    }
 
     const where =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
