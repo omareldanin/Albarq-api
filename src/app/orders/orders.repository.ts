@@ -29,18 +29,6 @@ import {MessagesController} from "../messages/messages.controller";
 
 const messageController = new MessagesController();
 
-function adjustStartDateToUTC(dateInput: string | Date): Date {
-  const date = new Date(dateInput);
-
-  // Go to previous day in UTC
-  date.setUTCDate(date.getUTCDate() - 1);
-
-  // Set to 23:59:59.999 UTC
-  date.setUTCHours(23, 59, 59, 999);
-
-  return date;
-}
-
 export class OrdersRepository {
   generateRandomId() {
     const now = new Date(
@@ -495,9 +483,14 @@ export class OrdersRepository {
     loggedInUser: loggedInUserType | undefined;
   }) {
     let startDate = new Date();
+    let endDate = new Date();
     if (data.filters.startDate) {
       startDate = new Date(data.filters.startDate);
       startDate.setUTCDate(startDate.getUTCDate() - 1);
+    }
+    if (data.filters.endDate) {
+      endDate = new Date(data.filters.endDate);
+      endDate.setUTCDate(endDate.getUTCDate() + 1);
     }
     const where =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
@@ -606,6 +599,22 @@ export class OrdersRepository {
                 company: {
                   id: data.filters.companyID,
                 },
+              },
+              // Filter by startDate
+              {
+                createdAt: data.filters.startDate
+                  ? {
+                      gte: startDate,
+                    }
+                  : undefined,
+              },
+              // Filter by endDate
+              {
+                createdAt: data.filters.endDate
+                  ? {
+                      lte: endDate,
+                    }
+                  : undefined,
               },
               {
                 location: data.filters.inquiryLocationsIDs
@@ -831,9 +840,11 @@ export class OrdersRepository {
               },
               // Filter by endDate
               {
-                createdAt: {
-                  lte: data.filters.endDate,
-                },
+                createdAt: data.filters.endDate
+                  ? {
+                      lte: endDate,
+                    }
+                  : undefined,
               },
               // Filter by deleted
               {
