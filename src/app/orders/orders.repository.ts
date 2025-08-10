@@ -29,15 +29,14 @@ import {MessagesController} from "../messages/messages.controller";
 
 const messageController = new MessagesController();
 
-function adjustStartDate(dateInput: string | Date): Date {
-  // Ensure it's a Date object
+function adjustStartDateToUTC(dateInput: string | Date): Date {
   const date = new Date(dateInput);
 
-  // Subtract 1 day
-  date.setDate(date.getDate() - 1);
+  // Go to previous day in UTC
+  date.setUTCDate(date.getUTCDate() - 1);
 
-  // Set time to 11:59:59 PM
-  date.setHours(23, 59, 59, 999);
+  // Set to 23:59:59.999 UTC
+  date.setUTCHours(23, 59, 59, 999);
 
   return date;
 }
@@ -499,7 +498,7 @@ export class OrdersRepository {
 
     if (data.filters.startDate) {
       startDate = adjustStartDate(data.filters.startDate);
-      console.log(startDate);
+      console.log(startDate.toISOString());
     }
 
     const where =
