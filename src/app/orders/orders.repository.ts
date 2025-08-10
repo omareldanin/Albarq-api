@@ -826,12 +826,7 @@ export class OrdersRepository {
                     }
                   : undefined,
               },
-              // Filter by endDate
-              {
-                createdAt: {
-                  lte: data.filters.endDate,
-                },
-              },
+
               // Filter by deleted
               {
                 deleted: data.filters.deleted,
