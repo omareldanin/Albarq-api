@@ -497,7 +497,7 @@ export class OrdersRepository {
     let startDate = new Date();
 
     if (data.filters.startDate) {
-      startDate = adjustStartDate(data.filters.startDate);
+      startDate = adjustStartDateToUTC(data.filters.startDate);
       console.log(startDate.toISOString());
     }
 
