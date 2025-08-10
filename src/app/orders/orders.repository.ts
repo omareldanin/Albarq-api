@@ -808,9 +808,11 @@ export class OrdersRepository {
               },
               // Filter by startDate
               {
-                createdAt: {
-                  gte: startDate,
-                },
+                createdAt: startDate
+                  ? {
+                      gte: startDate,
+                    }
+                  : undefined,
               },
               // Filter by endDate
               {
