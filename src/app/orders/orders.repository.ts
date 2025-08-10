@@ -497,16 +497,8 @@ export class OrdersRepository {
     let startDate = new Date();
 
     if (data.filters.startDate) {
-      const inputDate = new Date(data.filters.startDate);
-
-      // Force to start of that day in UTC
-      startDate = new Date(
-        Date.UTC(
-          inputDate.getUTCFullYear(),
-          inputDate.getUTCMonth(),
-          inputDate.getUTCDate()
-        )
-      );
+      startDate = new Date(data.filters.startDate);
+      startDate.setHours(0, 0, 0, 0);
       console.log("startDate", startDate);
     }
 
