@@ -481,6 +481,8 @@ export class OrdersRepository {
     filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
     loggedInUser: loggedInUserType | undefined;
   }) {
+    console.log(data.filters);
+
     const where =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
         ? ({
