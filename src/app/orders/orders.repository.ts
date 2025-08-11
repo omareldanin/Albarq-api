@@ -1147,7 +1147,6 @@ export class OrdersRepository {
               },
             ],
           } satisfies Prisma.OrderWhereInput);
-    console.log("data.filters.minified", data.filters.minified);
 
     if (data.filters.minified === true || data.filters.forMobile === true) {
       const paginatedOrders = await prisma.order.findManyPaginated(
@@ -1256,7 +1255,87 @@ export class OrdersRepository {
       const mobileOrdersReformed = paginatedOrders.data.map(mobileOrderReform);
 
       const ordersMetaDataAggregate = await prisma.order.aggregate({
-        where: where,
+        where:
+          data.loggedInUser?.role === "RECEIVING_AGENT" &&
+          data.filters.status === "RETURNED"
+            ? {
+                AND: [
+                  {
+                    status: {
+                      in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
+                    },
+                  },
+                  {
+                    client: {
+                      id: {
+                        in: data.filters.inquiryClientsIDs,
+                      },
+                    },
+                  },
+                ],
+              }
+            : {
+                ...where,
+                OR:
+                  data.loggedInUser?.role === "CLIENT" ||
+                  data.loggedInUser?.role === "CLIENT_ASSISTANT"
+                    ? [
+                        {
+                          clientReport: {
+                            none: {
+                              secondaryType: "DELIVERED",
+                            },
+                          },
+                          status: {
+                            notIn: ["RETURNED"],
+                          },
+                        },
+                        {
+                          clientReport: {
+                            none: {
+                              secondaryType: "RETURNED",
+                            },
+                          },
+                          status: {
+                            in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
+                          },
+                        },
+                      ]
+                    : data.loggedInUser?.role === "DELIVERY_AGENT"
+                    ? [
+                        {deliveryAgentReport: {is: null}},
+                        {
+                          deliveryAgentReport: {report: {deleted: true}},
+                        },
+                      ]
+                    : data.loggedInUser?.role === "BRANCH_MANAGER"
+                    ? [
+                        {branchReport: {is: null}},
+                        {branchReport: {report: {deleted: true}}},
+                      ]
+                    : [
+                        {
+                          companyReport: {
+                            none: {
+                              secondaryType: "DELIVERED",
+                            },
+                          },
+                          status: {
+                            notIn: ["RETURNED"],
+                          },
+                        },
+                        {
+                          companyReport: {
+                            none: {
+                              secondaryType: "RETURNED",
+                            },
+                          },
+                          status: {
+                            in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
+                          },
+                        },
+                      ],
+              },
         _count: {
           id: true,
         },
