@@ -490,8 +490,10 @@ export class OrdersRepository {
     }
     if (data.filters.endDate) {
       endDate = new Date(data.filters.endDate);
-      endDate.setUTCDate(endDate.getUTCDate() + 1);
+      // endDate.setUTCDate(endDate.getUTCDate() + 1);
+      endDate.setHours(23, 59, 29);
     }
+
     const where =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
         ? ({
@@ -511,6 +513,45 @@ export class OrdersRepository {
                         : data.filters.search.length > 9
                         ? undefined
                         : +data.filters.search
+                      : undefined,
+                  },
+                  {
+                    clientReport: data.filters.search
+                      ? Number.isNaN(+data.filters.search)
+                        ? undefined
+                        : data.filters.search.length > 9
+                        ? undefined
+                        : {
+                            some: {
+                              id: +data.filters.search,
+                            },
+                          }
+                      : undefined,
+                  },
+                  {
+                    repositoryReport: data.filters.search
+                      ? Number.isNaN(+data.filters.search)
+                        ? undefined
+                        : data.filters.search.length > 9
+                        ? undefined
+                        : {
+                            some: {
+                              id: +data.filters.search,
+                            },
+                          }
+                      : undefined,
+                  },
+                  {
+                    companyReport: data.filters.search
+                      ? Number.isNaN(+data.filters.search)
+                        ? undefined
+                        : data.filters.search.length > 9
+                        ? undefined
+                        : {
+                            some: {
+                              id: +data.filters.search,
+                            },
+                          }
                       : undefined,
                   },
                   {
@@ -604,7 +645,7 @@ export class OrdersRepository {
               {
                 createdAt: data.filters.startDate
                   ? {
-                      gte: startDate,
+                      gt: startDate,
                     }
                   : undefined,
               },
@@ -625,6 +666,206 @@ export class OrdersRepository {
                     }
                   : undefined,
               },
+              {
+                deliveryAgent: data.filters.inquiryDeliveryAgentsIDs
+                  ? {
+                      id: {
+                        in: data.filters.inquiryDeliveryAgentsIDs,
+                      },
+                    }
+                  : undefined,
+              },
+              {
+                AND: [
+                  data.filters.clientReport === "true"
+                    ? {
+                        clientReport: {
+                          some: {
+                            report: {
+                              deleted: false,
+                            },
+                          },
+                        },
+                      }
+                    : {},
+                  {
+                    OR:
+                      data.filters.clientReport === "false"
+                        ? [
+                            {
+                              clientReport: {
+                                none: {},
+                              },
+                            },
+                            {
+                              clientReport: {
+                                some: {
+                                  report: {
+                                    deleted: true,
+                                  },
+                                },
+                              },
+                            },
+                          ]
+                        : undefined,
+                  },
+                ],
+              },
+              // Filter by repositoryReport
+              {
+                AND: [
+                  data.filters.repositoryReport === "true"
+                    ? {
+                        repositoryReport: {
+                          some: {
+                            report: {
+                              deleted: false,
+                            },
+                          },
+                        },
+                      }
+                    : {},
+                  {
+                    OR:
+                      data.filters.repositoryReport === "false"
+                        ? [
+                            {
+                              repositoryReport: {
+                                none: {},
+                              },
+                            },
+                            {
+                              repositoryReport: {
+                                some: {
+                                  report: {
+                                    deleted: true,
+                                  },
+                                },
+                              },
+                            },
+                          ]
+                        : undefined,
+                  },
+                ],
+              },
+              // Filter by branchReport
+              {
+                AND: [
+                  {
+                    AND:
+                      data.filters.branchReport === "true"
+                        ? [
+                            {branchReport: {isNot: null}},
+                            {branchReport: {report: {deleted: false}}},
+                          ]
+                        : undefined,
+                  },
+                  {
+                    OR:
+                      data.filters.branchReport === "false"
+                        ? [
+                            {branchReport: {is: null}},
+                            {branchReport: {report: {deleted: true}}},
+                          ]
+                        : undefined,
+                  },
+                ],
+              },
+              // Filter by deliveryAgentReport
+              {
+                AND: [
+                  {
+                    AND:
+                      data.filters.deliveryAgentReport === "true"
+                        ? [
+                            {deliveryAgentReport: {isNot: null}},
+                            {
+                              deliveryAgentReport: {
+                                report: {deleted: false},
+                              },
+                            },
+                          ]
+                        : undefined,
+                  },
+                  {
+                    OR:
+                      data.filters.deliveryAgentReport === "false"
+                        ? [
+                            {deliveryAgentReport: {is: null}},
+                            {
+                              deliveryAgentReport: {
+                                report: {deleted: true},
+                              },
+                            },
+                          ]
+                        : undefined,
+                  },
+                ],
+              },
+              // Filter by governorateReport
+              {
+                AND: [
+                  {
+                    AND:
+                      data.filters.governorateReport === "true"
+                        ? [
+                            {governorateReport: {isNot: null}},
+                            {
+                              governorateReport: {report: {deleted: false}},
+                            },
+                          ]
+                        : undefined,
+                  },
+                  {
+                    OR:
+                      data.filters.governorateReport === "false"
+                        ? [
+                            {governorateReport: {is: null}},
+                            {
+                              governorateReport: {report: {deleted: true}},
+                            },
+                          ]
+                        : undefined,
+                  },
+                ],
+              },
+              // Filter by companyReport
+              {
+                AND: [
+                  data.filters.companyReport === "true"
+                    ? {
+                        companyReport: {
+                          some: {
+                            report: {
+                              deleted: false,
+                            },
+                          },
+                        },
+                      }
+                    : {},
+                  {
+                    OR:
+                      data.filters.companyReport === "false"
+                        ? [
+                            {
+                              companyReport: {
+                                none: {},
+                              },
+                            },
+                            {
+                              companyReport: {
+                                some: {
+                                  report: {
+                                    deleted: true,
+                                  },
+                                },
+                              },
+                            },
+                          ]
+                        : undefined,
+                  },
+                ],
+              },
             ],
           } satisfies Prisma.OrderWhereInput)
         : ({
@@ -644,6 +885,45 @@ export class OrdersRepository {
                         : data.filters.search.length > 9
                         ? undefined
                         : +data.filters.search
+                      : undefined,
+                  },
+                  {
+                    clientReport: data.filters.search
+                      ? Number.isNaN(+data.filters.search)
+                        ? undefined
+                        : data.filters.search.length > 9
+                        ? undefined
+                        : {
+                            some: {
+                              id: +data.filters.search,
+                            },
+                          }
+                      : undefined,
+                  },
+                  {
+                    repositoryReport: data.filters.search
+                      ? Number.isNaN(+data.filters.search)
+                        ? undefined
+                        : data.filters.search.length > 9
+                        ? undefined
+                        : {
+                            some: {
+                              id: +data.filters.search,
+                            },
+                          }
+                      : undefined,
+                  },
+                  {
+                    companyReport: data.filters.search
+                      ? Number.isNaN(+data.filters.search)
+                        ? undefined
+                        : data.filters.search.length > 9
+                        ? undefined
+                        : {
+                            some: {
+                              id: +data.filters.search,
+                            },
+                          }
                       : undefined,
                   },
                   {
@@ -834,7 +1114,7 @@ export class OrdersRepository {
               {
                 createdAt: data.filters.startDate
                   ? {
-                      gte: startDate,
+                      gt: startDate,
                     }
                   : undefined,
               },
@@ -856,8 +1136,7 @@ export class OrdersRepository {
                   data.filters.clientReport === "true"
                     ? {
                         clientReport: {
-                          every: {
-                            secondaryType: "DELIVERED",
+                          some: {
                             report: {
                               deleted: false,
                             },
@@ -871,9 +1150,7 @@ export class OrdersRepository {
                         ? [
                             {
                               clientReport: {
-                                none: {
-                                  secondaryType: "DELIVERED",
-                                },
+                                none: {},
                               },
                             },
                             {
@@ -896,8 +1173,10 @@ export class OrdersRepository {
                   data.filters.repositoryReport === "true"
                     ? {
                         repositoryReport: {
-                          every: {
-                            secondaryType: "DELIVERED",
+                          some: {
+                            report: {
+                              deleted: false,
+                            },
                           },
                         },
                       }
@@ -908,15 +1187,15 @@ export class OrdersRepository {
                         ? [
                             {
                               repositoryReport: {
-                                none: {
-                                  secondaryType: "DELIVERED",
-                                },
+                                none: {},
                               },
                             },
                             {
                               repositoryReport: {
-                                none: {
-                                  secondaryType: "RETURNED",
+                                some: {
+                                  report: {
+                                    deleted: true,
+                                  },
                                 },
                               },
                             },
@@ -1012,8 +1291,10 @@ export class OrdersRepository {
                   data.filters.companyReport === "true"
                     ? {
                         companyReport: {
-                          every: {
-                            secondaryType: "DELIVERED",
+                          some: {
+                            report: {
+                              deleted: false,
+                            },
                           },
                         },
                       }
@@ -1024,15 +1305,15 @@ export class OrdersRepository {
                         ? [
                             {
                               companyReport: {
-                                none: {
-                                  secondaryType: "DELIVERED",
-                                },
+                                none: {},
                               },
                             },
                             {
                               companyReport: {
-                                none: {
-                                  secondaryType: "RETURNED",
+                                some: {
+                                  report: {
+                                    deleted: true,
+                                  },
                                 },
                               },
                             },
@@ -2113,6 +2394,15 @@ export class OrdersRepository {
                   : undefined,
               },
               {
+                deliveryAgent: data.filters.inquiryDeliveryAgentsIDs
+                  ? {
+                      id: {
+                        in: data.filters.inquiryDeliveryAgentsIDs,
+                      },
+                    }
+                  : undefined,
+              },
+              {
                 store: data.filters.inquiryStoresIDs
                   ? {
                       id: {
@@ -2702,6 +2992,11 @@ export class OrdersRepository {
         locationId: true,
         status: true,
         governorate: true,
+        deliveryAgent: {
+          select: {
+            id: true,
+          },
+        },
         location: {
           select: {
             name: true,
@@ -2751,6 +3046,7 @@ export class OrdersRepository {
             inquiryGovernorates: true,
             inquiryLocations: true,
             inquiryStores: true,
+            inquiryDeliveryAgents: true,
             role: true,
           },
         })
@@ -2760,6 +3056,9 @@ export class OrdersRepository {
         );
         const inquiryStore = inquiryEmployee.inquiryStores.find(
           (e) => e.storeId === order.storeId
+        );
+        const inquiryDelivery = inquiryEmployee.inquiryDeliveryAgents.find(
+          (e) => e.deliveryAgentId === order.deliveryAgent?.id
         );
         if (
           inquiryEmployee.inquiryStatuses.length > 0 &&
@@ -2777,6 +3076,13 @@ export class OrdersRepository {
           return;
         }
         if (inquiryEmployee.inquiryLocations.length > 0 && !inquiryLocation) {
+          return;
+        }
+        if (
+          inquiryEmployee.inquiryDeliveryAgents.length > 0 &&
+          order.deliveryAgent &&
+          !inquiryDelivery
+        ) {
           return;
         }
         orderInquiryEmployees.push({

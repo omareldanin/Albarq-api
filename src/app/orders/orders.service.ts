@@ -272,6 +272,7 @@ export class OrdersService {
     let inquiryStoresIDs: number[] | undefined = undefined;
     let inquiryCompaniesIDs: number[] | undefined = undefined;
     let inquiryClientsIDs: number[] | undefined = undefined;
+    let inquiryDeliveryAgentIDs: number[] | undefined = undefined;
 
     if (data.loggedInUser.role === "RECEIVING_AGENT") {
       const inquiryEmployeeStuff =
@@ -298,6 +299,7 @@ export class OrdersService {
           inquiryEmployeeStuff.inquiryCompanies?.length === 0 &&
           inquiryEmployeeStuff.inquiryStores?.length === 0 &&
           inquiryEmployeeStuff.inquiryGovernorates?.length === 0 &&
+          inquiryEmployeeStuff.inquiryDeliveryAgents?.length === 0 &&
           inquiryEmployeeStuff.inquiryStatuses?.length === 0
         ) {
           // TODO: Improve this
@@ -345,6 +347,11 @@ export class OrdersService {
           inquiryEmployeeStuff.inquiryStores.length > 0
             ? inquiryEmployeeStuff.inquiryStores
             : undefined;
+        inquiryDeliveryAgentIDs =
+          inquiryEmployeeStuff.inquiryDeliveryAgents &&
+          inquiryEmployeeStuff.inquiryDeliveryAgents.length > 0
+            ? inquiryEmployeeStuff.inquiryDeliveryAgents
+            : undefined;
         inquiryCompaniesIDs =
           inquiryEmployeeStuff.inquiryCompanies &&
           inquiryEmployeeStuff.inquiryCompanies.length > 0
@@ -391,6 +398,7 @@ export class OrdersService {
           inquiryStoresIDs,
           inquiryCompaniesIDs,
           inquiryClientsIDs,
+          inquiryDeliveryAgentsIDs: inquiryDeliveryAgentIDs,
         },
         loggedInUser: data.loggedInUser,
       });
@@ -1215,6 +1223,7 @@ export class OrdersService {
     let inquiryStoresIDs: number[] | undefined = undefined;
     let inquiryCompaniesIDs: number[] | undefined = undefined;
     let inquiryClientsIDs: number[] | undefined = undefined;
+    let inquiryDeliveryAgentsIDs: number[] | undefined = undefined;
 
     if (data.loggedInUser.role === "INQUIRY_EMPLOYEE") {
       const inquiryEmployeeStuff =
@@ -1251,6 +1260,11 @@ export class OrdersService {
           inquiryEmployeeStuff.inquiryCompanies &&
           inquiryEmployeeStuff.inquiryCompanies.length > 0
             ? inquiryEmployeeStuff.inquiryCompanies
+            : undefined;
+        inquiryDeliveryAgentsIDs =
+          inquiryEmployeeStuff.inquiryDeliveryAgents &&
+          inquiryEmployeeStuff.inquiryDeliveryAgents.length > 0
+            ? inquiryEmployeeStuff.inquiryDeliveryAgents
             : undefined;
       }
     }
@@ -1300,6 +1314,7 @@ export class OrdersService {
         inquiryStoresIDs,
         inquiryCompaniesIDs,
         inquiryClientsIDs,
+        inquiryDeliveryAgentsIDs,
       },
       loggedInUser: data.loggedInUser,
     });

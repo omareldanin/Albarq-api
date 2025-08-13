@@ -1,11 +1,11 @@
-import { catchAsync } from "../../lib/catchAsync";
-import type { loggedInUserType } from "../../types/user";
+import {catchAsync} from "../../lib/catchAsync";
+import type {loggedInUserType} from "../../types/user";
 import {
   EmployeeCreateSchema,
   EmployeeUpdateSchema,
   EmployeesFiltersSchema,
 } from "./employees.dto";
-import { EmployeesService } from "./employees.service";
+import {EmployeesService} from "./employees.service";
 
 const employeesService = new EmployeesService();
 
@@ -13,6 +13,7 @@ export class EmployeesController {
   createEmployee = catchAsync(async (req, res) => {
     let employeeInput = req.body;
     const loggedInUser = res.locals.user;
+    console.log(employeeInput);
 
     if (req.files) {
       const files = req.files as {
@@ -34,10 +35,11 @@ export class EmployeesController {
     }
 
     const employeeData = EmployeeCreateSchema.parse(employeeInput);
+    console.log(employeeData.inquiryDeliveryAgentsIDs);
 
     const createdEmployee = await employeesService.createEmployee({
       loggedInUser,
-      employeeData: { ...employeeData },
+      employeeData: {...employeeData},
     });
 
     res.status(200).json({
@@ -66,7 +68,7 @@ export class EmployeesController {
       companyID: req.query.company_id,
     });
 
-    const { employees, pagesCount } = await employeesService.getAllEmployees({
+    const {employees, pagesCount} = await employeesService.getAllEmployees({
       filters,
       loggedInUser,
     });
@@ -118,7 +120,7 @@ export class EmployeesController {
 
     res.status(200).json({
       status: "success",
-      data: { ...updatedEmployee },
+      data: {...updatedEmployee},
     });
   });
 

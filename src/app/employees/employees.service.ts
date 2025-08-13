@@ -1,17 +1,17 @@
-import { AdminRole, EmployeeRole } from "@prisma/client";
+import {AdminRole, EmployeeRole} from "@prisma/client";
 import * as bcrypt from "bcrypt";
-import { env } from "../../config";
-import { AppError } from "../../lib/AppError";
-import type { loggedInUserType } from "../../types/user";
-import { BranchesRepository } from "../branches/branches.repository";
-import { sendNotification } from "../notifications/helpers/sendNotification";
+import {env} from "../../config";
+import {AppError} from "../../lib/AppError";
+import type {loggedInUserType} from "../../types/user";
+import {BranchesRepository} from "../branches/branches.repository";
+import {sendNotification} from "../notifications/helpers/sendNotification";
 import type {
   EmployeeCreateType,
   EmployeeUpdateType,
   EmployeesFiltersType,
 } from "./employees.dto";
-import { EmployeesRepository } from "./employees.repository";
-import { prisma } from "../../database/db";
+import {EmployeesRepository} from "./employees.repository";
+import {prisma} from "../../database/db";
 
 const employeesRepository = new EmployeesRepository();
 const branchesRepository = new BranchesRepository();
@@ -133,13 +133,13 @@ export class EmployeesService {
       clientId = employee?.clientId!;
     }
 
-    const { employees, pagesCount } =
+    const {employees, pagesCount} =
       await employeesRepository.getAllEmployeesPaginated({
         loggedInUser: data.loggedInUser,
-        filters: { ...data.filters, companyID, branchID, roles, clientId },
+        filters: {...data.filters, companyID, branchID, roles, clientId},
       });
 
-    return { employees, pagesCount };
+    return {employees, pagesCount};
   };
 
   getEmployee = async (data: {
@@ -150,8 +150,29 @@ export class EmployeesService {
     const employee = await employeesRepository.getEmployee({
       employeeID: data.params.employeeID,
     });
-
-    return employee;
+    const inD = await prisma.inquiryEmployeesDeliveryAgents.findMany({
+      where: {
+        inquiryEmployeeId: data.params.employeeID,
+      },
+      select: {
+        deliveryAgent: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return {
+      ...employee,
+      inquiryDeliveryAgents: inD.map((deliveryAgent) => {
+        return deliveryAgent.deliveryAgent.user;
+      }),
+    };
   };
 
   updateEmployee = async (data: {

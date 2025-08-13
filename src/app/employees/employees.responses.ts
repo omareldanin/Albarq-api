@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type {Prisma} from "@prisma/client";
 
 export const employeeSelect = {
   salary: true,
@@ -112,20 +112,20 @@ export const employeeSelect = {
       name: true,
     },
   },
-  // inquiryDeliveryAgents: {
-  //     select: {
-  //         deliveryAgent: {
-  //             select: {
-  //                 user: {
-  //                     select: {
-  //                         id: true,
-  //                         name: true
-  //                     }
-  //                 }
-  //             }
-  //         }
-  //     }
-  // },
+  inquiryDeliveryAgents: {
+    select: {
+      deliveryAgent: {
+        select: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  },
   // inquiryEmployees: {
   //     select: {
   //         inquiryEmployee: {
@@ -193,9 +193,11 @@ export const employeeReform = (
     inquiryClients: employee.inquiryClients.map((client) => {
       return client.client.user;
     }),
-    // inquiryDeliveryAgents: employee.inquiryDeliveryAgents.map((deliveryAgent) => {
-    //     return deliveryAgent.deliveryAgent.user;
-    // }),
+    inquiryDeliveryAgents: employee.inquiryDeliveryAgents.map(
+      (deliveryAgent) => {
+        return deliveryAgent.deliveryAgent.user;
+      }
+    ),
     // inquiryEmployees: employee.inquiryEmployees.map((inquiryEmployee) => {
     //     return inquiryEmployee.inquiryEmployee.user;
     // }),

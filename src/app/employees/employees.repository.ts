@@ -1,12 +1,12 @@
-import type { Prisma } from "@prisma/client";
-import { prisma } from "../../database/db";
-import type { loggedInUserType } from "../../types/user";
+import type {Prisma} from "@prisma/client";
+import {prisma} from "../../database/db";
+import type {loggedInUserType} from "../../types/user";
 import type {
   EmployeeCreateType,
   EmployeeUpdateType,
   EmployeesFiltersType,
 } from "./employees.dto";
-import { employeeReform, employeeSelect } from "./employees.responses";
+import {employeeReform, employeeSelect} from "./employees.responses";
 
 export class EmployeesRepository {
   async createEmployee(data: {
@@ -162,6 +162,14 @@ export class EmployeesRepository {
       },
       select: employeeSelect,
     });
+    if (data.employeeData.inquiryDeliveryAgentsIDs?.length) {
+      await prisma.inquiryEmployeesDeliveryAgents.createMany({
+        data: data.employeeData.inquiryDeliveryAgentsIDs.map((id) => ({
+          deliveryAgentId: id,
+          inquiryEmployeeId: createdEmployee.user.id,
+        })),
+      });
+    }
     return employeeReform(createdEmployee);
   }
 
@@ -179,17 +187,17 @@ export class EmployeesRepository {
       AND: [
         {
           permissions: data.filters.permissions
-            ? { hasEvery: data.filters.permissions }
+            ? {hasEvery: data.filters.permissions}
             : undefined,
         },
         {
           user: data.filters.name
-            ? { name: { contains: data.filters.name } }
+            ? {name: {contains: data.filters.name}}
             : undefined,
         },
         {
           user: data.filters.phone
-            ? { phone: { contains: data.filters.phone } }
+            ? {phone: {contains: data.filters.phone}}
             : undefined,
         },
         {
@@ -197,8 +205,8 @@ export class EmployeesRepository {
             data.loggedInUser.role !== "CLIENT" &&
             data.loggedInUser.role !== "CLIENT_ASSISTANT" &&
             !data.filters.roles
-              ? { not: "CLIENT_ASSISTANT" }
-              : { in: data.filters.roles },
+              ? {not: "CLIENT_ASSISTANT"}
+              : {in: data.filters.roles},
         },
         {
           role: data.filters.role,
@@ -237,7 +245,7 @@ export class EmployeesRepository {
               : undefined
             : undefined,
         },
-        { deleted: data.filters.deleted },
+        {deleted: data.filters.deleted},
         {
           company: {
             id: data.filters.companyID,
@@ -323,7 +331,7 @@ export class EmployeesRepository {
     };
   }
 
-  async getInquiryEmployeeStuff(data: { employeeID: number }) {
+  async getInquiryEmployeeStuff(data: {employeeID: number}) {
     const employee = await prisma.employee.findUnique({
       where: {
         id: data.employeeID,
@@ -340,7 +348,6 @@ export class EmployeesRepository {
             branch: {
               select: {
                 id: true,
-                name: true,
               },
             },
           },
@@ -350,7 +357,6 @@ export class EmployeesRepository {
             location: {
               select: {
                 id: true,
-                name: true,
               },
             },
           },
@@ -360,7 +366,6 @@ export class EmployeesRepository {
             company: {
               select: {
                 id: true,
-                name: true,
               },
             },
           },
@@ -370,7 +375,19 @@ export class EmployeesRepository {
             store: {
               select: {
                 id: true,
-                name: true,
+              },
+            },
+          },
+        },
+        inquiryDeliveryAgents: {
+          select: {
+            deliveryAgent: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                  },
+                },
               },
             },
           },
@@ -382,7 +399,6 @@ export class EmployeesRepository {
                 user: {
                   select: {
                     id: true,
-                    name: true,
                   },
                 },
               },
@@ -409,18 +425,22 @@ export class EmployeesRepository {
       inquiryClients: employee?.inquiryClients.map((client) => {
         return client.client.user.id;
       }),
+      inquiryDeliveryAgents: employee?.inquiryDeliveryAgents.map((agent) => {
+        return agent.deliveryAgent.user.id;
+      }),
       inquiryGovernorates: employee?.inquiryGovernorates,
       inquiryStatuses: employee?.inquiryStatuses,
     };
   }
 
-  async getEmployee(data: { employeeID: number }) {
+  async getEmployee(data: {employeeID: number}) {
     const employee = await prisma.employee.findUnique({
       where: {
         id: data.employeeID,
       },
       select: employeeSelect,
     });
+
     return employeeReform(employee);
   }
 
@@ -549,6 +569,7 @@ export class EmployeesRepository {
               set: data.employeeData.inquiryStatuses,
             }
           : undefined,
+
         inquiryLocations: data.employeeData.inquiryLocationsIDs
           ? {
               deleteMany: {
@@ -568,10 +589,28 @@ export class EmployeesRepository {
       },
       select: employeeSelect,
     });
+    await prisma.inquiryEmployeesDeliveryAgents.deleteMany({
+      where: {
+        inquiryEmployeeId: data.employeeID,
+      },
+    });
+    console.log(
+      "inquiryDeliveryAgentsIDs",
+      data.employeeData.inquiryDeliveryAgentsIDs
+    );
+
+    if (data.employeeData.inquiryDeliveryAgentsIDs?.length) {
+      await prisma.inquiryEmployeesDeliveryAgents.createMany({
+        data: data.employeeData.inquiryDeliveryAgentsIDs.map((id) => ({
+          deliveryAgentId: id,
+          inquiryEmployeeId: data.employeeID,
+        })),
+      });
+    }
     return employeeReform(employee);
   }
 
-  async deleteEmployee(data: { employeeID: number }) {
+  async deleteEmployee(data: {employeeID: number}) {
     await prisma.$transaction([
       prisma.employee.delete({
         where: {
@@ -587,7 +626,7 @@ export class EmployeesRepository {
     return true;
   }
 
-  async deactivateEmployee(data: { employeeID: number; deletedByID: number }) {
+  async deactivateEmployee(data: {employeeID: number; deletedByID: number}) {
     const deletedEmployee = await prisma.employee.update({
       where: {
         id: data.employeeID,
@@ -605,7 +644,7 @@ export class EmployeesRepository {
     return deletedEmployee;
   }
 
-  async reactivateEmployee(data: { employeeID: number }) {
+  async reactivateEmployee(data: {employeeID: number}) {
     const deletedEmployee = await prisma.employee.update({
       where: {
         id: data.employeeID,
@@ -617,7 +656,7 @@ export class EmployeesRepository {
     return deletedEmployee;
   }
 
-  async getCompanyManager(data: { companyID: number }) {
+  async getCompanyManager(data: {companyID: number}) {
     const companyManager = await prisma.employee.findFirst({
       where: {
         role: "COMPANY_MANAGER",
@@ -644,7 +683,7 @@ export class EmployeesRepository {
   }
 
   // TODO: Move to Employees repository
-  async getDeliveryAgentIDByLocationID(data: { locationID: number }) {
+  async getDeliveryAgentIDByLocationID(data: {locationID: number}) {
     const deliveryAgent = await prisma.employee.findFirst({
       where: {
         role: "DELIVERY_AGENT",

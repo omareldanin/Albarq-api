@@ -464,6 +464,8 @@ model InquiryEmployeesBranches {
   @@id([inquiryEmployeeId, branchId])
 }
 
+
+
 model Repository {
   // --- IDENTIFICATION --------------------------------------------------------------------- //
   id                Int                @id @default(autoincrement())
