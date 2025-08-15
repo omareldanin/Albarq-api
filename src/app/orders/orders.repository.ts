@@ -493,6 +493,8 @@ export class OrdersRepository {
       endDate.setUTCDate(endDate.getUTCDate() + 1);
       endDate.setHours(0, 0, 0, 0);
     }
+    console.log("startDate", startDate);
+    console.log("endDate", endDate);
 
     const where =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
