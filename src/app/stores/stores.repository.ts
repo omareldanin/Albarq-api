@@ -1,7 +1,7 @@
-import type { Prisma } from "@prisma/client";
-import { prisma } from "../../database/db";
-import type { StoreCreateType, StoreUpdateType } from "./stores.dto";
-import { storeSelect, storeSelectReform } from "./stores.responses";
+import type {Prisma} from "@prisma/client";
+import {prisma} from "../../database/db";
+import type {StoreCreateType, StoreUpdateType} from "./stores.dto";
+import {storeSelect, storeSelectReform} from "./stores.responses";
 
 export class StoresRepository {
   async createStore(companyID: number, data: StoreCreateType) {
@@ -42,22 +42,31 @@ export class StoresRepository {
     companyID?: number;
     minified?: boolean;
     branchID?: number;
+    name?: string;
   }) {
     const where = {
       AND: [
-        { deleted: filters.deleted === "true" },
-        { company: { id: filters.companyID } },
+        {deleted: filters.deleted === "true"},
+        {company: {id: filters.companyID}},
         {
-          client: filters.clientID ? { id: filters.clientID } : undefined,
+          client: filters.clientID ? {id: filters.clientID} : undefined,
+        },
+        {
+          name: filters.name
+            ? {
+                contains: filters.name,
+                mode: "insensitive",
+              }
+            : undefined,
         },
         {
           clientAssistant: filters.clientAssistantID
-            ? { id: filters.clientAssistantID }
+            ? {id: filters.clientAssistantID}
             : undefined,
         },
         {
           client: filters.branchID
-            ? { branch: { id: filters.branchID } }
+            ? {branch: {id: filters.branchID}}
             : undefined,
         },
       ],
@@ -103,7 +112,7 @@ export class StoresRepository {
     };
   }
 
-  async getStore(data: { storeID: number }) {
+  async getStore(data: {storeID: number}) {
     const store = await prisma.store.findUnique({
       where: {
         id: data.storeID,
@@ -123,7 +132,7 @@ export class StoresRepository {
     return storeSelectReform(store);
   }
 
-  async updateStore(data: { storeID: number; storeData: StoreUpdateType }) {
+  async updateStore(data: {storeID: number; storeData: StoreUpdateType}) {
     const store = await prisma.store.update({
       where: {
         id: data.storeID,
@@ -152,7 +161,7 @@ export class StoresRepository {
     return storeSelectReform(store);
   }
 
-  async deleteStore(data: { storeID: number }) {
+  async deleteStore(data: {storeID: number}) {
     const deletedStore = await prisma.store.delete({
       where: {
         id: data.storeID,
@@ -161,7 +170,7 @@ export class StoresRepository {
     return deletedStore;
   }
 
-  async deactivateStore(data: { storeID: number; deletedByID: number }) {
+  async deactivateStore(data: {storeID: number; deletedByID: number}) {
     const deletedStore = await prisma.store.update({
       where: {
         id: data.storeID,
@@ -179,7 +188,7 @@ export class StoresRepository {
     return deletedStore;
   }
 
-  async reactivateStore(data: { storeID: number }) {
+  async reactivateStore(data: {storeID: number}) {
     const deletedStore = await prisma.store.update({
       where: {
         id: data.storeID,
