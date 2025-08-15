@@ -1123,7 +1123,7 @@ export class OrdersRepository {
               {
                 createdAt: data.filters.endDate
                   ? {
-                      lt: endDate,
+                      lte: endDate,
                     }
                   : undefined,
               },
