@@ -486,12 +486,12 @@ export class OrdersRepository {
     let endDate = new Date();
     if (data.filters.startDate) {
       startDate = new Date(data.filters.startDate);
-      startDate.setHours(0, 0, 0, 0);
+      startDate.setUTCDate(endDate.getUTCDate() - 1);
+      startDate.setHours(22, 0, 0, 0);
     }
     if (data.filters.endDate) {
       endDate = new Date(data.filters.endDate);
-      endDate.setUTCDate(endDate.getUTCDate() + 1);
-      endDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 0, 0, 0);
     }
     console.log("startDate", startDate);
     console.log("endDate", endDate);
