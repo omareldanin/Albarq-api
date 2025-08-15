@@ -493,7 +493,6 @@ export class OrdersRepository {
       endDate.setUTCDate(endDate.getUTCDate() + 1);
       endDate.setHours(0, 0, 0, 0);
     }
-    console.log("endDate", endDate);
 
     const where =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
@@ -1115,7 +1114,7 @@ export class OrdersRepository {
               {
                 createdAt: data.filters.startDate
                   ? {
-                      gte: startDate,
+                      gt: startDate,
                     }
                   : undefined,
               },
@@ -1123,7 +1122,7 @@ export class OrdersRepository {
               {
                 createdAt: data.filters.endDate
                   ? {
-                      lte: endDate,
+                      lt: endDate,
                     }
                   : undefined,
               },
