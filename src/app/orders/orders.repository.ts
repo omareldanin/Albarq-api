@@ -491,7 +491,7 @@ export class OrdersRepository {
     if (data.filters.endDate) {
       endDate = new Date(data.filters.endDate);
       // endDate.setUTCDate(endDate.getUTCDate() + 1);
-      endDate.setHours(21, 59, 29);
+      endDate.setHours(0, 0, 0);
     }
     console.log("endDate", endDate);
 
