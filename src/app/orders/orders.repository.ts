@@ -487,11 +487,11 @@ export class OrdersRepository {
     if (data.filters.startDate) {
       startDate = new Date(data.filters.startDate);
       startDate.setUTCDate(startDate.getUTCDate() - 1);
-      startDate.setHours(22, 0, 0, 0);
+      startDate.setHours(21, 0, 0, 0);
     }
     if (data.filters.endDate) {
       endDate = new Date(data.filters.endDate);
-      endDate.setHours(23, 0, 0, 0);
+      endDate.setHours(21, 0, 0, 0);
     }
     console.log("startDate", startDate);
     console.log("endDate", endDate);
