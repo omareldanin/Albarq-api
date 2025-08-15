@@ -52,11 +52,14 @@ export class EmployeesRepository {
         clientAssistantRole: data.employeeData.clientAssistantRole,
         salary: data.employeeData.salary,
         role:
-          data.employeeData.role === "EMERGENCY_EMPLOYEE"
+          data.employeeData.role === "EMERGENCY_EMPLOYEE" ||
+          data.employeeData.role === "MAIN_EMERGENCY_EMPLOYEE"
             ? "INQUIRY_EMPLOYEE"
             : data.employeeData.role,
         emergency:
           data.employeeData.role === "EMERGENCY_EMPLOYEE" ? true : false,
+        mainEmergency:
+          data.employeeData.role === "MAIN_EMERGENCY_EMPLOYEE" ? true : false,
         Client: clientConnect,
         company: {
           connect: {
@@ -469,11 +472,14 @@ export class EmployeesRepository {
         clientAssistantRole: data.employeeData.clientAssistantRole,
         salary: data.employeeData.salary,
         role:
-          data.employeeData.role === "EMERGENCY_EMPLOYEE"
+          data.employeeData.role === "EMERGENCY_EMPLOYEE" ||
+          data.employeeData.role === "MAIN_EMERGENCY_EMPLOYEE"
             ? "INQUIRY_EMPLOYEE"
             : data.employeeData.role,
         emergency:
           data.employeeData.role === "EMERGENCY_EMPLOYEE" ? true : false,
+        mainEmergency:
+          data.employeeData.role === "MAIN_EMERGENCY_EMPLOYEE" ? true : false,
         permissions: data.employeeData.permissions,
         orderStatus: data.employeeData.orderStatus,
         branch: data.employeeData.branchID

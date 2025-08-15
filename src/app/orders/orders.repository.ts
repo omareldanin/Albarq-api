@@ -1871,6 +1871,7 @@ export class OrdersRepository {
     //     inquiryEmployees: [...(reformedOrder?.inquiryEmployees || []), ...inquiryEmployees]
     // };
   }
+
   async getOrderById(data: {orderID: string}) {
     const order = await prisma.order.findUnique({
       where: {
@@ -3032,6 +3033,9 @@ export class OrdersRepository {
                       },
                     }
                   : undefined,
+              },
+              {
+                mainEmergency: false,
               },
             ],
           },

@@ -36,7 +36,6 @@ export class AutomaticUpdatesController {
       minified: req.query.minified,
       enabled: req.query.enabled,
       orderStatus: req.query.order_status,
-      governorate: req.query.governorate,
       returnCondition: req.query.return_condition,
       newOrderStatus: req.query.new_order_status,
       branchID: req.query.branch_id,

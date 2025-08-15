@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "EmployeeRole" ADD VALUE 'MAIN_EMERGENCY_EMPLOYEE';

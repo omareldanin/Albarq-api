@@ -591,6 +591,14 @@ export class OrdersService {
       }
       data.orderData.branchID = branch.id;
     }
+
+    if (
+      data.orderData.status &&
+      oldOrderData.status === "DELIVERED" &&
+      !data.loggedInUser.permissions.includes("CHANGE_CLOSED_ORDER_STATUS")
+    ) {
+      throw new AppError("لا يمكنك تغيير حاله طلبيه مغلقه", 500);
+    }
     const newOrder = await ordersRepository.updateOrder({
       orderID: oldOrderData.id,
       loggedInUser: data.loggedInUser,
