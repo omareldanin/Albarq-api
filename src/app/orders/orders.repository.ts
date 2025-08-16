@@ -493,8 +493,6 @@ export class OrdersRepository {
       endDate = new Date(data.filters.endDate);
       endDate.setHours(21, 0, 0, 0);
     }
-    console.log("startDate", startDate);
-    console.log("endDate", endDate);
 
     const where =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
@@ -1152,7 +1150,11 @@ export class OrdersRepository {
                         ? [
                             {
                               clientReport: {
-                                none: {},
+                                none: {
+                                  secondaryType: data.filters.delivered
+                                    ? "DELIVERED"
+                                    : undefined,
+                                },
                               },
                             },
                             {
@@ -1347,19 +1349,25 @@ export class OrdersRepository {
                   id: data.filters.forwardedFromID,
                 },
               },
-              {
-                branch: data.filters.inquiryBranchesIDs
-                  ? {
-                      id: {
-                        in: data.filters.inquiryBranchesIDs,
-                      },
-                    }
-                  : {
-                      id: data.filters.branchID,
-                    },
-              },
+
               {
                 OR: [
+                  {
+                    branch: data.filters.inquiryBranchesIDs
+                      ? {
+                          id: {
+                            in: data.filters.inquiryBranchesIDs,
+                          },
+                        }
+                      : {
+                          id: data.filters.branchID,
+                        },
+                  },
+                  {
+                    client: {
+                      branchId: data.loggedInUser?.branchId,
+                    },
+                  },
                   {
                     repository: {
                       id: data.filters.repositoryID,
@@ -1371,60 +1379,6 @@ export class OrdersRepository {
                   },
                   {
                     clientOrderReceiptId: data.filters.clientOrderReceiptId,
-                  },
-                  {
-                    OR: [
-                      {
-                        status: data.filters.inquiryStatuses
-                          ? {
-                              in: data.filters.inquiryStatuses,
-                            }
-                          : undefined,
-                      },
-                      {
-                        governorate: data.filters.inquiryGovernorates
-                          ? {
-                              in: data.filters.inquiryGovernorates,
-                            }
-                          : undefined,
-                      },
-                      {
-                        branch: data.filters.inquiryBranchesIDs
-                          ? {
-                              id: {
-                                in: data.filters.inquiryBranchesIDs,
-                              },
-                            }
-                          : undefined,
-                      },
-                      {
-                        store: data.filters.inquiryStoresIDs
-                          ? {
-                              id: {
-                                in: data.filters.inquiryStoresIDs,
-                              },
-                            }
-                          : undefined,
-                      },
-                      {
-                        company: data.filters.inquiryCompaniesIDs
-                          ? {
-                              id: {
-                                in: data.filters.inquiryCompaniesIDs,
-                              },
-                            }
-                          : undefined,
-                      },
-                      {
-                        location: data.filters.inquiryLocationsIDs
-                          ? {
-                              id: {
-                                in: data.filters.inquiryLocationsIDs,
-                              },
-                            }
-                          : undefined,
-                      },
-                    ],
                   },
                 ],
               },
@@ -1676,32 +1630,7 @@ export class OrdersRepository {
     const paginatedOrders = await prisma.order.findManyPaginated(
       {
         where: {
-          OR: [
-            where,
-            data.loggedInUser?.role === "BRANCH_MANAGER" ||
-            data.loggedInUser?.role === "REPOSITORIY_EMPLOYEE"
-              ? {
-                  deliveryAgent: {
-                    branch: {
-                      id: data.loggedInUser.branchId,
-                    },
-                  },
-                  deleted: false,
-                }
-              : {},
-            (!data.filters.repositoryID &&
-              data.loggedInUser?.role === "REPOSITORIY_EMPLOYEE") ||
-            (!data.filters.repositoryID &&
-              data.loggedInUser?.role === "BRANCH_MANAGER")
-              ? {
-                  repository: {
-                    branchId: data.filters.branchID,
-                  },
-                  deleted: false,
-                  // secondaryStatus: "IN_REPOSITORY",
-                }
-              : {},
-          ],
+          ...where,
         },
         orderBy: {
           [data.filters.sort.split(":")[0]]:

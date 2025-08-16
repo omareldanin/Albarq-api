@@ -1,6 +1,6 @@
-import { prisma } from "../../database/db";
-import { catchAsync } from "../../lib/catchAsync";
-import type { loggedInUserType } from "../../types/user";
+import {prisma} from "../../database/db";
+import {catchAsync} from "../../lib/catchAsync";
+import type {loggedInUserType} from "../../types/user";
 import {
   OrderChatNotificationCreateSchema,
   OrderCreateSchema,
@@ -14,12 +14,12 @@ import {
   // OrdersReceiptsCreateSchema,
   OrdersStatisticsFiltersSchema,
 } from "./orders.dto";
-import { OrdersService } from "./orders.service";
-import { EmployeesRepository } from "../employees/employees.repository";
-import { Governorate, OrderStatus, SecondaryStatus } from "@prisma/client";
-import { orderReform, orderSelect, OrderStatusData } from "./orders.responses";
-import { AppError } from "../../lib/AppError";
-import { OrdersRepository } from "./orders.repository";
+import {OrdersService} from "./orders.service";
+import {EmployeesRepository} from "../employees/employees.repository";
+import {Governorate, OrderStatus, SecondaryStatus} from "@prisma/client";
+import {orderReform, orderSelect, OrderStatusData} from "./orders.responses";
+import {AppError} from "../../lib/AppError";
+import {OrdersRepository} from "./orders.repository";
 const XlsxPopulate = require("xlsx-populate");
 
 const employeesRepository = new EmployeesRepository();
@@ -120,9 +120,10 @@ export class OrdersController {
       secondaryStatus: req.query.secondaryStatus,
       clientOrderReceiptId: req.query.clientOrderReceiptId,
       printed: req.query.printed,
+      delivered: req.query.delivered,
     });
 
-    const { orders, ordersMetaData, page, pagesCount } =
+    const {orders, ordersMetaData, page, pagesCount} =
       await ordersService.getAllOrders({
         loggedInUser: loggedInUser,
         filters: filters,
@@ -228,7 +229,7 @@ export class OrdersController {
           secondaryStatus: secondaryStatus as SecondaryStatus,
           status:
             status === "RETURNED"
-              ? { in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"] }
+              ? {in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"]}
               : (status as OrderStatus),
           storeId: store_id ? Number(store_id) : undefined,
           clientId: client_id ? Number(client_id) : undefined,
@@ -274,7 +275,7 @@ export class OrdersController {
       params: params,
     });
     const orderTimeline = await ordersService.getOrderTimeline({
-      params: { orderID: params.orderID },
+      params: {orderID: params.orderID},
       filters: {},
     });
     const orderInquiryEmployees = await ordersService.getOrderInquiryEmployees({
@@ -752,7 +753,7 @@ export class OrdersController {
         : undefined;
 
     const clients = await prisma.client.findMany({
-      where: { id: { in: inquiryClientsIDs } },
+      where: {id: {in: inquiryClientsIDs}},
       select: {
         id: true,
         user: {
@@ -772,7 +773,7 @@ export class OrdersController {
         deleted: false,
         status:
           status === "RETURNED"
-            ? { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] }
+            ? {in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"]}
             : (status as OrderStatus),
         clientReport:
           status === "RETURNED"
@@ -826,7 +827,7 @@ export class OrdersController {
         where: {
           clientId: loggedInUser.id,
           deleted: false,
-          status: { in: ["REGISTERED", "READY_TO_SEND"] },
+          status: {in: ["REGISTERED", "READY_TO_SEND"]},
         },
       });
 
@@ -1059,11 +1060,11 @@ export class OrdersController {
       where: {
         companyId: loggedInUser.companyID,
       },
-      select: { id: true, name: true, governorateAr: true },
+      select: {id: true, name: true, governorateAr: true},
     });
 
     const grouped = governorate.reduce(
-      (acc: { [key: string]: string[] }, gov) => {
+      (acc: {[key: string]: string[]}, gov) => {
         acc[gov] = locations
           .filter((l) => l.governorateAr === gov)
           .map((l) => l.name);

@@ -521,7 +521,7 @@ export class OrdersService {
       oldOrderData?.status === "RETURNED" &&
       data.orderData.secondaryStatus === "IN_REPOSITORY"
     ) {
-      data.orderData.deliveryAgentID = null;
+      // data.orderData.deliveryAgentID = null;
       data.orderData.oldDeliveryAgentId = oldOrderData?.deliveryAgent?.id;
     }
 

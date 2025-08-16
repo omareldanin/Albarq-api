@@ -1,5 +1,5 @@
 // // import { generateMock } from "@anatine/zod-mock";
-import { generateSchema } from "@anatine/zod-openapi";
+import {generateSchema} from "@anatine/zod-openapi";
 import {
   DeliveryType,
   Governorate,
@@ -9,7 +9,7 @@ import {
   ReportType,
   SecondaryStatus,
 } from "@prisma/client";
-import { z } from "zod";
+import {z} from "zod";
 
 export const OrderCreateBaseSchema = z.object({
   receiptNumber: z.string().optional(),
@@ -311,6 +311,11 @@ export const OrdersFiltersSchema = z.object({
     return val;
   }, z.boolean().optional()),
   processed: z.preprocess((val) => {
+    if (val === "true") return true;
+    if (val === "false") return false;
+    return val;
+  }, z.boolean().optional()),
+  delivered: z.preprocess((val) => {
     if (val === "true") return true;
     if (val === "false") return false;
     return val;

@@ -75,19 +75,34 @@ export class CustomerOutputController {
     if (!returnsRepo) {
       throw new AppError("لا يوجد مخزن راوجع لهذا الفرع!", 404);
     }
-    // if client report, make secondary status WITH_CLIENT
-    if (type === "client") {
-      await prisma.order.update({
-        where: {
-          id: order.id,
-        },
-        data: {
-          secondaryStatus: "WITH_CLIENT",
-          repositoryId: null,
-          forwardedRepo: returnsRepo.id,
-        },
-      });
+    const checkIfExist = await prisma.customerOutput.findFirst({
+      where: {
+        orderId: order.id,
+        clientId: type === "client" ? store?.clientId : undefined,
+        targetRepositoryId: type === "repository" ? repository : undefined,
+        companyId: type === "company" ? companyId : undefined,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (checkIfExist) {
+      throw new AppError("هذا الطلب موجود بالفعل!", 404);
     }
+    // if client report, make secondary status WITH_CLIENT
+    // if (type === "client") {
+    //   await prisma.order.update({
+    //     where: {
+    //       id: order.id,
+    //     },
+    //     data: {
+    //       secondaryStatus: "WITH_CLIENT",
+    //       repositoryId: null,
+    //       forwardedRepo: returnsRepo.id,
+    //     },
+    //   });
+    // }
     if (type === "repository") {
       await prisma.order.updateMany({
         where: {
@@ -349,20 +364,22 @@ export class CustomerOutputController {
     }
 
     // // if client report, make secondary status WITH_CLIENT
-    // if (type === "client") {
-    //   await prisma.order.updateMany({
-    //     where: {
-    //       id: {
-    //         in: ordersIDs,
-    //       },
-    //     },
-    //     data: {
-    //       secondaryStatus: "WITH_CLIENT",
-    //       repositoryId: null,
-    //       forwardedRepo: returnsRepo.id,
-    //     },
-    //   });
-    // }
+    if (type === "client") {
+      await prisma.order.updateMany({
+        where: {
+          id: {
+            in: ordersIDs,
+          },
+        },
+        data: {
+          secondaryStatus: receivingAgentId
+            ? "WITH_RECEIVING_AGENT"
+            : "WITH_CLIENT",
+          repositoryId: null,
+          forwardedRepo: returnsRepo.id,
+        },
+      });
+    }
     // if (type === "repository") {
     //   await prisma.order.updateMany({
     //     where: {
