@@ -106,6 +106,7 @@ export const OrderUpdateSchema = z
     forwardedRepo: z.coerce.number().optional(),
     type: z.string().optional(),
     forwardedBranchId: z.number().optional(),
+    receivedBranchId: z.number().optional(),
     governorate: z.nativeEnum(Governorate),
     locationID: z.coerce.number(),
     storeID: z.coerce.number(),
@@ -397,6 +398,7 @@ export const OrdersFiltersSchema = z.object({
   inquiryClientsIDs: z.array(z.coerce.number()).optional(),
   inquiryGovernorates: z.array(z.nativeEnum(Governorate)).optional(),
   inquiryStatuses: z.array(z.nativeEnum(OrderStatus)).optional(),
+  orderType: z.string().optional(),
 });
 
 export type OrdersFiltersType = z.infer<typeof OrdersFiltersSchema>;

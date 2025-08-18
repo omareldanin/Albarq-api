@@ -1,8 +1,8 @@
-import type { NextFunction, Request, Response } from "express";
+import type {NextFunction, Request, Response} from "express";
 import jwt from "jsonwebtoken";
-import { env } from "../config";
-import { AppError } from "../lib/AppError";
-import type { loggedInUserType } from "../types/user";
+import {env} from "../config";
+import {AppError} from "../lib/AppError";
+import type {loggedInUserType} from "../types/user";
 
 export const isLoggedIn = (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -28,6 +28,7 @@ export const isLoggedIn = (req: Request, res: Response, next: NextFunction) => {
       mainCompany,
       clientId,
       branchId,
+      mainRepository,
     } = jwt.verify(
       token,
       env.ACCESS_TOKEN_SECRET as string
@@ -49,6 +50,7 @@ export const isLoggedIn = (req: Request, res: Response, next: NextFunction) => {
       mainCompany,
       clientId,
       branchId,
+      mainRepository,
     } as loggedInUserType;
 
     // GRANT ACCESS

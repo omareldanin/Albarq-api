@@ -35,5 +35,6 @@ export type loggedInUserType = {
   username: string;
   clientId: number;
   branchId: number;
+  mainRepository: boolean;
   permissions: Permission[];
 } & (AdminUserType | NonAdminUserType);

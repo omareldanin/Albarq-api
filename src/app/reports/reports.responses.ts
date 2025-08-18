@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type {Prisma} from "@prisma/client";
 
 export const reportSelect = {
   id: true,
@@ -105,7 +105,8 @@ export const reportSelect = {
           branchReportId: true,
         },
       },
-      deliveryAgentDeliveryCost: true,
+      baghdadDeliveryCost: true,
+      governoratesDeliveryCost: true,
     },
   },
   governorateReport: {
@@ -119,7 +120,8 @@ export const reportSelect = {
           governorateReportId: true,
         },
       },
-      deliveryAgentDeliveryCost: true,
+      baghdadDeliveryCost: true,
+      governoratesDeliveryCost: true,
     },
   },
   deliveryAgentReport: {
@@ -229,14 +231,16 @@ export const reportReform = (
       reportNumber: report.branchReport.id,
       branchReportOrders: report.branchReport.orders,
       branch: report.branchReport.branch,
-      deliveryAgentDeliveryCost: report.branchReport.deliveryAgentDeliveryCost,
+      baghdadDeliveryCost: report.branchReport.baghdadDeliveryCost,
+      governoratesDeliveryCost: report.branchReport.governoratesDeliveryCost,
     },
     governorateReport: report.governorateReport && {
       reportNumber: report.governorateReport.id,
       governorateReportOrders: report.governorateReport.orders,
       governorate: report.governorateReport.governorate,
-      deliveryAgentDeliveryCost:
-        report.governorateReport.deliveryAgentDeliveryCost,
+      baghdadDeliveryCost: report.governorateReport.baghdadDeliveryCost,
+      governoratesDeliveryCost:
+        report.governorateReport.governoratesDeliveryCost,
     },
     deliveryAgentReport: report.deliveryAgentReport && {
       reportNumber: report.deliveryAgentReport.id,

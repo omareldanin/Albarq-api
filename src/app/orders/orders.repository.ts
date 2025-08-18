@@ -1225,6 +1225,13 @@ export class OrdersRepository {
                       data.filters.branchReport === "false"
                         ? [
                             {branchReport: {is: null}},
+                            data.filters.orderType
+                              ? {
+                                  branchReport: {
+                                    branchId: {not: data.filters.branchID},
+                                  },
+                                }
+                              : {},
                             {branchReport: {report: {deleted: true}}},
                           ]
                         : undefined,
@@ -1332,7 +1339,6 @@ export class OrdersRepository {
                   id: data.filters.automaticUpdateID,
                 },
               },
-
               {
                 forwarded: data.filters.forwarded,
               },
@@ -1349,38 +1355,64 @@ export class OrdersRepository {
                   id: data.filters.forwardedFromID,
                 },
               },
-
               {
-                OR: [
-                  {
-                    branch: data.filters.inquiryBranchesIDs
-                      ? {
-                          id: {
-                            in: data.filters.inquiryBranchesIDs,
-                          },
-                        }
-                      : {
-                          id: data.filters.branchID,
+                OR: data.filters.orderType
+                  ? []
+                  : data.filters.governorate &&
+                    data.filters.governorateReport === "false"
+                  ? [
+                      {
+                        branch: {
+                          governorate: data.filters.governorate,
                         },
-                  },
-                  {
-                    client: {
-                      branchId: data.loggedInUser?.branchId,
-                    },
-                  },
-                  {
-                    repository: {
-                      id: data.filters.repositoryID,
-                    },
-                  },
-                  // Filter by governorate
-                  {
-                    governorate: data.filters.governorate,
-                  },
-                  {
-                    clientOrderReceiptId: data.filters.clientOrderReceiptId,
-                  },
-                ],
+                      },
+                    ]
+                  : [
+                      {
+                        branch: data.filters.inquiryBranchesIDs
+                          ? {
+                              id: {
+                                in: data.filters.inquiryBranchesIDs,
+                              },
+                            }
+                          : {
+                              id: data.filters.branchID,
+                            },
+                      },
+                      {
+                        client:
+                          data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                          !data.loggedInUser?.mainRepository
+                            ? {
+                                branchId: data.loggedInUser?.branchId,
+                              }
+                            : undefined,
+                      },
+                    ],
+              },
+              {
+                governorate:
+                  data.filters.governorate &&
+                  data.filters.governorateReport === "false"
+                    ? undefined
+                    : data.filters.governorate,
+              },
+              {
+                repository: {
+                  id: data.filters.repositoryID,
+                },
+              },
+              {
+                forwardedBranchId:
+                  data.filters.orderType === "forwarded"
+                    ? data.filters.branchID
+                    : undefined,
+              },
+              {
+                receivedBranchId:
+                  data.filters.orderType === "received"
+                    ? data.filters.branchID
+                    : undefined,
               },
             ],
           } satisfies Prisma.OrderWhereInput);
@@ -2139,6 +2171,7 @@ export class OrdersRepository {
             : data.orderData.forwardedToMainRepo,
         forwardedToGov: data.orderData.forwardedToGov,
         forwardedBranchId: data.orderData.forwardedBranchId,
+        receivedBranchId: data.orderData.receivedBranchId,
         forwardedRepo:
           data.orderData.secondaryStatus === "IN_REPOSITORY"
             ? null

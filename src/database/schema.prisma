@@ -663,6 +663,7 @@ model Order {
   branchId               Int?
   automaticUpdateId      Int?
   forwardedBranchId      Int?
+  receivedBranchId       Int?
   // --- RELATIONS --------------------------------------------------------------------------- //
   orderProducts          OrderProducts[]
   ordersInquiryEmployees OrdersInquiryEmployees[]
@@ -990,7 +991,8 @@ model BranchReport {
   report                    Report  @relation(fields: [id], references: [id], onDelete: Cascade)
   orders                    Order[]
   // --- OTHER --------------------------------------------------------------------- //
-  deliveryAgentDeliveryCost Float   @default(0)
+  baghdadDeliveryCost      Float               @default(0)
+  governoratesDeliveryCost Float               @default(0)
 
   @@index([branchId])
 }
@@ -1019,7 +1021,8 @@ model GovernorateReport {
   report                    Report      @relation(fields: [id], references: [id], onDelete: Cascade)
   orders                    Order[]
   // --- OTHER --------------------------------------------------------------------- //
-  deliveryAgentDeliveryCost Float       @default(0)
+  baghdadDeliveryCost      Float               @default(0)
+  governoratesDeliveryCost Float               @default(0)
 
   @@index([governorate])
 }

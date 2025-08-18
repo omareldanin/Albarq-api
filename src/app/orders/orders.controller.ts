@@ -121,6 +121,7 @@ export class OrdersController {
       clientOrderReceiptId: req.query.clientOrderReceiptId,
       printed: req.query.printed,
       delivered: req.query.delivered,
+      orderType: req.query.orderType,
     });
 
     const {orders, ordersMetaData, page, pagesCount} =
@@ -452,6 +453,7 @@ export class OrdersController {
           throw new AppError("الطلب غير مرتبط بهذا الفرع", 400);
         }
         orderData.forwardedRepo = exportRepo?.id;
+        orderData.receivedBranchId = repository?.branchId;
       } else {
         const mainRepository = await prisma.repository.findFirst({
           where: {
@@ -469,6 +471,7 @@ export class OrdersController {
         });
         orderData.repositoryID = mainRepository?.id;
         orderData.forwardedRepo = exportRepo?.id;
+        orderData.forwardedBranchId = user.branch?.id;
       }
     } else {
       orderData.repositoryID = exportRepo?.id;

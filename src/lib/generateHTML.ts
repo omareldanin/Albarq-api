@@ -1,12 +1,12 @@
-import { OrderStatus, SecondaryReportType } from "@prisma/client";
+import {OrderStatus, SecondaryReportType} from "@prisma/client";
 import handlebars from "handlebars";
 // @ts-expect-error
 import asyncHelpers from "handlebars-async-helpers";
-import { AppError } from "../lib/AppError";
-import { Logger } from "../lib/logger";
-import { generateBarCode } from "./generateBarCode";
-import { generateQRCode } from "./generateQRCode";
-import { localizeGovernorate, localizeOrderStatus } from "./localize";
+import {AppError} from "../lib/AppError";
+import {Logger} from "../lib/logger";
+import {generateBarCode} from "./generateBarCode";
+import {generateQRCode} from "./generateQRCode";
+import {localizeGovernorate, localizeOrderStatus} from "./localize";
 
 const hb: typeof handlebars = asyncHelpers(handlebars);
 
@@ -53,23 +53,20 @@ export const generateHTML = async (template: string, data: object) => {
       return "";
     });
 
-    hb.registerHelper(
-      "changed",
-      (status, totalCost, paidAmount, secondaryReportType) => {
-        if (secondaryReportType === SecondaryReportType.RETURNED) {
-          return "";
-        }
-        if (
-          (status === OrderStatus.PARTIALLY_RETURNED ||
-            status === OrderStatus.REPLACED) &&
-          +totalCost !== +paidAmount
-        ) {
-          return "bg-orange";
-        }
-
-        return "";
+    hb.registerHelper("changed", (status, totalCost, paidAmount) => {
+      // if (secondaryReportType === SecondaryReportType.RETURNED) {
+      //   return "";
+      // }
+      if (
+        (status === OrderStatus.PARTIALLY_RETURNED ||
+          status === OrderStatus.REPLACED) &&
+        +totalCost !== +paidAmount
+      ) {
+        return "bg-orange";
       }
-    );
+
+      return "";
+    });
 
     hb.registerHelper("colorizeHeader", (secondaryReportType) => {
       if (secondaryReportType === SecondaryReportType.RETURNED) {
@@ -115,7 +112,7 @@ export const generateHTML = async (template: string, data: object) => {
       return localizeGovernorate(governorate);
     });
 
-    const compiledTemplate = hb.compile(template, { strict: true });
+    const compiledTemplate = hb.compile(template, {strict: true});
     const html = compiledTemplate({
       ...data,
     });

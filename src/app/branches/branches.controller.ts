@@ -1,8 +1,8 @@
-import { AdminRole, type Governorate } from "@prisma/client";
-import { catchAsync } from "../../lib/catchAsync";
-import type { loggedInUserType } from "../../types/user";
-import { BranchCreateSchema, BranchUpdateSchema } from "./branches.dto";
-import { BranchesRepository } from "./branches.repository";
+import {AdminRole, type Governorate} from "@prisma/client";
+import {catchAsync} from "../../lib/catchAsync";
+import type {loggedInUserType} from "../../types/user";
+import {BranchCreateSchema, BranchUpdateSchema} from "./branches.dto";
+import {BranchesRepository} from "./branches.repository";
 
 const branchesRepository = new BranchesRepository();
 
@@ -35,7 +35,10 @@ export class BranchesController {
       companyID = loggedInUser.companyID;
     }
 
-    if (loggedInUser.role !== "COMPANY_MANAGER") {
+    if (
+      loggedInUser.role !== "COMPANY_MANAGER" &&
+      !loggedInUser.mainRepository
+    ) {
       branchID = loggedInUser.branchId;
     }
 
@@ -66,7 +69,7 @@ export class BranchesController {
     }
 
     // Query
-    const { branches, pagesCount } =
+    const {branches, pagesCount} =
       await branchesRepository.getAllBranchesPaginated({
         page: page,
         size: size,

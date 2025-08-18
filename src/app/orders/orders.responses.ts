@@ -1,4 +1,4 @@
-import { Governorate, OrderStatus, type Prisma } from "@prisma/client";
+import {Governorate, OrderStatus, type Prisma} from "@prisma/client";
 
 export const OrderStatusData = {
   REGISTERED: {
@@ -114,6 +114,8 @@ export const orderSelect = {
   processed: true,
   processedAt: true,
   forwardedRepo: true,
+  forwardedBranchId: true,
+  receivedBranchId: true,
   processedBy: {
     select: {
       user: {
@@ -564,7 +566,7 @@ export const statisticsReformed = (statistics: {
     )
       .map((status) => {
         const statusCount = statistics.ordersStatisticsByStatus.find(
-          (orderStatus: { status: string }) => {
+          (orderStatus: {status: string}) => {
             return orderStatus.status === status;
           }
         );
@@ -585,7 +587,7 @@ export const statisticsReformed = (statistics: {
       Object.keys(Governorate) as Array<keyof typeof Governorate>
     ).map((governorate) => {
       const governorateCount = statistics.ordersStatisticsByGovernorate.find(
-        (orderStatus: { governorate: string }) => {
+        (orderStatus: {governorate: string}) => {
           return orderStatus.governorate === governorate;
         }
       );

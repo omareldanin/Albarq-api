@@ -1,5 +1,5 @@
 // // import { generateMock } from "@anatine/zod-mock";
-import { generateSchema } from "@anatine/zod-openapi";
+import {generateSchema} from "@anatine/zod-openapi";
 import {
   Governorate,
   OrderStatus,
@@ -7,8 +7,8 @@ import {
   ReportType,
   SecondaryReportType,
 } from "@prisma/client";
-import { z } from "zod";
-import { OrdersFiltersSchema } from "../orders/orders.dto";
+import {z} from "zod";
+import {OrdersFiltersSchema} from "../orders/orders.dto";
 
 export const ReportCreateBaseSchema = z.object({
   ordersIDs: z.array(z.coerce.string()).min(1).or(z.literal("*")),
@@ -35,12 +35,14 @@ export const ReportCreateSchema = z
     z.object({
       type: z.literal(ReportType.GOVERNORATE),
       governorate: z.nativeEnum(Governorate),
-      deliveryAgentDeliveryCost: z.coerce.number().optional(),
+      baghdadDeliveryCost: z.coerce.number().optional(),
+      governoratesDeliveryCost: z.coerce.number().optional(),
     }),
     z.object({
       type: z.literal(ReportType.BRANCH),
       branchID: z.coerce.number(),
-      deliveryAgentDeliveryCost: z.coerce.number().optional(),
+      baghdadDeliveryCost: z.coerce.number().optional(),
+      governoratesDeliveryCost: z.coerce.number().optional(),
     }),
     z.object({
       type: z.literal(ReportType.CLIENT),
@@ -207,6 +209,12 @@ export const ReportCreateOrdersFiltersSchema = z
         if (val === "false") return false;
         return val;
       }, z.boolean()),
+      delivered: z.preprocess((val) => {
+        if (val === "true") return true;
+        if (val === "false") return false;
+        return val;
+      }, z.boolean().optional()),
+      orderType: z.string().optional(),
     })
   );
 

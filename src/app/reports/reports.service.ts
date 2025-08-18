@@ -5,18 +5,18 @@ import {
   type Order,
   ReportType,
 } from "@prisma/client";
-import { AppError } from "../../lib/AppError";
+import {AppError} from "../../lib/AppError";
 // import { OrderTimelineType } from "../orders/orders.dto";
-import { localizeReportType } from "../../lib/localize";
-import type { loggedInUserType } from "../../types/user";
-import { ClientsRepository } from "../clients/clients.repository";
-import { CompaniesRepository } from "../companies/companies.repository";
-import { EmployeesRepository } from "../employees/employees.repository";
-import { sendNotification } from "../notifications/helpers/sendNotification";
-import { OrdersRepository } from "../orders/orders.repository";
-import type { orderReform } from "../orders/orders.responses";
-import { generateReport } from "./helpers/generateReport";
-import { generateReportsReport } from "./helpers/generateReportsReport";
+import {localizeReportType} from "../../lib/localize";
+import type {loggedInUserType} from "../../types/user";
+import {ClientsRepository} from "../clients/clients.repository";
+import {CompaniesRepository} from "../companies/companies.repository";
+import {EmployeesRepository} from "../employees/employees.repository";
+import {sendNotification} from "../notifications/helpers/sendNotification";
+import {OrdersRepository} from "../orders/orders.repository";
+import type {orderReform} from "../orders/orders.responses";
+import {generateReport} from "./helpers/generateReport";
+import {generateReportsReport} from "./helpers/generateReportsReport";
 import type {
   ReportCreateOrdersFiltersType,
   ReportCreateType,
@@ -24,9 +24,9 @@ import type {
   ReportsFiltersType,
   ReportsReportPDFCreateType,
 } from "./reports.dto";
-import { ReportsRepository } from "./reports.repository";
-import { reportSelect, type reportReform } from "./reports.responses";
-import { prisma } from "../../database/db";
+import {ReportsRepository} from "./reports.repository";
+import {type reportReform} from "./reports.responses";
+import {prisma} from "../../database/db";
 
 const reportsRepository = new ReportsRepository();
 const ordersRepository = new OrdersRepository();
@@ -45,7 +45,7 @@ export class ReportsService {
     if (data.reportData.ordersIDs === "*") {
       orders = (
         await ordersRepository.getAllOrdersPaginated({
-          filters: { ...data.ordersFilters, size: 5000 },
+          filters: {...data.ordersFilters, size: 5000},
           loggedInUser: data.loggedInUser,
         })
       ).orders as ReturnType<typeof orderReform>[];
@@ -205,7 +205,11 @@ export class ReportsService {
     });
 
     // Change orders costs reportData contains new costs
-    if (data.reportData.type === ReportType.CLIENT) {
+    if (
+      data.reportData.type === ReportType.CLIENT ||
+      data.reportData.type === ReportType.BRANCH ||
+      data.reportData.type === ReportType.GOVERNORATE
+    ) {
       await ordersRepository.updateOrdersCosts({
         ordersIDs,
         costs: {
@@ -214,7 +218,7 @@ export class ReportsService {
         },
       });
 
-      orders = await ordersRepository.getOrdersByIDs({ ordersIDs });
+      orders = await ordersRepository.getOrdersByIDs({ordersIDs});
     }
 
     if (data.reportData.type === ReportType.COMPANY) {
@@ -229,14 +233,10 @@ export class ReportsService {
         },
       });
 
-      orders = await ordersRepository.getOrdersByIDs({ ordersIDs });
+      orders = await ordersRepository.getOrdersByIDs({ordersIDs});
     }
 
-    if (
-      data.reportData.type === ReportType.DELIVERY_AGENT ||
-      data.reportData.type === ReportType.GOVERNORATE ||
-      data.reportData.type === ReportType.BRANCH
-    ) {
+    if (data.reportData.type === ReportType.DELIVERY_AGENT) {
       await ordersRepository.updateOrdersCosts({
         ordersIDs,
         costs: {
@@ -246,7 +246,7 @@ export class ReportsService {
         },
       });
 
-      orders = await ordersRepository.getOrdersByIDs({ ordersIDs });
+      orders = await ordersRepository.getOrdersByIDs({ordersIDs});
     }
 
     const reportMetaData = {
@@ -293,8 +293,8 @@ export class ReportsService {
       loggedInUser: data.loggedInUser,
       reportData:
         data.reportData.type === ReportType.CLIENT
-          ? { ...data.reportData, ordersIDs, clientID }
-          : { ...data.reportData, ordersIDs },
+          ? {...data.reportData, ordersIDs, clientID}
+          : {...data.reportData, ordersIDs},
       reportMetaData: reportMetaData,
     });
 
@@ -418,7 +418,7 @@ export class ReportsService {
     }
 
     // Only show reports of the same branch as the employee
-    let branch: number | undefined, secondaryType: boolean | undefined;
+    let branch: number | undefined;
     if (
       (data.filters.type === ReportType.CLIENT ||
         data.filters.type === ReportType.REPOSITORY ||
@@ -487,7 +487,7 @@ export class ReportsService {
         reportsMetaData: {},
       };
     }
-    const { reports, reportsMetaData, pagesCount } =
+    const {reports, reportsMetaData, pagesCount} =
       await reportsRepository.getAllReportsPaginated({
         filters: {
           ...data.filters,
@@ -499,10 +499,10 @@ export class ReportsService {
         },
       });
 
-    return { page, pagesCount, reports, reportsMetaData };
+    return {page, pagesCount, reports, reportsMetaData};
   }
 
-  async getReport(data: { params: { reportID: number } }) {
+  async getReport(data: {params: {reportID: number}}) {
     const report = await reportsRepository.getReport({
       reportID: data.params.reportID,
     });
@@ -514,7 +514,7 @@ export class ReportsService {
     return report;
   }
 
-  async getReportPDF(data: { params: { reportID: number } }) {
+  async getReportPDF(data: {params: {reportID: number}}) {
     const reportData = await reportsRepository.getReport({
       reportID: data.params.reportID,
     });
@@ -637,7 +637,7 @@ export class ReportsService {
   }
 
   async updateReport(data: {
-    params: { reportID: number };
+    params: {reportID: number};
     loggedInUser: loggedInUserType;
     reportData: ReportUpdateType;
   }) {
@@ -657,14 +657,14 @@ export class ReportsService {
     return report;
   }
 
-  async deleteReport(data: { params: { reportID: number } }) {
+  async deleteReport(data: {params: {reportID: number}}) {
     await reportsRepository.deleteReport({
       reportID: data.params.reportID,
     });
   }
 
   async deactivateReport(data: {
-    params: { reportID: number };
+    params: {reportID: number};
     loggedInUser: loggedInUserType;
   }) {
     const report = await reportsRepository.deactivateReport({
@@ -733,7 +733,7 @@ export class ReportsService {
     }
   }
 
-  async reactivateReport(data: { params: { reportID: number } }) {
+  async reactivateReport(data: {params: {reportID: number}}) {
     const report = await reportsRepository.reactivateReport({
       reportID: data.params.reportID,
     });

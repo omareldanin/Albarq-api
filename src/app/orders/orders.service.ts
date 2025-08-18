@@ -229,7 +229,8 @@ export class OrdersService {
       data.loggedInUser.role !== EmployeeRole.CLIENT_ASSISTANT &&
       data.loggedInUser.role !== EmployeeRole.ACCOUNTANT &&
       data.loggedInUser.role !== EmployeeRole.RECEIVING_AGENT &&
-      data.loggedInUser.role !== EmployeeRole.ACCOUNT_MANAGER
+      data.loggedInUser.role !== EmployeeRole.ACCOUNT_MANAGER &&
+      !data.filters.orderType
     ) {
       const branch = await branchesRepository.getBranchManagerBranch({
         branchManagerID: data.loggedInUser.id,
@@ -242,7 +243,7 @@ export class OrdersService {
       if (!branch.governorate) {
         throw new AppError("الفرع الذي تعمل به غير مرتبط بمحافظة", 500);
       }
-      governorate = branch.governorate;
+      // governorate = data.filters.orderType ? undefined : branch.governorate;
       branchID = branch.id;
     }
 
