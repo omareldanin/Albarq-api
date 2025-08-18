@@ -54,6 +54,21 @@ export class OrdersRepository {
     let weight = (data.orderData.weight as number) || 0;
     let status: OrderStatus = "REGISTERED";
     let receivingBranchId: number | undefined = undefined;
+    let forwardedBranchId: number | undefined = undefined;
+    const client = await prisma.client.findUnique({
+      where: {
+        id: data.clientID,
+      },
+      select: {
+        governoratesDeliveryCosts: true,
+        branchId: true,
+      },
+    });
+
+    if (!client) {
+      throw new AppError("العميل غير موجود", 400);
+    }
+
     if (
       data.loggedInUser.role !== "CLIENT" &&
       data.loggedInUser.role !== "CLIENT_ASSISTANT"
@@ -73,6 +88,7 @@ export class OrdersRepository {
         throw new AppError("لا يوجد مخزن فرز مرتبط بالفرع", 404);
       }
       receivingBranchId = data.orderData.branchID;
+      forwardedBranchId = client?.branchId || undefined;
       data.orderData.repositoryID = repository.id;
       status = "IN_GOV_REPOSITORY";
     }
@@ -206,19 +222,6 @@ export class OrdersRepository {
     // Calculate delivery cost
     let deliveryCost = 0;
 
-    const client = await prisma.client.findUnique({
-      where: {
-        id: data.clientID,
-      },
-      select: {
-        governoratesDeliveryCosts: true,
-      },
-    });
-
-    if (!client) {
-      throw new AppError("العميل غير موجود", 400);
-    }
-
     const governoratesDeliveryCosts = client.governoratesDeliveryCosts as {
       governorate: Governorate;
       cost: number;
@@ -306,6 +309,7 @@ export class OrdersRepository {
         deliveryType: data.orderData.deliveryType,
         printed: data.orderData.clientOrderReceiptId ? true : false,
         receivedBranchId: receivingBranchId || undefined,
+        forwardedBranchId: forwardedBranchId || undefined,
         clientOrderReceipt: data.orderData.clientOrderReceiptId
           ? {
               connect: {
