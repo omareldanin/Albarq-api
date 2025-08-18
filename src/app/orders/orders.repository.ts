@@ -53,6 +53,7 @@ export class OrdersRepository {
     let quantity = 0;
     let weight = (data.orderData.weight as number) || 0;
     let status: OrderStatus = "REGISTERED";
+    let receivingBranchId: number | undefined = undefined;
     if (
       data.loggedInUser.role !== "CLIENT" &&
       data.loggedInUser.role !== "CLIENT_ASSISTANT"
@@ -71,6 +72,7 @@ export class OrdersRepository {
       if (!repository) {
         throw new AppError("لا يوجد مخزن فرز مرتبط بالفرع", 404);
       }
+      receivingBranchId = data.orderData.branchID;
       data.orderData.repositoryID = repository.id;
       status = "IN_GOV_REPOSITORY";
     }
@@ -303,6 +305,7 @@ export class OrdersRepository {
         details: data.orderData.details,
         deliveryType: data.orderData.deliveryType,
         printed: data.orderData.clientOrderReceiptId ? true : false,
+        receivedBranchId: receivingBranchId || undefined,
         clientOrderReceipt: data.orderData.clientOrderReceiptId
           ? {
               connect: {
