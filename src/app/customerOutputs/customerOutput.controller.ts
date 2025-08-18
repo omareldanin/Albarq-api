@@ -310,6 +310,7 @@ export class CustomerOutputController {
       clientNet: 0,
       deliveryAgentNet: 0,
       companyNet: 0,
+      branchNet: 0,
     };
 
     for (const order of orders) {
