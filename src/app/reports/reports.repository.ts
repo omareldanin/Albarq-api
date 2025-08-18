@@ -532,6 +532,25 @@ export class ReportsRepository {
         });
       });
     }
+    if (
+      report.clientReport &&
+      report.clientReport.secondaryType === "RETURNED" &&
+      data.reportData.confirmed
+    ) {
+      await prisma.order.updateMany({
+        where: {
+          clientReport: {
+            some: {
+              id: report.clientReport.id,
+            },
+          },
+          status: {in: ["PARTIALLY_RETURNED", "REPLACED", "RETURNED"]},
+        },
+        data: {
+          secondaryStatus: "WITH_CLIENT",
+        },
+      });
+    }
     return reportReform(report);
   }
 
