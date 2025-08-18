@@ -93,6 +93,7 @@ export const orderSelect = {
   deliveryAgentNet: true,
   companyNet: true,
   discount: true,
+  branchNet: true,
   receiptNumber: true,
   quantity: true,
   weight: true,
@@ -237,6 +238,7 @@ export const orderSelect = {
     select: {
       id: true,
       branchId: true,
+      type: true,
       report: {
         select: {
           deleted: true,
@@ -371,11 +373,12 @@ export const orderReform = (
       repositoryId: report?.repositoryId,
       deleted: report.report.deleted,
     })),
-    branchReport: order.branchReport && {
-      id: order.branchReport?.id,
-      branchId: order.branchReport?.branchId,
-      deleted: order.branchReport?.report.deleted,
-    },
+    branchReport: order.branchReport.map((report) => ({
+      id: report?.id,
+      branchId: report?.branchId,
+      type: report.type,
+      deleted: report.report.deleted,
+    })),
     deliveryAgentReport: order.deliveryAgentReport && {
       id: order.deliveryAgentReport?.id,
       deliveryAgentId: order.deliveryAgentReport?.deliveryAgentId,
@@ -446,11 +449,12 @@ export const mobileOrderReform = (
     deletedAt: order.deletedAt?.toISOString(),
     clientReport: null,
     repositoryReport: null,
-    branchReport: order.branchReport && {
-      id: order.branchReport?.id,
-      branchId: order.branchReport?.branchId,
-      deleted: order.branchReport?.report.deleted,
-    },
+    branchReport: order.branchReport.map((report) => ({
+      id: report?.id,
+      branchId: report?.branchId,
+      type: report.type,
+      deleted: report.report.deleted,
+    })),
     deliveryAgentReport: order.deliveryAgentReport && {
       id: order.deliveryAgentReport?.id,
       deliveryAgentId: order.deliveryAgentReport?.deliveryAgentId,

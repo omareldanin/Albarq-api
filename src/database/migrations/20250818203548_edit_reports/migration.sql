@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Report" ADD COLUMN     "branchNet" DOUBLE PRECISION NOT NULL DEFAULT 0;

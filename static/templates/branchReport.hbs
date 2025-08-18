@@ -31,8 +31,6 @@
           <td style="width: 25%"></td>
         </tr>
         <tr>
-          <td style="width: 25%">صافي الشركة:
-            <span>{{currency reportData.companyNet}}</span></td>
           <td style="width: 25%"></td>
           <td style="width: 25%">عدد طلبيات المحافظات:
             <span>{{reportData.governoratesOrdersCount}}</span></td>
@@ -81,7 +79,7 @@
                 {{recipientAddress}}</td>
               <td>{{currency totalCost}}</td>
               <td>{{currency paidAmount}}</td>
-              <td>{{currency deliveryAgentNet}}</td>
+              <td>{{currency branchNet}}</td>
               <td class="{{colorizeRow status}}">{{localizeOrderStatus
                   status
                 }}</td>
@@ -107,8 +105,8 @@
               {{currency reportData.totalCost}}</td>
             <td style="font-weight: bold">المبلغ المدفوع :
               {{currency reportData.paidAmount}}</td>
-            <td style="font-weight: bold">صافي المندوب :
-              {{currency reportData.deliveryAgentNet}}</td>
+            <td style="font-weight: bold">صافي الفرع :
+              {{currency reportData.branchNet}}</td>
           </tr>
         </table>
       </div>

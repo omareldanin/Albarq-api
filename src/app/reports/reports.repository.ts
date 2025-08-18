@@ -13,6 +13,7 @@ export class ReportsRepository {
   async createReport(data: {
     loggedInUser: loggedInUserType;
     reportData: ReportCreateType & {ordersIDs: string[]};
+    type?: string;
     // TODO: Make reportMetaData a type
     reportMetaData: {
       totalCost: number;
@@ -23,6 +24,7 @@ export class ReportsRepository {
       clientNet: number;
       deliveryAgentNet: number;
       companyNet: number;
+      branchNet: number;
     };
   }) {
     const orders = {
@@ -54,6 +56,7 @@ export class ReportsRepository {
         clientNet: data.reportMetaData.clientNet,
         deliveryAgentNet: data.reportMetaData.deliveryAgentNet,
         companyNet: data.reportMetaData.companyNet,
+        branchNet: data.reportMetaData.branchNet,
       },
     };
     if (data.reportData.type === ReportType.CLIENT) {
@@ -117,6 +120,7 @@ export class ReportsRepository {
           baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
           governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
           report: report,
+          type: data.type,
         },
       });
       return createdReport;

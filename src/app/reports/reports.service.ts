@@ -128,15 +128,6 @@ export class ReportsService {
           );
         }
       }
-    } else if (data.reportData.type === ReportType.BRANCH) {
-      for (const order of orders) {
-        if (order?.branchReport && order?.branchReport.deleted !== true) {
-          throw new AppError(
-            `الطلب ${order.receiptNumber} يوجد في كشف فروع اخر رقمه ${order.branchReport.id}`,
-            400
-          );
-        }
-      }
     } else if (data.reportData.type === ReportType.GOVERNORATE) {
       for (const order of orders) {
         if (
@@ -215,6 +206,7 @@ export class ReportsService {
         costs: {
           baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
           governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
+          reportType: data.reportData.type,
         },
       });
 
@@ -258,6 +250,7 @@ export class ReportsService {
       clientNet: 0,
       deliveryAgentNet: 0,
       companyNet: 0,
+      branchNet: 0,
     };
 
     for (const order of orders) {
@@ -269,6 +262,8 @@ export class ReportsService {
       reportMetaData.deliveryCost += +order.deliveryCost;
       // @ts-expect-error Fix later
       reportMetaData.clientNet += +order.clientNet;
+      // @ts-expect-error Fix later
+      reportMetaData.branchNet += +order.branchNet;
       // @ts-expect-error Fix later
       reportMetaData.deliveryAgentNet += order.deliveryAgentNet;
       // @ts-expect-error Fix later
@@ -295,6 +290,7 @@ export class ReportsService {
         data.reportData.type === ReportType.CLIENT
           ? {...data.reportData, ordersIDs, clientID}
           : {...data.reportData, ordersIDs},
+      type: data.ordersFilters.orderType || undefined,
       reportMetaData: reportMetaData,
     });
 

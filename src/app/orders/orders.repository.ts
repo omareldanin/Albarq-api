@@ -1,6 +1,7 @@
 import {
   Governorate,
   OrderStatus,
+  ReportType,
   type Prisma,
   type SecondaryStatus,
 } from "@prisma/client";
@@ -758,21 +759,35 @@ export class OrdersRepository {
               // Filter by branchReport
               {
                 AND: [
-                  {
-                    AND:
-                      data.filters.branchReport === "true"
-                        ? [
-                            {branchReport: {isNot: null}},
-                            {branchReport: {report: {deleted: false}}},
-                          ]
-                        : undefined,
-                  },
+                  data.filters.branchReport === "true"
+                    ? {
+                        branchReport: {
+                          some: {
+                            report: {
+                              deleted: false,
+                            },
+                          },
+                        },
+                      }
+                    : {},
                   {
                     OR:
                       data.filters.branchReport === "false"
                         ? [
-                            {branchReport: {is: null}},
-                            {branchReport: {report: {deleted: true}}},
+                            {
+                              branchReport: {
+                                none: {},
+                              },
+                            },
+                            {
+                              branchReport: {
+                                some: {
+                                  report: {
+                                    deleted: true,
+                                  },
+                                },
+                              },
+                            },
                           ]
                         : undefined,
                   },
@@ -1218,28 +1233,38 @@ export class OrdersRepository {
               // Filter by branchReport
               {
                 AND: [
-                  {
-                    AND:
-                      data.filters.branchReport === "true"
-                        ? [
-                            {branchReport: {isNot: null}},
-                            {branchReport: {report: {deleted: false}}},
-                          ]
-                        : undefined,
-                  },
+                  data.filters.branchReport === "true"
+                    ? {
+                        branchReport: {
+                          some: {
+                            report: {
+                              deleted: false,
+                            },
+                          },
+                        },
+                      }
+                    : {},
                   {
                     OR:
                       data.filters.branchReport === "false"
                         ? [
-                            {branchReport: {is: null}},
-                            data.filters.orderType
-                              ? {
-                                  branchReport: {
-                                    branchId: {not: data.filters.branchID},
+                            {
+                              branchReport: {
+                                none: {
+                                  branchId: data.filters.branchID,
+                                  type: data.filters.orderType,
+                                },
+                              },
+                            },
+                            {
+                              branchReport: {
+                                some: {
+                                  report: {
+                                    deleted: true,
                                   },
-                                }
-                              : {},
-                            {branchReport: {report: {deleted: true}}},
+                                },
+                              },
+                            },
                           ]
                         : undefined,
                   },
@@ -1484,11 +1509,6 @@ export class OrdersRepository {
                             deliveryAgentReport: {report: {deleted: true}},
                           },
                         ]
-                      : data.loggedInUser?.role === "BRANCH_MANAGER"
-                      ? [
-                          {branchReport: {is: null}},
-                          {branchReport: {report: {deleted: true}}},
-                        ]
                       : [
                           {
                             companyReport: {
@@ -1583,11 +1603,6 @@ export class OrdersRepository {
                         {
                           deliveryAgentReport: {report: {deleted: true}},
                         },
-                      ]
-                    : data.loggedInUser?.role === "BRANCH_MANAGER"
-                    ? [
-                        {branchReport: {is: null}},
-                        {branchReport: {report: {deleted: true}}},
                       ]
                     : [
                         {
@@ -1871,9 +1886,13 @@ export class OrdersRepository {
       baghdadDeliveryCost?: number;
       governoratesDeliveryCost?: number;
       deliveryAgentDeliveryCost?: number;
+      reportType?: ReportType;
     };
   }) {
-    if (data.costs.baghdadDeliveryCost) {
+    if (
+      data.costs.baghdadDeliveryCost &&
+      data.costs.reportType === ReportType.CLIENT
+    ) {
       // Get Baghdad orders
       const baghdadOrders = await prisma.order.findMany({
         where: {
@@ -1923,7 +1942,10 @@ export class OrdersRepository {
       }
     }
 
-    if (data.costs.governoratesDeliveryCost) {
+    if (
+      data.costs.governoratesDeliveryCost &&
+      data.costs.reportType === ReportType.CLIENT
+    ) {
       // get governorates orders
       const governoratesOrders = await prisma.order.findMany({
         where: {
@@ -1975,6 +1997,71 @@ export class OrdersRepository {
       }
     }
 
+    if (
+      data.costs.baghdadDeliveryCost &&
+      data.costs.reportType === ReportType.CLIENT
+    ) {
+      // Get Baghdad orders
+      const baghdadOrders = await prisma.order.findMany({
+        where: {
+          id: {
+            in: data.ordersIDs,
+          },
+          governorate: Governorate.BAGHDAD,
+        },
+        select: {
+          id: true,
+          paidAmount: true,
+          weight: true,
+        },
+      });
+
+      // Update Baghdad orders costs
+      for (const order of baghdadOrders) {
+        await prisma.order.update({
+          where: {
+            id: order.id,
+          },
+          data: {
+            branchNet: order.paidAmount - data.costs.baghdadDeliveryCost,
+          },
+        });
+      }
+    }
+
+    if (
+      data.costs.governoratesDeliveryCost &&
+      data.costs.reportType === ReportType.BRANCH
+    ) {
+      // get governorates orders
+      const governoratesOrders = await prisma.order.findMany({
+        where: {
+          id: {
+            in: data.ordersIDs,
+          },
+          governorate: {
+            not: Governorate.BAGHDAD,
+          },
+        },
+        select: {
+          id: true,
+          paidAmount: true,
+          weight: true,
+        },
+      });
+
+      // Update governorates orders costs
+      for (const order of governoratesOrders) {
+        await prisma.order.update({
+          where: {
+            id: order.id,
+          },
+          data: {
+            branchNet: order.paidAmount - data.costs.governoratesDeliveryCost,
+          },
+        });
+      }
+    }
     // Update delivery agent delivery cost
     if (data.costs.deliveryAgentDeliveryCost) {
       // get orders
@@ -2451,13 +2538,13 @@ export class OrdersRepository {
                   ? {is: null}
                   : undefined,
               },
-              {
-                branchReport: data.filters.branchReport
-                  ? {isNot: null}
-                  : data.filters.branchReport
-                  ? {is: null}
-                  : undefined,
-              },
+              // {
+              //   branchReport: data.filters.branchReport
+              //     ? {isNot: null}
+              //     : data.filters.branchReport
+              //     ? {is: null}
+              //     : undefined,
+              // },
               {
                 deliveryAgentReport: data.filters.deliveryAgentReport
                   ? {isNot: null}
@@ -2604,11 +2691,6 @@ export class OrdersRepository {
                 {deliveryAgentReport: {is: null}},
                 {deliveryAgentReport: {report: {deleted: true}}},
               ]
-            : data.loggedInUser.role === "BRANCH_MANAGER"
-            ? [
-                {branchReport: {is: null}},
-                {branchReport: {report: {deleted: true}}},
-              ]
             : [
                 {
                   companyReport: {
@@ -2709,26 +2791,26 @@ export class OrdersRepository {
         },
       });
 
-    const allOrdersStatisticsWithoutBranchReport = await prisma.order.aggregate(
-      {
-        _sum: {
-          paidAmount: true,
-        },
-        _count: {
-          id: true,
-        },
-        where: {
-          ...filtersReformed,
-          OR: [
-            {branchReport: {is: null}},
-            {branchReport: {report: {deleted: true}}},
-          ],
-          status: {
-            in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
-          },
-        },
-      }
-    );
+    // const allOrdersStatisticsWithoutBranchReport = await prisma.order.aggregate(
+    //   {
+    //     _sum: {
+    //       paidAmount: true,
+    //     },
+    //     _count: {
+    //       id: true,
+    //     },
+    //     where: {
+    //       ...filtersReformed,
+    //       OR: [
+    //         {branchReport: {is: null}},
+    //         {branchReport: {report: {deleted: true}}},
+    //       ],
+    //       status: {
+    //         in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
+    //       },
+    //     },
+    //   }
+    // );
 
     const allOrdersStatisticsWithoutCompanyReport =
       await prisma.order.aggregate({
@@ -2790,7 +2872,8 @@ export class OrdersRepository {
       allOrdersStatisticsWithoutClientReport,
       todayOrdersStatistics,
       allOrdersStatisticsWithoutDeliveryReport,
-      allOrdersStatisticsWithoutBranchReport,
+      allOrdersStatisticsWithoutBranchReport:
+        allOrdersStatisticsWithoutCompanyReport,
       allOrdersStatisticsWithoutCompanyReport,
     });
   }

@@ -642,6 +642,7 @@ model Order {
   clientNet              Float                    @default(0)
   deliveryAgentNet       Float                    @default(0) // TODO: remove this field
   companyNet             Float                    @default(0)
+  branchNet             Float                    @default(0)
   discount               Float                    @default(0)
   // --- STATUS --------------------------------------------------------------------------- //
   status                 OrderStatus              @default(REGISTERED)
@@ -696,7 +697,7 @@ model Order {
   // --- REPORTS --------------------------------------------------------------------------- //
   clientReport           ClientReport[]
   repositoryReport       RepositoryReport[]
-  branchReport           BranchReport?            @relation(fields: [branchReportId], references: [id], onDelete: SetNull)
+  branchReport           BranchReport[]            
   branchReportId         Int?
   deliveryAgentReport    DeliveryAgentReport?     @relation(fields: [deliveryAgentReportId], references: [id], onDelete: SetNull)
   deliveryAgentReportId  Int?
@@ -911,6 +912,7 @@ model Report {
   deliveryCost            Float                @default(0)
   clientNet               Float                @default(0)
   deliveryAgentNet        Float                @default(0)
+  branchNet               Float                @default(0)
   companyNet              Float                @default(0)
   // --- OTHER --------------------------------------------------------------------- //
   createdAt               DateTime             @default(now())
@@ -990,6 +992,7 @@ model BranchReport {
   branch                    Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
   report                    Report  @relation(fields: [id], references: [id], onDelete: Cascade)
   orders                    Order[]
+  type                      String  @default("forwarded")
   // --- OTHER --------------------------------------------------------------------- //
   baghdadDeliveryCost      Float               @default(0)
   governoratesDeliveryCost Float               @default(0)

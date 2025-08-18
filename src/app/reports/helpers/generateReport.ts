@@ -1,12 +1,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { ReportType } from "@prisma/client";
-import { AppError } from "../../..//lib/AppError";
-import { generateHTML } from "../../..//lib/generateHTML";
-import { generatePDF } from "../../..//lib/generatePDF";
-import type { orderReform } from "../../../app/orders/orders.responses";
-import { Logger } from "../../../lib/logger";
-import type { reportReform } from "../reports.responses";
+import type {ReportType} from "@prisma/client";
+import {AppError} from "../../..//lib/AppError";
+import {generateHTML} from "../../..//lib/generateHTML";
+import {generatePDF} from "../../..//lib/generatePDF";
+import type {orderReform} from "../../../app/orders/orders.responses";
+import {Logger} from "../../../lib/logger";
+import type {reportReform} from "../reports.responses";
 
 export const generateReport = async (
   reportType: ReportType,
@@ -54,9 +54,8 @@ export const generateReport = async (
       path.join(__dirname, "../../../../static/styles/reportStyle.css"),
       "utf8"
     );
-    console.log(reportData);
 
-    const html = await generateHTML(template, { reportData, orders });
+    const html = await generateHTML(template, {reportData, orders});
     const pdf = await generatePDF(html, css);
 
     return pdf;

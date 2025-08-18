@@ -22,6 +22,7 @@ export const reportSelect = {
   deliveryCost: true,
   clientNet: true,
   deliveryAgentNet: true,
+  branchNet: true,
   companyNet: true,
   type: true,
   createdAt: true,
