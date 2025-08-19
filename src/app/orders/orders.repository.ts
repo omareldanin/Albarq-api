@@ -39,9 +39,9 @@ export class OrdersRepository {
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
     const datePart = `${month}${day}`;
-    const randomPart = Math.floor(10000 + Math.random() * 90000);
+    const timestampPart = Date.now().toString().slice(-5);
 
-    return `${datePart}${randomPart}`;
+    return `${datePart}${timestampPart}`;
   }
 
   async createOrder(data: {
@@ -600,6 +600,9 @@ export class OrdersRepository {
                     },
                   },
                 ],
+              },
+              {
+                deleted: data.filters.deleted,
               },
               // Filter by orderID
               {
