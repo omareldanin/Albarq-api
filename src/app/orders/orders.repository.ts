@@ -1478,12 +1478,16 @@ export class OrdersRepository {
                   ...where,
                   OR:
                     data.loggedInUser?.role === "CLIENT" ||
-                    data.loggedInUser?.role === "CLIENT_ASSISTANT"
+                    data.loggedInUser?.role === "CLIENT_ASSISTANT" ||
+                    data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
                       ? [
                           {
                             clientReport: {
                               none: {
                                 secondaryType: "DELIVERED",
+                                report: {
+                                  confirmed: true,
+                                },
                               },
                             },
                             status: {
@@ -1494,6 +1498,9 @@ export class OrdersRepository {
                             clientReport: {
                               none: {
                                 secondaryType: "RETURNED",
+                                report: {
+                                  confirmed: true,
+                                },
                               },
                             },
                             status: {
@@ -2685,6 +2692,9 @@ export class OrdersRepository {
                   clientReport: {
                     none: {
                       secondaryType: "RETURNED",
+                      report: {
+                        confirmed: true,
+                      },
                     },
                   },
                   status: {

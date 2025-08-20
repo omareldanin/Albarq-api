@@ -920,13 +920,22 @@ export class OrdersController {
               clientReport: {
                 none: {
                   secondaryType: "DELIVERED",
+                  report: {
+                    confirmed: true,
+                  },
                 },
+              },
+              status: {
+                notIn: ["RETURNED"],
               },
             },
             {
               clientReport: {
                 none: {
                   secondaryType: "RETURNED",
+                  report: {
+                    confirmed: true,
+                  },
                 },
               },
               status: {
