@@ -28,13 +28,16 @@ export class BranchesController {
 
     let companyID: number | undefined;
     let branchID: number | undefined;
+    let getAll: boolean | undefined;
 
     if (Object.keys(AdminRole).includes(loggedInUser.role)) {
       companyID = req.query.company_id ? +req.query.company_id : undefined;
     } else if (loggedInUser.companyID) {
       companyID = loggedInUser.companyID;
     }
-
+    if (req.query.getAll === "true") {
+      getAll = true;
+    }
     if (
       loggedInUser.role !== "COMPANY_MANAGER" &&
       !loggedInUser.mainRepository
@@ -78,6 +81,7 @@ export class BranchesController {
         governorate: governorate,
         locationID: locationID,
         minified: minified,
+        getAll,
       });
 
     // Response

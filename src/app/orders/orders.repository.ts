@@ -89,7 +89,10 @@ export class OrdersRepository {
         throw new AppError("لا يوجد مخزن فرز مرتبط بالفرع", 404);
       }
       receivingBranchId = data.orderData.branchID;
-      forwardedBranchId = client?.branchId || undefined;
+      if (data.orderData.branchID !== client.branchId) {
+        forwardedBranchId = client?.branchId || undefined;
+      }
+
       data.orderData.repositoryID = repository.id;
       status = "IN_GOV_REPOSITORY";
     }
@@ -1449,6 +1452,46 @@ export class OrdersRepository {
                     ? data.filters.branchID
                     : undefined,
               },
+              {
+                forwardedBranchId:
+                  data.filters.orderType === "forwardedAll" &&
+                  (data.loggedInUser?.role === "COMPANY_MANAGER" ||
+                    data.loggedInUser?.mainRepository) &&
+                  data.filters.branchID
+                    ? data.filters.branchID
+                    : data.filters.orderType === "forwardedAll" &&
+                      (data.loggedInUser?.role === "COMPANY_MANAGER" ||
+                        data.loggedInUser?.mainRepository)
+                    ? {
+                        not: null,
+                      }
+                    : data.filters.orderType === "forwardedAll"
+                    ? data.loggedInUser?.branchId
+                    : data.filters.orderType === "receivedAll" &&
+                      data.filters.branchID
+                    ? data.filters.branchID
+                    : undefined,
+              },
+              {
+                receivedBranchId:
+                  data.filters.orderType === "receivedAll" &&
+                  (data.loggedInUser?.role === "COMPANY_MANAGER" ||
+                    data.loggedInUser?.mainRepository) &&
+                  data.filters.branchID
+                    ? data.filters.branchID
+                    : data.filters.orderType === "receivedAll" &&
+                      (data.loggedInUser?.role === "COMPANY_MANAGER" ||
+                        data.loggedInUser?.mainRepository)
+                    ? {
+                        not: null,
+                      }
+                    : data.filters.orderType === "forwardedAll" &&
+                      data.filters.branchID
+                    ? data.filters.branchID
+                    : data.filters.orderType === "receivedAll"
+                    ? data.loggedInUser?.branchId
+                    : undefined,
+              },
             ],
           } satisfies Prisma.OrderWhereInput);
 
@@ -2340,6 +2383,13 @@ export class OrdersRepository {
           ? {
               connect: {
                 id: data.orderData.clientID,
+              },
+            }
+          : undefined,
+        store: data.orderData.storeID
+          ? {
+              connect: {
+                id: data.orderData.storeID,
               },
             }
           : undefined,
