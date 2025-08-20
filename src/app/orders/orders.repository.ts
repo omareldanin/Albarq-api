@@ -2673,7 +2673,7 @@ export class OrdersRepository {
                     none: {
                       secondaryType: "DELIVERED",
                       report: {
-                        confirmed: false,
+                        confirmed: true,
                       },
                     },
                   },
