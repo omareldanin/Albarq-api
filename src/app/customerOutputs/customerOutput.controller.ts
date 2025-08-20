@@ -30,6 +30,10 @@ export class CustomerOutputController {
       throw new AppError("الطلب غير موجود", 404);
     }
 
+    if (order.secondaryStatus !== "IN_REPOSITORY") {
+      throw new AppError("قم بإدخال الطلب للمخزن اولا!", 404);
+    }
+
     if (type === "company" && +companyId !== +order.company.id) {
       throw new AppError("هذا الطلب غير تابع لهذه الشركه", 404);
     }
@@ -90,19 +94,7 @@ export class CustomerOutputController {
     if (checkIfExist) {
       throw new AppError("هذا الطلب موجود بالفعل!", 404);
     }
-    // if client report, make secondary status WITH_CLIENT
-    // if (type === "client") {
-    //   await prisma.order.update({
-    //     where: {
-    //       id: order.id,
-    //     },
-    //     data: {
-    //       secondaryStatus: "WITH_CLIENT",
-    //       repositoryId: null,
-    //       forwardedRepo: returnsRepo.id,
-    //     },
-    //   });
-    // }
+
     if (type === "repository") {
       await prisma.order.updateMany({
         where: {
@@ -115,6 +107,7 @@ export class CustomerOutputController {
         },
       });
     }
+
     if (type === "company") {
       await prisma.order.updateMany({
         where: {
@@ -127,6 +120,7 @@ export class CustomerOutputController {
         },
       });
     }
+
     await prisma.customerOutput.create({
       data: {
         orderId: order.id,
