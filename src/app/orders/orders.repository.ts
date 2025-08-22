@@ -1468,7 +1468,9 @@ export class OrdersRepository {
                     : data.filters.orderType === "forwardedAll"
                     ? data.loggedInUser?.branchId
                     : data.filters.orderType === "receivedAll" &&
-                      data.filters.branchID
+                      data.filters.branchID &&
+                      data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                      !data.loggedInUser?.mainCompany
                     ? data.filters.branchID
                     : undefined,
               },
@@ -1486,7 +1488,9 @@ export class OrdersRepository {
                         not: null,
                       }
                     : data.filters.orderType === "forwardedAll" &&
-                      data.filters.branchID
+                      data.filters.branchID &&
+                      data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                      !data.loggedInUser?.mainCompany
                     ? data.filters.branchID
                     : data.filters.orderType === "receivedAll"
                     ? data.loggedInUser?.branchId
