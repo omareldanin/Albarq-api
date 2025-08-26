@@ -2622,18 +2622,54 @@ export class OrdersRepository {
               {
                 OR: [
                   {
-                    branch: {
-                      id: data.loggedInUser.branchId,
-                    },
+                    status: data.filters.inquiryStatuses
+                      ? {
+                          in: data.filters.inquiryStatuses,
+                        }
+                      : undefined,
                   },
                   {
-                    client:
-                      data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-                      !data.loggedInUser?.mainRepository
-                        ? {
-                            branchId: data.loggedInUser?.branchId,
-                          }
-                        : undefined,
+                    governorate: data.filters.inquiryGovernorates
+                      ? {
+                          in: data.filters.inquiryGovernorates,
+                        }
+                      : undefined,
+                  },
+                  {
+                    branch: data.filters.inquiryBranchesIDs
+                      ? {
+                          id: {
+                            in: data.filters.inquiryBranchesIDs,
+                          },
+                        }
+                      : undefined,
+                  },
+                  {
+                    store: data.filters.inquiryStoresIDs
+                      ? {
+                          id: {
+                            in: data.filters.inquiryStoresIDs,
+                          },
+                        }
+                      : undefined,
+                  },
+                  {
+                    company: data.filters.inquiryCompaniesIDs
+                      ? {
+                          id: {
+                            in: data.filters.inquiryCompaniesIDs,
+                          },
+                        }
+                      : undefined,
+                  },
+                  {
+                    location: data.filters.inquiryLocationsIDs
+                      ? {
+                          id: {
+                            in: data.filters.inquiryLocationsIDs,
+                          },
+                        }
+                      : undefined,
                   },
                 ],
               },
