@@ -1566,32 +1566,7 @@ export class OrdersRepository {
                             deliveryAgentReport: {report: {deleted: true}},
                           },
                         ]
-                      : [
-                          {
-                            companyReport: {
-                              none: {
-                                secondaryType: "DELIVERED",
-                              },
-                            },
-                            status: {
-                              notIn: ["RETURNED"],
-                            },
-                          },
-                          {
-                            companyReport: {
-                              none: {
-                                secondaryType: "RETURNED",
-                              },
-                            },
-                            status: {
-                              in: [
-                                "RETURNED",
-                                "REPLACED",
-                                "PARTIALLY_RETURNED",
-                              ],
-                            },
-                          },
-                        ],
+                      : [],
                 },
           select: orderSelect,
           orderBy: {
@@ -2588,13 +2563,6 @@ export class OrdersRepository {
                     ? {in: data.filters.inquiryStoresIDs}
                     : data.filters.storeID,
               },
-              // {
-              //   clientReport: data.filters.clientReport
-              //     ? { isNot: null }
-              //     : data.filters.clientReport
-              //     ? { is: null }
-              //     : undefined,
-              // },
               {
                 governorateReport: data.filters.governorateReport
                   ? {isNot: null}
@@ -2602,13 +2570,6 @@ export class OrdersRepository {
                   ? {is: null}
                   : undefined,
               },
-              // {
-              //   branchReport: data.filters.branchReport
-              //     ? {isNot: null}
-              //     : data.filters.branchReport
-              //     ? {is: null}
-              //     : undefined,
-              // },
               {
                 deliveryAgentReport: data.filters.deliveryAgentReport
                   ? {isNot: null}
@@ -2661,54 +2622,18 @@ export class OrdersRepository {
               {
                 OR: [
                   {
-                    status: data.filters.inquiryStatuses
-                      ? {
-                          in: data.filters.inquiryStatuses,
-                        }
-                      : undefined,
+                    branch: {
+                      id: data.loggedInUser.branchId,
+                    },
                   },
                   {
-                    governorate: data.filters.inquiryGovernorates
-                      ? {
-                          in: data.filters.inquiryGovernorates,
-                        }
-                      : undefined,
-                  },
-                  {
-                    branch: data.filters.inquiryBranchesIDs
-                      ? {
-                          id: {
-                            in: data.filters.inquiryBranchesIDs,
-                          },
-                        }
-                      : undefined,
-                  },
-                  {
-                    store: data.filters.inquiryStoresIDs
-                      ? {
-                          id: {
-                            in: data.filters.inquiryStoresIDs,
-                          },
-                        }
-                      : undefined,
-                  },
-                  {
-                    company: data.filters.inquiryCompaniesIDs
-                      ? {
-                          id: {
-                            in: data.filters.inquiryCompaniesIDs,
-                          },
-                        }
-                      : undefined,
-                  },
-                  {
-                    location: data.filters.inquiryLocationsIDs
-                      ? {
-                          id: {
-                            in: data.filters.inquiryLocationsIDs,
-                          },
-                        }
-                      : undefined,
+                    client:
+                      data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                      !data.loggedInUser?.mainRepository
+                        ? {
+                            branchId: data.loggedInUser?.branchId,
+                          }
+                        : undefined,
                   },
                 ],
               },
@@ -2761,28 +2686,7 @@ export class OrdersRepository {
                 {deliveryAgentReport: {is: null}},
                 {deliveryAgentReport: {report: {deleted: true}}},
               ]
-            : [
-                {
-                  companyReport: {
-                    none: {
-                      secondaryType: "DELIVERED",
-                    },
-                  },
-                  status: {
-                    notIn: ["RETURNED"],
-                  },
-                },
-                {
-                  companyReport: {
-                    none: {
-                      secondaryType: "RETURNED",
-                    },
-                  },
-                  status: {
-                    in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
-                  },
-                },
-              ],
+            : [],
       },
     });
 
