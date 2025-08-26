@@ -1566,6 +1566,21 @@ export class OrdersRepository {
                             deliveryAgentReport: {report: {deleted: true}},
                           },
                         ]
+                      : data.loggedInUser?.role === "REPOSITORIY_EMPLOYEE"
+                      ? [
+                          {
+                            branch: {
+                              id: data.loggedInUser.branchId,
+                            },
+                          },
+                          {
+                            client: !data.loggedInUser?.mainRepository
+                              ? {
+                                  branchId: data.loggedInUser?.branchId,
+                                }
+                              : undefined,
+                          },
+                        ]
                       : [],
                 },
           select: orderSelect,
@@ -2722,22 +2737,22 @@ export class OrdersRepository {
                 {deliveryAgentReport: {is: null}},
                 {deliveryAgentReport: {report: {deleted: true}}},
               ]
-            : [
+            : data.loggedInUser.role === "REPOSITORIY_EMPLOYEE"
+            ? [
                 {
                   branch: {
                     id: data.loggedInUser.branchId,
                   },
                 },
                 {
-                  client:
-                    data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-                    !data.loggedInUser?.mainRepository
-                      ? {
-                          branchId: data.loggedInUser?.branchId,
-                        }
-                      : undefined,
+                  client: !data.loggedInUser?.mainRepository
+                    ? {
+                        branchId: data.loggedInUser?.branchId,
+                      }
+                    : undefined,
                 },
-              ],
+              ]
+            : [],
       },
     });
 
