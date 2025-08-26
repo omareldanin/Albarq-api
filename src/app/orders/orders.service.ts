@@ -1445,6 +1445,18 @@ export class OrdersService {
       };
     }
 
+    if (data.loggedInUser.role === "REPOSITORIY_EMPLOYEE") {
+      const ordersStatisticsByStatus =
+        statistics.ordersStatisticsByStatus.filter(
+          (status) =>
+            status.status !== "REGISTERED" && status.status !== "READY_TO_SEND"
+        );
+      return {
+        ...statistics,
+        ordersStatisticsByStatus: ordersStatisticsByStatus,
+      };
+    }
+
     if (data.loggedInUser.role === "CLIENT") {
       let newStatusStatistics = statistics.ordersStatisticsByStatus;
 
