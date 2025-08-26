@@ -424,6 +424,17 @@ export class OrdersService {
     return order;
   };
 
+  getOrderById = async (data: {
+    params: {
+      orderID: string;
+    };
+  }) => {
+    const order = await ordersRepository.getOrderById({
+      orderID: data.params.orderID,
+    });
+
+    return order;
+  };
   updateOrder = async (data: {
     params: {
       orderID: string;
@@ -621,7 +632,7 @@ export class OrdersService {
           newOrder.deliveryAgent
         ) {
           await sendNotification({
-            orderId: newOrder.receiptNumber,
+            orderId: newOrder.id,
             userID: newOrder.deliveryAgent?.id,
             title: `تم تغيير حالة الطلب رقم ${
               newOrder.receiptNumber
@@ -646,7 +657,7 @@ export class OrdersService {
         ) {
           const orderInquiryEmployees =
             await ordersRepository.getOrderInquiryEmployees({
-              orderID: oldOrderData.receiptNumber,
+              orderID: oldOrderData.id,
             });
           const clientAssitants = await prisma.employee.findMany({
             where: {
@@ -663,7 +674,7 @@ export class OrdersService {
               e.orderStatus.includes(data.orderData.status)
             ) {
               await sendNotification({
-                orderId: newOrder.receiptNumber,
+                orderId: newOrder.id,
                 userID: e.id,
                 title: `تم تغيير حالة الطلب رقم ${
                   newOrder.receiptNumber
@@ -680,7 +691,7 @@ export class OrdersService {
           });
           orderInquiryEmployees.forEach(async (e) => {
             await sendNotification({
-              orderId: newOrder.receiptNumber,
+              orderId: newOrder.id,
               userID: e.id,
               title: `تم تغيير حالة الطلب رقم ${
                 newOrder.receiptNumber
@@ -695,7 +706,7 @@ export class OrdersService {
             });
           });
           await sendNotification({
-            orderId: newOrder.receiptNumber,
+            orderId: newOrder.id,
             userID: newOrder.client.id,
             title: `تم تغيير حالة الطلب رقم ${
               newOrder.receiptNumber

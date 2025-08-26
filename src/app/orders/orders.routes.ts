@@ -1,16 +1,11 @@
 // import { ClientRole } from "@prisma/client";
 // import { isAutherized } from "../../middlewares/isAutherized.middleware";
-import {
-  AdminRole,
-  ClientRole,
-  EmployeeRole,
-  Permission,
-} from "@prisma/client";
-import { Router } from "express";
-import { isAutherized } from "../../middlewares/isAutherized";
-import { isLoggedIn } from "../../middlewares/isLoggedIn";
-import { OrdersController } from "./orders.controller";
-import { preventDuplicateRequests } from "../../middlewares/preventDuplicateRequests";
+import {AdminRole, ClientRole, EmployeeRole, Permission} from "@prisma/client";
+import {Router} from "express";
+import {isAutherized} from "../../middlewares/isAutherized";
+import {isLoggedIn} from "../../middlewares/isLoggedIn";
+import {OrdersController} from "./orders.controller";
+import {preventDuplicateRequests} from "../../middlewares/preventDuplicateRequests";
 
 import multer from "multer";
 const upload = multer();
@@ -353,6 +348,18 @@ router.route("/orders/pdf").post(
     ...Object.values(ClientRole),
   ]),
   ordersController.getOrdersReportPDF
+  /*
+        #swagger.tags = ['Orders Routes']
+    */
+);
+router.route("/orders/getById/:orderID").get(
+  isLoggedIn,
+  isAutherized([
+    ...Object.values(AdminRole),
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  ordersController.getOrderById
   /*
         #swagger.tags = ['Orders Routes']
     */

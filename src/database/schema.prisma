@@ -1193,10 +1193,10 @@ model Banner {
   // --- IDENTIFICATION --------------------------------------------------------------------- //
   id        Int      @id @default(autoincrement())
   // --- DETAILS --------------------------------------------------------------------------- //
-  title     String
-  content   String   @default("")
+  title     String?
+  content   String?   @default("")
   image     String   @default("https://w7.pngwing.com/pngs/819/548/png-transparent-photo-image-landscape-icon-images.png")
-  url       String   @default("")
+  url       String?   @default("")
   // --- TENANT --------------------------------------------------------------------- //
   company   Company  @relation(fields: [companyId], references: [id])
   companyId Int

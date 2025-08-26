@@ -1,35 +1,35 @@
-import { Router } from "express";
+import {Router} from "express";
 
 // import { Role } from "@prisma/client";
 // import { isAutherized } from "../../middlewares/isAutherized.middleware";
-import { AdminRole, ClientRole, EmployeeRole, Permission } from "@prisma/client";
-import { isAutherized } from "../../middlewares/isAutherized";
-import { isLoggedIn } from "../../middlewares/isLoggedIn";
-import { ReportController } from "./reports.controller";
+import {AdminRole, ClientRole, EmployeeRole, Permission} from "@prisma/client";
+import {isAutherized} from "../../middlewares/isAutherized";
+import {isLoggedIn} from "../../middlewares/isLoggedIn";
+import {ReportController} from "./reports.controller";
 
 const router = Router();
 const reportController = new ReportController();
 
 router.route("/reports").post(
-    isLoggedIn,
-    isAutherized(
-        [
-            EmployeeRole.COMPANY_MANAGER,
-            EmployeeRole.REPOSITORIY_EMPLOYEE,
-            EmployeeRole.ACCOUNTANT,
-            EmployeeRole.BRANCH_MANAGER
-        ],
-        [
-            Permission.CREATE_BRANCH_REPORT,
-            Permission.CREATE_REPOSITORY_REPORT,
-            Permission.CREATE_COMPANY_REPORT,
-            Permission.CREATE_DELIVERY_AGENT_REPORT,
-            Permission.CREATE_CLIENT_REPORT,
-            Permission.CREATE_GOVERNMENT_REPORT
-        ]
-    ),
-    reportController.createReport
-    /*
+  isLoggedIn,
+  isAutherized(
+    [
+      EmployeeRole.COMPANY_MANAGER,
+      EmployeeRole.REPOSITORIY_EMPLOYEE,
+      EmployeeRole.ACCOUNTANT,
+      EmployeeRole.BRANCH_MANAGER,
+    ],
+    [
+      Permission.CREATE_BRANCH_REPORT,
+      Permission.CREATE_REPOSITORY_REPORT,
+      Permission.CREATE_COMPANY_REPORT,
+      Permission.CREATE_DELIVERY_AGENT_REPORT,
+      Permission.CREATE_CLIENT_REPORT,
+      Permission.CREATE_GOVERNMENT_REPORT,
+    ]
+  ),
+  reportController.createReport
+  /*
         #swagger.tags = ['Reports Routes']
 
         #swagger.requestBody = {
@@ -47,10 +47,14 @@ router.route("/reports").post(
 );
 
 router.route("/reports").get(
-    isLoggedIn,
-    isAutherized([...Object.values(AdminRole), ...Object.values(EmployeeRole), ...Object.values(ClientRole)]),
-    reportController.getAllReports
-    /*
+  isLoggedIn,
+  isAutherized([
+    ...Object.values(AdminRole),
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  reportController.getAllReports
+  /*
         #swagger.tags = ['Reports Routes']
 
         #swagger.parameters['page'] = {
@@ -134,37 +138,53 @@ router.route("/reports").get(
 );
 
 router.route("/reports/:reportID").get(
-    isLoggedIn,
-    isAutherized([...Object.values(AdminRole), ...Object.values(EmployeeRole), ...Object.values(ClientRole)]),
-    reportController.getReport
-    /*
+  isLoggedIn,
+  isAutherized([
+    ...Object.values(AdminRole),
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  reportController.getReport
+  /*
         #swagger.tags = ['Reports Routes']
     */
 );
 
 router.route("/reports/:reportID/pdf").get(
-    isLoggedIn,
-    isAutherized([...Object.values(AdminRole), ...Object.values(EmployeeRole), ...Object.values(ClientRole)]),
-    reportController.getReportPDF
-    /*
+  isLoggedIn,
+  isAutherized([
+    ...Object.values(AdminRole),
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  reportController.getReportPDF
+  /*
         #swagger.tags = ['Reports Routes']
     */
 );
 
 router.route("/reports/pdf").post(
-    isLoggedIn,
-    isAutherized([...Object.values(AdminRole), ...Object.values(EmployeeRole), ...Object.values(ClientRole)]),
-    reportController.getReportsReportPDF
-    /*
+  isLoggedIn,
+  isAutherized([
+    ...Object.values(AdminRole),
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  reportController.getReportsReportPDF
+  /*
         #swagger.tags = ['Reports Routes']
     */
 );
 
 router.route("/reports/:reportID").patch(
-    isLoggedIn,
-    isAutherized([...Object.values(AdminRole), ...Object.values(EmployeeRole), ...Object.values(ClientRole)]),
-    reportController.updateReport
-    /*
+  isLoggedIn,
+  isAutherized([
+    ...Object.values(AdminRole),
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  reportController.updateReport
+  /*
         #swagger.tags = ['Reports Routes']
 
         #swagger.requestBody = {
@@ -182,45 +202,46 @@ router.route("/reports/:reportID").patch(
 );
 
 router.route("/reports/:reportID").delete(
-    isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
-    reportController.deleteReport
-    /*
+  isLoggedIn,
+  isAutherized([
+    EmployeeRole.COMPANY_MANAGER,
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+  ]),
+  reportController.deleteReport
+  /*
         #swagger.tags = ['Reports Routes']
     */
 );
 
 router.route("/reports/:reportID/deactivate").patch(
-    isLoggedIn,
-    isAutherized(
-        [
-            AdminRole.ADMIN,
-            AdminRole.ADMIN_ASSISTANT,
-            EmployeeRole.COMPANY_MANAGER,
-            EmployeeRole.REPOSITORIY_EMPLOYEE,
-            EmployeeRole.ACCOUNTANT,
-            EmployeeRole.BRANCH_MANAGER
-        ],
-        [
-            Permission.DELETE_BRANCH_REPORT,
-            Permission.DELETE_REPOSITORY_REPORT,
-            Permission.DELETE_COMPANY_REPORT,
-            Permission.DELETE_DELIVERY_AGENT_REPORT,
-            Permission.DELETE_CLIENT_REPORT,
-            Permission.DELETE_GOVERNMENT_REPORT
-        ]
-    ),
-    reportController.deactivateReport
-    /*
+  isLoggedIn,
+  isAutherized(
+    [AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT, EmployeeRole.COMPANY_MANAGER],
+    [
+      Permission.DELETE_BRANCH_REPORT,
+      Permission.DELETE_REPOSITORY_REPORT,
+      Permission.DELETE_COMPANY_REPORT,
+      Permission.DELETE_DELIVERY_AGENT_REPORT,
+      Permission.DELETE_CLIENT_REPORT,
+      Permission.DELETE_GOVERNMENT_REPORT,
+    ]
+  ),
+  reportController.deactivateReport
+  /*
         #swagger.tags = ['Reports Routes']
     */
 );
 
 router.route("/reports/:reportID/reactivate").patch(
-    isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
-    reportController.reactivateReport
-    /*
+  isLoggedIn,
+  isAutherized([
+    EmployeeRole.COMPANY_MANAGER,
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+  ]),
+  reportController.reactivateReport
+  /*
         #swagger.tags = ['Reports Routes']
     */
 );

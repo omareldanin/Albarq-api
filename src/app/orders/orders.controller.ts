@@ -291,6 +291,30 @@ export class OrdersController {
     });
   });
 
+  getOrderById = catchAsync(async (req, res) => {
+    const params = {
+      orderID: req.params.orderID,
+    };
+
+    const order = await ordersService.getOrderById({
+      params: params,
+    });
+    const orderTimeline = await ordersService.getOrderTimeline({
+      params: {orderID: params.orderID},
+      filters: {},
+    });
+    const orderInquiryEmployees = await ordersService.getOrderInquiryEmployees({
+      params: params,
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: order,
+      orderTimeline,
+      orderInquiryEmployees,
+    });
+  });
+
   updateOrder = catchAsync(async (req, res) => {
     const params = {
       orderID: req.params.orderID,
@@ -485,20 +509,11 @@ export class OrdersController {
       throw new AppError("هذا الطلب مرتجع!", 400);
     }
 
-    // if (oldOrder?.repository && oldOrder.repository.id !== exportRepo?.id) {
-    //   throw new AppError("هذا الطلب لم يتم تحويله اليك!", 404);
-    // }
-
-    // if (orderData.forwardedToMainRepo) {
-    //   if (oldOrder?.repository?.id !== exportRepo?.id) {
-    //     throw new AppError("هذا الطلب غير موجود بالمخزن", 404);
-    //   }
-    // }
     orderData.confirmed = true;
 
     const order = await ordersService.updateOrder({
       params: {
-        orderID: oldOrder?.receiptNumber,
+        orderID: oldOrder?.id,
       },
       orderData: orderData,
       loggedInUser: loggedInUser,

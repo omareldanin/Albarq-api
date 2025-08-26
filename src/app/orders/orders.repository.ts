@@ -2955,7 +2955,7 @@ export class OrdersRepository {
     const orderTimeline = await prisma.orderTimeline.findMany({
       where: {
         order: {
-          receiptNumber: data.params.orderID,
+          id: data.params.orderID,
         },
         type: data.filters.types ? {in: data.filters.types} : data.filters.type,
       },
@@ -3011,6 +3011,7 @@ export class OrdersRepository {
         id: data.orderID,
       },
       select: {
+        id: true,
         status: true,
         governorate: true,
         branchId: true,
@@ -3064,7 +3065,7 @@ export class OrdersRepository {
     });
 
     const inquiryEmployees = await this.getOrderInquiryEmployees({
-      orderID: data.orderID,
+      orderID: order?.id,
     });
 
     // array of chat members with no nulls
@@ -3106,9 +3107,9 @@ export class OrdersRepository {
   }
 
   async getOrderInquiryEmployees(data: {orderID: string | undefined}) {
-    const order = await prisma.order.findFirst({
+    const order = await prisma.order.findUnique({
       where: {
-        receiptNumber: data.orderID,
+        id: data.orderID,
       },
       select: {
         branchId: true,

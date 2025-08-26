@@ -1,12 +1,12 @@
 // // import { generateMock } from "@anatine/zod-mock";
-import { generateSchema } from "@anatine/zod-openapi";
-import { z } from "zod";
+import {generateSchema} from "@anatine/zod-openapi";
+import {z} from "zod";
 
 export const BannerCreateSchema = z.object({
-    title: z.string().min(3),
-    content: z.string().optional(),
-    image: z.string().optional(),
-    url: z.string().optional()
+  title: z.string().optional(),
+  content: z.string().optional(),
+  image: z.string().optional(),
+  url: z.string().optional(),
 });
 
 export type BannerCreateType = z.infer<typeof BannerCreateSchema>;
