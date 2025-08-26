@@ -2722,7 +2722,22 @@ export class OrdersRepository {
                 {deliveryAgentReport: {is: null}},
                 {deliveryAgentReport: {report: {deleted: true}}},
               ]
-            : [],
+            : [
+                {
+                  branch: {
+                    id: data.loggedInUser.branchId,
+                  },
+                },
+                {
+                  client:
+                    data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                    !data.loggedInUser?.mainRepository
+                      ? {
+                          branchId: data.loggedInUser?.branchId,
+                        }
+                      : undefined,
+                },
+              ],
       },
     });
 
