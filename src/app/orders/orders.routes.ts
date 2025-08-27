@@ -352,6 +352,18 @@ router.route("/orders/pdf").post(
         #swagger.tags = ['Orders Routes']
     */
 );
+router.route("/orders/getByStore").get(
+  isLoggedIn,
+  isAutherized([
+    ...Object.values(AdminRole),
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  ordersController.getReceivingAgentStores
+  /*
+        #swagger.tags = ['Orders Routes']
+    */
+);
 router.route("/orders/getById/:orderID").get(
   isLoggedIn,
   isAutherized([

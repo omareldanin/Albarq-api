@@ -2752,7 +2752,7 @@ export class OrdersRepository {
                     : undefined,
                 },
               ]
-            : [],
+            : undefined,
       },
     });
 

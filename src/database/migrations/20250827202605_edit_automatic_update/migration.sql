@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "AutomaticUpdate" ADD COLUMN     "notes" TEXT,
+ALTER COLUMN "updateAt" DROP NOT NULL,
+ALTER COLUMN "updateAt" SET DEFAULT 0,
+ALTER COLUMN "checkAfter" DROP NOT NULL,
+ALTER COLUMN "checkAfter" SET DEFAULT 0;

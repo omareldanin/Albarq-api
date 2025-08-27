@@ -1212,8 +1212,9 @@ model AutomaticUpdate {
   orderStatus     OrderStatus
   newOrderStatus  OrderStatus                     @default(DELIVERED)
   returnCondition AutomaticUpdateReturnCondition?
-  updateAt        Int                             @default(22) // 0 -> 24
-  checkAfter      Int                             @default(24) // 0 -> infinity
+  notes           String?
+  updateAt        Int?                             @default(0) // 0 -> 24
+  checkAfter      Int?                             @default(0) // 0 -> infinity
   // --- STATUS --------------------------------------------------------------------------- //
   enabled         Boolean                         @default(true)
   // --- FOREIGN KEYS --------------------------------------------------------------------------- //

@@ -13,6 +13,7 @@ export const AutomaticUpdateCreateSchema = z.object({
   checkAfter: z.number().min(0).max(480),
   enabled: z.boolean().default(true),
   branchID: z.number(),
+  notes: z.string().optional(),
 });
 
 export type AutomaticUpdateCreateType = z.infer<

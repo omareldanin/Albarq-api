@@ -836,6 +836,120 @@ export class OrdersController {
     });
   });
 
+  getReceivingAgentStores = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    const {receivingAgentId} = req.query;
+
+    let inquiryClientsIDs: number[] | undefined = undefined;
+    const inquiryEmployeeStuff =
+      await employeesRepository.getInquiryEmployeeStuff({
+        employeeID: +receivingAgentId!!,
+      });
+
+    inquiryClientsIDs =
+      inquiryEmployeeStuff.inquiryClients &&
+      inquiryEmployeeStuff.inquiryClients.length > 0
+        ? inquiryEmployeeStuff.inquiryClients
+        : undefined;
+
+    // aggregate orders for these clients
+    const aggregatedOrders = await prisma.order.groupBy({
+      by: ["storeId"],
+      where: {
+        AND: [
+          {clientId: {in: inquiryClientsIDs}},
+          {status: {in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"]}},
+          {
+            deleted: false,
+          },
+          {
+            confirmed: true,
+          },
+          {
+            companyId: loggedInUser.companyID!!,
+          },
+          {
+            OR: [
+              {
+                clientReport: {
+                  none: {
+                    secondaryType: "DELIVERED",
+                  },
+                },
+              },
+              {
+                clientReport: {
+                  some: {
+                    report: {
+                      deleted: true,
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      },
+      _count: {id: true},
+      _sum: {
+        totalCost: true,
+        paidAmount: true,
+        clientNet: true,
+        deliveryAgentNet: true,
+        companyNet: true,
+        deliveryCost: true,
+      },
+    });
+
+    const stores = await prisma.store.findMany({
+      where: {
+        id: {in: aggregatedOrders.map((o) => o.storeId)},
+      },
+      select: {
+        id: true,
+        name: true,
+        client: {
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // merge data
+    const result = aggregatedOrders.map((o) => {
+      const store = stores.find((s) => s.id === o.storeId);
+      return {
+        store: {
+          id: o.storeId,
+          name: store?.name || "",
+        },
+        client: {
+          id: store?.client.user.id,
+          name: store?.client.user.name,
+        },
+        count: o._count.id,
+        totalCost: o._sum.totalCost || 0,
+        paidAmount: o._sum.paidAmount || 0,
+        clientNet: o._sum.clientNet || 0,
+        deliveryAgentNet: o._sum.deliveryAgentNet || 0,
+        companyNet: o._sum.companyNet || 0,
+        deliveryCost: o._sum.deliveryCost || 0,
+      };
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: result,
+    });
+  });
+
   getStatusOrdersStatistics = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
     const status = req.query.status as OrderStatus;

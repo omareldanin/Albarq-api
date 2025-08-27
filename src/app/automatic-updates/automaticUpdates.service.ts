@@ -18,6 +18,7 @@ export class AutomaticUpdatesService {
         orderStatus: data.automaticUpdateData.orderStatus,
         returnCondition: data.automaticUpdateData.returnCondition,
         newOrderStatus: data.automaticUpdateData.newOrderStatus,
+        notes: data.automaticUpdateData.notes,
         branch: {
           connect: {
             id: data.automaticUpdateData.branchID,
@@ -59,27 +60,6 @@ export class AutomaticUpdatesService {
       returnCondition: data.filters.returnCondition,
       newOrderStatus: data.filters.newOrderStatus,
     };
-
-    // const automaticUpdatesCount = await prisma.automaticUpdate.count({
-    //     where: where
-    // });
-    // const pagesCount = Math.ceil(automaticUpdatesCount / data.filters.size);
-
-    // if (pagesCount === 0) {
-    //     return {
-    //         automaticUpdates: [],
-    //         automaticUpdatesMetaData: {
-    //             page: 1,
-    //             pagesCount: 1
-    //         }
-    //     };
-    // }
-
-    // if (data.filters.page > pagesCount) {
-    //     throw new AppError("Page number out of range", 400);
-    // }
-    // const take = data.filters.page * data.filters.size;
-    // const skip = (data.filters.page - 1) * data.filters.size;
 
     if (data.filters.minified === true) {
       const paginatedAutomaticUpdates =
@@ -165,6 +145,7 @@ export class AutomaticUpdatesService {
         updateAt: data.automaticUpdateData.updateAt,
         checkAfter: data.automaticUpdateData.checkAfter,
         newOrderStatus: data.automaticUpdateData.newOrderStatus,
+        notes: data.automaticUpdateData.notes,
         branch: data.automaticUpdateData.branchID
           ? {
               connect: {

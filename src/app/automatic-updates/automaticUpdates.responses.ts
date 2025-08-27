@@ -21,6 +21,7 @@ export const automaticUpdateSelect = {
   },
   newOrderStatus: true,
   checkAfter: true,
+  notes: true,
   enabled: true,
 } satisfies Prisma.AutomaticUpdateSelect;
 
