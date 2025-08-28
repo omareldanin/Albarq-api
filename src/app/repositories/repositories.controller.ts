@@ -1,17 +1,15 @@
-import { AdminRole, EmployeeRole, RepositoryType } from "@prisma/client";
-import { catchAsync } from "../../lib/catchAsync";
-import type { loggedInUserType } from "../../types/user";
-import { BranchesRepository } from "../branches/branches.repository";
+import {AdminRole, EmployeeRole, RepositoryType} from "@prisma/client";
+import {catchAsync} from "../../lib/catchAsync";
+import type {loggedInUserType} from "../../types/user";
 import {
   RepositoryCreateSchema,
   RepositoryUpdateSchema,
 } from "./repositories.dto";
-import { RepositoriesRepository } from "./repositories.repository";
-import { prisma } from "../../database/db";
-import { AppError } from "../../lib/AppError";
+import {RepositoriesRepository} from "./repositories.repository";
+import {prisma} from "../../database/db";
+import {AppError} from "../../lib/AppError";
 
 const repositoriesRepository = new RepositoriesRepository();
-const branchesRepository = new BranchesRepository();
 
 export class RepositoriesController {
   createRepository = catchAsync(async (req, res) => {
@@ -49,9 +47,10 @@ export class RepositoriesController {
 
   getAllRepositories = catchAsync(async (req, res) => {
     // Filters
-    const { type } = req.query;
+    const {type} = req.query;
     const loggedInUser = res.locals.user as loggedInUserType;
     let companyID: number | undefined;
+
     if (Object.keys(AdminRole).includes(loggedInUser.role)) {
       companyID = req.query.company_id ? +req.query.company_id : undefined;
     } else if (loggedInUser.companyID) {
@@ -65,6 +64,22 @@ export class RepositoriesController {
     // Branch manager can only see repositories of his branch
     let branchID = req.query.branchId ? +req.query.branchId : undefined;
     let mainRepository: boolean | undefined;
+    let inquiryBranchesIDs: number[] | undefined = undefined;
+
+    if (loggedInUser.role === "REPOSITORIY_EMPLOYEE") {
+      const employee = await prisma.employee.findUnique({
+        where: {
+          id: loggedInUser.id,
+        },
+        select: {
+          inquiryBranches: true,
+        },
+      });
+      inquiryBranchesIDs = employee?.inquiryBranches.length
+        ? employee?.inquiryBranches.map((b) => b.branchId)
+        : [];
+    }
+
     if (loggedInUser.role !== EmployeeRole.COMPANY_MANAGER) {
       const branch = await prisma.branch.findUnique({
         where: {
@@ -98,7 +113,7 @@ export class RepositoriesController {
       page = +req.query.page;
     }
 
-    const { repositories, pagesCount } =
+    const {repositories, pagesCount} =
       await repositoriesRepository.getAllRepositoriesPaginated({
         page: page,
         size: size,
@@ -107,6 +122,7 @@ export class RepositoriesController {
         minified: minified,
         mainRepository,
         type: type as RepositoryType,
+        inquiryBranchesIDs,
       });
 
     res.status(200).json({

@@ -1734,8 +1734,7 @@ export class OrdersRepository {
           ...where,
         },
         orderBy: {
-          [data.filters.sort.split(":")[0]]:
-            data.filters.sort.split(":")[1] === "desc" ? "desc" : "asc",
+          createdAt: "desc",
         },
         select: orderSelect,
       },

@@ -35,7 +35,6 @@ export class EmployeesController {
     }
 
     const employeeData = EmployeeCreateSchema.parse(employeeInput);
-    console.log(employeeData.inquiryDeliveryAgentsIDs);
 
     const createdEmployee = await employeesService.createEmployee({
       loggedInUser,

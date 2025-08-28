@@ -1,13 +1,13 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { env } from "../../config";
-import { AppError } from "../../lib/AppError";
-import { catchAsync } from "../../lib/catchAsync";
-import type { loggedInUserType } from "../../types/user";
-import { sendNotification } from "../notifications/helpers/sendNotification";
-import { UsersRepository } from "../users/users.repository";
-import { RefreshTokenSchema, UserSigninSchema } from "./auth.dto";
-import { AuthRepository } from "./auth.repository";
+import {env} from "../../config";
+import {AppError} from "../../lib/AppError";
+import {catchAsync} from "../../lib/catchAsync";
+import type {loggedInUserType} from "../../types/user";
+import {sendNotification} from "../notifications/helpers/sendNotification";
+import {UsersRepository} from "../users/users.repository";
+import {RefreshTokenSchema, UserSigninSchema} from "./auth.dto";
+import {AuthRepository} from "./auth.repository";
 
 const authModel = new AuthRepository();
 const usersRepository = new UsersRepository();
@@ -55,7 +55,7 @@ export class AuthController {
         clientId: returnedUser.clientId,
       } as loggedInUserType,
       env.ACCESS_TOKEN_SECRET as string,
-      { expiresIn: env.ACCESS_TOKEN_EXPIRES_IN }
+      {expiresIn: env.ACCESS_TOKEN_EXPIRES_IN}
     );
 
     const refreshToken = jwt.sign(
@@ -63,12 +63,12 @@ export class AuthController {
         id: returnedUser?.id,
       },
       env.REFRESH_TOKEN_SECRET as string,
-      { expiresIn: env.REFRESH_TOKEN_EXPIRES_IN }
+      {expiresIn: env.REFRESH_TOKEN_EXPIRES_IN}
     );
 
     await usersRepository.updateUser({
       userID: returnedUser.id,
-      userData: { refreshToken },
+      userData: {refreshToken},
     });
 
     res.cookie("jwt", token, {
@@ -87,7 +87,7 @@ export class AuthController {
     if (user.fcm) {
       await usersRepository.updateUser({
         userID: returnedUser.id,
-        userData: { fcm: user.fcm },
+        userData: {fcm: user.fcm},
       });
     }
 
@@ -157,7 +157,7 @@ export class AuthController {
 
       const token = jwt.sign(
         {
-          id: user.id,
+          id: user?.id,
           name: user.name,
           username: user.username,
           role: user.role,
@@ -166,11 +166,14 @@ export class AuthController {
           companyID: user.companyID,
           companyName: user.companyName,
           mainCompany: user.mainCompany,
-          clientId: user.clientId,
+          mainRepository: user.mainRepository,
           branchId: user.branchId,
+          repositoryId: user.repositoryId,
+          type: user.type,
+          clientId: user.clientId,
         } as loggedInUserType,
         env.ACCESS_TOKEN_SECRET as string,
-        { expiresIn: env.ACCESS_TOKEN_EXPIRES_IN }
+        {expiresIn: env.ACCESS_TOKEN_EXPIRES_IN}
       );
 
       res.cookie("jwt", token, {

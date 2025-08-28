@@ -1,10 +1,10 @@
-import type { Prisma, RepositoryType } from "@prisma/client";
-import { prisma } from "../../database/db";
+import type {Prisma, RepositoryType} from "@prisma/client";
+import {prisma} from "../../database/db";
 import type {
   RepositoryCreateType,
   RepositoryUpdateType,
 } from "./repositories.dto";
-import { repositorySelect } from "./repositories.responses";
+import {repositorySelect} from "./repositories.responses";
 
 export class RepositoriesRepository {
   async createRepository(companyID: number, data: RepositoryCreateType) {
@@ -37,11 +37,16 @@ export class RepositoriesRepository {
     minified?: boolean;
     mainRepository?: boolean;
     type: string;
+    inquiryBranchesIDs: number[] | undefined;
   }) {
     const where = {
-      branch: {
-        id: filters.branchID,
-      },
+      branch: filters.inquiryBranchesIDs
+        ? {
+            id: {in: filters.inquiryBranchesIDs},
+          }
+        : {
+            id: filters.branchID,
+          },
       company: {
         id: filters.companyID,
       },
@@ -91,7 +96,7 @@ export class RepositoriesRepository {
     };
   }
 
-  async getRepository(data: { repositoryID: number }) {
+  async getRepository(data: {repositoryID: number}) {
     const repository = await prisma.repository.findUnique({
       where: {
         id: data.repositoryID,
@@ -119,7 +124,7 @@ export class RepositoriesRepository {
     return repository;
   }
 
-  async deleteRepository(data: { repositoryID: number }) {
+  async deleteRepository(data: {repositoryID: number}) {
     await prisma.repository.delete({
       where: {
         id: data.repositoryID,
