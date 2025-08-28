@@ -1581,7 +1581,7 @@ export class OrdersRepository {
                               : undefined,
                           },
                         ]
-                      : [],
+                      : undefined,
                 },
           select: orderSelect,
           orderBy: {
