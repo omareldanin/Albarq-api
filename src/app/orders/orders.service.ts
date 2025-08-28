@@ -3,6 +3,7 @@ import {
   ClientRole,
   EmployeeRole,
   OrderStatus,
+  SecondaryStatus,
   type Governorate,
   type Order,
 } from "@prisma/client";
@@ -1212,6 +1213,79 @@ export class OrdersService {
     );
     return pdf;
   };
+  getRepositoryOrderCount = async (filters: {
+    loggedInUser: loggedInUserType;
+    client_id?: string;
+    store_id?: string;
+    repository_id?: string;
+    governorate?: string;
+    secondaryStatus?: string;
+    status?: string;
+    getIncoming?: string;
+    getOutComing?: string;
+  }) => {
+    const user = await prisma.employee.findUnique({
+      where: {
+        id: filters.loggedInUser.id,
+      },
+      select: {
+        branch: {
+          select: {
+            id: true,
+            repositories: {
+              select: {
+                id: true,
+                type: true,
+                name: true,
+                mainRepository: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const exportRepo = user?.branch?.repositories.find(
+      (repo) => repo.type === "EXPORT"
+    );
+    const returnRepo = user?.branch?.repositories.find(
+      (repo) => repo.type === "RETURN"
+    );
+
+    const results = await prisma.order.count({
+      where: {
+        deleted: false,
+        repositoryId: filters.getOutComing
+          ? undefined
+          : filters.repository_id
+          ? Number(filters.repository_id)
+          : filters.secondaryStatus === "IN_CAR"
+          ? undefined
+          : filters.status === "RETURNED"
+          ? returnRepo?.id
+          : exportRepo?.id,
+        secondaryStatus: filters.secondaryStatus as SecondaryStatus,
+        status:
+          filters.status === "RETURNED"
+            ? {in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"]}
+            : (filters.status as OrderStatus),
+        storeId: filters.store_id ? Number(filters.store_id) : undefined,
+        clientId: filters.client_id ? Number(filters.client_id) : undefined,
+        governorate: filters.governorate
+          ? (filters.governorate as Governorate)
+          : undefined,
+        forwardedRepo: filters.getOutComing
+          ? returnRepo?.id
+          : filters.getIncoming
+          ? undefined
+          : filters.secondaryStatus === "IN_CAR"
+          ? exportRepo?.id
+          : undefined,
+      },
+    });
+
+    return results;
+  };
 
   getOrdersStatistics = async (data: {
     filters: OrdersStatisticsFiltersType;
@@ -1446,14 +1520,59 @@ export class OrdersService {
     }
 
     if (data.loggedInUser.role === "REPOSITORIY_EMPLOYEE") {
-      const ordersStatisticsByStatus =
-        statistics.ordersStatisticsByStatus.filter(
-          (status) =>
-            status.status !== "REGISTERED" && status.status !== "READY_TO_SEND"
-        );
+      const withReceingAgent = statistics.ordersStatisticsByStatus.find(
+        (s) => s.status === "WITH_RECEIVING_AGENT"
+      );
+      const inRepo = await this.getRepositoryOrderCount({
+        loggedInUser: data.loggedInUser,
+        secondaryStatus: "IN_REPOSITORY",
+      });
+
+      const forwarded = await this.getRepositoryOrderCount({
+        loggedInUser: data.loggedInUser,
+        secondaryStatus: "IN_CAR",
+      });
+
+      const incomming = await this.getRepositoryOrderCount({
+        loggedInUser: data.loggedInUser,
+        repository_id: data.loggedInUser.repositoryId + "",
+        secondaryStatus: "IN_CAR",
+        getIncoming: "true",
+      });
+
       return {
         ...statistics,
-        ordersStatisticsByStatus: ordersStatisticsByStatus,
+        ordersStatisticsByStatus: [
+          withReceingAgent,
+          {
+            status: "inrepo",
+            totalCost: 0,
+            count: inRepo,
+            name: "في المخزن",
+            icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/delivered.png",
+            inside: false,
+          },
+          {
+            status: "forwarded",
+            totalCost: 0,
+            count: forwarded,
+            name: data.loggedInUser.mainRepository
+              ? "المرسله إلي الافرع"
+              : "المرسله إلي الرئيسي",
+            icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/receiving.png",
+            inside: false,
+          },
+          {
+            status: "incomming",
+            totalCost: 0,
+            count: incomming,
+            name: data.loggedInUser.mainRepository
+              ? "المرسله من الافرع"
+              : "المرسله من الرئيسي",
+            icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/receiving.png",
+            inside: false,
+          },
+        ],
       };
     }
 
