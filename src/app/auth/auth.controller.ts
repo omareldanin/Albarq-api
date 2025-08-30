@@ -53,6 +53,7 @@ export class AuthController {
         repositoryId: returnedUser.repositoryId,
         type: returnedUser.type,
         clientId: returnedUser.clientId,
+        repository: returnedUser.repository,
       } as loggedInUserType,
       env.ACCESS_TOKEN_SECRET as string,
       {expiresIn: env.ACCESS_TOKEN_EXPIRES_IN}
@@ -171,6 +172,7 @@ export class AuthController {
           repositoryId: user.repositoryId,
           type: user.type,
           clientId: user.clientId,
+          repository: user.repository,
         } as loggedInUserType,
         env.ACCESS_TOKEN_SECRET as string,
         {expiresIn: env.ACCESS_TOKEN_EXPIRES_IN}

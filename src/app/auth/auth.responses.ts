@@ -1,9 +1,4 @@
-import type {
-  AdminRole,
-  ClientRole,
-  EmployeeRole,
-  Prisma,
-} from "@prisma/client";
+import type {AdminRole, ClientRole, EmployeeRole, Prisma} from "@prisma/client";
 
 export const userSelect = {
   id: true,
@@ -34,6 +29,7 @@ export const userSelect = {
         select: {
           id: true,
           mainRepository: true,
+          name: true,
           type: true,
         },
       },
@@ -83,6 +79,7 @@ export const userReform = (
     repositoryId:
       user.employee?.repository?.id ?? user.employee?.repository?.id ?? null,
     mainRepository: user.employee?.repository?.mainRepository,
+    repository: user.employee?.repository?.name,
     type: user.employee?.repository?.type,
     role: (user.admin?.role || user.employee?.role || user.client?.role) as
       | AdminRole
