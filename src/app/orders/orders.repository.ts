@@ -1163,6 +1163,11 @@ export class OrdersRepository {
                     ? {
                         clientReport: {
                           some: {
+                            secondaryType:
+                              data.filters.delivered &&
+                              data.filters.orderType === "forwarded"
+                                ? "DELIVERED"
+                                : undefined,
                             report: {
                               deleted: false,
                             },
