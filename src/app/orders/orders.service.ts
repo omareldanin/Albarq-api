@@ -118,6 +118,14 @@ export class OrdersService {
       return createdOrders;
     }
 
+    const clientID = await clientsRepository.getClientIDByStoreID({
+      storeID: data.orderOrOrdersData.storeID,
+    });
+
+    if (!clientID) {
+      throw new AppError("حصل خطأ في ايجاد صاحب المتجر", 500);
+    }
+
     if (data.orderOrOrdersData.clientOrderReceiptId) {
       const clientReceipt = await prisma.clientOrderReceipt.findFirst({
         where: {
@@ -127,6 +135,11 @@ export class OrdersService {
           id: true,
           receiptNumber: true,
           storeId: true,
+          store: {
+            select: {
+              clientId: true,
+            },
+          },
           order: {
             select: {
               id: true,
@@ -137,17 +150,11 @@ export class OrdersService {
       if (clientReceipt?.order) {
         throw new AppError("تم اضافه الوصل مسبق", 500);
       }
-
+      if (clientID !== clientReceipt?.store?.clientId) {
+        throw new AppError("رقم الوصل غير صالح", 500);
+      }
       data.orderOrOrdersData.receiptNumber = clientReceipt?.receiptNumber;
       data.orderOrOrdersData.clientOrderReceiptId = clientReceipt?.id + "";
-    }
-
-    const clientID = await clientsRepository.getClientIDByStoreID({
-      storeID: data.orderOrOrdersData.storeID,
-    });
-
-    if (!clientID) {
-      throw new AppError("حصل خطأ في ايجاد صاحب المتجر", 500);
     }
 
     // const deliveryAgentID = await employeesRepository.getDeliveryAgentIDByLocationID({
