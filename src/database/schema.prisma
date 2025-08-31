@@ -1232,7 +1232,7 @@ model AutomaticUpdate {
   createdAt       DateTime                        @default(now())
   updatedAt       DateTime                        @updatedAt
 
-  @@unique([orderStatus, branchId, companyId])
+  @@unique([branchId, companyId])
 }
 
 model ClosedStatus {

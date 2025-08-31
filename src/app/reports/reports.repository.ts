@@ -648,49 +648,4 @@ export class ReportsRepository {
     });
     return reportReform(deletedReport);
   }
-
-  // async reEvaluateRepositoryReport(data: {
-  //     repositoryReportID: number;
-  //     orderData: {
-  //         totalCost: number;
-  //         paidAmount: number;
-  //         deliveryCost: number;
-  //         clientNet: number;
-  //         deliveryAgentNet: number;
-  //         companyNet: number;
-  //         governorate: Governorate;
-  //     };
-  // }) {
-  //     await prisma.report.update({
-  //         where: {
-  //             id: data.repositoryReportID
-  //         },
-  //         data: {
-  //             baghdadOrdersCount: {
-  //                 decrement: data.orderData.governorate === Governorate.BAGHDAD ? 1 : 0
-  //             },
-  //             governoratesOrdersCount: {
-  //                 decrement: data.orderData.governorate !== Governorate.BAGHDAD ? 1 : 0
-  //             },
-  //             totalCost: {
-  //                 decrement: data.orderData.totalCost
-  //             },
-  //             paidAmount: {
-  //                 decrement: data.orderData.paidAmount
-  //             },
-  //             deliveryCost: {
-  //                 decrement: data.orderData.deliveryCost
-  //             },
-  //             clientNet: {
-  //                 decrement: data.orderData.clientNet
-  //             },
-  //             deliveryAgentNet: {
-  //                 decrement: data.orderData.deliveryAgentNet
-  //             },
-  //             companyNet: {
-  //                 decrement: data.orderData.companyNet
-  //             }
-  //         }
-  //     });
-  // }
 }

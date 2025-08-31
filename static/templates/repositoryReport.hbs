@@ -121,7 +121,7 @@
             {{#if (eq reportData.repositoryReport.secondaryType)}}
               <td style="font-weight: bold">اجور التوصيل :
                 {{currency reportData.deliveryCost}}</td>
-              <td style="font-weight: bold">صافي العميل :
+              <td style="font-weight: bold">إجمالي المبلغ المستحق :
                 {{currency reportData.clientNet}}</td>
             {{/if}}
 
@@ -129,10 +129,7 @@
         </table>
       </div>
     </main>
-    <footer>التوقيع:
-      <span
-        class="light"
-      >______________________________________________</span></footer>
+
     {{!-- <section class="watermark">{{reportData.company.name}}</section> --}}
   </body>
 

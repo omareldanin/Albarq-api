@@ -49,7 +49,7 @@
 
         <tr>
           {{#if (eq reportData.clientReport.secondaryType)}}
-            <td style="width: 25%">صافي العميل:
+            <td style="width: 25%">إجمالي المبلغ المستحق :
               <span>{{currency reportData.clientNet}}</span></td>
           {{else}}
             <td style="width: 25%"></td>
@@ -119,7 +119,9 @@
         <table>
           <tr>
             {{#if (eq reportData.clientReport.secondaryType)}}
-              <td colspan="7" style="font-weight: bold;width:50%">صافي العميل</td>
+              <td colspan="7" style="font-weight: bold;width:50%">إجمالي المبلغ
+                المستحق
+              </td>
               <td style="font-weight: bold">{{currency
                   reportData.clientNet
                 }}</td>
@@ -128,10 +130,7 @@
         </table>
       </div>
     </main>
-    <footer>التوقيع:
-      <span
-        class="light"
-      >______________________________________________</span></footer>
+
     {{!-- <section class="watermark">{{reportData.company.name}}</section> --}}
   </body>
 

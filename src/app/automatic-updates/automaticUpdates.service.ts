@@ -69,6 +69,7 @@ export class AutomaticUpdatesService {
             select: {
               id: true,
               orderStatus: true,
+              notes: true,
               branch: {
                 select: {
                   id: true,

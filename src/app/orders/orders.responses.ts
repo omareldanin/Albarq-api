@@ -349,6 +349,7 @@ export const orderReform = (
       showNumbers: order.client.showNumbers,
       showDeliveryNumber: order.client.showDeliveryNumber,
       branch: order.client.branch?.name,
+      branchId: order.client.branchId,
     },
     deliveryAgent: order.deliveryAgent && {
       id: order.deliveryAgent.user.id,

@@ -24,6 +24,7 @@
         <tr>
           <td style="width: 25%">التاريخ:
             <span>{{date reportData.createdAt}}</span></td>
+
           <td style="width: 25%">الفرع:
             <span>{{reportData.branchReport.branch.name}}</span></td>
           <td style="width: 25%">عدد طلبيات بغداد:
@@ -31,7 +32,8 @@
           <td style="width: 25%"></td>
         </tr>
         <tr>
-          <td style="width: 25%"></td>
+          <td style="width: 25%">إجمالي المبلغ المستحق :
+            <span>{{currency reportData.branchNet}}</span></td>
           <td style="width: 25%">عدد طلبيات المحافظات:
             <span>{{reportData.governoratesOrdersCount}}</span></td>
           <td style="width: 25%"></td>
@@ -105,16 +107,13 @@
               {{currency reportData.totalCost}}</td>
             <td style="font-weight: bold">المبلغ المدفوع :
               {{currency reportData.paidAmount}}</td>
-            <td style="font-weight: bold">صافي الفرع :
+            <td style="font-weight: bold">إجمالي المبلغ المستحق :
               {{currency reportData.branchNet}}</td>
           </tr>
         </table>
       </div>
     </main>
-    <footer>التوقيع:
-      <span
-        class="light"
-      >______________________________________________</span></footer>
+
     {{!-- <section class="watermark">{{reportData.company.name}}</section> --}}
   </body>
 

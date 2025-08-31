@@ -498,6 +498,9 @@ export class OrdersController {
         orderData.forwardedBranchId = user.branch?.id;
       }
     } else {
+      if (user.branch?.id !== oldOrder.client.branchId) {
+        orderData.forwardedBranchId = oldOrder.client.branchId || undefined;
+      }
       orderData.repositoryID = exportRepo?.id;
     }
 
@@ -839,26 +842,29 @@ export class OrdersController {
   getReceivingAgentStores = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
 
-    const {receivingAgentId} = req.query;
+    const {receivingAgentId, clientId} = req.query;
 
     let inquiryClientsIDs: number[] | undefined = undefined;
-    const inquiryEmployeeStuff =
-      await employeesRepository.getInquiryEmployeeStuff({
-        employeeID: +receivingAgentId!!,
-      });
 
-    inquiryClientsIDs =
-      inquiryEmployeeStuff.inquiryClients &&
-      inquiryEmployeeStuff.inquiryClients.length > 0
-        ? inquiryEmployeeStuff.inquiryClients
-        : undefined;
+    if (receivingAgentId) {
+      const inquiryEmployeeStuff =
+        await employeesRepository.getInquiryEmployeeStuff({
+          employeeID: +receivingAgentId!!,
+        });
+
+      inquiryClientsIDs =
+        inquiryEmployeeStuff.inquiryClients &&
+        inquiryEmployeeStuff.inquiryClients.length > 0
+          ? inquiryEmployeeStuff.inquiryClients
+          : undefined;
+    }
 
     // aggregate orders for these clients
     const aggregatedOrders = await prisma.order.groupBy({
       by: ["storeId"],
       where: {
         AND: [
-          {clientId: {in: inquiryClientsIDs}},
+          {clientId: clientId ? +clientId : {in: inquiryClientsIDs}},
           {status: {in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"]}},
           {
             deleted: false,
@@ -904,7 +910,10 @@ export class OrdersController {
 
     const stores = await prisma.store.findMany({
       where: {
-        id: {in: aggregatedOrders.map((o) => o.storeId)},
+        id: receivingAgentId
+          ? {in: aggregatedOrders.map((o) => o.storeId)}
+          : undefined,
+        clientId: clientId ? +clientId : undefined,
       },
       select: {
         id: true,

@@ -89,9 +89,7 @@ export class OrdersRepository {
         throw new AppError("لا يوجد مخزن فرز مرتبط بالفرع", 404);
       }
       receivingBranchId = data.orderData.branchID;
-      if (data.orderData.branchID !== client.branchId) {
-        forwardedBranchId = client?.branchId || undefined;
-      }
+      forwardedBranchId = client?.branchId || undefined;
 
       data.orderData.repositoryID = repository.id;
       status = "IN_GOV_REPOSITORY";
