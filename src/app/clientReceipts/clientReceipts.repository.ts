@@ -2,7 +2,6 @@ import {clientReceiptCreateType} from "./clientReceipts.dto";
 import {prisma} from "../../database/db";
 // import { AppError } from "../../lib/AppError";
 import {clientReceiptSelect, receiptReform} from "./clientReceipts.responses";
-import {log} from "node:console";
 
 export class clientReceiptsRepository {
   async createClientReceipt(data: {

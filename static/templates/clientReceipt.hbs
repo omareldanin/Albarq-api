@@ -20,10 +20,12 @@
                 <span>رقم الوصل :</span>
                 <span>{{receiptNumber}}</span>
             </div> --}}
-        <div>
-          <span>اسم الصفحه :</span>
-          <span>{{store.name}}</span>
-        </div>
+        {{#if (check store)}}
+          <div>
+            <span>اسم الصفحه :</span>
+            <span>{{store.name}}</span>
+          </div>
+        {{/if}}
         <div>
           <span>المحافظه :</span>
         </div>

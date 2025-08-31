@@ -135,6 +135,7 @@ export class OrdersService {
           id: true,
           receiptNumber: true,
           storeId: true,
+          branchId: true,
           store: {
             select: {
               clientId: true,
@@ -149,6 +150,12 @@ export class OrdersService {
       });
       if (clientReceipt?.order) {
         throw new AppError("تم اضافه الوصل مسبق", 500);
+      }
+      if (
+        !clientReceipt?.store &&
+        data.loggedInUser.branchId !== clientReceipt?.branchId
+      ) {
+        throw new AppError("رقم الوصل غير صالح", 500);
       }
       if (clientID !== clientReceipt?.store?.clientId) {
         throw new AppError("رقم الوصل غير صالح", 500);

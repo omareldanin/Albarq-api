@@ -86,6 +86,9 @@ export const generateHTML = async (template: string, data: object) => {
       }
       return true;
     });
+    hb.registerHelper("check", (store) => {
+      return !!store;
+    });
     hb.registerHelper("QRCode", (data) => {
       return generateQRCode(
         JSON.stringify({

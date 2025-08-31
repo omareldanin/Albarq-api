@@ -1,20 +1,20 @@
-import { catchAsync } from "../../lib/catchAsync";
+import {catchAsync} from "../../lib/catchAsync";
 import {
   clientReceiptCreateSchema,
   clientReceiptCreateType,
 } from "./clientReceipts.dto";
-import { clientReceiptsRepository } from "./clientReceipts.repository";
-import { AppError } from "../../lib/AppError";
-import { generateReceipts } from "./helpers/generateReceipts";
-import { prisma } from "../../database/db";
-import { loggedInUserType } from "../../types/user";
+import {clientReceiptsRepository} from "./clientReceipts.repository";
+import {AppError} from "../../lib/AppError";
+import {generateReceipts} from "./helpers/generateReceipts";
+import {prisma} from "../../database/db";
+import {loggedInUserType} from "../../types/user";
 
 const clientReceiptRepository = new clientReceiptsRepository();
 
 export class ClientReceiptController {
   generateRandomId() {
     const now = new Date(
-      new Date().toLocaleString("en-US", { timeZone: "Asia/Gaza" })
+      new Date().toLocaleString("en-US", {timeZone: "Asia/Gaza"})
     );
 
     // Format date as YYMMDD
@@ -37,7 +37,8 @@ export class ClientReceiptController {
     for (const receipt of receipts) {
       let isUnique = false;
       let receiptId = this.generateRandomId();
-
+      let storeId: undefined | number;
+      let branchId: undefined | number;
       while (!isUnique) {
         receiptId = this.generateRandomId(); // Assuming generateRandomId is in scope
 
@@ -52,23 +53,35 @@ export class ClientReceiptController {
         }
       }
 
-      const client = await prisma.client.findUnique({
-        where: {
-          id: user.id,
-        },
-        select: {
-          branchId: true,
-        },
-      });
+      if (receipt.storeId) {
+        const store = await prisma.store.findUnique({
+          where: {
+            id: receipt.storeId,
+          },
+          select: {
+            client: {
+              select: {
+                id: true,
+                branchId: true,
+              },
+            },
+          },
+        });
+        if (receipt.branchId && store?.client.branchId !== receipt.branchId) {
+          throw new AppError("هذا العميل لا ينتمي لهذا الفرع", 400);
+        }
+        storeId = receipt.storeId;
+        branchId = store?.client.branchId || undefined;
+      }
+      if (receipt.branchId && !receipt.storeId) {
+        branchId = receipt.branchId;
+      }
 
       const createdReceipt = await clientReceiptRepository.createClientReceipt({
         storeId: receipt.storeId,
         receiptData: {
-          storeId: receipt.storeId,
-          branchId:
-            user.role === "CLIENT" && client?.branchId
-              ? client?.branchId
-              : receipt.branchId,
+          storeId: storeId,
+          branchId: branchId,
           receiptNumber: receiptId,
         },
       });
