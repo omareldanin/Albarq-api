@@ -1,74 +1,51 @@
-<!DOCTYPE html>
 <html lang="ar">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>فاتورة</title>
     <style>
-        .receipt{
-            margin-top: 10px;
-            position: relative;
-            margin-bottom: 70px;
-        }
-        p{
-          margin: 10px 0 0;
-        }
-      .logo {
-        width: 50px;
-        position: absolute;
-        top: 5px;
-        left: 10px;
-      }
-      .receipt div{
-        margin-top: 10px;
-        font-weight: bold;
-        font-size: 14px;
-      }
-      .footer{
-        display: flex;justify-content: space-between;
-        align-items: end;
-      }
-      .footer div{
-        font-weight: lighter !important;
-      }
+      .receipt{ margin-top: 10px; position: relative; margin-bottom: 70px; } p{
+      margin: 10px 0 0; } .logo { width: 50px; position: absolute; top: 5px;
+      left: 10px; } .receipt div{ margin-top: 10px; font-weight: bold;
+      font-size: 14px; } .footer{ display: flex;justify-content: space-between;
+      align-items: end; } .footer div{ font-weight: lighter !important; }
     </style>
   </head>
   <body style="direction: rtl">
     {{#each receipts}}
-       <div class="receipt">
-            <img
-            src="{{client.companyLogo}}"
-            class="logo"
-            />
-            <p>{{branch.name}}</p>
-            {{!-- <div>
+      <div class="receipt">
+        <img src="{{client.companyLogo}}" class="logo" />
+        <p>{{branch.name}}</p>
+        {{!-- <div>
                 <span>رقم الوصل :</span>
                 <span>{{receiptNumber}}</span>
             </div> --}}
-            <div>
-                <span>اسم العميل :</span>
-                <span>{{client.name}}</span>
-            </div>
-            <div>
-                <span>المحافظه :</span>
-            </div>
-            <div>
-                <span>المنطقه :</span>
-            </div>
-            <div class="footer">
-              <div>
-                <span style="display: block;">ملاحظات مهمه</span>
-                <span style="display: block;">* الشركه مسئوله عن توصيل الطلبات فقط</span>
-              </div>
-              <div style="float: left;margin-top: 0px;">
-                  <img src="{{QRCode this}}" />
-                  <span style="display: block;text-align:center;font-weight:bold">{{receiptNumber}}</span>
-              </div>
-            </div>
-       </div>
-       {{#unless @last}}
-            <div style="page-break-before: always;"></div>
-        {{/unless}}
+        <div>
+          <span>اسم الصفحه :</span>
+          <span>{{store.name}}</span>
+        </div>
+        <div>
+          <span>المحافظه :</span>
+        </div>
+        <div>
+          <span>المنطقه :</span>
+        </div>
+        <div class="footer">
+          <div>
+            <span style="display: block;">ملاحظات مهمه</span>
+            <span style="display: block;">* الشركه مسئوله عن توصيل الطلبات فقط</span>
+          </div>
+          <div style="float: left;margin-top: 0px;">
+            <img src="{{QRCode this}}" />
+            <span
+              style="display: block;text-align:center;font-weight:bold"
+            >{{receiptNumber}}</span>
+          </div>
+        </div>
+      </div>
+      {{#unless @last}}
+        <div style="page-break-before: always;"></div>
+      {{/unless}}
     {{/each}}
   </body>
 </html>

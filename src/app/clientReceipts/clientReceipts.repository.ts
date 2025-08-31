@@ -1,8 +1,8 @@
-import { clientReceiptCreateType } from "./clientReceipts.dto";
-import { prisma } from "../../database/db";
+import {clientReceiptCreateType} from "./clientReceipts.dto";
+import {prisma} from "../../database/db";
 // import { AppError } from "../../lib/AppError";
-import { clientReceiptSelect, receiptReform } from "./clientReceipts.responses";
-import { log } from "node:console";
+import {clientReceiptSelect, receiptReform} from "./clientReceipts.responses";
+import {log} from "node:console";
 
 export class clientReceiptsRepository {
   async createClientReceipt(data: {
@@ -27,13 +27,11 @@ export class clientReceiptsRepository {
     };
 
     if (store?.id) {
-      receiptData.store = { connect: { id: store.id } };
+      receiptData.store = {connect: {id: store.id}};
     }
 
-    console.log(data.receiptData.branchId);
-
     if (data.receiptData.branchId) {
-      receiptData.branch = { connect: { id: data.receiptData.branchId } };
+      receiptData.branch = {connect: {id: data.receiptData.branchId}};
     }
 
     const createdReceipt = await prisma.clientOrderReceipt.create({
