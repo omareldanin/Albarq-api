@@ -1143,6 +1143,16 @@ export class OrdersService {
         data.loggedInUser.role === "CLIENT" ||
         data.loggedInUser.role === "CLIENT_ASSISTANT"
       ) {
+        const createdPdf = await prisma.savedPdf.create({
+          data: {
+            ordersCount: data.ordersIDs.ordersIDs.length,
+            clientId:
+              data.loggedInUser.role === "CLIENT"
+                ? data.loggedInUser.id
+                : data.loggedInUser.clientId,
+          },
+        });
+
         await prisma.order.updateMany({
           where: {
             id: {
@@ -1151,6 +1161,7 @@ export class OrdersService {
           },
           data: {
             printed: true,
+            pdfId: createdPdf.id,
           },
         });
       }

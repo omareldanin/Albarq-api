@@ -364,6 +364,17 @@ router.route("/orders/getByStore").get(
         #swagger.tags = ['Orders Routes']
     */
 );
+router
+  .route("/orders/pdf/getAll")
+  .get(
+    isLoggedIn,
+    isAutherized([
+      ...Object.values(AdminRole),
+      ...Object.values(EmployeeRole),
+      ...Object.values(ClientRole),
+    ]),
+    ordersController.getPdfs
+  );
 router.route("/orders/getById/:orderID").get(
   isLoggedIn,
   isAutherized([
@@ -376,6 +387,18 @@ router.route("/orders/getById/:orderID").get(
         #swagger.tags = ['Orders Routes']
     */
 );
+
+router
+  .route("/orders/pdf/:id")
+  .get(
+    isLoggedIn,
+    isAutherized([
+      ...Object.values(AdminRole),
+      ...Object.values(EmployeeRole),
+      ...Object.values(ClientRole),
+    ]),
+    ordersController.getOrderPdf
+  );
 
 router.route("/orders/:orderID").get(
   isLoggedIn,

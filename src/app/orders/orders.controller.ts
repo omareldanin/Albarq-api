@@ -20,6 +20,7 @@ import {Governorate, OrderStatus, SecondaryStatus} from "@prisma/client";
 import {orderReform, orderSelect, OrderStatusData} from "./orders.responses";
 import {AppError} from "../../lib/AppError";
 import {OrdersRepository} from "./orders.repository";
+import {generateReceipts} from "./helpers/generateReceipts";
 const XlsxPopulate = require("xlsx-populate");
 
 const employeesRepository = new EmployeesRepository();
@@ -690,6 +691,67 @@ export class OrdersController {
     res.setHeader("Content-Disposition", "attachment; filename=generated.pdf");
 
     res.send(pdfBuffer);
+  });
+
+  getOrderPdf = catchAsync(async (req, res) => {
+    const pdfId = req.params.id;
+
+    const orders = await prisma.order.findMany({
+      where: {
+        pdfId: +pdfId,
+      },
+      orderBy: {
+        id: "asc",
+      },
+      select: orderSelect,
+    });
+
+    const reformedOrders = orders.map(orderReform);
+
+    const pdf = await generateReceipts(reformedOrders);
+
+    const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
+    // Set headers for a PDF response
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=generated.pdf");
+
+    res.send(pdfBuffer);
+  });
+
+  getPdfs = catchAsync(async (req, res) => {
+    const {page, size} = req.query;
+    const loggedInUser = res.locals.user as loggedInUserType;
+    const pdfs = await prisma.savedPdf.findManyPaginated(
+      {
+        where: {
+          clientId:
+            loggedInUser.role === "CLIENT"
+              ? loggedInUser.id
+              : loggedInUser.clientId,
+        },
+        select: {
+          id: true,
+          ordersCount: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+      {
+        page: page ? +page : 1,
+        size: size ? +size : 2000,
+      }
+    );
+
+    res.status(200).json({
+      status: "success",
+      page: pdfs.currentPage,
+      pagesCount: pdfs.pagesCount,
+      data: {
+        pdfs: pdfs,
+      },
+    });
   });
 
   getOrdersReportPDF = catchAsync(async (req, res) => {

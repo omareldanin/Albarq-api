@@ -141,6 +141,7 @@ model Client {
   sizes                     Size[]
   stores                    Store[]
   tickets                   Ticket[]
+  savedPdf                  SavedPdf[]
 
   @@index([companyId])
 }
@@ -408,6 +409,9 @@ model Order {
   timeline               OrderTimeline[]
   ordersInquiryEmployees OrdersInquiryEmployees[]
   tickets                Ticket[]
+  pdfId                Int?
+  savedPdf            SavedPdf?                @relation(fields: [pdfId], references: [id])
+
   branchReport           BranchReport[]           @relation("BranchReportToOrder")
   clientReport           ClientReport[]           @relation("ClientReportToOrder")
   companyReport          CompanyReport[]          @relation("CompanyReportToOrder")
@@ -578,6 +582,14 @@ model Report {
   @@index([type])
   @@index([employeeId])
   @@index([companyId])
+}
+model SavedPdf {
+  id                      Int                  @id @default(autoincrement())
+  ordersCount             Int                  @default(0)
+  createdAt               DateTime             @default(now())
+  orders                  Order[]
+  clientId                Int?
+  client                  Client?                @relation(fields: [clientId], references: [id])
 }
 
 model CompanyReport {
