@@ -695,7 +695,6 @@ export class OrdersController {
 
   getOrderPdf = catchAsync(async (req, res) => {
     const pdfId = req.params.id;
-    console.log("pdfId", pdfId);
 
     const orders = await prisma.order.findMany({
       where: {
