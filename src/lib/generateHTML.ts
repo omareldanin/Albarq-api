@@ -54,11 +54,9 @@ export const generateHTML = async (template: string, data: object) => {
     });
 
     hb.registerHelper("changed", (status, totalCost, paidAmount) => {
-      // if (secondaryReportType === SecondaryReportType.RETURNED) {
-      //   return "";
-      // }
       if (
         (status === OrderStatus.PARTIALLY_RETURNED ||
+          status === OrderStatus.DELIVERED ||
           status === OrderStatus.REPLACED) &&
         +totalCost !== +paidAmount
       ) {

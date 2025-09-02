@@ -10,14 +10,6 @@ const ordersRepository = new OrdersRepository();
 export const automaticUpdatesTask = async () => {
   try {
     const currentDate = new Date();
-    const currentHour = currentDate.getUTCHours();
-    const currentMinute = currentDate.getUTCMinutes();
-    const currentTime =
-      currentMinute >= 0 && currentMinute < 30
-        ? currentHour
-        : currentMinute >= 30 && currentMinute < 60
-        ? currentHour + 1
-        : currentHour + 1;
 
     const companies = await prisma.company.findMany({
       select: {
@@ -32,23 +24,20 @@ export const automaticUpdatesTask = async () => {
           company: {
             id: company.id,
           },
-          updateAt: {
-            // Add 3 hours to the current time to get local baghdad time
-            equals: currentTime + 3,
-          },
           enabled: true,
         },
         select: {
           id: true,
           orderStatus: true,
           // newStatus: true,
+          notes: true,
           branch: {
             select: {
               id: true,
             },
           },
           checkAfter: true,
-          // updateAt: true,
+          updateAt: true,
           returnCondition: true,
           newOrderStatus: true,
         },
@@ -61,6 +50,10 @@ export const automaticUpdatesTask = async () => {
               id: company.id,
             },
             status: automaticUpdate.orderStatus,
+            notes:
+              automaticUpdate.notes && automaticUpdate.notes !== ""
+                ? automaticUpdate.notes
+                : undefined,
             branch: {
               id: automaticUpdate.branch.id,
             },
@@ -91,7 +84,16 @@ export const automaticUpdatesTask = async () => {
           const lastUpdate = new Date(order.updatedAt);
           const difference = currentDate.getTime() - lastUpdate.getTime();
           const hoursDifference = difference / (1000 * 3600);
-          if (hoursDifference < automaticUpdate.checkAfter) {
+          const hours24 = lastUpdate.getHours();
+          if (
+            automaticUpdate.checkAfter &&
+            hoursDifference < automaticUpdate.checkAfter
+          ) {
+            continue;
+          } else if (
+            automaticUpdate.updateAt &&
+            automaticUpdate.updateAt < hours24
+          ) {
             continue;
           }
 

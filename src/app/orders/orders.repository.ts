@@ -628,6 +628,10 @@ export class OrdersRepository {
                     }
                   : undefined,
               },
+              // Filter by notes
+              {
+                notes: data.filters.notes,
+              },
               {
                 branch: data.filters.inquiryBranchesIDs
                   ? {

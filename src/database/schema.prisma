@@ -8,14 +8,836 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id               Int                 @id @default(autoincrement())
+  username         String              @unique
+  phone            String
+  avatar           String              @default("https://w7.pngwing.com/pngs/627/693/png-transparent-computer-icons-user-user-icon.png")
+  name             String
+  password         String
+  fcm              String              @default("")
+  refreshTokens    String[]
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  admin            Admin?
+  createdClients   Client[]            @relation("createdBy")
+  deletedClients   Client[]            @relation("deletedBy")
+  client           Client?
+  createdEmployees Employee[]          @relation("createdBy")
+  deletedEmployees Employee[]          @relation("deletedBy")
+  employee         Employee?
+  message          Message[]
+  notifications    Notification[]
+  deletedOrders    Order[]             @relation("deletedBy")
+  deletedReports   Report[]            @relation("deletedBy")
+  deletedStores    Store[]             @relation("deletedBy")
+  tickets          Ticket[]
+  ticketResponses  TicketResponse[]
+  loginHistory     UsersLoginHistory[]
+
+  @@index([name])
+  @@index([phone])
+}
+
+model Admin {
+  id   Int       @id
+  role AdminRole
+  user User      @relation(fields: [id], references: [id])
+}
+
+model Employee {
+  id                      Int                              @id
+  permissions             Permission[]
+  salary                  Float                            @default(0)
+  deliveryCost            Float                            @default(0)
+  role                    EmployeeRole
+  branchId                Int?
+  repositoryId            Int?
+  createdById             Int
+  inquiryGovernorates     Governorate[]
+  inquiryStatuses         OrderStatus[]
+  companyId               Int
+  deleted                 Boolean                          @default(false)
+  deletedAt               DateTime?
+  deletedById             Int?
+  idCard                  String?                          @default("https://w7.pngwing.com/pngs/627/693/png-transparent-computer-icons-user-user-icon.png")
+  residencyCard           String?                          @default("https://w7.pngwing.com/pngs/627/693/png-transparent-computer-icons-user-user-icon.png")
+  orderStatus             OrderStatus[]                    @default([REGISTERED, READY_TO_SEND, WITH_DELIVERY_AGENT, DELIVERED, REPLACED, PARTIALLY_RETURNED, RETURNED, POSTPONED, CHANGE_ADDRESS, RESEND, WITH_RECEIVING_AGENT, PROCESSING])
+  departmentId            Int?
+  clientId                Int?
+  clientAssistantRole     String?
+  emergency               Boolean                          @default(false)
+  mainEmergency           Boolean                          @default(false)
+  deliveryAgentReports    DeliveryAgentReport[]
+  deliveryAgentsLocations DeliveryAgentsLocations[]
+  branch                  Branch?                          @relation(fields: [branchId], references: [id])
+  Client                  Client?                          @relation(fields: [clientId], references: [id])
+  company                 Company                          @relation(fields: [companyId], references: [id])
+  createdBy               User                             @relation("createdBy", fields: [createdById], references: [id])
+  deletedBy               User?                            @relation("deletedBy", fields: [deletedById], references: [id])
+  Department              Department?                      @relation(fields: [departmentId], references: [id])
+  user                    User                             @relation(fields: [id], references: [id])
+  repository              Repository?                      @relation(fields: [repositoryId], references: [id])
+  inquiryBranches         InquiryEmployeesBranches[]
+  inquiryCompanies        InquiryEmployeesCompanies[]
+  inquiryDeliveryAgents   InquiryEmployeesDeliveryAgents[] @relation("inquiryDeliveryAgents")
+  inquiryEmployees        InquiryEmployeesDeliveryAgents[] @relation("inquiryEmployees")
+  inquiryLocations        InquiryEmployeesLocations[]
+  inquiryStores           InquiryEmployeesStores[]
+  orders                  Order[]
+  forwardedOrders         Order[]                          @relation("forwardedBy")
+  processedOrders         Order[]                          @relation("processedBy")
+  ordersInquiryEmployees  OrdersInquiryEmployees[]
+  inquiryClients          ReceivingAgentClients[]
+  reports                 Report[]
+  managedStores           Store[]
+  tickets                 Ticket[]
+
+  @@index([companyId])
+  @@index([role])
+  @@index([permissions])
+  @@index([orderStatus])
+  @@index([branchId])
+}
+
+model InquiryEmployeesDeliveryAgents {
+  inquiryEmployeeId Int
+  deliveryAgentId   Int
+  deliveryAgent     Employee @relation("inquiryDeliveryAgents", fields: [deliveryAgentId], references: [id], onDelete: Cascade)
+  inquiryEmployee   Employee @relation("inquiryEmployees", fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
+
+  @@id([inquiryEmployeeId, deliveryAgentId])
+}
+
+model Client {
+  id                        Int                     @id
+  role                      ClientRole              @default(CLIENT)
+  token                     String                  @default("")
+  governoratesDeliveryCosts Json                    @default("[]")
+  deletedById               Int?
+  createdById               Int
+  repositoryId              Int?
+  branchId                  Int?
+  companyId                 Int
+  deleted                   Boolean                 @default(false)
+  deletedAt                 DateTime?
+  receivingAgentId          Int?
+  showNumbers               Boolean                 @default(false)
+  showDeliveryNumber        Boolean                 @default(false)
+  categories                Category[]
+  branch                    Branch?                 @relation(fields: [branchId], references: [id])
+  company                   Company                 @relation(fields: [companyId], references: [id])
+  createdBy                 User                    @relation("createdBy", fields: [createdById], references: [id])
+  deletedBy                 User?                   @relation("deletedBy", fields: [deletedById], references: [id])
+  user                      User                    @relation(fields: [id], references: [id])
+  repository                Repository?             @relation(fields: [repositoryId], references: [id])
+  clientReports             ClientReport[]
+  colors                    Color[]
+  CustomerOutput            CustomerOutput[]
+  employees                 Employee[]
+  orders                    Order[]
+  products                  Product[]
+  ReceivingAgentClients     ReceivingAgentClients[]
+  sizes                     Size[]
+  stores                    Store[]
+  tickets                   Ticket[]
+
+  @@index([companyId])
+}
+
+model Store {
+  id                  Int                      @id @default(autoincrement())
+  name                String                   @unique
+  logo                String                   @default("https://w7.pngwing.com/pngs/307/22/png-transparent-computer-icons-business-company-corporation-company-angle-company-text.png")
+  notes               String                   @default("")
+  clientAssistantId   Int?
+  clientId            Int
+  companyId           Int
+  deleted             Boolean                  @default(false)
+  deletedById         Int?
+  deletedAt           DateTime?
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  clientOrderReceipts ClientOrderReceipt[]
+  clientReports       ClientReport[]
+  CustomerOutput      CustomerOutput[]
+  inquiryEmployees    InquiryEmployeesStores[]
+  orders              Order[]
+  products            Product[]
+  clientAssistant     Employee?                @relation(fields: [clientAssistantId], references: [id])
+  client              Client                   @relation(fields: [clientId], references: [id])
+  company             Company                  @relation(fields: [companyId], references: [id])
+  deletedBy           User?                    @relation("deletedBy", fields: [deletedById], references: [id])
+
+  @@index([companyId])
+  @@index([clientId])
+}
+
+model InquiryEmployeesStores {
+  inquiryEmployeeId Int
+  storeId           Int
+  inquiryEmployee   Employee @relation(fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
+  store             Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@id([inquiryEmployeeId, storeId])
+}
+
+model ReceivingAgentClients {
+  agentId        Int
+  clientId       Int
+  receivingAgent Employee @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  client         Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@id([agentId, clientId])
+}
+
+model Branch {
+  id                  Int                        @id @default(autoincrement())
+  name                String
+  governorate         Governorate?
+  companyId           Int
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+  automaticUpdate     AutomaticUpdate[]
+  company             Company                    @relation(fields: [companyId], references: [id])
+  branchReports       BranchReport[]
+  clients             Client[]
+  clientOrderReceipts ClientOrderReceipt[]
+  closedStatus        ClosedStatus[]
+  employees           Employee[]
+  inquiryEmployees    InquiryEmployeesBranches[]
+  locations           Location[]
+  orders              Order[]
+  repositories        Repository[]
+
+  @@unique([name, companyId])
+}
+
+model InquiryEmployeesBranches {
+  inquiryEmployeeId Int
+  branchId          Int
+  branch            Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  inquiryEmployee   Employee @relation(fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
+
+  @@id([inquiryEmployeeId, branchId])
+}
+
+model Repository {
+  id                Int                @id @default(autoincrement())
+  name              String             @unique
+  branchId          Int
+  companyId         Int
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  mainRepository    Boolean            @default(false)
+  type              RepositoryType     @default(EXPORT)
+  clients           Client[]
+  clientReports     ClientReport[]
+  companyReports    CompanyReport[]
+  CustomerOutput    CustomerOutput[]
+  employees         Employee[]
+  Order             Order[]
+  branch            Branch             @relation(fields: [branchId], references: [id])
+  company           Company            @relation(fields: [companyId], references: [id])
+  repositoryReports RepositoryReport[]
+}
+
+model Location {
+  id                      Int                         @id @default(autoincrement())
+  name                    String
+  governorate             Governorate
+  remote                  Boolean                     @default(false)
+  branchId                Int?
+  companyId               Int?
+  createdAt               DateTime                    @default(now())
+  updatedAt               DateTime                    @updatedAt
+  governorateAr           String?
+  deliveryAgentsLocations DeliveryAgentsLocations[]
+  inquiryEmployees        InquiryEmployeesLocations[]
+  branch                  Branch?                     @relation(fields: [branchId], references: [id])
+  company                 Company?                    @relation(fields: [companyId], references: [id])
+  orders                  Order[]
+}
+
+model InquiryEmployeesLocations {
+  inquiryEmployeeId Int
+  locationId        Int
+  inquiryEmployee   Employee @relation(fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
+  location          Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@id([inquiryEmployeeId, locationId])
+}
+
+model DeliveryAgentsLocations {
+  deliveryAgentId Int
+  locationId      Int
+  companyId       Int
+  company         Company  @relation(fields: [companyId], references: [id])
+  deliveryAgent   Employee @relation(fields: [deliveryAgentId], references: [id], onDelete: Cascade)
+  location        Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@id([deliveryAgentId, locationId])
+}
+
+model Company {
+  id                                      Int                         @id @default(autoincrement())
+  name                                    String                      @unique
+  treasury                                Float                       @default(0)
+  phone                                   String                      @default("")
+  website                                 String                      @default("")
+  logo                                    String                      @default("https://w7.pngwing.com/pngs/307/22/png-transparent-computer-icons-business-company-corporation-company-angle-company-text.png")
+  color                                   String                      @default("FF0000")
+  registrationText                        String                      @default("")
+  orderStatusAutomaticUpdate              Boolean                     @default(false)
+  governoratePrice                        Float                       @default(0)
+  deliveryAgentFee                        Float                       @default(0)
+  baghdadPrice                            Float                       @default(0)
+  additionalPriceForEvery500000IraqiDinar Float                       @default(0)
+  additionalPriceForEveryKilogram         Float                       @default(0)
+  additionalPriceForRemoteAreas           Float                       @default(0)
+  createdAt                               DateTime                    @default(now())
+  updatedAt                               DateTime                    @updatedAt
+  mainCompany                             Boolean                     @default(false)
+  automaticUpdates                        AutomaticUpdate[]
+  banners                                 Banner[]
+  branches                                Branch[]
+  clients                                 Client[]
+  closedStatus                            ClosedStatus[]
+  CompanyReport                           CompanyReport[]
+  CustomerOutput                          CustomerOutput[]
+  DeliveryAgentsLocations                 DeliveryAgentsLocations[]
+  departments                             Department[]
+  employees                               Employee[]
+  inquiryEmployees                        InquiryEmployeesCompanies[]
+  locations                               Location[]
+  orders                                  Order[]
+  forwardedOrders                         Order[]                     @relation("forwardedFrom")
+  products                                Product[]
+  reports                                 Report[]
+  repositories                            Repository[]
+  stores                                  Store[]
+  tickets                                 Ticket[]
+  usersLoginHistory                       UsersLoginHistory[]
+}
+
+model InquiryEmployeesCompanies {
+  inquiryEmployeeId Int
+  companyId         Int
+  company           Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  inquiryEmployee   Employee @relation(fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
+
+  @@id([inquiryEmployeeId, companyId])
+}
+
+model Order {
+  id                     String                   @id @default("")
+  receiptNumber          String                   @default("")
+  quantity               Int                      @default(0)
+  weight                 Float                    @default(0)
+  recipientName          String                   @default("غير معرف")
+  recipientPhones        String[]
+  recipientAddress       String
+  details                String                   @default("")
+  notes                  String                   @default("")
+  deliveryType           DeliveryType             @default(NORMAL)
+  governorate            Governorate
+  currentLocation        String                   @default("")
+  deliveryDate           DateTime?
+  totalCost              Float                    @default(0)
+  paidAmount             Float                    @default(0)
+  deliveryCost           Float                    @default(0)
+  clientNet              Float                    @default(0)
+  deliveryAgentNet       Float                    @default(0)
+  companyNet             Float                    @default(0)
+  discount               Float                    @default(0)
+  status                 OrderStatus              @default(REGISTERED)
+  secondaryStatus        SecondaryStatus?
+  confirmed              Boolean                  @default(false)
+  clientId               Int
+  deliveryAgentId        Int?
+  oldDeliveryAgentId     Int?
+  locationId             Int
+  storeId                Int
+  repositoryId           Int?
+  branchId               Int?
+  automaticUpdateId      Int?
+  deleted                Boolean                  @default(false)
+  deletedAt              DateTime?
+  deletedById            Int?
+  processed              Boolean                  @default(false)
+  processedAt            DateTime?
+  processedById          Int?
+  forwarded              Boolean                  @default(false)
+  forwardedAt            DateTime?
+  forwardedById          Int?
+  forwardedFromId        Int?
+  branchReportId         Int?
+  deliveryAgentReportId  Int?
+  governorateReportId    Int?
+  companyId              Int
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  clientOrderReceiptId   Int?                     @unique
+  forwardedToMainRepo    Boolean?                 @default(false)
+  forwardedToGov         Boolean?                 @default(false)
+  forwardedRepo          Int?
+  printed                Boolean                  @default(false)
+  forwardedBranchId      Int?
+  processingStatus       ProcessingStatus         @default(not_processed)
+  oldDeliveryCost        Float                    @default(0)
+  receivedBranchId       Int?
+  branchNet              Float                    @default(0)
+  chat                   Chat?
+  CustomerOutput         CustomerOutput[]
+  automaticUpdate        AutomaticUpdate?         @relation(fields: [automaticUpdateId], references: [id])
+  branch                 Branch?                  @relation(fields: [branchId], references: [id])
+  client                 Client                   @relation(fields: [clientId], references: [id])
+  clientOrderReceipt     ClientOrderReceipt?      @relation(fields: [clientOrderReceiptId], references: [id])
+  company                Company                  @relation(fields: [companyId], references: [id])
+  deletedBy              User?                    @relation("deletedBy", fields: [deletedById], references: [id])
+  deliveryAgent          Employee?                @relation(fields: [deliveryAgentId], references: [id])
+  deliveryAgentReport    DeliveryAgentReport?     @relation(fields: [deliveryAgentReportId], references: [id])
+  forwardedBy            Employee?                @relation("forwardedBy", fields: [forwardedById], references: [id])
+  forwardedFrom          Company?                 @relation("forwardedFrom", fields: [forwardedFromId], references: [id])
+  governorateReport      GovernorateReport?       @relation(fields: [governorateReportId], references: [id])
+  location               Location                 @relation(fields: [locationId], references: [id])
+  processedBy            Employee?                @relation("processedBy", fields: [processedById], references: [id])
+  repository             Repository?              @relation(fields: [repositoryId], references: [id])
+  store                  Store                    @relation(fields: [storeId], references: [id])
+  orderProducts          OrderProducts[]
+  timeline               OrderTimeline[]
+  ordersInquiryEmployees OrdersInquiryEmployees[]
+  tickets                Ticket[]
+  branchReport           BranchReport[]           @relation("BranchReportToOrder")
+  clientReport           ClientReport[]           @relation("ClientReportToOrder")
+  companyReport          CompanyReport[]          @relation("CompanyReportToOrder")
+  repositoryReport       RepositoryReport[]       @relation("OrderToRepositoryReport")
+
+  @@index([receiptNumber])
+  @@index([status])
+  @@index([secondaryStatus])
+  @@index([clientId])
+  @@index([deliveryAgentId])
+  @@index([governorate])
+  @@index([storeId])
+  @@index([branchId])
+  @@index([companyId])
+}
+
+model Chat {
+  id               Int       @id @default(autoincrement())
+  numberOfMessages Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  orderId          String?   @unique
+  Order            Order?    @relation(fields: [orderId], references: [id])
+  messages         Message[]
+}
+
+model Message {
+  id                    Int          @id @default(autoincrement())
+  content               String
+  seenByClient          Boolean      @default(false)
+  seenByDelivery        Boolean      @default(false)
+  seenByCallCenter      Boolean      @default(false)
+  seenByBranchManager   Boolean      @default(false)
+  seenByCompanyManager  Boolean      @default(false)
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  createdById           Int?
+  chatId                Int?
+  image                 String?
+  sendFor               MessageType?
+  seenByClientAssistant Boolean      @default(false)
+  Chat                  Chat?        @relation(fields: [chatId], references: [id])
+  createdBy             User?        @relation(fields: [createdById], references: [id])
+}
+
+model CustomerOutput {
+  id                 Int         @id @default(autoincrement())
+  repositoryId       Int?
+  orderId            String?
+  clientId           Int?
+  companyId          Int?
+  storeId            Int?
+  targetRepositoryId Int?
+  client             Client?     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  company            Company?    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  order              Order?      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  repository         Repository? @relation(fields: [repositoryId], references: [id])
+  store              Store?      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+}
+
+model ClientOrderReceipt {
+  id            Int      @id @default(autoincrement())
+  receiptNumber String   @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  branchId      Int
+  storeId       Int?
+  paperReceipt  Boolean  @default(false)
+  branch        Branch   @relation(fields: [branchId], references: [id])
+  store         Store?   @relation(fields: [storeId], references: [id])
+  order         Order?
+
+  @@index([storeId])
+}
+
+model OrderTimeline {
+  id        Int               @id @default(autoincrement())
+  type      OrderTimelineType
+  old       Json?
+  new       Json?
+  message   String
+  by        Json
+  orderId   String
+  createdAt DateTime          @default(now())
+  order     Order             @relation(fields: [orderId], references: [id])
+}
+
+model Department {
+  id        Int        @id @default(autoincrement())
+  name      String
+  createdBy String?
+  companyId Int?
+  Company   Company?   @relation(fields: [companyId], references: [id])
+  employees Employee[]
+  tickets   Ticket[]
+}
+
+model Ticket {
+  id             Int              @id @default(autoincrement())
+  content        String
+  closed         Boolean          @default(false)
+  forwarded      Boolean          @default(false)
+  departmentId   Int?
+  employeeId     Int?
+  clientId       Int?
+  orderId        String?
+  createdById    Int?
+  companyId      Int?
+  createdByRole  EmployeeRole?
+  Client         Client?          @relation(fields: [clientId], references: [id])
+  Company        Company?         @relation(fields: [companyId], references: [id])
+  createdBy      User?            @relation(fields: [createdById], references: [id])
+  Department     Department?      @relation(fields: [departmentId], references: [id])
+  Employee       Employee?        @relation(fields: [employeeId], references: [id])
+  Order          Order?           @relation(fields: [orderId], references: [id])
+  ticketResponse TicketResponse[]
+}
+
+model TicketResponse {
+  id          Int     @id @default(autoincrement())
+  content     String
+  ticketId    Int?
+  createdById Int?
+  createdBy   User?   @relation(fields: [createdById], references: [id])
+  Ticket      Ticket? @relation(fields: [ticketId], references: [id])
+}
+
+model OrdersInquiryEmployees {
+  inquiryEmployeeId Int
+  orderId           String
+  inquiryEmployee   Employee @relation(fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@id([orderId, inquiryEmployeeId])
+}
+
+model Report {
+  id                      Int                  @id @default(autoincrement())
+  type                    ReportType
+  baghdadOrdersCount      Int                  @default(0)
+  governoratesOrdersCount Int                  @default(0)
+  employeeId              Int
+  companyId               Int
+  status                  ReportStatus         @default(UNPAID)
+  confirmed               Boolean              @default(false)
+  deleted                 Boolean              @default(false)
+  deletedAt               DateTime?
+  deletedById             Int?
+  totalCost               Float                @default(0)
+  paidAmount              Float                @default(0)
+  deliveryCost            Float                @default(0)
+  clientNet               Float                @default(0)
+  deliveryAgentNet        Float                @default(0)
+  companyNet              Float                @default(0)
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+  branchNet               Float                @default(0)
+  branchReport            BranchReport?
+  clientReport            ClientReport?
+  companyReport           CompanyReport?
+  deliveryAgentReport     DeliveryAgentReport?
+  governorateReport       GovernorateReport?
+  company                 Company              @relation(fields: [companyId], references: [id])
+  deletedBy               User?                @relation("deletedBy", fields: [deletedById], references: [id])
+  createdBy               Employee             @relation(fields: [employeeId], references: [id])
+  repositoryReport        RepositoryReport?
+
+  @@index([type])
+  @@index([employeeId])
+  @@index([companyId])
+}
+
+model CompanyReport {
+  id                       Int                 @id
+  companyId                Int
+  baghdadDeliveryCost      Float               @default(0)
+  governoratesDeliveryCost Float               @default(0)
+  secondaryType            SecondaryReportType @default(DELIVERED)
+  repositoryId             Int?
+  company                  Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  report                   Report              @relation(fields: [id], references: [id], onDelete: Cascade)
+  repository               Repository?         @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  orders                   Order[]             @relation("CompanyReportToOrder")
+
+  @@index([companyId])
+}
+
+model ClientReport {
+  id                       Int                 @id
+  clientId                 Int
+  storeId                  Int?
+  baghdadDeliveryCost      Float               @default(0)
+  governoratesDeliveryCost Float               @default(0)
+  secondaryType            SecondaryReportType @default(DELIVERED)
+  repositoryId             Int?
+  receivingAgentId         Int?
+  client                   Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  report                   Report              @relation(fields: [id], references: [id], onDelete: Cascade)
+  repository               Repository?         @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  store                    Store?              @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  orders                   Order[]             @relation("ClientReportToOrder")
+
+  @@index([clientId])
+  @@index([storeId])
+}
+
+model RepositoryReport {
+  id                   Int                 @id
+  repositoryId         Int
+  secondaryType        SecondaryReportType @default(DELIVERED)
+  targetRepositoryId   Int?
+  targetRepositoryName String?
+  report               Report              @relation(fields: [id], references: [id], onDelete: Cascade)
+  repository           Repository          @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  orders               Order[]             @relation("OrderToRepositoryReport")
+
+  @@index([repositoryId])
+}
+
+model BranchReport {
+  id                       Int     @id
+  branchId                 Int
+  baghdadDeliveryCost      Float   @default(0)
+  governoratesDeliveryCost Float   @default(0)
+  type                     String  @default("forwarded")
+  branch                   Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  report                   Report  @relation(fields: [id], references: [id], onDelete: Cascade)
+  orders                   Order[] @relation("BranchReportToOrder")
+
+  @@index([branchId])
+}
+
+model DeliveryAgentReport {
+  id                        Int      @id
+  deliveryAgentId           Int
+  deliveryAgentDeliveryCost Float    @default(0)
+  deliveryAgent             Employee @relation(fields: [deliveryAgentId], references: [id], onDelete: Cascade)
+  report                    Report   @relation(fields: [id], references: [id], onDelete: Cascade)
+  orders                    Order[]
+
+  @@index([deliveryAgentId])
+}
+
+model GovernorateReport {
+  id                       Int         @id
+  governorate              Governorate
+  baghdadDeliveryCost      Float       @default(0)
+  governoratesDeliveryCost Float       @default(0)
+  report                   Report      @relation(fields: [id], references: [id], onDelete: Cascade)
+  orders                   Order[]
+
+  @@index([governorate])
+}
+
+model Product {
+  id            Int             @id @default(autoincrement())
+  title         String
+  price         Float
+  image         String          @default("https://w7.pngwing.com/pngs/436/721/png-transparent-package-delivery-box-freight-transport-computer-icons-shipping-miscellaneous-angle-freight-transport.png")
+  stock         Int             @default(0)
+  weight        Float           @default(0)
+  storeId       Int
+  categoryId    Int
+  clientId      Int
+  companyId     Int
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  orderProducts OrderProducts[]
+  category      Category        @relation(fields: [categoryId], references: [id])
+  client        Client          @relation(fields: [clientId], references: [id])
+  company       Company         @relation(fields: [companyId], references: [id])
+  store         Store           @relation(fields: [storeId], references: [id])
+  productColors ProductColors[]
+  productSizes  ProductSizes[]
+
+  @@index([companyId])
+  @@index([clientId])
+  @@index([categoryId])
+  @@index([storeId])
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  title     String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  clientId  Int
+  client    Client    @relation(fields: [clientId], references: [id])
+  products  Product[]
+}
+
+model OrderProducts {
+  quantity  Int
+  productId Int
+  orderId   String
+  colorId   Int?
+  sizeId    Int?
+  color     Color?  @relation(fields: [colorId], references: [id])
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+  size      Size?   @relation(fields: [sizeId], references: [id])
+
+  @@id([productId, orderId])
+}
+
+model Size {
+  id            Int             @id @default(autoincrement())
+  title         String          @unique
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  clientId      Int
+  orderProducts OrderProducts[]
+  productSizes  ProductSizes[]
+  client        Client          @relation(fields: [clientId], references: [id])
+}
+
+model Color {
+  id            Int             @id @default(autoincrement())
+  title         String          @unique
+  code          String          @unique
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  clientId      Int
+  client        Client          @relation(fields: [clientId], references: [id])
+  orderProducts OrderProducts[]
+  productColors ProductColors[]
+}
+
+model ProductColors {
+  quantity  Int
+  productId Int
+  colorId   Int
+  color     Color   @relation(fields: [colorId], references: [id])
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([productId, colorId])
+}
+
+model ProductSizes {
+  quantity  Int
+  productId Int
+  sizeId    Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size      Size    @relation(fields: [sizeId], references: [id])
+
+  @@id([productId, sizeId])
+}
+
+model Notification {
+  id            Int      @id @default(autoincrement())
+  title         String
+  content       String   @default("")
+  userId        Int
+  seen          Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  receiptNumber String?
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Banner {
+  id        Int      @id @default(autoincrement())
+  title     String?
+  content   String?  @default("")
+  image     String   @default("https://w7.pngwing.com/pngs/819/548/png-transparent-photo-image-landscape-icon-images.png")
+  url       String?  @default("")
+  companyId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  company   Company  @relation(fields: [companyId], references: [id])
+}
+
+model AutomaticUpdate {
+  id              Int                             @id @default(autoincrement())
+  orderStatus     OrderStatus
+  newOrderStatus  OrderStatus                     @default(DELIVERED)
+  returnCondition AutomaticUpdateReturnCondition?
+  updateAt        Int?                            @default(0)
+  checkAfter      Int?                            @default(0)
+  enabled         Boolean                         @default(true)
+  branchId        Int
+  companyId       Int
+  createdAt       DateTime                        @default(now())
+  updatedAt       DateTime                        @updatedAt
+  notes           String?
+  branch          Branch                          @relation(fields: [branchId], references: [id])
+  company         Company                         @relation(fields: [companyId], references: [id])
+  orders          Order[]
+
+  // @@unique([orderStatus, branchId, companyId])
+}
+
+model ClosedStatus {
+  id          Int         @id @default(autoincrement())
+  orderStatus OrderStatus
+  enabled     Boolean     @default(true)
+  branchId    Int
+  companyId   Int
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  branch      Branch      @relation(fields: [branchId], references: [id])
+  company     Company     @relation(fields: [companyId], references: [id])
+
+  @@unique([orderStatus, branchId, companyId])
+}
+
+model UsersLoginHistory {
+  id        Int      @id @default(autoincrement())
+  ip        String   @default("")
+  device    String   @default("")
+  platform  String   @default("")
+  browser   String   @default("")
+  location  String   @default("")
+  userId    Int
+  createdAt DateTime @default(now())
+  companyId Int
+  company   Company  @relation(fields: [companyId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([companyId])
+}
+
 enum AdminRole {
   ADMIN
   ADMIN_ASSISTANT
 }
 
 enum EmployeeRole {
-  CLIENT
-  CLIENT_ASSISTANT
   COMPANY_MANAGER
   ACCOUNT_MANAGER
   ACCOUNTANT
@@ -23,12 +845,14 @@ enum EmployeeRole {
   RECEIVING_AGENT
   BRANCH_MANAGER
   EMERGENCY_EMPLOYEE
-  MAIN_EMERGENCY_EMPLOYEE
   DATA_ENTRY
   REPOSITORIY_EMPLOYEE
   INQUIRY_EMPLOYEE
+  CLIENT_ASSISTANT
+  CLIENT
   ADMIN
   ADMIN_ASSISTANT
+  MAIN_EMERGENCY_EMPLOYEE
 }
 
 enum ClientRole {
@@ -37,30 +861,17 @@ enum ClientRole {
 
 enum Permission {
   ADD_STORE
-  ADD_PRODUCT
-  PRINT_ORDER
-  SEND_ORDER
-  NOTIFICATIONS
-  MESSAGES
-  MANAGE_ORDERS
-  MANAGE_REPORTS
-  MANAGE_EMPLOYEES
-  MANAGE_TICKETS
   ADD_CLIENT
   ADD_LOCATION
   ADD_DELIVERY_AGENT
   ADD_ORDER
   DELETE_ORDER
   CONFIRM_ORDER
-  CHANGE_ORDER_DATA
-  LOCK_ORDER_STATUS
   CHANGE_ORDER_STATUS
   CHANGE_CLOSED_ORDER_STATUS
   CHANGE_ORDER_TOTAL_AMOUNT
+  LOCK_ORDER_STATUS
   CHANGE_ORDER_DELIVERY_AGENT
-  CHANGE_ORDER_PAID_AMOUNT
-  CHANGE_ORDER_RECEIPT_NUMBER
-  CHANGE_ORDER_RECEPIENT_NUMBER
   CHANGE_ORDER_BRANCH
   CHANGE_ORDER_CLIENT
   CHANGE_ORDER_COMPANY
@@ -76,6 +887,19 @@ enum Permission {
   DELETE_DELIVERY_AGENT_REPORT
   DELETE_CLIENT_REPORT
   DELETE_BRANCH_REPORT
+  CHANGE_ORDER_DATA
+  CHANGE_ORDER_PAID_AMOUNT
+  CHANGE_ORDER_RECEIPT_NUMBER
+  CHANGE_ORDER_RECEPIENT_NUMBER
+  ADD_PRODUCT
+  NOTIFICATIONS
+  MESSAGES
+  MANAGE_ORDERS
+  MANAGE_REPORTS
+  MANAGE_EMPLOYEES
+  MANAGE_TICKETS
+  PRINT_ORDER
+  SEND_ORDER
   ADD_ORDERS_TO_REPOSITORY
   SEND_ORDER_TO_REPOSITORY
   ASSIGN_ORDERS_TO_AGENT
@@ -128,8 +952,8 @@ enum AutomaticUpdateReturnCondition {
 enum SecondaryStatus {
   WITH_CLIENT
   WITH_AGENT
-  WITH_RECEIVING_AGENT
   IN_REPOSITORY
+  WITH_RECEIVING_AGENT
   IN_CAR
 }
 
@@ -174,1121 +998,19 @@ enum SecondaryReportType {
 }
 
 enum OrderTimelineType {
-  // ID & NAME
   DELIVERY_AGENT_CHANGE
   CLIENT_CHANGE
   REPOSITORY_CHANGE
   BRANCH_CHANGE
-  COMPANY_CHANGE
-  // VALUE (INT)
   PAID_AMOUNT_CHANGE
-  // VALUE (STRING)
   STATUS_CHANGE
   CURRENT_LOCATION_CHANGE
-  // ID & TYPE
   REPORT_CREATE
   REPORT_DELETE
-  // OTHER
+  ORDER_DELIVERY
+  OTHER
+  COMPANY_CHANGE
   ORDER_CREATION
   ORDER_CONFIRMATION
-  ORDER_DELIVERY
   ORDER_PROCESS
-  OTHER
 }
-
-// enum LoginType {
-//   LOGIN
-//   LOGOUT
-// }
-
-model User {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id               Int                 @id @default(autoincrement())
-  username         String              @unique
-  phone            String
-  // --- DETAILS --------------------------------------------------------------------------- //
-  avatar           String              @default("https://w7.pngwing.com/pngs/627/693/png-transparent-computer-icons-user-user-icon.png")
-  name             String
-  password         String
-  fcm              String              @default("")
-  refreshTokens    String[]
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  admin            Admin?
-  employee         Employee?
-  client           Client?
-  notifications    Notification[]
-  deletedReports   Report[]            @relation("deletedBy")
-  deletedOrders    Order[]             @relation("deletedBy")
-  deletedClients   Client[]            @relation("deletedBy")
-  deletedStores    Store[]             @relation("deletedBy")
-  deletedEmployees Employee[]          @relation("deletedBy")
-  createdEmployees Employee[]          @relation("createdBy")
-  createdClients   Client[]            @relation("createdBy")
-  loginHistory     UsersLoginHistory[]
-  tickets          Ticket[]
-  ticketResponses  TicketResponse[]
-  message          Message[]
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-
-  @@index([name])
-  @@index([phone])
-}
-
-model Admin {
-  id   Int       @id
-  role AdminRole
-  user User      @relation(fields: [id], references: [id])
-}
-
-model Employee {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                      Int                              @id
-  // --- DETAILS --------------------------------------------------------------------------- //
-  permissions             Permission[]
-  orderStatus             OrderStatus[]                    @default([REGISTERED, READY_TO_SEND, WITH_DELIVERY_AGENT, DELIVERED, REPLACED, PARTIALLY_RETURNED, RETURNED, POSTPONED, CHANGE_ADDRESS, RESEND, WITH_RECEIVING_AGENT, PROCESSING])
-  salary                  Float                            @default(0) // TODO: remove this field
-  deliveryCost            Float                            @default(0)
-  clientAssistantRole     String?
-  role                    EmployeeRole
-  emergency               Boolean                          @default(false)
-  mainEmergency               Boolean                          @default(false)
-  idCard                  String?                          @default("https://w7.pngwing.com/pngs/627/693/png-transparent-computer-icons-user-user-icon.png")
-  residencyCard           String?                          @default("https://w7.pngwing.com/pngs/627/693/png-transparent-computer-icons-user-user-icon.png")
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  branchId                Int?
-  repositoryId            Int?
-  createdById             Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  orders                  Order[]
-  managedStores           Store[]
-  reports                 Report[]
-  deliveryAgentReports    DeliveryAgentReport[]
-  deliveryAgentsLocations DeliveryAgentsLocations[]
-  ordersInquiryEmployees  OrdersInquiryEmployees[]
-  forwardedOrders         Order[]                          @relation("forwardedBy")
-  processedOrders         Order[]                          @relation("processedBy")
-  user                    User                             @relation(fields: [id], references: [id])
-  repository              Repository?                      @relation(fields: [repositoryId], references: [id])
-  branch                  Branch?                          @relation(fields: [branchId], references: [id])
-  createdBy               User                             @relation("createdBy", fields: [createdById], references: [id])
-  // -- INQUIRY EMPLOYEE --------------------------------------------------------------------- //
-  inquiryBranches         InquiryEmployeesBranches[]
-  inquiryLocations        InquiryEmployeesLocations[]
-  inquiryStores           InquiryEmployeesStores[]
-  inquiryCompanies        InquiryEmployeesCompanies[]
-  inquiryDeliveryAgents   InquiryEmployeesDeliveryAgents[] @relation("inquiryDeliveryAgents")
-  inquiryGovernorates     Governorate[]
-  inquiryStatuses         OrderStatus[]
-  inquiryClients          ReceivingAgentClients[]
-  tickets                 Ticket[]
-  // --- INQUIRY EMPLOYEE (DELIVERY AGENTS) --------------------------------------------------------------------- //
-  inquiryEmployees        InquiryEmployeesDeliveryAgents[] @relation("inquiryEmployees")
-  // --- TENANT --------------------------------------------------------------------- //
-  companyId               Int
-  company                 Company                          @relation(fields: [companyId], references: [id])
-  // --- DELETED --------------------------------------------------------------------------- //
-  deleted                 Boolean                          @default(false)
-  deletedAt               DateTime?
-  deletedById             Int?
-  deletedBy               User?                            @relation("deletedBy", fields: [deletedById], references: [id])
-  // --- OTHER --------------------------------------------------------------------- //
-  Department              Department?                      @relation(fields: [departmentId], references: [id])
-  departmentId            Int?
-  Client                  Client?                          @relation(fields: [clientId], references: [id])
-  clientId                Int?
-
-  @@index([companyId])
-  @@index([role])
-  @@index([permissions])
-  @@index([orderStatus])
-  @@index([branchId])
-}
-
-model InquiryEmployeesDeliveryAgents {
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  inquiryEmployeeId Int
-  deliveryAgentId   Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  inquiryEmployee   Employee @relation("inquiryEmployees", fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
-  deliveryAgent     Employee @relation("inquiryDeliveryAgents", fields: [deliveryAgentId], references: [id], onDelete: Cascade)
-  // --- OTHER --------------------------------------------------------------------- //
-
-  @@id([inquiryEmployeeId, deliveryAgentId])
-}
-
-model Client {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                        Int                     @id
-  // --- DETAILS --------------------------------------------------------------------------- //
-  role                      ClientRole              @default(CLIENT)
-  token                     String                  @default("")
-  governoratesDeliveryCosts Json                    @default("[]")
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  deletedById               Int?
-  createdById               Int
-  repositoryId              Int?
-  branchId                  Int?
-  receivingAgentId          Int?
-  showNumbers               Boolean                 @default(false)
-  showDeliveryNumber        Boolean                 @default(false)
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  clientReports             ClientReport[]
-  products                  Product[]
-  orders                    Order[]
-  stores                    Store[]
-  colors                    Color[]
-  categories                Category[]
-  sizes                     Size[]
-  tickets                   Ticket[]
-  // createdBy                 Employee       @relation(fields: [employeeId], references: [id])
-  createdBy                 User                    @relation("createdBy", fields: [createdById], references: [id])
-  user                      User                    @relation(fields: [id], references: [id])
-  repository                Repository?             @relation(fields: [repositoryId], references: [id])
-  branch                    Branch?                 @relation(fields: [branchId], references: [id])
-  // --- TENANT --------------------------------------------------------------------- //
-  companyId                 Int
-  company                   Company                 @relation(fields: [companyId], references: [id])
-  // --- DELETED --------------------------------------------------------------------------- //
-  deleted                   Boolean                 @default(false)
-  deletedBy                 User?                   @relation("deletedBy", fields: [deletedById], references: [id])
-  deletedAt                 DateTime?
-  // --- OTHER --------------------------------------------------------------------- //
-  CustomerOutput            CustomerOutput[]
-  ReceivingAgentClients     ReceivingAgentClients[]
-  employees                 Employee[]
-
-  @@index([companyId])
-}
-
-model Store {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                  Int                      @id @default(autoincrement())
-  // --- DETAILS --------------------------------------------------------------------------- //
-  name                String                   @unique
-  logo                String                   @default("https://w7.pngwing.com/pngs/307/22/png-transparent-computer-icons-business-company-corporation-company-angle-company-text.png")
-  notes               String                   @default("")
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  clientAssistantId   Int?
-  clientId            Int
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  orders              Order[]
-  clientOrderReceipts ClientOrderReceipt[]
-  clientReports       ClientReport[]
-  products            Product[]
-  client              Client                   @relation(fields: [clientId], references: [id])
-  clientAssistant     Employee?                @relation(fields: [clientAssistantId], references: [id])
-  // --- INQUIRY EMPLOYEE --------------------------------------------------------------------- //
-  // inquiryEmployee   Employee?      @relation("inquiryStores", fields: [inquiryEmployeeId], references: [id])
-  // inquiryEmployeeId Int?
-  inquiryEmployees    InquiryEmployeesStores[]
-  // --- TENANT --------------------------------------------------------------------- //
-  companyId           Int
-  company             Company                  @relation(fields: [companyId], references: [id])
-  // --- DELETED --------------------------------------------------------------------------- //
-  deleted             Boolean                  @default(false)
-  deletedById         Int?
-  deletedAt           DateTime?
-  deletedBy           User?                    @relation("deletedBy", fields: [deletedById], references: [id])
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt           DateTime                 @default(now())
-  updatedAt           DateTime                 @updatedAt
-  CustomerOutput      CustomerOutput[]
-
-  @@index([companyId])
-  @@index([clientId])
-}
-
-model InquiryEmployeesStores {
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  inquiryEmployeeId Int
-  storeId           Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  inquiryEmployee   Employee @relation(fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
-  store             Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  // --- OTHER --------------------------------------------------------------------- //
-
-  @@id([inquiryEmployeeId, storeId])
-}
-
-model ReceivingAgentClients {
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  agentId        Int
-  clientId       Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  receivingAgent Employee @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  client         Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  // --- OTHER --------------------------------------------------------------------- //
-
-  @@id([agentId, clientId])
-}
-
-model Branch {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                  Int                        @id @default(autoincrement())
-  // --- DETAILS --------------------------------------------------------------------------- //
-  name                String
-  // TODO: Governorate should be mandatory
-  governorate         Governorate?
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  repositories        Repository[]
-  employees           Employee[]
-  locations           Location[]
-  branchReports       BranchReport[]
-  orders              Order[]
-  clients             Client[]
-  automaticUpdate     AutomaticUpdate[]
-  closedStatus ClosedStatus[]
-  clientOrderReceipts ClientOrderReceipt[]
-  // --- INQUIRY EMPLOYEE --------------------------------------------------------------------- //
-  // inquiryEmployee   Employee?         @relation("inquiryBranches", fields: [inquiryEmployeeId], references: [id])
-  // inquiryEmployeeId Int?
-  inquiryEmployees    InquiryEmployeesBranches[]
-  // --- TENANT --------------------------------------------------------------------- //
-  companyId           Int
-  company             Company                    @relation(fields: [companyId], references: [id])
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt           DateTime                   @default(now())
-  updatedAt           DateTime                   @updatedAt
-
-  @@unique([name, companyId])
-}
-
-model InquiryEmployeesBranches {
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  inquiryEmployeeId Int
-  branchId          Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  inquiryEmployee   Employee @relation(fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
-  branch            Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  // --- OTHER --------------------------------------------------------------------- //
-
-  @@id([inquiryEmployeeId, branchId])
-}
-
-model Repository {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                Int                @id @default(autoincrement())
-  // --- DETAILS --------------------------------------------------------------------------- //
-  name              String             @unique
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  branchId          Int
-  mainRepository    Boolean            @default(false)
-  type              RepositoryType     @default(EXPORT)
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  branch            Branch             @relation(fields: [branchId], references: [id])
-  employees         Employee[]
-  clients           Client[]
-  repositoryReports RepositoryReport[]
-  Order             Order[]
-  // --- TENANT --------------------------------------------------------------------- //
-  company           Company            @relation(fields: [companyId], references: [id])
-  companyId         Int
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  CustomerOutput    CustomerOutput[]
-  clientReports     ClientReport[]
-  companyReports    CompanyReport[]
-}
-
-model Location {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                      Int                         @id @default(autoincrement())
-  // --- DETAILS --------------------------------------------------------------------------- //
-  name                    String
-  governorate             Governorate
-  governorateAr           String?
-  remote                  Boolean                     @default(false)
-  // --- INQUIRY EMPLOYEE --------------------------------------------------------------------- //
-  // inquiryEmployee         Employee?                 @relation("inquiryLocations", fields: [inquiryEmployeeId], references: [id])
-  // inquiryEmployeeId       Int?
-  inquiryEmployees        InquiryEmployeesLocations[]
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  // TODO: Remove
-  branchId                Int?
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  // TODO: Remove
-  branch                  Branch?                     @relation(fields: [branchId], references: [id])
-  orders                  Order[]
-  deliveryAgentsLocations DeliveryAgentsLocations[]
-  // --- TENANT --------------------------------------------------------------------- //
-  // TODO: Remove
-  company                 Company?                    @relation(fields: [companyId], references: [id])
-  companyId               Int?
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt               DateTime                    @default(now())
-  updatedAt               DateTime                    @updatedAt
-
-  // @@unique([name, governorate])
-}
-
-model InquiryEmployeesLocations {
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  inquiryEmployeeId Int
-  locationId        Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  inquiryEmployee   Employee @relation(fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
-  location          Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  // --- OTHER --------------------------------------------------------------------- //
-
-  @@id([inquiryEmployeeId, locationId])
-}
-
-model DeliveryAgentsLocations {
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  deliveryAgentId Int
-  locationId      Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  deliveryAgent   Employee @relation(fields: [deliveryAgentId], references: [id], onDelete: Cascade)
-  location        Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  // --- TENANT --------------------------------------------------------------------- //
-  // TODO: Make mandatory
-  company         Company  @relation(fields: [companyId], references: [id])
-  companyId       Int
-  // --- OTHER --------------------------------------------------------------------- //
-
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  @@id([deliveryAgentId, locationId])
-}
-
-model Company {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                                      Int                         @id @default(autoincrement())
-  // --- DETAILS --------------------------------------------------------------------------- //
-  name                                    String                      @unique
-  treasury                                Float                       @default(0)
-  phone                                   String                      @default("")
-  website                                 String                      @default("")
-  logo                                    String                      @default("https://w7.pngwing.com/pngs/307/22/png-transparent-computer-icons-business-company-corporation-company-angle-company-text.png")
-  color                                   String                      @default("FF0000")
-  registrationText                        String                      @default("")
-  orderStatusAutomaticUpdate              Boolean                     @default(false)
-  mainCompany                             Boolean                     @default(false)
-  // --- INQUIRY EMPLOYEE --------------------------------------------------------------------- //
-  // inquiryEmployee                         Employee?         @relation("inquiryCompanies", fields: [inquiryEmployeeId], references: [id])
-  // inquiryEmployeeId                       Int?
-  inquiryEmployees                        InquiryEmployeesCompanies[]
-  // --- COSTS ----------------------------------------------------------------------------- //
-  governoratePrice                        Float                       @default(0)
-  deliveryAgentFee                        Float                       @default(0)
-  baghdadPrice                            Float                       @default(0)
-  additionalPriceForEvery500000IraqiDinar Float                       @default(0)
-  additionalPriceForEveryKilogram         Float                       @default(0)
-  additionalPriceForRemoteAreas           Float                       @default(0)
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  employees                               Employee[]
-  clients                                 Client[]
-  stores                                  Store[]
-  branches                                Branch[]
-  repositories                            Repository[]
-  locations                               Location[]
-  orders                                  Order[]
-  reports                                 Report[]
-  products                                Product[]
-  // categories                              Category[]
-  // sizes                                   Size[]
-  // colors                                  Color[]
-  banners                                 Banner[]
-  CompanyReport                           CompanyReport[]
-  automaticUpdates                        AutomaticUpdate[]
-  closedStatus ClosedStatus[]
-  forwardedOrders                         Order[]                     @relation("forwardedFrom")
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt                               DateTime                    @default(now())
-  updatedAt                               DateTime                    @updatedAt
-  DeliveryAgentsLocations                 DeliveryAgentsLocations[]
-  usersLoginHistory                       UsersLoginHistory[]
-  CustomerOutput                          CustomerOutput[]
-  departments                             Department[]
-  tickets                                 Ticket[]
-}
-
-model InquiryEmployeesCompanies {
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  inquiryEmployeeId Int
-  companyId         Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  inquiryEmployee   Employee @relation(fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
-  company           Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  // --- OTHER --------------------------------------------------------------------- //
-
-  @@id([inquiryEmployeeId, companyId])
-}
-
-model Order {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                     String                   @id @default("")
-  receiptNumber          String                   @default("") // TODO
-  // --- DETAILS --------------------------------------------------------------------------- //
-  quantity               Int                      @default(0)
-  weight                 Float                    @default(0)
-  recipientName          String                   @default("غير معرف")
-  recipientPhones        String[]
-  recipientAddress       String
-  details                String                   @default("")
-  notes                  String                   @default("")
-  deliveryType           DeliveryType             @default(NORMAL)
-  governorate            Governorate
-  timeline               OrderTimeline[]
-  currentLocation        String                   @default("")
-  deliveryDate           DateTime?
-  // --- COSTS ----------------------------------------------------------------------------- //
-  totalCost              Float                    @default(0)
-  paidAmount             Float                    @default(0)
-  deliveryCost           Float                    @default(0)
-  oldDeliveryCost        Float                    @default(0)
-  clientNet              Float                    @default(0)
-  deliveryAgentNet       Float                    @default(0) // TODO: remove this field
-  companyNet             Float                    @default(0)
-  branchNet             Float                    @default(0)
-  discount               Float                    @default(0)
-  // --- STATUS --------------------------------------------------------------------------- //
-  status                 OrderStatus              @default(REGISTERED)
-  secondaryStatus        SecondaryStatus?
-  processingStatus       ProcessingStatus         @default(not_processed)
-  confirmed              Boolean                  @default(false)
-  printed                Boolean                  @default(false)
-  forwardedToMainRepo    Boolean?                 @default(false)
-  forwardedToGov         Boolean?                 @default(false)
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  clientId               Int
-  deliveryAgentId        Int?
-  oldDeliveryAgentId     Int? // For when relinking the order to the old delivery agent
-  locationId             Int
-  storeId                Int
-  repositoryId           Int?
-  forwardedRepo          Int?
-  clientOrderReceiptId   Int?                     @unique
-  branchId               Int?
-  automaticUpdateId      Int?
-  forwardedBranchId      Int?
-  receivedBranchId       Int?
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  orderProducts          OrderProducts[]
-  ordersInquiryEmployees OrdersInquiryEmployees[]
-  tickets                Ticket[]
-  deliveryAgent          Employee?                @relation(fields: [deliveryAgentId], references: [id], onDelete: SetNull)
-  location               Location                 @relation(fields: [locationId], references: [id])
-  client                 Client                   @relation(fields: [clientId], references: [id])
-  store                  Store                    @relation(fields: [storeId], references: [id])
-  repository             Repository?              @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
-  branch                 Branch?                  @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  automaticUpdate        AutomaticUpdate?         @relation(fields: [automaticUpdateId], references: [id], onDelete: SetNull)
-  clientOrderReceipt     ClientOrderReceipt?      @relation(fields: [clientOrderReceiptId], references: [id], onDelete: SetNull)
-  // --- DELETED --------------------------------------------------------------------------- //
-  deleted                Boolean                  @default(false)
-  deletedAt              DateTime?
-  deletedBy              User?                    @relation("deletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
-  deletedById            Int?
-  // --- PROCESSING  --------------------------------------------------------------------------- //
-  processed              Boolean                  @default(false)
-  processedAt            DateTime?
-  processedBy            Employee?                @relation("processedBy", fields: [processedById], references: [id], onDelete: SetNull)
-  processedById          Int?
-  // --- FORWARDED --------------------------------------------------------------------------- //
-  forwarded              Boolean                  @default(false)
-  forwardedAt            DateTime?
-  forwardedBy            Employee?                @relation("forwardedBy", fields: [forwardedById], references: [id], onDelete: SetNull)
-  forwardedById          Int?
-  forwardedFrom          Company?                 @relation("forwardedFrom", fields: [forwardedFromId], references: [id], onDelete: SetNull)
-  forwardedFromId        Int?
-  // --- REPORTS --------------------------------------------------------------------------- //
-  clientReport           ClientReport[]
-  repositoryReport       RepositoryReport[]
-  branchReport           BranchReport[]            
-  branchReportId         Int?
-  deliveryAgentReport    DeliveryAgentReport?     @relation(fields: [deliveryAgentReportId], references: [id], onDelete: SetNull)
-  deliveryAgentReportId  Int?
-  governorateReport      GovernorateReport?       @relation(fields: [governorateReportId], references: [id], onDelete: SetNull)
-  governorateReportId    Int?
-  companyReport          CompanyReport[]
-  // --- TENANT --------------------------------------------------------------------- //
-  company                Company                  @relation(fields: [companyId], references: [id])
-  companyId              Int
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt              DateTime                 @default(now())
-  updatedAt              DateTime                 @updatedAt
-  CustomerOutput         CustomerOutput[]
-  chat                   Chat?
-
-  // @@index([automaticUpdateId])
-  // @@index([deleted, deletedById])
-  // @@index([processed, processedById])
-  // @@index([forwarded, forwardedById])
-  // @@index([forwarded, forwardedFromId])
-  // @@index([clientReportId])
-  // @@index([repositoryReportId])
-  // @@index([branchReportId])
-  // @@index([deliveryAgentReportId])
-  // @@index([governorateReportId])
-  // @@index([companyReportId])
-  @@index([receiptNumber])
-  // @@index([recipientName])
-  // @@index([recipientAddress])
-  // @@index([recipientPhones])
-  @@index([status])
-  @@index([secondaryStatus])
-  @@index([clientId])
-  @@index([deliveryAgentId])
-  @@index([governorate])
-  // @@index([locationId])
-  @@index([storeId])
-  // @@index([repositoryId])
-  @@index([branchId])
-  @@index([companyId])
-}
-
-model Chat {
-  id               Int       @id @default(autoincrement())
-  numberOfMessages Int       @default(0)
-  messages         Message[]
-
-  Order     Order?   @relation(fields: [orderId], references: [id])
-  orderId   String?  @unique
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Message {
-  id                    Int          @id @default(autoincrement())
-  content               String
-  image                 String?
-  sendFor               MessageType?
-  seenByClient          Boolean      @default(false)
-  seenByClientAssistant Boolean      @default(false)
-  seenByDelivery        Boolean      @default(false)
-  seenByCallCenter      Boolean      @default(false)
-  seenByBranchManager   Boolean      @default(false)
-  seenByCompanyManager  Boolean      @default(false)
-
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  // --- RELATIONS --------------------------------------------------------------------------- //
-
-  createdBy   User? @relation(fields: [createdById], references: [id])
-  createdById Int?
-  Chat        Chat? @relation(fields: [chatId], references: [id])
-  chatId      Int?
-}
-
-model CustomerOutput {
-  id                 Int         @id @default(autoincrement())
-  repositoryId       Int?
-  targetRepositoryId Int?
-  orderId            String?
-  clientId           Int?
-  companyId          Int?
-  storeId            Int?
-  order              Order?      @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  repository         Repository? @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
-  client             Client?     @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  company            Company?    @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  store              Store?      @relation(fields: [storeId], references: [id], onDelete: Cascade)
-}
-
-model ClientOrderReceipt {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id            Int      @id @default(autoincrement())
-  receiptNumber String   @default("") // TODO
-  paperReceipt  Boolean  @default(false)
-  // --- RELATIONS --------------------------------------------------------------------- //
-  store         Store?   @relation(fields: [storeId], references: [id])
-  storeId       Int?
-  branch        Branch?  @relation(fields: [branchId], references: [id])
-  branchId      Int
-  order         Order?
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@index([storeId])
-}
-
-model OrderTimeline {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id        Int               @id @default(autoincrement())
-  // --- DETAILS --------------------------------------------------------------------------- //
-  type      OrderTimelineType
-  old       Json?
-  new       Json?
-  message   String
-  by        Json
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  orderId   String
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  order     Order             @relation(fields: [orderId], references: [id])
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt DateTime          @default(now())
-}
-
-model Department {
-  id        Int        @id @default(autoincrement())
-  name      String
-  createdBy String?
-  employees Employee[]
-  tickets   Ticket[]
-  Company   Company?   @relation(fields: [companyId], references: [id])
-  companyId Int?
-}
-
-model Ticket {
-  id             Int              @id @default(autoincrement())
-  content        String
-  closed         Boolean          @default(false)
-  forwarded      Boolean          @default(false)
-  Department     Department?      @relation(fields: [departmentId], references: [id])
-  departmentId   Int?
-  Employee       Employee?        @relation(fields: [employeeId], references: [id])
-  employeeId     Int?
-  Client         Client?          @relation(fields: [clientId], references: [id])
-  clientId       Int?
-  Order          Order?           @relation(fields: [orderId], references: [id])
-  orderId        String?
-  createdBy      User?            @relation(fields: [createdById], references: [id])
-  createdByRole  EmployeeRole?
-  createdById    Int?
-  ticketResponse TicketResponse[]
-  Company        Company?         @relation(fields: [companyId], references: [id])
-  companyId      Int?
-}
-
-model TicketResponse {
-  id          Int     @id @default(autoincrement())
-  content     String
-  Ticket      Ticket? @relation(fields: [ticketId], references: [id])
-  ticketId    Int?
-  createdBy   User?   @relation(fields: [createdById], references: [id])
-  createdById Int?
-}
-
-model OrdersInquiryEmployees {
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  inquiryEmployeeId Int
-  orderId           String
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  inquiryEmployee   Employee @relation(fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
-  // --- OTHER --------------------------------------------------------------------- //
-
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  @@id([orderId, inquiryEmployeeId])
-}
-
-model Report {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                      Int                  @id @default(autoincrement())
-  // --- DETAILS --------------------------------------------------------------------------- //
-  type                    ReportType
-  baghdadOrdersCount      Int                  @default(0)
-  governoratesOrdersCount Int                  @default(0)
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  employeeId              Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  createdBy               Employee             @relation(fields: [employeeId], references: [id])
-  clientReport            ClientReport?
-  repositoryReport        RepositoryReport?
-  branchReport            BranchReport?
-  deliveryAgentReport     DeliveryAgentReport?
-  governorateReport       GovernorateReport?
-  companyReport           CompanyReport?
-  // --- TENANT --------------------------------------------------------------------- //
-  company                 Company              @relation(fields: [companyId], references: [id])
-  companyId               Int
-  // --- STATUS --------------------------------------------------------------------------- //
-  status                  ReportStatus         @default(UNPAID)
-  confirmed               Boolean              @default(false)
-  // --- DELETED --------------------------------------------------------------------------- //
-  deleted                 Boolean              @default(false)
-  deletedAt               DateTime?
-  deletedBy               User?                @relation("deletedBy", fields: [deletedById], references: [id])
-  deletedById             Int?
-  // --- COSTS ----------------------------------------------------------------------------- //
-  totalCost               Float                @default(0)
-  paidAmount              Float                @default(0)
-  deliveryCost            Float                @default(0)
-  clientNet               Float                @default(0)
-  deliveryAgentNet        Float                @default(0)
-  branchNet               Float                @default(0)
-  companyNet              Float                @default(0)
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt               DateTime             @default(now())
-  updatedAt               DateTime             @updatedAt
-
-  @@index([type])
-  @@index([employeeId])
-  @@index([companyId])
-}
-
-model CompanyReport {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                       Int                 @id
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  companyId                Int
-  repositoryId             Int?
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  report                   Report              @relation(fields: [id], references: [id], onDelete: Cascade)
-  orders                   Order[]
-  repository               Repository?         @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
-  company                  Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  // --- OTHER --------------------------------------------------------------------- //
-  baghdadDeliveryCost      Float               @default(0)
-  governoratesDeliveryCost Float               @default(0)
-  secondaryType            SecondaryReportType @default(DELIVERED)
-
-  @@index([companyId])
-}
-
-model ClientReport {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id           Int         @id
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  clientId     Int
-  storeId      Int?
-  repositoryId Int?
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  client       Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  report       Report      @relation(fields: [id], references: [id], onDelete: Cascade)
-  store        Store?      @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  orders       Order[]
-  repository   Repository? @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
-
-  // --- OTHER --------------------------------------------------------------------- //
-  baghdadDeliveryCost      Float               @default(0)
-  governoratesDeliveryCost Float               @default(0)
-  secondaryType            SecondaryReportType @default(DELIVERED)
-  receivingAgentId         Int?
-
-  @@index([clientId])
-  @@index([storeId])
-}
-
-model RepositoryReport {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                   Int                 @id
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  targetRepositoryName String?
-  targetRepositoryId   Int?
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  report               Report              @relation(fields: [id], references: [id], onDelete: Cascade)
-  repositoryId         Int
-  repository           Repository          @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
-  orders               Order[]
-  // --- OTHER --------------------------------------------------------------------- //
-  secondaryType        SecondaryReportType @default(DELIVERED)
-
-  @@index([repositoryId])
-}
-
-model BranchReport {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                        Int     @id
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  branchId                  Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  branch                    Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  report                    Report  @relation(fields: [id], references: [id], onDelete: Cascade)
-  orders                    Order[]
-  type                      String  @default("forwarded")
-  // --- OTHER --------------------------------------------------------------------- //
-  baghdadDeliveryCost      Float               @default(0)
-  governoratesDeliveryCost Float               @default(0)
-
-  @@index([branchId])
-}
-
-model DeliveryAgentReport {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                        Int      @id
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  deliveryAgentId           Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  deliveryAgent             Employee @relation(fields: [deliveryAgentId], references: [id], onDelete: Cascade)
-  report                    Report   @relation(fields: [id], references: [id], onDelete: Cascade)
-  orders                    Order[]
-  // --- OTHER --------------------------------------------------------------------- //
-  deliveryAgentDeliveryCost Float    @default(0)
-
-  @@index([deliveryAgentId])
-}
-
-model GovernorateReport {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id                        Int         @id
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  governorate               Governorate
-  report                    Report      @relation(fields: [id], references: [id], onDelete: Cascade)
-  orders                    Order[]
-  // --- OTHER --------------------------------------------------------------------- //
-  baghdadDeliveryCost      Float               @default(0)
-  governoratesDeliveryCost Float               @default(0)
-
-  @@index([governorate])
-}
-
-model Product {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id            Int             @id @default(autoincrement())
-  // --- DETAILS --------------------------------------------------------------------------- //
-  title         String
-  price         Float
-  image         String          @default("https://w7.pngwing.com/pngs/436/721/png-transparent-package-delivery-box-freight-transport-computer-icons-shipping-miscellaneous-angle-freight-transport.png")
-  stock         Int             @default(0)
-  weight        Float           @default(0)
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  storeId       Int
-  categoryId    Int
-  clientId      Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  store         Store           @relation(fields: [storeId], references: [id])
-  category      Category        @relation(fields: [categoryId], references: [id])
-  orderProducts OrderProducts[]
-  productColors ProductColors[]
-  productSizes  ProductSizes[]
-  client        Client          @relation(fields: [clientId], references: [id])
-  // --- TENANT --------------------------------------------------------------------- //
-  company       Company         @relation(fields: [companyId], references: [id])
-  companyId     Int
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-
-  @@index([companyId])
-  @@index([clientId])
-  @@index([categoryId])
-  @@index([storeId])
-}
-
-model Category {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id        Int       @id @default(autoincrement())
-  // --- DETAILS --------------------------------------------------------------------------- //
-  title     String    @unique
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  products  Product[]
-  // --- TENANT --------------------------------------------------------------------- //
-  // company   Company?  @relation(fields: [companyId], references: [id])
-  // companyId Int?
-  client    Client    @relation(fields: [clientId], references: [id])
-  clientId  Int
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-}
-
-model OrderProducts {
-  // --- DETAILS --------------------------------------------------------------------------- //
-  quantity  Int
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  productId Int
-  orderId   String
-  colorId   Int?
-  sizeId    Int?
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  product   Product @relation(fields: [productId], references: [id])
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  color     Color?  @relation(fields: [colorId], references: [id])
-  size      Size?   @relation(fields: [sizeId], references: [id])
-  // --- OTHER --------------------------------------------------------------------- //
-
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  @@id([productId, orderId])
-}
-
-model Size {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id            Int             @id @default(autoincrement())
-  // --- DETAILS --------------------------------------------------------------------------- //
-  title         String          @unique
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  productSizes  ProductSizes[]
-  orderProducts OrderProducts[]
-  // --- TENANT --------------------------------------------------------------------- //
-  // company       Company?        @relation(fields: [companyId], references: [id])
-  // companyId     Int?
-  client        Client          @relation(fields: [clientId], references: [id])
-  clientId      Int
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-}
-
-model Color {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id            Int             @id @default(autoincrement())
-  // --- DETAILS --------------------------------------------------------------------------- //
-  title         String          @unique
-  code          String          @unique
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  productColors ProductColors[]
-  orderProducts OrderProducts[]
-  // --- TENANT --------------------------------------------------------------------- //
-  // company       Company?        @relation(fields: [companyId], references: [id])
-  // companyId     Int?
-  client        Client          @relation(fields: [clientId], references: [id])
-  clientId      Int
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-}
-
-model ProductColors {
-  // --- DETAILS --------------------------------------------------------------------------- //
-  quantity  Int
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  productId Int
-  colorId   Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  color     Color   @relation(fields: [colorId], references: [id])
-  // --- OTHER --------------------------------------------------------------------- //
-
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  @@id([productId, colorId])
-}
-
-model ProductSizes {
-  // --- DETAILS --------------------------------------------------------------------------- //
-  quantity  Int
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  productId Int
-  sizeId    Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  size      Size    @relation(fields: [sizeId], references: [id])
-  // --- OTHER --------------------------------------------------------------------- //
-
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  @@id([productId, sizeId])
-}
-
-model Notification {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id        Int      @id @default(autoincrement())
-  // --- DETAILS --------------------------------------------------------------------------- //
-  title     String
-  content   String   @default("")
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  userId    Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  // --- STATUS --------------------------------------------------------------------------- //
-  seen      Boolean  @default(false)
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt DateTime @default(now())
-
-  receiptNumber String?
-
-  @@index([userId])
-}
-
-model Banner {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id        Int      @id @default(autoincrement())
-  // --- DETAILS --------------------------------------------------------------------------- //
-  title     String?
-  content   String?   @default("")
-  image     String   @default("https://w7.pngwing.com/pngs/819/548/png-transparent-photo-image-landscape-icon-images.png")
-  url       String?   @default("")
-  // --- TENANT --------------------------------------------------------------------- //
-  company   Company  @relation(fields: [companyId], references: [id])
-  companyId Int
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model AutomaticUpdate {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id              Int                             @id @default(autoincrement())
-  // --- DETAILS --------------------------------------------------------------------------- //
-  orderStatus     OrderStatus
-  newOrderStatus  OrderStatus                     @default(DELIVERED)
-  returnCondition AutomaticUpdateReturnCondition?
-  notes           String?
-  updateAt        Int?                             @default(0) // 0 -> 24
-  checkAfter      Int?                             @default(0) // 0 -> infinity
-  // --- STATUS --------------------------------------------------------------------------- //
-  enabled         Boolean                         @default(true)
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  branchId        Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  orders          Order[]
-  branch          Branch                          @relation(fields: [branchId], references: [id])
-  // --- TENANT --------------------------------------------------------------------- //
-  company         Company                         @relation(fields: [companyId], references: [id])
-  companyId       Int
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt       DateTime                        @default(now())
-  updatedAt       DateTime                        @updatedAt
-
-  @@unique([branchId, companyId])
-}
-
-model ClosedStatus {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id              Int                             @id @default(autoincrement())
-  // --- DETAILS --------------------------------------------------------------------------- //
-  orderStatus     OrderStatus
-  // --- STATUS --------------------------------------------------------------------------- //
-  enabled         Boolean                         @default(true)
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  branchId        Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  branch          Branch                          @relation(fields: [branchId], references: [id])
-  // --- TENANT --------------------------------------------------------------------- //
-  company         Company                         @relation(fields: [companyId], references: [id])
-  companyId       Int
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt       DateTime                        @default(now())
-  updatedAt       DateTime                        @updatedAt
-
-  @@unique([orderStatus, branchId, companyId])
-}
-
-model UsersLoginHistory {
-  // --- IDENTIFICATION --------------------------------------------------------------------- //
-  id        Int      @id @default(autoincrement())
-  // --- DETAILS --------------------------------------------------------------------------- //
-  // loginTime    DateTime
-  // logoutTime   DateTime?
-  ip        String   @default("")
-  device    String   @default("")
-  platform  String   @default("")
-  browser   String   @default("")
-  location  String   @default("")
-  // type      LoginType
-  // --- STATUS --------------------------------------------------------------------------- //
-  // loginStatus  Boolean   @default(true)
-  // logoutStatus Boolean   @default(false)
-  // --- FOREIGN KEYS --------------------------------------------------------------------------- //
-  userId    Int
-  // --- RELATIONS --------------------------------------------------------------------------- //
-  user      User     @relation(fields: [userId], references: [id])
-  // --- TENANT --------------------------------------------------------------------- //
-  company   Company  @relation(fields: [companyId], references: [id])
-  companyId Int
-  // --- OTHER --------------------------------------------------------------------- //
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@index([companyId])
-}
-
-// --- IDENTIFICATION --------------------------------------------------------------------- //
-// --- DETAILS --------------------------------------------------------------------------- //
-// --- FOREIGN KEYS --------------------------------------------------------------------------- //
-// --- RELATIONS --------------------------------------------------------------------------- //
-// --- TENANT --------------------------------------------------------------------- //
-// --- OTHER --------------------------------------------------------------------- //
-// --- DELETED --------------------------------------------------------------------------- //
