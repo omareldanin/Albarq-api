@@ -22,6 +22,17 @@ import {AppError} from "../../lib/AppError";
 import {OrdersRepository} from "./orders.repository";
 import {generateReceipts} from "./helpers/generateReceipts";
 const XlsxPopulate = require("xlsx-populate");
+import ExcelJS from "exceljs";
+
+function getExcelColumnLetter(col: number): string {
+  let letter = "";
+  while (col > 0) {
+    const mod = (col - 1) % 26;
+    letter = String.fromCharCode(65 + mod) + letter;
+    col = Math.floor((col - mod) / 26);
+  }
+  return letter;
+}
 
 const employeesRepository = new EmployeesRepository();
 
@@ -1269,47 +1280,54 @@ export class OrdersController {
   });
 
   generateExcelSheet = catchAsync(async (req, res) => {
-    const loggedInUser = res.locals.user as loggedInUserType;
+    const loggedInUser = res.locals.user as {companyID: number};
 
+    // إنشاء ملف جديد
     const workbook = await XlsxPopulate.fromBlankAsync();
     const sheet = workbook.sheet(0).name("Template");
     const listSheet = workbook.addSheet("Lists");
-    // Simulate location list (replace with real DB values)
-    let locations = await prisma.location.findMany({
-      where: {
-        companyId: loggedInUser.companyID,
-      },
+
+    // جلب البيانات من DB
+    const locations = await prisma.location.findMany({
+      where: {companyId: loggedInUser.companyID},
       select: {id: true, name: true, governorateAr: true},
     });
 
-    const grouped = governorate.reduce(
-      (acc: {[key: string]: string[]}, gov) => {
-        acc[gov] = locations
-          .filter((l) => l.governorateAr === gov)
-          .map((l) => l.name);
-        return acc;
-      },
-      {}
+    // استخراج المحافظات الفريدة
+    const governorates = Array.from(
+      new Set(locations.map((l) => l.governorateAr?.trim()).filter(Boolean))
     );
 
-    // Add governorate list to Lists sheet
-    governorate.forEach((gov, i) => {
-      listSheet.cell(`A${i + 1}`).value(gov);
+    // تجميع المناطق حسب المحافظة
+    const grouped: {[key: string]: string[]} = {};
+    governorates.forEach((gov) => {
+      grouped[gov!!] = locations
+        .filter((l) => l.governorateAr?.trim() === gov)
+        .map((l) => l.name);
     });
 
-    workbook.definedName("Governorates", `Lists!$A$1:$A$${governorate.length}`);
+    // إضافة المحافظات للـ Lists sheet
+    governorates.forEach((gov, i) => {
+      listSheet.cell(`A${i + 1}`).value(gov);
+    });
+    workbook.definedName(
+      "Governorates",
+      `Lists!$A$1:$A$${governorates.length}`
+    );
 
-    let col = 2;
-    for (let gov of governorate) {
-      const govSafe = gov.replace(/\s/g, "_"); // Excel named range can't have spaces
+    // إضافة المناطق لكل محافظة
+    let col = 2; // B, C, D...
+    for (let gov of governorates) {
+      const govSafe = gov.replace(/\s/g, "_");
       const locationList = grouped[gov] || [];
 
       locationList.forEach((loc, i) => {
         listSheet.cell(i + 1, col).value(loc);
       });
 
+      const colLetter = String.fromCharCode(65 + col - 1);
       const endRow = locationList.length || 1;
-      const colLetter = String.fromCharCode(65 + col - 1); // B, C, D...
+
       workbook.definedName(
         govSafe,
         `Lists!$${colLetter}$1:$${colLetter}$${endRow}`
@@ -1318,7 +1336,9 @@ export class OrdersController {
       col++;
     }
 
-    // Setup Template headers
+    listSheet.hidden(true);
+
+    // إعداد الأعمدة
     sheet.cell("A1").value("رقم الهاتف");
     sheet.column("A").width(15);
 
@@ -1337,28 +1357,34 @@ export class OrdersController {
     sheet.cell("F1").value("الملاحظات");
     sheet.column("F").width(25);
 
-    // Add validation to "المحافظة"
+    // عمل Data Validation
     for (let row = 2; row <= 1000; row++) {
+      // المحافظة
       sheet.cell(`B${row}`).dataValidation({
         type: "list",
-        showInputMessage: true,
         formula1: "=Governorates",
         allowBlank: true,
+        showInputMessage: true,
+        promptTitle: "اختر المحافظة",
+        prompt: "اختر المحافظة من القائمة",
       });
 
-      // Data validation to location column using INDIRECT
+      // المنطقة (تتغير حسب المحافظة المختارة)
       sheet.cell(`C${row}`).dataValidation({
         type: "list",
-        showInputMessage: true,
         formula1: `=INDIRECT(SUBSTITUTE(B${row}," ","_"))`,
         allowBlank: true,
+        showErrorMessage: true,
+        showInputMessage: true,
+        promptTitle: "اختر المنطقة",
+        prompt: "اختر المنطقة من القائمة",
       });
+
+      // صيغة رقم للمبلغ
       sheet.cell(`E${row}`).style("numberFormat", "#,##0");
     }
 
-    listSheet.hidden(true); // hide Lists sheet
-
-    // Write and send
+    // كتابة وإرسال الملف
     const buffer = await workbook.outputAsync();
     res.setHeader(
       "Content-Type",
