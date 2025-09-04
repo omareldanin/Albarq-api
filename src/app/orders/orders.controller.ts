@@ -22,45 +22,12 @@ import {AppError} from "../../lib/AppError";
 import {OrdersRepository} from "./orders.repository";
 import {generateReceipts} from "./helpers/generateReceipts";
 const XlsxPopulate = require("xlsx-populate");
-import ExcelJS from "exceljs";
-
-function getExcelColumnLetter(col: number): string {
-  let letter = "";
-  while (col > 0) {
-    const mod = (col - 1) % 26;
-    letter = String.fromCharCode(65 + mod) + letter;
-    col = Math.floor((col - mod) / 26);
-  }
-  return letter;
-}
 
 const employeesRepository = new EmployeesRepository();
 
 const ordersService = new OrdersService();
 
 const ordersRepository = new OrdersRepository();
-
-const governorate = [
-  "الأنبار",
-  "بابل",
-  "بغداد",
-  "البصرة",
-  "ذي قار",
-  "القادسية",
-  "ديالى",
-  "دهوك",
-  "أربيل",
-  "كربلاء",
-  "كركوك",
-  "ميسان",
-  "المثنى",
-  "النجف",
-  "نينوى",
-  "صلاح الدين",
-  "السليمانية",
-  "واسط",
-  "شركات بابل",
-];
 
 export class OrdersController {
   createOrder = catchAsync(async (req, res) => {
@@ -1364,6 +1331,7 @@ export class OrdersController {
         type: "list",
         formula1: "=Governorates",
         allowBlank: true,
+        showErrorMessage: true,
         showInputMessage: true,
         promptTitle: "اختر المحافظة",
         prompt: "اختر المحافظة من القائمة",
