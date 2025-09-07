@@ -462,6 +462,7 @@ export class OrdersController {
         }
         orderData.forwardedRepo = exportRepo?.id;
         orderData.receivedBranchId = repository?.branchId;
+        orderData.branchID = repository.branchId;
       } else {
         const mainRepository = await prisma.repository.findFirst({
           where: {
@@ -486,6 +487,7 @@ export class OrdersController {
         orderData.forwardedBranchId = oldOrder.client.branchId || undefined;
       }
       orderData.repositoryID = exportRepo?.id;
+      orderData.branchID = user.branch?.id;
     }
 
     if (
