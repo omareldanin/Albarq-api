@@ -449,10 +449,15 @@ export class OrdersController {
           },
           select: {
             branchId: true,
+            branch: {
+              select: {
+                governorate: true,
+              },
+            },
           },
         });
 
-        if (repository?.branchId !== oldOrder?.branch?.id) {
+        if (repository?.branch.governorate !== oldOrder?.governorate) {
           throw new AppError("الطلب غير مرتبط بهذا الفرع", 400);
         }
         orderData.forwardedRepo = exportRepo?.id;
@@ -1337,16 +1342,16 @@ export class OrdersController {
         prompt: "اختر المحافظة من القائمة",
       });
 
-      // المنطقة (تتغير حسب المحافظة المختارة)
-      sheet.cell(`C${row}`).dataValidation({
-        type: "list",
-        formula1: `=INDIRECT(SUBSTITUTE(B${row}," ","_"))`,
-        allowBlank: true,
-        showErrorMessage: true,
-        showInputMessage: true,
-        promptTitle: "اختر المنطقة",
-        prompt: "اختر المنطقة من القائمة",
-      });
+      // // المنطقة (تتغير حسب المحافظة المختارة)
+      // sheet.cell(`C${row}`).dataValidation({
+      //   type: "list",
+      //   formula1: `=INDIRECT(SUBSTITUTE(B${row}," ","_"))`,
+      //   allowBlank: true,
+      //   showErrorMessage: true,
+      //   showInputMessage: true,
+      //   promptTitle: "اختر المنطقة",
+      //   prompt: "اختر المنطقة من القائمة",
+      // });
 
       // صيغة رقم للمبلغ
       sheet.cell(`E${row}`).style("numberFormat", "#,##0");
