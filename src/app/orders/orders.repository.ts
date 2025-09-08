@@ -1055,7 +1055,7 @@ export class OrdersRepository {
               // Filter by deliveryDate
               {
                 // gte deliveryDate day start time (00:00:00) and lte deliveryDate day end time (23:59:59)
-                deliveryDate: data.filters.deliveryDate
+                updatedAt: data.filters.deliveryDate
                   ? {
                       gte: new Date(
                         new Date(data.filters.deliveryDate).setHours(0, 0, 0, 0)

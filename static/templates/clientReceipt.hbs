@@ -16,14 +16,18 @@
       <div class="receipt">
         <img src="{{client.companyLogo}}" class="logo" />
         <p>{{branch.name}}</p>
-        {{!-- <div>
-                <span>رقم الوصل :</span>
-                <span>{{receiptNumber}}</span>
-            </div> --}}
+        <div>
+          <span>رقم الوصل :</span>
+          <span>{{receiptNumber}}</span>
+        </div>
         {{#if (check store)}}
           <div>
             <span>اسم الصفحه :</span>
             <span>{{store.name}}</span>
+          </div>
+        {{else}}
+          <div>
+            <span>اسم الصفحه :</span>
           </div>
         {{/if}}
         <div>
@@ -32,16 +36,19 @@
         <div>
           <span>المنطقه :</span>
         </div>
+        <div>
+          <span>التاريخ :</span>
+        </div>
+        <div>
+          <span>ملاحظات :</span>
+        </div>
         <div class="footer">
           <div>
-            <span style="display: block;">ملاحظات مهمه</span>
-            <span style="display: block;">* الشركه مسئوله عن توصيل الطلبات فقط</span>
+            <span style="display: block;">ملاحظات مهمة</span>
+            <span style="display: block;">* الشركة مسئولة عن توصيل الطلبات فقط</span>
           </div>
           <div style="float: left;margin-top: 0px;">
             <img src="{{QRCode this}}" />
-            <span
-              style="display: block;text-align:center;font-weight:bold"
-            >{{receiptNumber}}</span>
           </div>
         </div>
       </div>

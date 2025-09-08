@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type {Prisma} from "@prisma/client";
 
 export const clientReceiptSelect = {
   id: true,
@@ -30,6 +30,12 @@ export const clientReceiptSelect = {
   branch: {
     select: {
       name: true,
+      company: {
+        select: {
+          id: true,
+          logo: true,
+        },
+      },
     },
   },
 } satisfies Prisma.ClientOrderReceiptSelect;
@@ -48,7 +54,7 @@ export const receiptReform = (
     client: {
       name: receipt.store?.client.user.name,
       phone: receipt.store?.client.user.phone,
-      companyLogo: receipt.store?.client.company.logo,
+      companyLogo: receipt.branch?.company.logo,
       companyId: receipt.store?.client.company.id,
     },
   };
