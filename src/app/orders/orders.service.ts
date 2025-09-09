@@ -626,6 +626,15 @@ export class OrdersService {
     ) {
       throw new AppError("لا يمكنك تغيير حاله طلبيه مغلقه", 500);
     }
+
+    if (
+      data.orderData.status === "WITH_DELIVERY_AGENT" &&
+      oldOrderData.client.branchId !== data.loggedInUser.branchId &&
+      oldOrderData.receivedBranchId !== data.loggedInUser.branchId
+    ) {
+      data.orderData.receivedBranchId = data.loggedInUser.branchId;
+    }
+
     const newOrder = await ordersRepository.updateOrder({
       orderID: oldOrderData.id,
       loggedInUser: data.loggedInUser,

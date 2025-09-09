@@ -460,8 +460,12 @@ export class OrdersController {
         if (repository?.branch.governorate !== oldOrder?.governorate) {
           throw new AppError("الطلب غير مرتبط بهذا الفرع", 400);
         }
+        if (repository.branchId === oldOrder.client.branchId) {
+          orderData.forwardedBranchId = -1;
+        } else {
+          orderData.receivedBranchId = repository?.branchId;
+        }
         orderData.forwardedRepo = exportRepo?.id;
-        orderData.receivedBranchId = repository?.branchId;
         orderData.branchID = repository.branchId;
       } else {
         const mainRepository = await prisma.repository.findFirst({
@@ -485,6 +489,12 @@ export class OrdersController {
     } else {
       if (user.branch?.id !== oldOrder.client.branchId) {
         orderData.forwardedBranchId = oldOrder.client.branchId || undefined;
+      }
+      if (
+        oldOrder.receivedBranchId &&
+        oldOrder.receivedBranchId !== user.branch?.id
+      ) {
+        orderData.receivedBranchId = user.branch?.id;
       }
       orderData.repositoryID = exportRepo?.id;
       orderData.branchID = user.branch?.id;

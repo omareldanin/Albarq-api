@@ -2317,7 +2317,10 @@ export class OrdersRepository {
             ? false
             : data.orderData.forwardedToMainRepo,
         forwardedToGov: data.orderData.forwardedToGov,
-        forwardedBranchId: data.orderData.forwardedBranchId,
+        forwardedBranchId:
+          data.orderData.forwardedBranchId === -1
+            ? null
+            : data.orderData.forwardedBranchId,
         receivedBranchId: data.orderData.receivedBranchId,
         forwardedRepo:
           data.orderData.secondaryStatus === "IN_REPOSITORY"
