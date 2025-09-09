@@ -570,24 +570,6 @@ export class OrdersService {
       throw new AppError("لقد تم اضافه هذا الطلب مسبقا", 403);
     }
 
-    if (data.orderData.deliveryAgentID) {
-      const agent = await prisma.employee.findFirst({
-        where: {
-          id: data.orderData.deliveryAgentID,
-        },
-        select: {
-          branch: {
-            select: {
-              id: true,
-            },
-          },
-        },
-      });
-      if (agent?.branch?.id !== oldOrderData.branch?.id) {
-        throw new AppError("هذا الطلب غير مرتبط بهذا الفرع", 403);
-      }
-    }
-
     if (
       data.orderData.status === "WITH_RECEIVING_AGENT" &&
       oldOrderData.status !== "READY_TO_SEND"
@@ -633,6 +615,12 @@ export class OrdersService {
       oldOrderData.receivedBranchId !== data.loggedInUser.branchId
     ) {
       data.orderData.receivedBranchId = data.loggedInUser.branchId;
+      data.orderData.branchID = data.loggedInUser.branchId;
+    } else if (
+      data.orderData.status === "WITH_DELIVERY_AGENT" &&
+      oldOrderData.branch?.id !== data.loggedInUser.branchId
+    ) {
+      data.orderData.branchID = data.loggedInUser.branchId;
     }
 
     const newOrder = await ordersRepository.updateOrder({
