@@ -641,6 +641,7 @@ export class OrdersService {
         // send notification to client
         if (
           data.loggedInUser.role !== "DELIVERY_AGENT" &&
+          data.loggedInUser.role !== "RECEIVING_AGENT" &&
           newOrder.deliveryAgent
         ) {
           await sendNotification({
@@ -665,6 +666,7 @@ export class OrdersService {
           data.orderData.status === "REPLACED" ||
           data.orderData.status === "RETURNED" ||
           data.orderData.status === "RESEND" ||
+          data.orderData.status === "POSTPONED" ||
           data.orderData.status === "PROCESSING"
         ) {
           const orderInquiryEmployees =
@@ -717,20 +719,22 @@ export class OrdersService {
               }`,
             });
           });
-          await sendNotification({
-            orderId: newOrder.id,
-            userID: newOrder.client.id,
-            title: `تم تغيير حالة الطلب رقم ${
-              newOrder.receiptNumber
-            } إلى ${localizeOrderStatus(newOrder.status)} ${
-              newOrder.notes ? `(${newOrder.notes})` : ""
-            }`,
-            content: `تم تغيير حالة الطلب رقم ${
-              newOrder.receiptNumber
-            } إلى ${localizeOrderStatus(newOrder.status)} ${
-              newOrder.notes ? `(${newOrder.notes})` : ""
-            }`,
-          });
+          if (data.orderData.status !== "POSTPONED") {
+            await sendNotification({
+              orderId: newOrder.id,
+              userID: newOrder.client.id,
+              title: `تم تغيير حالة الطلب رقم ${
+                newOrder.receiptNumber
+              } إلى ${localizeOrderStatus(newOrder.status)} ${
+                newOrder.notes ? `(${newOrder.notes})` : ""
+              }`,
+              content: `تم تغيير حالة الطلب رقم ${
+                newOrder.receiptNumber
+              } إلى ${localizeOrderStatus(newOrder.status)} ${
+                newOrder.notes ? `(${newOrder.notes})` : ""
+              }`,
+            });
+          }
         }
 
         await ordersRepository.updateOrderTimeline({
