@@ -70,7 +70,10 @@ export class StoresController {
       const employee = await employeesRepository.getEmployee({
         employeeID: loggedInUser.id,
       });
-      branchID = employee?.branch?.id;
+
+      if (!employee?.repository || !employee.repository.mainRepository) {
+        branchID = employee?.branch?.id;
+      }
     }
 
     const minified = req.query.minified
