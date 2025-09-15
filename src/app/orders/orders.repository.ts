@@ -1532,8 +1532,7 @@ export class OrdersRepository {
                   ...where,
                   OR:
                     data.loggedInUser?.role === "CLIENT" ||
-                    data.loggedInUser?.role === "CLIENT_ASSISTANT" ||
-                    data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
+                    data.loggedInUser?.role === "CLIENT_ASSISTANT"
                       ? [
                           {
                             clientReport: {
@@ -2908,7 +2907,7 @@ export class OrdersRepository {
         createdAt:
           data.loggedInUser.role !== "DELIVERY_AGENT"
             ? {
-                gte: new Date(new Date().setHours(0, 0, 0, 0)),
+                gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
               }
             : undefined,
       },
