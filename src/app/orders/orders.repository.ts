@@ -388,6 +388,7 @@ export class OrdersRepository {
         confirmed: data.orderData.forwardedCompanyID
           ? false
           : data.orderData.confirmed,
+        receivedAt: data.orderData.confirmed ? new Date() : undefined,
         status: status,
         secondaryStatus:
           data.loggedInUser.role !== "CLIENT" &&
@@ -2166,6 +2167,7 @@ export class OrdersRepository {
         deliveryAgentNet: true,
         paidAmount: true,
         weight: true,
+        receivedAt: true,
         deliveryAgent: {
           select: {
             deliveryCost: true,
@@ -2308,6 +2310,10 @@ export class OrdersRepository {
           ? false
           : data.orderData.confirmed,
         details: data.orderData.details,
+        receivedAt:
+          data.orderData.confirmed && !orderData?.receivedAt
+            ? new Date()
+            : undefined,
         deliveryDate: data.orderData.deliveryAgentID
           ? new Date()
           : data.orderData.deliveryDate,
@@ -2904,7 +2910,7 @@ export class OrdersRepository {
                 gte: new Date(new Date().setHours(0, 0, 0, 0)),
               }
             : undefined,
-        createdAt:
+        receivedAt:
           data.loggedInUser.role !== "DELIVERY_AGENT"
             ? {
                 gte: new Date(Date.now() - 24 * 60 * 60 * 1000),

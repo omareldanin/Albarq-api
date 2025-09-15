@@ -363,6 +363,7 @@ model Order {
   branchId               Int?
   automaticUpdateId      Int?
   deleted                Boolean                  @default(false)
+  receivedAt             DateTime?
   deletedAt              DateTime?
   deletedById            Int?
   processed              Boolean                  @default(false)

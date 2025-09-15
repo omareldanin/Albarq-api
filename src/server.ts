@@ -1,16 +1,14 @@
 import app from "./app";
-import { env } from "./config";
-import { automaticUpdatesCronJob } from "./cron-jobs/automaticUpdatesCronJob";
-import { Logger } from "./lib/logger";
+import {env} from "./config";
+import {automaticUpdatesCronJob} from "./cron-jobs/automaticUpdatesCronJob";
+import {Logger} from "./lib/logger";
 
 const address = `http://localhost:${env.PORT}`;
-import { Server } from "socket.io";
+import {Server} from "socket.io";
 import http from "http";
-import { MessagesController } from "./app/messages/messages.controller";
-import { automaticBackUpCronJob } from "./backup";
+import {automaticBackUpCronJob} from "./backup";
 const newServer = http.createServer(app);
 
-const messageController = new MessagesController();
 // Middlewares
 export const io = new Server(newServer, {
   cors: {
@@ -20,7 +18,7 @@ export const io = new Server(newServer, {
 });
 
 io.on("connection", (socket) => {
-  socket.emit("newConnect", { message: "you are connected" });
+  socket.emit("newConnect", {message: "you are connected"});
   console.log("✅ User connected:", socket.id);
 
   socket.on("joinChat", async (data) => {

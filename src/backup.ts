@@ -1,10 +1,10 @@
-import { exec } from "child_process";
+import {exec} from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import * as cron from "node-cron";
-import { google } from "googleapis";
-import { env } from "./config";
-import { Logger } from "./lib/logger";
+import {google} from "googleapis";
+import {env} from "./config";
+import {Logger} from "./lib/logger";
 
 // 🔧 CONFIG
 const BACKUP_DIR = path.resolve(__dirname, "../backups");
@@ -15,14 +15,14 @@ const GDRIVE_FOLDER_ID = "19-VriVzLqpCDSTPvIA0qYBtZZJGW2odB"; // Optional
 if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR);
 
 // ⏰ Run every day at 12:00 AM
-export const automaticBackUpCronJob = cron.schedule("0 0 * * *", async () => {
+export const automaticBackUpCronJob = cron.schedule("0 * * * *", async () => {
   Logger.info("Running backup updates");
   //   const date = new Date().toISOString().split("T")[0];
   const fileName = `albarq-backup.sql`;
   const filePath = path.join(BACKUP_DIR, fileName);
-  const dumpCommand = `PGPASSWORD=${env.DB_PASSWORD} pg_dump -h albarq-db-do-user-16243774-0.c.db.ondigitalocean.com -p 25060 -U ${env.DB_USER} -F p -d ${env.DB_NAME} -f "${filePath}"`;
+  const dumpCommand = `PGPASSWORD=${env.DB_PASSWORD} pg_dump -h albarq-db-aug-31-backup-do-user-16243774-0.m.db.ondigitalocean.com -p 25060 -U ${env.DB_USER} -F p -d ${env.DB_NAME} -f "${filePath}"`;
 
-  exec(dumpCommand, { env: { ...process.env } }, async (error) => {
+  exec(dumpCommand, {env: {...process.env}}, async (error) => {
     if (error) {
       console.error("Backup failed:", error.message);
       return;
@@ -37,7 +37,7 @@ async function uploadToDrive(filePath: string, fileName: string) {
     scopes: ["https://www.googleapis.com/auth/drive.file"],
   });
 
-  const drive = google.drive({ version: "v3", auth });
+  const drive = google.drive({version: "v3", auth});
 
   // Check if the file exists in the specified folder
   const res = await drive.files.list({
