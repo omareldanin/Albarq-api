@@ -1634,6 +1634,9 @@ export class OrdersRepository {
                           clientReport: {
                             none: {
                               secondaryType: "DELIVERED",
+                              report: {
+                                confirmed: true,
+                              },
                             },
                           },
                           status: {
@@ -1644,6 +1647,9 @@ export class OrdersRepository {
                           clientReport: {
                             none: {
                               secondaryType: "RETURNED",
+                              report: {
+                                confirmed: true,
+                              },
                             },
                           },
                           status: {
@@ -1658,28 +1664,22 @@ export class OrdersRepository {
                           deliveryAgentReport: {report: {deleted: true}},
                         },
                       ]
-                    : [
+                    : data.loggedInUser?.role === "REPOSITORIY_EMPLOYEE"
+                    ? [
                         {
-                          companyReport: {
-                            none: {
-                              secondaryType: "DELIVERED",
-                            },
-                          },
-                          status: {
-                            notIn: ["RETURNED"],
+                          branch: {
+                            id: data.loggedInUser.branchId,
                           },
                         },
                         {
-                          companyReport: {
-                            none: {
-                              secondaryType: "RETURNED",
-                            },
-                          },
-                          status: {
-                            in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
-                          },
+                          client: !data.loggedInUser?.mainRepository
+                            ? {
+                                branchId: data.loggedInUser?.branchId,
+                              }
+                            : undefined,
                         },
-                      ],
+                      ]
+                    : undefined,
               },
         _count: {
           id: true,
