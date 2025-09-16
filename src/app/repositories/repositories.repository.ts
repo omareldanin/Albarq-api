@@ -48,10 +48,9 @@ export class RepositoriesRepository {
       company: {
         id: filters.companyID,
       },
-      // mainRepository: filters.mainRepository,
+      mainRepository: filters.mainRepository,
       type: filters.type ? (filters.type as RepositoryType) : undefined,
     } satisfies Prisma.RepositoryWhereInput;
-    console.log(filters);
 
     if (filters.minified === true) {
       const paginatedRepositories = await prisma.repository.findManyPaginated(

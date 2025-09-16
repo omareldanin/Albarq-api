@@ -78,6 +78,9 @@ export class RepositoriesController {
       inquiryBranchesIDs = employee?.inquiryBranches.length
         ? employee?.inquiryBranches.map((b) => b.branchId)
         : [];
+      if (!loggedInUser.mainRepository) {
+        mainRepository = true;
+      }
     }
 
     // if (loggedInUser.role !== EmployeeRole.COMPANY_MANAGER) {
