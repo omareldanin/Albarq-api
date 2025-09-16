@@ -282,7 +282,9 @@ export class MessagesController {
                               in: inquiryBranchesIDs,
                             },
                           }
-                        : undefined,
+                        : {
+                            id: employee?.branchId!!,
+                          },
                     },
                     {
                       store: inquiryStoresIDs
