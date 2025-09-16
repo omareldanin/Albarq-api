@@ -82,25 +82,12 @@ export class RepositoriesController {
         mainRepository = true;
       }
     }
-
-    // if (loggedInUser.role !== EmployeeRole.COMPANY_MANAGER) {
-    //   const branch = await prisma.branch.findUnique({
-    //     where: {
-    //       id: loggedInUser.branchId,
-    //     },
-    //     select: {
-    //       id: true,
-    //       repositories: {
-    //         select: {
-    //           mainRepository: true,
-    //         },
-    //       },
-    //     },
-    //   });
-    //   if (!branch?.repositories[0].mainRepository) {
-    //     mainRepository = true;
-    //   }
-    // }
+    if (
+      loggedInUser.role === "BRANCH_MANAGER" &&
+      !loggedInUser.mainRepository
+    ) {
+      inquiryBranchesIDs = [loggedInUser.branchId];
+    }
 
     let size = req.query.size ? +req.query.size : 10;
     if (size > 500 && minified !== true) {
