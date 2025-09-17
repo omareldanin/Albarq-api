@@ -205,6 +205,7 @@ router.route("/reports/:reportID").delete(
   isLoggedIn,
   isAutherized([
     EmployeeRole.COMPANY_MANAGER,
+    EmployeeRole.BRANCH_MANAGER,
     AdminRole.ADMIN,
     AdminRole.ADMIN_ASSISTANT,
   ]),
