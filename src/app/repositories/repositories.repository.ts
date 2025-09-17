@@ -44,6 +44,8 @@ export class RepositoriesRepository {
         ? {
             id: {in: filters.inquiryBranchesIDs},
           }
+        : filters.branchID
+        ? {id: filters.branchID}
         : undefined,
       company: {
         id: filters.companyID,
