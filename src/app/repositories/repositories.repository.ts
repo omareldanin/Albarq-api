@@ -61,6 +61,7 @@ export class RepositoriesRepository {
             name: true,
             type: true,
             mainRepository: true,
+            branchId: true,
           },
         },
         {
