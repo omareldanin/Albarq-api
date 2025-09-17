@@ -40,26 +40,16 @@ export class RepositoriesRepository {
     inquiryBranchesIDs: number[] | undefined;
   }) {
     const where = {
-      AND: [
-        {
-          branch: filters.inquiryBranchesIDs?.length
-            ? {
-                id: {in: filters.inquiryBranchesIDs},
-              }
-            : undefined,
-        },
-        {
-          company: {
-            id: filters.companyID,
-          },
-        },
-        {type: filters.type ? (filters.type as RepositoryType) : undefined},
-      ],
-      OR: [
-        {
-          mainRepository: filters.mainRepository,
-        },
-      ],
+      branch: filters.inquiryBranchesIDs?.length
+        ? {
+            id: {in: filters.inquiryBranchesIDs},
+          }
+        : undefined,
+      company: {
+        id: filters.companyID,
+      },
+      mainRepository: filters.mainRepository,
+      type: filters.type ? (filters.type as RepositoryType) : undefined,
     } satisfies Prisma.RepositoryWhereInput;
 
     if (filters.minified === true) {

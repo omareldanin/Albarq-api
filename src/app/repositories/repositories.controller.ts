@@ -82,12 +82,12 @@ export class RepositoriesController {
         mainRepository = true;
       }
     }
-    if (
-      loggedInUser.role === "BRANCH_MANAGER" &&
-      !loggedInUser.mainRepository
-    ) {
-      inquiryBranchesIDs = [loggedInUser.branchId];
-    }
+    // if (
+    //   loggedInUser.role === "BRANCH_MANAGER" &&
+    //   !loggedInUser.mainRepository
+    // ) {
+    //   inquiryBranchesIDs = [loggedInUser.branchId];
+    // }
 
     let size = req.query.size ? +req.query.size : 10;
     if (size > 500 && minified !== true) {
