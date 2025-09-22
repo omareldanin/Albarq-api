@@ -25,6 +25,15 @@ export const userSelect = {
           mainCompany: true,
         },
       },
+      branch: {
+        select: {
+          repositories: {
+            select: {
+              mainRepository: true,
+            },
+          },
+        },
+      },
       repository: {
         select: {
           id: true,
@@ -78,7 +87,8 @@ export const userReform = (
       user.client?.branchId,
     repositoryId:
       user.employee?.repository?.id ?? user.employee?.repository?.id ?? null,
-    mainRepository: user.employee?.repository?.mainRepository,
+    mainRepository:
+      user.employee?.branch?.repositories[0]?.mainRepository || false,
     repository: user.employee?.repository?.name,
     type: user.employee?.repository?.type,
     role: (user.admin?.role || user.employee?.role || user.client?.role) as
