@@ -624,6 +624,11 @@ export class OrdersService {
       data.orderData.branchID = data.loggedInUser.branchId;
     }
 
+    if (oldOrderData.deliveryAgent && data.orderData.deliveryAgentID) {
+      data.orderData.status = undefined;
+      data.orderData.secondaryStatus = undefined;
+    }
+
     const newOrder = await ordersRepository.updateOrder({
       orderID: oldOrderData.id,
       loggedInUser: data.loggedInUser,
