@@ -31,8 +31,8 @@ export class EmployeesService {
     }
 
     if (
-      data.employeeData.role !== EmployeeRole.DELIVERY_AGENT &&
       data.loggedInUser.role !== EmployeeRole.COMPANY_MANAGER &&
+      data.loggedInUser.role !== EmployeeRole.BRANCH_MANAGER &&
       data.loggedInUser.role !== AdminRole.ADMIN &&
       data.loggedInUser.role !== AdminRole.ADMIN_ASSISTANT &&
       data.loggedInUser.role !== EmployeeRole.CLIENT &&

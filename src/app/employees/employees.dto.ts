@@ -1,19 +1,19 @@
 // // import { generateMock } from "@anatine/zod-mock";
-import { generateSchema } from "@anatine/zod-openapi";
+import {generateSchema} from "@anatine/zod-openapi";
 import {
   EmployeeRole,
   Governorate,
   OrderStatus,
   Permission,
 } from "@prisma/client";
-import { z } from "zod";
+import {z} from "zod";
 
 export const EmployeeCreateSchema = z.object({
-  username: z.string().min(3),
+  username: z.string().min(11),
   name: z.string().min(3),
   clientAssistantRole: z.string().optional(),
   password: z.string().min(6),
-  phone: z.string().min(6),
+  phone: z.string().min(11),
   salary: z.coerce.number().min(0).optional(),
   storesIDs: z
     .preprocess((val) => {

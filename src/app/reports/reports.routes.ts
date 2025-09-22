@@ -203,12 +203,22 @@ router.route("/reports/:reportID").patch(
 
 router.route("/reports/:reportID").delete(
   isLoggedIn,
-  isAutherized([
-    EmployeeRole.COMPANY_MANAGER,
-    EmployeeRole.BRANCH_MANAGER,
-    AdminRole.ADMIN,
-    AdminRole.ADMIN_ASSISTANT,
-  ]),
+  isAutherized(
+    [
+      EmployeeRole.COMPANY_MANAGER,
+      EmployeeRole.BRANCH_MANAGER,
+      AdminRole.ADMIN,
+      AdminRole.ADMIN_ASSISTANT,
+    ],
+    [
+      Permission.DELETE_BRANCH_REPORT,
+      Permission.DELETE_REPOSITORY_REPORT,
+      Permission.DELETE_COMPANY_REPORT,
+      Permission.DELETE_DELIVERY_AGENT_REPORT,
+      Permission.DELETE_CLIENT_REPORT,
+      Permission.DELETE_GOVERNMENT_REPORT,
+    ]
+  ),
   reportController.deleteReport
   /*
         #swagger.tags = ['Reports Routes']

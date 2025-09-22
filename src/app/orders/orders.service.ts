@@ -565,7 +565,8 @@ export class OrdersService {
 
     if (
       data.orderData.secondaryStatus === oldOrderData.secondaryStatus &&
-      data.orderData.status === oldOrderData.status
+      data.orderData.status === oldOrderData.status &&
+      !data.orderData.deliveryAgentID
     ) {
       throw new AppError("لقد تم اضافه هذا الطلب مسبقا", 403);
     }
