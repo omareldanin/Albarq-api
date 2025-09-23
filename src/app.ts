@@ -1,3 +1,4 @@
+// import { apiReference } from "@scalar/express-api-reference";
 import bodyParser from "body-parser";
 import compression from "compression";
 import cookieParser from "cookie-parser";
@@ -17,30 +18,13 @@ import swaggerDocument from "./swagger/swagger-output.json";
 
 const app = express();
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      const allowedOrigins = [
-        "http://localhost:3000",
-        "https://albarqiq.net",
-        "https://www.albarqiq.net",
-        "capacitor://localhost",
-        "ionic://localhost",
-      ];
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  })
-);
+app.options("*", cors()); // include before other routes
 
-app.options("*", cors());
+app.use(cors());
 
 const swaggerOptionsV1 = {
   explorer: true,
+  // customCss: swaggerTheme.getBuffer("dark"),
 };
 
 app.use(
