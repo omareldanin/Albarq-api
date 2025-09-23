@@ -23,9 +23,16 @@ import swaggerDocument from "./swagger/swagger-output.json";
 
 const app = express();
 
-app.options("*", cors()); // include before other routes
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "https://albarqiq.net"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 
-app.use(cors());
+app.options("*", cors()); // include before other routes
 
 // Rate Limiting
 
