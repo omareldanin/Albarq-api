@@ -17,9 +17,27 @@ import swaggerDocument from "./swagger/swagger-output.json";
 
 const app = express();
 
-app.options("*", cors()); // include before other routes
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        "http://localhost:3000",
+        "https://albarqiq.net",
+        "https://www.albarqiq.net",
+        "capacitor://localhost",
+        "ionic://localhost",
+      ];
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 
-app.use(cors());
+app.options("*", cors());
 
 const swaggerOptionsV1 = {
   explorer: true,
