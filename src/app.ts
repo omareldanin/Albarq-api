@@ -1,15 +1,9 @@
-// import { apiReference } from "@scalar/express-api-reference";
 import bodyParser from "body-parser";
-// import { isLoggedIn } from "./middlewares/isLoggedIn.middleware";
 import compression from "compression";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
-// import { Role } from "@prisma/client";
 import morganBody from "morgan-body";
-// import shrinkRay from "shrink-ray-current";
-// import { SwaggerTheme } from "swagger-themes";
-// import { rateLimit } from "express-rate-limit";
 import swaggerUi from "swagger-ui-express";
 import {AppError} from "./lib/AppError";
 import {Logger} from "./lib/logger";
@@ -23,23 +17,12 @@ import swaggerDocument from "./swagger/swagger-output.json";
 
 const app = express();
 
-app.use(
-  cors({
-    origin: ["http://localhost:3000", "https://albarqiq.net"],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  })
-);
-
 app.options("*", cors()); // include before other routes
 
-// Rate Limiting
+app.use(cors());
 
-// const swaggerTheme = new SwaggerTheme("v3");
 const swaggerOptionsV1 = {
   explorer: true,
-  // customCss: swaggerTheme.getBuffer("dark"),
 };
 
 app.use(
