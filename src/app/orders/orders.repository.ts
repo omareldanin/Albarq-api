@@ -2052,7 +2052,7 @@ export class OrdersRepository {
 
     if (
       data.costs.baghdadDeliveryCost &&
-      data.costs.reportType === ReportType.CLIENT
+      data.costs.reportType === ReportType.BRANCH
     ) {
       // Get Baghdad orders
       const baghdadOrders = await prisma.order.findMany({
