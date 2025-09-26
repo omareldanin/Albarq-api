@@ -2521,6 +2521,8 @@ export class OrdersRepository {
                         in: data.filters.inquiryBranchesIDs,
                       },
                     }
+                  : data.loggedInUser.mainRepository
+                  ? undefined
                   : {
                       id: data.loggedInUser.branchId,
                     },
