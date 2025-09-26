@@ -465,21 +465,21 @@ export class OrdersService {
       throw new AppError("ليس لديك صلاحية تعديل المبلغ المدفوع", 403);
     }
 
-    if (
-      !data.loggedInUser.permissions?.includes("CHANGE_ORDER_STATUS") &&
-      data.orderData.status &&
-      data.loggedInUser.role !== "COMPANY_MANAGER"
-    ) {
-      throw new AppError("ليس لديك صلاحية تعديل حالة الطلب", 403);
-    }
+    // if (
+    //   !data.loggedInUser.permissions?.includes("CHANGE_ORDER_STATUS") &&
+    //   data.orderData.status &&
+    //   data.loggedInUser.role !== "COMPANY_MANAGER"
+    // ) {
+    //   throw new AppError("ليس لديك صلاحية تعديل حالة الطلب", 403);
+    // }
 
-    if (
-      !data.loggedInUser.permissions?.includes("CHANGE_ORDER_RECEIPT_NUMBER") &&
-      data.orderData.receiptNumber &&
-      data.loggedInUser.role !== "COMPANY_MANAGER"
-    ) {
-      throw new AppError("ليس لديك صلاحية تعديل رقم الوصل", 403);
-    }
+    // if (
+    //   !data.loggedInUser.permissions?.includes("CHANGE_ORDER_RECEIPT_NUMBER") &&
+    //   data.orderData.receiptNumber &&
+    //   data.loggedInUser.role !== "COMPANY_MANAGER"
+    // ) {
+    //   throw new AppError("ليس لديك صلاحية تعديل رقم الوصل", 403);
+    // }
 
     if (
       data.orderData.confirmed &&
