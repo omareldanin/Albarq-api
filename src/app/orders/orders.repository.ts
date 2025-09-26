@@ -2724,6 +2724,7 @@ export class OrdersRepository {
         ...filtersReformed,
         OR:
           data.loggedInUser.role === "CLIENT" ||
+          data.loggedInUser.role === "INQUIRY_EMPLOYEE" ||
           data.loggedInUser.role === "CLIENT_ASSISTANT"
             ? [
                 {
@@ -2851,27 +2852,6 @@ export class OrdersRepository {
           },
         },
       });
-
-    // const allOrdersStatisticsWithoutBranchReport = await prisma.order.aggregate(
-    //   {
-    //     _sum: {
-    //       paidAmount: true,
-    //     },
-    //     _count: {
-    //       id: true,
-    //     },
-    //     where: {
-    //       ...filtersReformed,
-    //       OR: [
-    //         {branchReport: {is: null}},
-    //         {branchReport: {report: {deleted: true}}},
-    //       ],
-    //       status: {
-    //         in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
-    //       },
-    //     },
-    //   }
-    // );
 
     const allOrdersStatisticsWithoutCompanyReport =
       await prisma.order.aggregate({
