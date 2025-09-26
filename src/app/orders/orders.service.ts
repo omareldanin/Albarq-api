@@ -245,7 +245,8 @@ export class OrdersService {
       data.loggedInUser.role !== EmployeeRole.ACCOUNTANT &&
       data.loggedInUser.role !== EmployeeRole.RECEIVING_AGENT &&
       data.loggedInUser.role !== EmployeeRole.ACCOUNT_MANAGER &&
-      !data.filters.orderType
+      !data.filters.orderType &&
+      !data.loggedInUser.mainRepository
     ) {
       const branch = await branchesRepository.getBranchManagerBranch({
         branchManagerID: data.loggedInUser.id,
@@ -264,21 +265,8 @@ export class OrdersService {
 
     // show orders/statistics without client reports to the client unless he searches for them
     let clientReport = data.filters.clientReport;
-    // if (
-    //     data.loggedInUser.role === "CLIENT" &&
-    //     data.filters.search !== undefined
-    // ) {
-    //     clientReport = "false";
-    // }
-    // show orders/statistics without delivery agent reports to the delivery agent unless he searches for them
+
     let deliveryAgentReport = data.filters.deliveryAgentReport;
-    // if (
-    //     data.loggedInUser.role !== "DELIVERY_AGENT" &&
-    //     data.filters.deliveryAgentReport !== "true" &&
-    //     data.filters.search === undefined
-    // ) {
-    //     deliveryAgentReport = "false";
-    // }
 
     // Inquiry Employee Filters
     let inquiryStatuses: OrderStatus[] | undefined = undefined;
@@ -450,6 +438,7 @@ export class OrdersService {
 
     return order;
   };
+
   updateOrder = async (data: {
     params: {
       orderID: string;
@@ -466,6 +455,30 @@ export class OrdersService {
       data.loggedInUser.role !== "CLIENT"
     ) {
       throw new AppError("ليس لديك صلاحية تعديل الطلب", 403);
+    }
+
+    if (
+      !data.loggedInUser.permissions?.includes("CHANGE_ORDER_PAID_AMOUNT") &&
+      data.orderData.paidAmount &&
+      data.loggedInUser.role !== "COMPANY_MANAGER"
+    ) {
+      throw new AppError("ليس لديك صلاحية تعديل المبلغ المدفوع", 403);
+    }
+
+    if (
+      !data.loggedInUser.permissions?.includes("CHANGE_ORDER_STATUS") &&
+      data.orderData.status &&
+      data.loggedInUser.role !== "COMPANY_MANAGER"
+    ) {
+      throw new AppError("ليس لديك صلاحية تعديل حالة الطلب", 403);
+    }
+
+    if (
+      !data.loggedInUser.permissions?.includes("CHANGE_ORDER_RECEIPT_NUMBER") &&
+      data.orderData.receiptNumber &&
+      data.loggedInUser.role !== "COMPANY_MANAGER"
+    ) {
+      throw new AppError("ليس لديك صلاحية تعديل رقم الوصل", 403);
     }
 
     if (

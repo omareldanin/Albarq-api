@@ -494,6 +494,7 @@ export class OrdersRepository {
   }) {
     let startDate = new Date();
     let endDate = new Date();
+
     if (data.filters.startDate) {
       startDate = new Date(data.filters.startDate);
       startDate.setUTCDate(startDate.getUTCDate() - 1);
@@ -640,6 +641,8 @@ export class OrdersRepository {
                         in: data.filters.inquiryBranchesIDs,
                       },
                     }
+                  : data.loggedInUser.mainRepository
+                  ? undefined
                   : {
                       id: data.loggedInUser.branchId,
                     },
