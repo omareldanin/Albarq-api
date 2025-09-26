@@ -565,7 +565,7 @@ export class MessagesController {
         id: orderId,
       },
       select: {
-        receiptNumber: true,
+        id: true,
       },
     });
 
@@ -677,7 +677,7 @@ export class MessagesController {
         title: `رساله جديده "${content}"`,
         content: `هناك رساله جديده للطلب رقم ${orderId}`,
         userID: e,
-        orderId: order?.receiptNumber,
+        orderId: order?.id,
         forChat: true,
       });
     });

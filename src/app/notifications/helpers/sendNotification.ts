@@ -1,9 +1,9 @@
 import admin from "firebase-admin";
-import { env } from "../../../config";
-import { Logger } from "../../../lib/logger";
-import type { NotificationCreateType } from "../notifications.dto";
-import { NotificationsRepository } from "../notifications.repository";
-import { prisma } from "../../../database/db";
+import {env} from "../../../config";
+import {Logger} from "../../../lib/logger";
+import type {NotificationCreateType} from "../notifications.dto";
+import {NotificationsRepository} from "../notifications.repository";
+import {prisma} from "../../../database/db";
 
 admin.initializeApp({
   credential: admin.credential.cert({
@@ -60,10 +60,13 @@ export const sendNotification = async (data: NotificationCreateType) => {
         sound: "default",
         title: data.title,
         body: data.content,
+        data: {
+          message: data.forChat ? "true" : "false",
+          orderId: data.orderId || null,
+        },
       }),
     });
-
-    const responseData = await response.json();
+    await response.json();
   } catch (error) {
     Logger.error("Error sending message to token:", error);
   }
