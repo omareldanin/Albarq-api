@@ -1510,6 +1510,8 @@ export class OrdersRepository {
             ],
           } satisfies Prisma.OrderWhereInput);
 
+    console.log(where);
+
     if (data.filters.minified === true || data.filters.forMobile === true) {
       const paginatedOrders = await prisma.order.findManyPaginated(
         {
@@ -1632,6 +1634,7 @@ export class OrdersRepository {
                 ...where,
                 OR:
                   data.loggedInUser?.role === "CLIENT" ||
+                  data.loggedInUser?.role === "INQUIRY_EMPLOYEE" ||
                   data.loggedInUser?.role === "CLIENT_ASSISTANT"
                     ? [
                         {
