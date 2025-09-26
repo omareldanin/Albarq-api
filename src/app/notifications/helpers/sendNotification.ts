@@ -4,6 +4,7 @@ import {Logger} from "../../../lib/logger";
 import type {NotificationCreateType} from "../notifications.dto";
 import {NotificationsRepository} from "../notifications.repository";
 import {prisma} from "../../../database/db";
+import {chat} from "googleapis/build/src/apis/chat";
 
 admin.initializeApp({
   credential: admin.credential.cert({
@@ -63,6 +64,8 @@ export const sendNotification = async (data: NotificationCreateType) => {
         data: {
           message: data.forChat ? "true" : "false",
           orderId: data.orderId || null,
+          chatId: data.chatId || null,
+          receiptNumber: data.receiptNumber || null,
         },
       }),
     });

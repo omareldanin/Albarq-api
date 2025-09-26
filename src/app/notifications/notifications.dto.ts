@@ -1,13 +1,15 @@
 // // import { generateMock } from "@anatine/zod-mock";
-import { generateSchema } from "@anatine/zod-openapi";
-import { z } from "zod";
+import {generateSchema} from "@anatine/zod-openapi";
+import {z} from "zod";
 
 export const NotificationCreateSchema = z.object({
   title: z.string(),
   content: z.string(),
   seen: z.boolean().default(false).optional(),
   userID: z.coerce.number(),
+  chatId: z.coerce.number().optional(),
   orderId: z.coerce.string().optional(),
+  receiptNumber: z.coerce.string().optional(),
   forChat: z.boolean().optional(),
 });
 

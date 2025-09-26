@@ -566,6 +566,7 @@ export class MessagesController {
       },
       select: {
         id: true,
+        receiptNumber: true,
       },
     });
 
@@ -678,6 +679,8 @@ export class MessagesController {
         content: `هناك رساله جديده للطلب رقم ${orderId}`,
         userID: e,
         orderId: order?.id,
+        chatId: chat.id,
+        receiptNumber: order?.receiptNumber,
         forChat: true,
       });
     });
