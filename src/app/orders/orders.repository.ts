@@ -1536,6 +1536,7 @@ export class OrdersRepository {
                   ...where,
                   OR:
                     data.loggedInUser?.role === "CLIENT" ||
+                    data.loggedInUser?.role === "INQUIRY_EMPLOYEE" ||
                     data.loggedInUser?.role === "CLIENT_ASSISTANT"
                       ? [
                           {
