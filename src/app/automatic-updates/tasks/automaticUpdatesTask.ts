@@ -1,3 +1,4 @@
+import {OrderStatus} from "@prisma/client";
 import {prisma} from "../../../database/db";
 import {localizeOrderStatus} from "../../../lib/localize";
 import {Logger} from "../../../lib/logger";
@@ -62,6 +63,8 @@ export const automaticUpdatesTask = async () => {
             id: true,
             status: true,
             updatedAt: true,
+            paidAmount: true,
+            totalCost: true,
             createdAt: true,
             client: {
               select: {
@@ -85,6 +88,7 @@ export const automaticUpdatesTask = async () => {
           const difference = currentDate.getTime() - lastUpdate.getTime();
           const hoursDifference = difference / (1000 * 3600);
           const hours24 = lastUpdate.getHours();
+          let paidAmount: number | undefined = undefined;
           if (
             automaticUpdate.checkAfter &&
             hoursDifference < automaticUpdate.checkAfter
@@ -97,6 +101,17 @@ export const automaticUpdatesTask = async () => {
             continue;
           }
 
+          if (
+            order?.status !== automaticUpdate.newOrderStatus &&
+            (automaticUpdate.newOrderStatus === OrderStatus.DELIVERED ||
+              automaticUpdate.newOrderStatus ===
+                OrderStatus.PARTIALLY_RETURNED ||
+              automaticUpdate.newOrderStatus === OrderStatus.REPLACED) &&
+            order.paidAmount === 0
+          ) {
+            paidAmount = order?.totalCost;
+          }
+
           await prisma.order.update({
             where: {
               id: order.id,
@@ -104,6 +119,7 @@ export const automaticUpdatesTask = async () => {
             data: {
               status: automaticUpdate.newOrderStatus,
               secondaryStatus: automaticUpdate.returnCondition,
+              paidAmount: paidAmount,
               automaticUpdate: {
                 connect: {
                   id: automaticUpdate.id,
