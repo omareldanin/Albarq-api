@@ -518,6 +518,7 @@ export const statisticsReformed = (statistics: {
     };
     _sum: {
       paidAmount: number | null;
+      deliveryCost: number | null;
     };
   };
   allOrdersStatisticsWithoutDeliveryReport: {
@@ -616,7 +617,13 @@ export const statisticsReformed = (statistics: {
 
     allOrdersStatisticsWithoutClientReport: {
       totalCost:
-        statistics.allOrdersStatisticsWithoutClientReport._sum.paidAmount || 0,
+        (statistics.allOrdersStatisticsWithoutClientReport._sum?.paidAmount ??
+          0) -
+        (statistics.allOrdersStatisticsWithoutClientReport._sum?.deliveryCost ??
+          0),
+      deliveryCost:
+        statistics.allOrdersStatisticsWithoutClientReport._sum.deliveryCost ||
+        0,
       count: statistics.allOrdersStatisticsWithoutClientReport._count.id,
     },
 

@@ -2811,6 +2811,7 @@ export class OrdersRepository {
       {
         _sum: {
           paidAmount: true,
+          deliveryCost: true,
         },
         _count: {
           id: true,
