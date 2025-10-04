@@ -79,6 +79,25 @@ export class CustomerOutputController {
     if (!returnsRepo) {
       throw new AppError("لا يوجد مخزن راوجع لهذا الفرع!", 404);
     }
+
+    if (type === "repository") {
+      const targetRepository = await prisma.repository.findUnique({
+        where: {
+          id: +repository,
+        },
+        select: {
+          branchId: true,
+          mainRepository: true,
+        },
+      });
+      if (
+        !targetRepository?.mainRepository &&
+        targetRepository?.branchId !== order.client.branchId
+      ) {
+        throw new AppError("هذا العميل غير تابع لهذا الفرع!", 404);
+      }
+    }
+
     const checkIfExist = await prisma.customerOutput.findFirst({
       where: {
         orderId: order.id,

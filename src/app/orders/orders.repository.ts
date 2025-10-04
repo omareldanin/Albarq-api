@@ -2787,11 +2787,9 @@ export class OrdersRepository {
                   },
                 },
                 {
-                  client: !data.loggedInUser?.mainRepository
-                    ? {
-                        branchId: data.loggedInUser?.branchId,
-                      }
-                    : undefined,
+                  client: {
+                    branchId: data.loggedInUser?.branchId,
+                  },
                 },
               ]
             : undefined,
