@@ -583,6 +583,12 @@ export class OrdersService {
     ) {
       throw new AppError("لقد تم اضافه هذا الطلب مسبقا", 403);
     }
+    if (
+      data.orderData.status === oldOrderData.status &&
+      data.orderData.deliveryAgentID === oldOrderData.deliveryAgent?.id
+    ) {
+      throw new AppError("لقد تم اضافه هذا الطلب مسبقا", 403);
+    }
 
     if (
       data.orderData.status === "WITH_RECEIVING_AGENT" &&
