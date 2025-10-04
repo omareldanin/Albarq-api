@@ -1510,8 +1510,6 @@ export class OrdersRepository {
             ],
           } satisfies Prisma.OrderWhereInput);
 
-    console.log(where);
-
     if (data.filters.minified === true || data.filters.forMobile === true) {
       const paginatedOrders = await prisma.order.findManyPaginated(
         {
@@ -1526,10 +1524,19 @@ export class OrdersRepository {
                       },
                     },
                     {
-                      client: {
-                        id: {
-                          in: data.filters.inquiryClientsIDs,
+                      clientReport: {
+                        some: {
+                          receivingAgentId: data.loggedInUser.id,
+                          report: {
+                            confirmed: false,
+                            deleted: false,
+                          },
                         },
+                      },
+                    },
+                    {
+                      client: {
+                        id: data.filters.clientID,
                       },
                     },
                   ],
@@ -1622,10 +1629,19 @@ export class OrdersRepository {
                     },
                   },
                   {
-                    client: {
-                      id: {
-                        in: data.filters.inquiryClientsIDs,
+                    clientReport: {
+                      some: {
+                        receivingAgentId: data.loggedInUser.id,
+                        report: {
+                          confirmed: false,
+                          deleted: false,
+                        },
                       },
+                    },
+                  },
+                  {
+                    client: {
+                      id: data.filters.clientID,
                     },
                   },
                 ],
