@@ -1347,10 +1347,7 @@ export class OrdersService {
       data.loggedInUser.role === EmployeeRole.DELIVERY_AGENT
         ? data.loggedInUser.id
         : data.filters.deliveryAgentID;
-    // const companyID =
-    //     Object.keys(AdminRole).includes(data.loggedInUser.role) && data.filters.companyID
-    //         ? data.filters.companyID
-    //         : data.loggedInUser.companyID || undefined;\
+
     const companyID = data.filters.companyID
       ? data.filters.companyID
       : data.loggedInUser.companyID || undefined;
@@ -1460,6 +1457,27 @@ export class OrdersService {
     });
 
     if (data.loggedInUser.role === "RECEIVING_AGENT") {
+      const reports = await prisma.clientReport.findMany({
+        where: {
+          receivingAgentId: data.loggedInUser.id,
+          report: {
+            confirmed: false,
+            deleted: false,
+          },
+        },
+        select: {
+          id: true,
+          report: {
+            select: {
+              confirmed: true,
+              baghdadOrdersCount: true,
+              governoratesOrdersCount: true,
+            },
+          },
+        },
+      });
+      console.log(reports);
+
       const ordersStatisticsByStatus = await prisma.order.groupBy({
         by: ["status"],
         _sum: {
@@ -1489,6 +1507,7 @@ export class OrdersService {
         count += s._count.id;
       });
       return {
+        reports,
         ...statistics,
         ordersStatisticsByStatus: [
           ...statistics.ordersStatisticsByStatus.filter(

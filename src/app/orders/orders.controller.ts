@@ -825,6 +825,7 @@ export class OrdersController {
   getCLientOrdersStatistics = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
     const status = req.query.status;
+
     let inquiryClientsIDs: number[] | undefined = undefined;
     const inquiryEmployeeStuff =
       await employeesRepository.getInquiryEmployeeStuff({
@@ -838,7 +839,9 @@ export class OrdersController {
         : undefined;
 
     const clients = await prisma.client.findMany({
-      where: {id: {in: inquiryClientsIDs}},
+      where: {
+        companyId: loggedInUser.companyID!,
+      },
       select: {
         id: true,
         user: {
