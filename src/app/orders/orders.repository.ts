@@ -3139,13 +3139,20 @@ export class OrdersRepository {
             AND: [
               {role: "INQUIRY_EMPLOYEE"},
               {
-                inquiryBranches: order?.branchId
-                  ? {
-                      some: {
-                        branchId: order.branchId,
-                      },
-                    }
-                  : undefined,
+                OR: [
+                  {
+                    inquiryBranches: order?.branchId
+                      ? {
+                          some: {
+                            branchId: order.branchId,
+                          },
+                        }
+                      : undefined,
+                  },
+                  {
+                    id: order.branchId!!,
+                  },
+                ],
               },
               {
                 mainEmergency: false,
