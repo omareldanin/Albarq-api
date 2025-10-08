@@ -336,6 +336,8 @@ export const OrdersFiltersSchema = z.object({
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
   deliveryDate: z.coerce.date().optional(),
+  startDeliveryDate: z.coerce.date().optional(),
+  endDeliveryDate: z.coerce.date().optional(),
   governorate: z.nativeEnum(Governorate).optional(),
   statuses: z.preprocess((val) => {
     if (typeof val === "string") {

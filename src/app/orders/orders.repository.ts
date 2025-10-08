@@ -43,6 +43,33 @@ export class OrdersRepository {
 
     return `${datePart}${timestampPart}`;
   }
+  async getDeliverCost(clientId: number, governorate: Governorate) {
+    const client = await prisma.client.findUnique({
+      where: {
+        id: clientId,
+      },
+      select: {
+        governoratesDeliveryCosts: true,
+        branchId: true,
+      },
+    });
+    if (!client) {
+      throw new AppError("العميل غير موجود", 400);
+    }
+
+    const governoratesDeliveryCosts = client.governoratesDeliveryCosts as {
+      governorate: Governorate;
+      cost: number;
+    }[];
+
+    return (
+      governoratesDeliveryCosts.find(
+        (governorateDeliveryCost: {governorate: Governorate; cost: number}) => {
+          return governorateDeliveryCost.governorate === governorate;
+        }
+      )?.cost || 0
+    );
+  }
 
   async createOrder(data: {
     companyID: number;
@@ -504,6 +531,21 @@ export class OrdersRepository {
       endDate = new Date(data.filters.endDate);
       endDate.setHours(21, 0, 0, 0);
     }
+
+    let deliveryStartDate = new Date();
+    let deliveryEndDate = new Date();
+
+    if (data.filters.startDeliveryDate) {
+      deliveryStartDate = new Date(data.filters.startDeliveryDate);
+    }
+    if (data.filters.endDeliveryDate) {
+      deliveryEndDate = new Date(data.filters.endDeliveryDate);
+    }
+    console.log(deliveryStartDate);
+    console.log(
+      "data.filters.startDeliveryDate",
+      data.filters.startDeliveryDate
+    );
 
     const where =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
@@ -1043,6 +1085,21 @@ export class OrdersRepository {
               {
                 status: data.filters.statuses
                   ? {in: data.filters.statuses}
+                  : undefined,
+              },
+              {
+                deliveryDate: data.filters.startDeliveryDate
+                  ? {
+                      gte: deliveryStartDate,
+                    }
+                  : undefined,
+              },
+              // Filter by endDate
+              {
+                deliveryDate: data.filters.endDeliveryDate
+                  ? {
+                      lt: deliveryEndDate,
+                    }
                   : undefined,
               },
               {
@@ -2188,6 +2245,7 @@ export class OrdersRepository {
         clientNet: true,
         companyNet: true,
         deliveryAgentNet: true,
+        clientId: true,
         paidAmount: true,
         weight: true,
         receivedAt: true,
@@ -2215,6 +2273,13 @@ export class OrdersRepository {
       ? orderData?.deliveryCost
       : orderData?.oldDeliveryCost;
     let weight = (data.orderData.weight as number) || orderData?.weight || 0;
+
+    if (data.orderData.governorate) {
+      newDeliveryCost = await this.getDeliverCost(
+        orderData?.clientId!!,
+        data.orderData.governorate
+      );
+    }
 
     if (weight) {
       const companyAdditionalPrices = await prisma.company.findUnique({

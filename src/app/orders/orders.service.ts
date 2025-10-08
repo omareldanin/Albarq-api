@@ -465,22 +465,6 @@ export class OrdersService {
       throw new AppError("ليس لديك صلاحية تعديل المبلغ المدفوع", 403);
     }
 
-    // if (
-    //   !data.loggedInUser.permissions?.includes("CHANGE_ORDER_STATUS") &&
-    //   data.orderData.status &&
-    //   data.loggedInUser.role !== "COMPANY_MANAGER"
-    // ) {
-    //   throw new AppError("ليس لديك صلاحية تعديل حالة الطلب", 403);
-    // }
-
-    // if (
-    //   !data.loggedInUser.permissions?.includes("CHANGE_ORDER_RECEIPT_NUMBER") &&
-    //   data.orderData.receiptNumber &&
-    //   data.loggedInUser.role !== "COMPANY_MANAGER"
-    // ) {
-    //   throw new AppError("ليس لديك صلاحية تعديل رقم الوصل", 403);
-    // }
-
     if (
       data.orderData.confirmed &&
       data.loggedInUser.role !== "COMPANY_MANAGER" &&
@@ -557,6 +541,7 @@ export class OrdersService {
       data.orderData.deliveryAgentID = null;
       data.orderData.oldDeliveryAgentId = oldOrderData?.deliveryAgent?.id;
     }
+
     if (
       oldOrderData?.status === "RETURNED" &&
       data.orderData.secondaryStatus === "IN_REPOSITORY"
@@ -579,13 +564,19 @@ export class OrdersService {
     if (
       data.orderData.secondaryStatus === oldOrderData.secondaryStatus &&
       data.orderData.status === oldOrderData.status &&
-      !data.orderData.deliveryAgentID
+      !data.orderData.deliveryAgentID &&
+      !data.orderData.recipientName &&
+      !data.orderData.recipientPhones &&
+      !data.orderData.recipientAddress
     ) {
       throw new AppError("لقد تم اضافه هذا الطلب مسبقا", 403);
     }
     if (
       data.orderData.status === oldOrderData.status &&
-      data.orderData.deliveryAgentID === oldOrderData.deliveryAgent?.id
+      data.orderData.deliveryAgentID === oldOrderData.deliveryAgent?.id &&
+      !data.orderData.recipientName &&
+      !data.orderData.recipientPhones &&
+      !data.orderData.recipientAddress
     ) {
       throw new AppError("لقد تم اضافه هذا الطلب مسبقا", 403);
     }
@@ -605,6 +596,19 @@ export class OrdersService {
       data.orderData.secondaryStatus = "WITH_AGENT";
     }
 
+    if (data.orderData.branchID) {
+      const branch = await prisma.branch.findUnique({
+        where: {
+          id: data.orderData.branchID,
+        },
+        select: {
+          governorate: true,
+        },
+      });
+      data.orderData.governorate = branch?.governorate as Governorate;
+      data.orderData.receivedBranchId = data.orderData.branchID;
+    }
+
     if (
       data.orderData.governorate &&
       data.orderData.locationID &&
@@ -619,6 +623,7 @@ export class OrdersService {
         throw new AppError("لا يوجد فرع مرتبط بالموقع", 500);
       }
       data.orderData.branchID = branch.id;
+      data.orderData.receivedBranchId = data.orderData.branchID;
     }
 
     if (

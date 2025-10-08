@@ -286,6 +286,17 @@ export class EmployeesRepository {
       };
     }
 
+    let startDate = new Date();
+    let endDate = new Date();
+
+    if (data.filters.ordersStartDate) {
+      startDate = new Date(data.filters.ordersStartDate);
+      // startDate.setHours(0, 0, 0, 0);
+    }
+    if (data.filters.ordersEndDate) {
+      endDate = new Date(data.filters.ordersEndDate);
+    }
+
     const employees = await prisma.employee.findManyPaginated(
       {
         where: {
@@ -309,12 +320,25 @@ export class EmployeesRepository {
             select: {
               orders: {
                 where: {
-                  createdAt: {
-                    gte: data.filters.ordersStartDate,
-                    lte: data.filters.ordersEndDate,
-                  },
-                  confirmed: true,
-                  deleted: false,
+                  AND: [
+                    {confirmed: true},
+                    {deleted: false},
+                    {
+                      deliveryDate: data.filters.ordersStartDate
+                        ? {
+                            gte: startDate,
+                          }
+                        : undefined,
+                    },
+                    // Filter by endDate
+                    {
+                      deliveryDate: data.filters.ordersEndDate
+                        ? {
+                            lt: endDate,
+                          }
+                        : undefined,
+                    },
+                  ],
                 },
               },
               // deliveryAgentsLocations: true

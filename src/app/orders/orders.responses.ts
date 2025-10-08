@@ -90,6 +90,7 @@ export const orderSelect = {
   paidAmount: true,
   deliveryCost: true,
   clientNet: true,
+  printed: true,
   deliveryAgentNet: true,
   companyNet: true,
   discount: true,
