@@ -541,11 +541,6 @@ export class OrdersRepository {
     if (data.filters.endDeliveryDate) {
       deliveryEndDate = new Date(data.filters.endDeliveryDate);
     }
-    console.log(deliveryStartDate);
-    console.log(
-      "data.filters.startDeliveryDate",
-      data.filters.startDeliveryDate
-    );
 
     const where =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
@@ -1643,7 +1638,8 @@ export class OrdersRepository {
                             deliveryAgentReport: {report: {deleted: true}},
                           },
                         ]
-                      : data.loggedInUser?.role === "REPOSITORIY_EMPLOYEE"
+                      : data.loggedInUser?.role === "REPOSITORIY_EMPLOYEE" ||
+                        data.loggedInUser?.role === "BRANCH_MANAGER"
                       ? [
                           {
                             branch: {
@@ -1744,7 +1740,8 @@ export class OrdersRepository {
                           deliveryAgentReport: {report: {deleted: true}},
                         },
                       ]
-                    : data.loggedInUser?.role === "REPOSITORIY_EMPLOYEE"
+                    : data.loggedInUser?.role === "REPOSITORIY_EMPLOYEE" ||
+                      data.loggedInUser?.role === "BRANCH_MANAGER"
                     ? [
                         {
                           branch: {
@@ -2844,7 +2841,8 @@ export class OrdersRepository {
                 {deliveryAgentReport: {is: null}},
                 {deliveryAgentReport: {report: {deleted: true}}},
               ]
-            : data.loggedInUser.role === "REPOSITORIY_EMPLOYEE"
+            : data.loggedInUser.role === "REPOSITORIY_EMPLOYEE" ||
+              data.loggedInUser.role === "BRANCH_MANAGER"
             ? [
                 {
                   branch: {
