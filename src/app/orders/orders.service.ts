@@ -1573,6 +1573,20 @@ export class OrdersService {
       };
     }
 
+    if (data.loggedInUser.role === "BRANCH_MANAGER") {
+      const ordersStatisticsByStatus =
+        statistics.ordersStatisticsByStatus.filter(
+          (status) =>
+            status.status !== "REGISTERED" && status.status !== "READY_TO_SEND"
+        );
+      return {
+        ...statistics,
+        ordersStatisticsByStatus: ordersStatisticsByStatus,
+        allOrdersStatisticsWithoutClientReport:
+          statistics.allOrdersStatisticsWithoutDeliveryReport,
+      };
+    }
+
     if (data.loggedInUser.role === "REPOSITORIY_EMPLOYEE") {
       const withReceingAgent = statistics.ordersStatisticsByStatus.find(
         (s) => s.status === "WITH_RECEIVING_AGENT"
