@@ -605,7 +605,7 @@ export class OrdersService {
           governorate: true,
         },
       });
-      data.orderData.governorate = branch?.governorate as Governorate;
+      // data.orderData.governorate = branch?.governorate as Governorate;
       data.orderData.receivedBranchId = data.orderData.branchID;
     }
 
