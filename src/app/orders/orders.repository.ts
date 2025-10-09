@@ -1654,6 +1654,14 @@ export class OrdersRepository {
                               : undefined,
                           },
                         ]
+                      : data.loggedInUser?.role !== "COMPANY_MANAGER"
+                      ? [
+                          {
+                            branch: {
+                              id: data.loggedInUser?.branchId,
+                            },
+                          },
+                        ]
                       : undefined,
                 },
           select: orderSelect,
@@ -1754,6 +1762,14 @@ export class OrdersRepository {
                                 branchId: data.loggedInUser?.branchId,
                               }
                             : undefined,
+                        },
+                      ]
+                    : data.loggedInUser?.role !== "COMPANY_MANAGER"
+                    ? [
+                        {
+                          branch: {
+                            id: data.loggedInUser?.branchId,
+                          },
                         },
                       ]
                     : undefined,
@@ -2852,6 +2868,14 @@ export class OrdersRepository {
                 {
                   client: {
                     branchId: data.loggedInUser?.branchId,
+                  },
+                },
+              ]
+            : data.loggedInUser?.role !== "COMPANY_MANAGER"
+            ? [
+                {
+                  branch: {
+                    id: data.loggedInUser?.branchId,
                   },
                 },
               ]

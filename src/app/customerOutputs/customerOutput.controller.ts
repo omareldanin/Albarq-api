@@ -115,7 +115,7 @@ export class CustomerOutputController {
     }
 
     if (type === "repository") {
-      await prisma.order.updateMany({
+      const newOrder = await prisma.order.update({
         where: {
           id: order.id,
         },
@@ -123,6 +123,28 @@ export class CustomerOutputController {
           secondaryStatus: "IN_CAR",
           repositoryId: +repository,
           forwardedRepo: returnsRepo.id,
+        },
+        select: orderSelect,
+      });
+
+      await ordersRepository.updateOrderTimeline({
+        orderID: order.id,
+        data: {
+          type: "REPOSITORY_CHANGE",
+          date: newOrder.updatedAt,
+          old: order.repository && {
+            id: order.repository.id,
+            name: order.repository.name,
+          },
+          new: newOrder.repository && {
+            id: newOrder.repository.id,
+            name: newOrder.repository.name,
+          },
+          by: {
+            id: loggedInUser.id,
+            name: loggedInUser.name,
+          },
+          message: `تم ارسال الطلب الي مخزن ${repository}`,
         },
       });
     }

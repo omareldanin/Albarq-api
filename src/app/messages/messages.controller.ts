@@ -321,7 +321,10 @@ export class MessagesController {
                   clientId: user.role === "CLIENT" ? user.id : undefined,
                   companyId: user?.companyID || undefined,
                   branchId:
-                    user.role === "BRANCH_MANAGER"
+                    user.role !== "COMPANY_MANAGER" &&
+                    user.role !== "CLIENT_ASSISTANT" &&
+                    !user.mainRepository &&
+                    user.role !== "DELIVERY_AGENT"
                       ? employee?.branchId
                       : undefined,
                   deliveryAgentId:
@@ -411,6 +414,10 @@ export class MessagesController {
                               in: inquiryBranchesIDs,
                             },
                           }
+                        : !user.mainRepository
+                        ? {
+                            id: user.branchId,
+                          }
                         : undefined,
                     },
                     {
@@ -442,7 +449,9 @@ export class MessagesController {
                   clientId: user.role === "CLIENT" ? user.id : undefined,
                   companyId: user?.companyID || undefined,
                   branchId:
-                    user.role === "BRANCH_MANAGER"
+                    user.role !== "COMPANY_MANAGER" &&
+                    user.role !== "CLIENT_ASSISTANT" &&
+                    user.role !== "DELIVERY_AGENT"
                       ? employee?.branchId
                       : undefined,
                   deliveryAgentId:
@@ -457,6 +466,7 @@ export class MessagesController {
     });
 
     let totalUnSeened = 0;
+
     unSeenChats.forEach((c) => {
       totalUnSeened += c._count.id;
     });
@@ -871,6 +881,41 @@ export class MessagesController {
         seenByCallCenter: user.role === "INQUIRY_EMPLOYEE" ? true : undefined,
       },
     });
+    res.status(200).json({message: "success"});
+  });
+
+  deleteMessages = catchAsync(async (req, res) => {
+    const user = res.locals.user as loggedInUserType;
+    const {ids} = req.body;
+    if (!ids || ids.length === 0) {
+      throw new AppError("ليس هناك رسائل", 400);
+    }
+
+    // Fetch messages to validate ownership
+    const messages = await prisma.message.findMany({
+      where: {id: {in: ids}},
+      select: {
+        id: true,
+        createdById: true,
+        chatId: true,
+        Chat: {
+          select: {
+            orderId: true,
+          },
+        },
+      },
+    });
+
+    io.to(`chat_${messages[0].Chat?.orderId}`).emit("newChatMessage", "");
+
+    // Delete them
+    await prisma.message.deleteMany({
+      where: {
+        id: {in: ids},
+        createdById: user.id,
+      },
+    });
+
     res.status(200).json({message: "success"});
   });
 }

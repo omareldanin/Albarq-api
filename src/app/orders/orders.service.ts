@@ -754,19 +754,27 @@ export class OrdersService {
           }
         }
 
-        await ordersRepository.updateOrderTimeline({
-          orderID: oldOrderData.id,
-          data: {
-            type: "STATUS_CHANGE",
-            date: newOrder.updatedAt,
-            old: {value: oldOrderData.status},
-            new: {value: newOrder.status},
-            by: {id: data.loggedInUser.id, name: data.loggedInUser.name},
-            message: `تم تغيير حالة الطلب من ${localizeOrderStatus(
-              oldOrderData.status
-            )} إلى ${localizeOrderStatus(newOrder.status)}`,
-          },
-        });
+        if (
+          newOrder.status !== "IN_GOV_REPOSITORY" &&
+          newOrder.status !== "IN_MAIN_REPOSITORY"
+        ) {
+          await ordersRepository.updateOrderTimeline({
+            orderID: oldOrderData.id,
+            data: {
+              type: "STATUS_CHANGE",
+              date: newOrder.updatedAt,
+              old: {value: oldOrderData.status},
+              new: {value: newOrder.status},
+              by: {id: data.loggedInUser.id, name: data.loggedInUser.name},
+              message:
+                newOrder.status === "WITH_RECEIVING_AGENT"
+                  ? "تم استلام الطلب من العميل بواسطه مندوب الاستلام"
+                  : `تم تغيير حالة الطلب من ${localizeOrderStatus(
+                      oldOrderData.status
+                    )} إلى ${localizeOrderStatus(newOrder.status)}`,
+            },
+          });
+        }
       }
 
       // Update delivery agent
@@ -792,14 +800,7 @@ export class OrdersService {
               id: data.loggedInUser.id,
               name: data.loggedInUser.name,
             },
-            message:
-              oldOrderData.deliveryAgent && newOrder.deliveryAgent
-                ? `تم تغيير مندوب التوصيل من ${oldOrderData.deliveryAgent.name} إلى ${newOrder.deliveryAgent.name}`
-                : oldOrderData.deliveryAgent && !newOrder.deliveryAgent
-                ? `تم إلغاء مندوب التوصيل ${oldOrderData.deliveryAgent.name}`
-                : !oldOrderData.deliveryAgent && newOrder.deliveryAgent
-                ? `تم تعيين مندوب التوصيل ${newOrder.deliveryAgent.name}`
-                : "",
+            message: `تم تعيين مندوب التوصيل ${newOrder.deliveryAgent?.name}`,
           },
         });
       }
@@ -854,13 +855,9 @@ export class OrdersService {
               name: data.loggedInUser.name,
             },
             message:
-              oldOrderData.repository && newOrder.repository
-                ? `تم تغيير المخزن من ${oldOrderData.repository.name} إلى ${newOrder.repository.name}`
-                : oldOrderData.repository && !newOrder.repository
-                ? `تم إلغاء المخزن ${oldOrderData.repository.name}`
-                : !oldOrderData.repository && newOrder.repository
-                ? `تم تعيين المخزن ${newOrder.repository.name}`
-                : "",
+              newOrder.secondaryStatus === "IN_REPOSITORY"
+                ? `تم ادخال الطلب الي مخزن ${newOrder.repository?.name}`
+                : `تم ارسال الطلب الي مخزن ${newOrder.repository?.name}`,
           },
         });
       }
@@ -868,7 +865,8 @@ export class OrdersService {
       // Update Branch
       if (
         data.orderData.branchID &&
-        oldOrderData?.branch?.id !== newOrder.branch?.id
+        oldOrderData?.branch?.id !== newOrder.branch?.id &&
+        !data.orderData.repositoryID
       ) {
         await ordersRepository.updateOrderTimeline({
           orderID: oldOrderData.id,
@@ -895,31 +893,6 @@ export class OrdersService {
                 : !oldOrderData.branch && newOrder.branch
                 ? `تم تعيين الفرع ${newOrder.branch.name}`
                 : "",
-          },
-        });
-      }
-
-      // // Update current location
-      if (
-        data.orderData.currentLocation &&
-        oldOrderData.currentLocation !== newOrder.currentLocation
-      ) {
-        await ordersRepository.updateOrderTimeline({
-          orderID: oldOrderData.id,
-          data: {
-            type: "CURRENT_LOCATION_CHANGE",
-            date: newOrder.updatedAt,
-            old: {
-              value: oldOrderData.currentLocation,
-            },
-            new: {
-              value: newOrder.currentLocation,
-            },
-            by: {
-              id: data.loggedInUser.id,
-              name: data.loggedInUser.name,
-            },
-            message: `تم تغيير الموقع الحالي من ${oldOrderData.currentLocation} إلى ${newOrder.currentLocation}`,
           },
         });
       }

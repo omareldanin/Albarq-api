@@ -38,6 +38,7 @@ router
       EmployeeRole.ACCOUNT_MANAGER,
       EmployeeRole.DATA_ENTRY,
       EmployeeRole.INQUIRY_EMPLOYEE,
+      EmployeeRole.REPOSITORIY_EMPLOYEE,
       EmployeeRole.DELIVERY_AGENT,
       EmployeeRole.CLIENT_ASSISTANT,
       ClientRole.CLIENT,
@@ -77,5 +78,22 @@ router
       ClientRole.CLIENT,
     ]),
     messageController.markAllSeen
+  );
+
+router
+  .route("/chats/deleteAll")
+  .post(
+    isLoggedIn,
+    isAutherized([
+      EmployeeRole.COMPANY_MANAGER,
+      EmployeeRole.BRANCH_MANAGER,
+      EmployeeRole.ACCOUNT_MANAGER,
+      EmployeeRole.DATA_ENTRY,
+      EmployeeRole.INQUIRY_EMPLOYEE,
+      EmployeeRole.DELIVERY_AGENT,
+      EmployeeRole.CLIENT_ASSISTANT,
+      ClientRole.CLIENT,
+    ]),
+    messageController.deleteMessages
   );
 export default router;

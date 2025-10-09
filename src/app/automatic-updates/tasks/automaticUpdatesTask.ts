@@ -89,6 +89,7 @@ export const automaticUpdatesTask = async () => {
           const hoursDifference = difference / (1000 * 3600);
           const hours24 = lastUpdate.getHours();
           let paidAmount: number | undefined = undefined;
+
           if (
             automaticUpdate.checkAfter &&
             hoursDifference < automaticUpdate.checkAfter
@@ -96,7 +97,7 @@ export const automaticUpdatesTask = async () => {
             continue;
           } else if (
             automaticUpdate.updateAt &&
-            automaticUpdate.updateAt < hours24
+            automaticUpdate.updateAt + 3 < hours24
           ) {
             continue;
           }
