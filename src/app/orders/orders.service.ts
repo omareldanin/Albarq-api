@@ -596,19 +596,6 @@ export class OrdersService {
       data.orderData.secondaryStatus = "WITH_AGENT";
     }
 
-    if (data.orderData.branchID) {
-      const branch = await prisma.branch.findUnique({
-        where: {
-          id: data.orderData.branchID,
-        },
-        select: {
-          governorate: true,
-        },
-      });
-      // data.orderData.governorate = branch?.governorate as Governorate;
-      data.orderData.receivedBranchId = data.orderData.branchID;
-    }
-
     if (
       data.orderData.governorate &&
       data.orderData.locationID &&
@@ -623,7 +610,7 @@ export class OrdersService {
         throw new AppError("لا يوجد فرع مرتبط بالموقع", 500);
       }
       data.orderData.branchID = branch.id;
-      data.orderData.receivedBranchId = data.orderData.branchID;
+      // data.orderData.receivedBranchId = data.orderData.branchID;
     }
 
     if (
