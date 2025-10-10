@@ -1633,9 +1633,27 @@ export class OrdersRepository {
                         ]
                       : data.loggedInUser?.role === "DELIVERY_AGENT"
                       ? [
-                          {deliveryAgentReport: {is: null}},
+                          {
+                            deliveryAgentReport: {is: null},
+                            status: {
+                              notIn: ["RETURNED"],
+                            },
+                          },
                           {
                             deliveryAgentReport: {report: {deleted: true}},
+                            status: {
+                              notIn: ["RETURNED"],
+                            },
+                          },
+                          {
+                            secondaryStatus: "WITH_AGENT",
+                            status: {
+                              in: [
+                                "RETURNED",
+                                "REPLACED",
+                                "PARTIALLY_RETURNED",
+                              ],
+                            },
                           },
                         ]
                       : data.loggedInUser?.role === "REPOSITORIY_EMPLOYEE" ||
@@ -1743,9 +1761,23 @@ export class OrdersRepository {
                       ]
                     : data.loggedInUser?.role === "DELIVERY_AGENT"
                     ? [
-                        {deliveryAgentReport: {is: null}},
+                        {
+                          deliveryAgentReport: {is: null},
+                          status: {
+                            notIn: ["RETURNED"],
+                          },
+                        },
                         {
                           deliveryAgentReport: {report: {deleted: true}},
+                          status: {
+                            notIn: ["RETURNED"],
+                          },
+                        },
+                        {
+                          secondaryStatus: "WITH_AGENT",
+                          status: {
+                            in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
+                          },
                         },
                       ]
                     : data.loggedInUser?.role === "REPOSITORIY_EMPLOYEE" ||
