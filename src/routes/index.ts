@@ -23,6 +23,7 @@ import cutomerOutput from "../app/customerOutputs/customerOutput.routes";
 import departments from "../app/departments/deparment.routes";
 import tickets from "../app/tickets/tickets.routes";
 import message from "../app/messages/messages.routes";
+import transactions from "../app/transactions/transactions.routes";
 import {catchAsync} from "../lib/catchAsync";
 import {upload} from "../middlewares/upload";
 
@@ -52,6 +53,7 @@ router.use("/", departments);
 router.use("/", tickets);
 router.use("/", message);
 router.use("/", statusRoutes);
+router.use("/", transactions);
 
 /*******************************************************************************
  * TEST ROUTES

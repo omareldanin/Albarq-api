@@ -228,15 +228,13 @@ router.route("/reports/:reportID").delete(
 router.route("/reports/:reportID/deactivate").patch(
   isLoggedIn,
   isAutherized(
-    [AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT, EmployeeRole.COMPANY_MANAGER],
     [
-      Permission.DELETE_BRANCH_REPORT,
-      Permission.DELETE_REPOSITORY_REPORT,
-      Permission.DELETE_COMPANY_REPORT,
-      Permission.DELETE_DELIVERY_AGENT_REPORT,
-      Permission.DELETE_CLIENT_REPORT,
-      Permission.DELETE_GOVERNMENT_REPORT,
-    ]
+      EmployeeRole.COMPANY_MANAGER,
+      EmployeeRole.REPOSITORIY_EMPLOYEE,
+      EmployeeRole.ACCOUNTANT,
+      EmployeeRole.BRANCH_MANAGER,
+    ],
+    [Permission.DELETE_DELIVERY_AGENT_REPORT]
   ),
   reportController.deactivateReport
   /*

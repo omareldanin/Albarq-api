@@ -418,7 +418,19 @@ export class ReportsRepository {
     );
 
     const reportsMetaData = await prisma.report.aggregate({
-      where: where,
+      where: {
+        ...where,
+        OR:
+          data.filters.type === "CLIENT"
+            ? [
+                {
+                  clientReport: {
+                    secondaryType: "DELIVERED",
+                  },
+                },
+              ]
+            : undefined,
+      },
       _count: {
         id: true,
       },

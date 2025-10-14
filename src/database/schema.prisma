@@ -34,6 +34,7 @@ model User {
   tickets          Ticket[]
   ticketResponses  TicketResponse[]
   loginHistory     UsersLoginHistory[]
+  transactions                            Transaction[]
 
   @@index([name])
   @@index([phone])
@@ -92,6 +93,7 @@ model Employee {
   reports                 Report[]
   managedStores           Store[]
   tickets                 Ticket[]
+  transactions                            Transaction[]
 
   @@index([companyId])
   @@index([role])
@@ -199,6 +201,8 @@ model Branch {
   companyId           Int
   createdAt           DateTime                   @default(now())
   updatedAt           DateTime                   @updatedAt
+  branchCLient        Float                       @default(1000)
+  branchOrder         Float                       @default(1000)
   automaticUpdate     AutomaticUpdate[]
   company             Company                    @relation(fields: [companyId], references: [id])
   branchReports       BranchReport[]
@@ -318,6 +322,7 @@ model Company {
   repositories                            Repository[]
   stores                                  Store[]
   tickets                                 Ticket[]
+  transactions                            Transaction[]
   usersLoginHistory                       UsersLoginHistory[]
 }
 
@@ -828,6 +833,22 @@ model ClosedStatus {
   @@unique([orderStatus, branchId, companyId])
 }
 
+model Transaction {
+  id                      Int      @id @default(autoincrement())
+  paidAmount              Float  @default(0)
+  type                    TransactionType
+  for                     String
+  employeeId              Int?
+  createdById             Int?
+  createdBy               User?                @relation(fields: [createdById], references: [id])
+  employee                Employee?             @relation(fields: [employeeId], references: [id])
+  companyId               Int
+  company                 Company  @relation(fields: [companyId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model UsersLoginHistory {
   id        Int      @id @default(autoincrement())
   ip        String   @default("")
@@ -848,6 +869,11 @@ model UsersLoginHistory {
 enum AdminRole {
   ADMIN
   ADMIN_ASSISTANT
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAW  
 }
 
 enum EmployeeRole {
