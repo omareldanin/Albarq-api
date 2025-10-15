@@ -39,7 +39,7 @@ export class TransactionsRepository {
   }) {
     const where = {
       companyId: filters.companyId,
-      employeeId: filters.employeeId,
+      createdById: filters.employeeId,
       type: filters.type ? filters.type : undefined,
     };
 
@@ -140,7 +140,6 @@ export class TransactionsRepository {
       },
       where: {
         companyId: filters.companyId,
-        employeeId: filters.employeeId,
         type: "DEPOSIT",
       },
     });
@@ -154,7 +153,6 @@ export class TransactionsRepository {
       },
       where: {
         companyId: filters.companyId,
-        employeeId: filters.employeeId,
         type: "WITHDRAW",
       },
     });
