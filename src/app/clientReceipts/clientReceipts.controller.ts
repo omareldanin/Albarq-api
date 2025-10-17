@@ -15,15 +15,15 @@ export class ClientReceiptController {
     const now = new Date(
       new Date().toLocaleString("en-US", {timeZone: "Asia/Gaza"})
     );
-
     // Format date as YYMMDD
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
     const datePart = `${month}${day}`;
-    const randomPart = Math.floor(10000 + Math.random() * 90000);
+    const timestampPart = Date.now().toString().slice(-5);
 
-    return `${datePart}${randomPart}`;
+    return `${datePart}${timestampPart}`;
   }
+
   createReceipts = catchAsync(async (req, res) => {
     let receipts: clientReceiptCreateType[];
     receipts = req.body.map((receipt: unknown) =>
