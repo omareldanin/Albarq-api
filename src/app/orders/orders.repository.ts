@@ -1597,9 +1597,10 @@ export class OrdersRepository {
               : {
                   ...where,
                   OR:
-                    data.loggedInUser?.role === "CLIENT" ||
-                    data.loggedInUser?.role === "INQUIRY_EMPLOYEE" ||
-                    data.loggedInUser?.role === "CLIENT_ASSISTANT"
+                    (data.loggedInUser?.role === "CLIENT" ||
+                      data.loggedInUser?.role === "INQUIRY_EMPLOYEE" ||
+                      data.loggedInUser?.role === "CLIENT_ASSISTANT") &&
+                    !data.filters.receiptNumber
                       ? [
                           {
                             clientReport: {
@@ -1632,7 +1633,8 @@ export class OrdersRepository {
                             },
                           },
                         ]
-                      : data.loggedInUser?.role === "DELIVERY_AGENT"
+                      : data.loggedInUser?.role === "DELIVERY_AGENT" &&
+                        !data.filters.receiptNumber
                       ? [
                           {
                             deliveryAgentReport: {is: null},
