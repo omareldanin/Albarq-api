@@ -11,7 +11,6 @@ import {
   OrdersFiltersSchema,
   OrdersReceiptsCreateSchema,
   OrdersReportPDFCreateSchema,
-  // OrdersReceiptsCreateSchema,
   OrdersStatisticsFiltersSchema,
 } from "./orders.dto";
 import {OrdersService} from "./orders.service";

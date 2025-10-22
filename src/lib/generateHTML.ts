@@ -1,4 +1,4 @@
-import {OrderStatus, SecondaryReportType} from "@prisma/client";
+import {Governorate, OrderStatus, SecondaryReportType} from "@prisma/client";
 import handlebars from "handlebars";
 // @ts-expect-error
 import asyncHelpers from "handlebars-async-helpers";
@@ -39,6 +39,15 @@ export const generateHTML = async (template: string, data: object) => {
       }
       return "";
     });
+    hb.registerHelper(
+      "isBaghdad",
+      (governorate, baghdadDeliveryCost, governoratesDeliveryCost) => {
+        if (governorate === Governorate.BAGHDAD) {
+          return Number(baghdadDeliveryCost || 0).toLocaleString("en-GB");
+        }
+        return Number(governoratesDeliveryCost || 0).toLocaleString("en-GB");
+      }
+    );
     hb.registerHelper("colorizeRow2", (secondaryReportType, status) => {
       if (secondaryReportType === SecondaryReportType.RETURNED) {
         return "";
@@ -97,15 +106,7 @@ export const generateHTML = async (template: string, data: object) => {
     hb.registerHelper("BarCode", (id) => {
       return generateBarCode(id.toString());
     });
-    // hb.registerHelper("arabicNumber", (value) => {
-    //     const arabicNumbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
-    //     if (value === 0) {
-    //         return "٠";
-    //     }
-    //     if (!value) return "";
-    //     if (typeof value === "string") return value.replace(/[0-9]/g, (w) => arabicNumbers[+w]);
-    //     return value.toString().replace(/[0-9]/g, (w: string) => arabicNumbers[+w]);
-    // });
+
     hb.registerHelper("localizeOrderStatus", (status) => {
       return localizeOrderStatus(status);
     });

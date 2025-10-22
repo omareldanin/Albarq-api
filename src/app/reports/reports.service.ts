@@ -10,7 +10,6 @@ import {AppError} from "../../lib/AppError";
 import {localizeReportType} from "../../lib/localize";
 import type {loggedInUserType} from "../../types/user";
 import {ClientsRepository} from "../clients/clients.repository";
-import {CompaniesRepository} from "../companies/companies.repository";
 import {EmployeesRepository} from "../employees/employees.repository";
 import {sendNotification} from "../notifications/helpers/sendNotification";
 import {OrdersRepository} from "../orders/orders.repository";
@@ -32,7 +31,6 @@ const reportsRepository = new ReportsRepository();
 const ordersRepository = new OrdersRepository();
 const employeesRepository = new EmployeesRepository();
 const clientsRepository = new ClientsRepository();
-const companiesRepository = new CompaniesRepository();
 
 export class ReportsService {
   async createReport(data: {
@@ -298,41 +296,6 @@ export class ReportsService {
       throw new AppError("حدث خطأ اثناء عمل الكشف", 500);
     }
 
-    // // if client report, make secondary status WITH_CLIENT
-    // if (data.reportData.type === ReportType.CLIENT) {
-    //   await ordersRepository.updateOrdersSecondaryStatus({
-    //     ordersIDs,
-    //     secondaryStatus: "WITH_CLIENT",
-    //   });
-    // }
-
-    // Update company treasury
-    if (
-      data.reportData.type === ReportType.GOVERNORATE ||
-      data.reportData.type === ReportType.BRANCH ||
-      data.reportData.type === ReportType.DELIVERY_AGENT ||
-      data.reportData.type === ReportType.COMPANY
-    ) {
-      await companiesRepository.updateCompanyTreasury({
-        companyID: data.loggedInUser.companyID as number,
-        treasury: {
-          amount: reportMetaData.companyNet || 0,
-          type: "increment",
-        },
-      });
-    } else if (
-      data.reportData.type === ReportType.CLIENT ||
-      data.reportData.type === ReportType.REPOSITORY
-    ) {
-      await companiesRepository.updateCompanyTreasury({
-        companyID: data.loggedInUser.companyID as number,
-        treasury: {
-          amount: reportMetaData.clientNet || 0,
-          type: "decrement",
-        },
-      });
-    }
-
     const reportData = await reportsRepository.getReport({
       reportID: report.id,
     });
@@ -546,6 +509,7 @@ export class ReportsService {
     const ordersData = await ordersRepository.getOrdersByIDs({
       ordersIDs: ordersIDs,
     });
+
     if (ordersData.length === 0) {
       throw new AppError("لا يوجد طلبات", 404);
     }

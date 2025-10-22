@@ -446,8 +446,6 @@ export class OrdersService {
     loggedInUser: loggedInUserType;
     orderData: OrderUpdateType;
   }) => {
-    // Cant change order data unless you have the permission
-
     if (
       data.loggedInUser.role !== "COMPANY_MANAGER" &&
       data.loggedInUser.role !== "BRANCH_MANAGER" &&
@@ -465,14 +463,6 @@ export class OrdersService {
       throw new AppError("ليس لديك صلاحية تعديل المبلغ المدفوع", 403);
     }
 
-    if (
-      data.orderData.confirmed &&
-      data.loggedInUser.role !== "COMPANY_MANAGER" &&
-      !data.loggedInUser.permissions?.includes("CONFIRM_ORDER")
-    ) {
-      throw new AppError("ليس لديك صلاحية تأكيد الطلب", 403);
-    }
-
     let oldOrderData = await ordersRepository.getOrderById({
       orderID: data.params.orderID,
     });
@@ -484,15 +474,6 @@ export class OrdersService {
       if (!oldOrderData) {
         throw new AppError("الطلب غير موجود", 404);
       }
-    }
-
-    if (
-      data.orderData.processed !== undefined &&
-      oldOrderData?.processed !== data.orderData.processed &&
-      data.loggedInUser.role !== "INQUIRY_EMPLOYEE" &&
-      data.loggedInUser.role !== "EMERGENCY_EMPLOYEE"
-    ) {
-      throw new AppError("لا يمكنك معالجة الطلب", 403);
     }
 
     // update order paid amount if new status is delivered or partially returned or replaced
@@ -635,9 +616,17 @@ export class OrdersService {
       data.orderData.branchID = data.loggedInUser.branchId;
     }
 
+    if (
+      data.orderData.deliveryAgentID &&
+      oldOrderData.client.branchId === data.loggedInUser.branchId &&
+      oldOrderData.forwardedBranchId === data.loggedInUser.branchId
+    ) {
+      data.orderData.forwardedBranchId = -1;
+    }
+
     if (oldOrderData.deliveryAgent && data.orderData.deliveryAgentID) {
       data.orderData.status = undefined;
-      data.orderData.secondaryStatus = undefined;
+      data.orderData.secondaryStatus = "WITH_AGENT";
     }
 
     const newOrder = await ordersRepository.updateOrder({
@@ -649,8 +638,6 @@ export class OrdersService {
     if (!newOrder) {
       throw new AppError("فشل تحديث الطلب", 500);
     }
-
-    // TODO: Move this to a separate function and call it in the controller after the response
     // Update Order Timeline
     try {
       // Update status
@@ -899,9 +886,8 @@ export class OrdersService {
 
       // Update paid amount
       if (
-        data.orderData.paidAmount &&
+        (data.orderData.paidAmount || data.orderData.paidAmount === 0) &&
         +oldOrderData.paidAmount !== +newOrder.paidAmount &&
-        data.orderData.status !== "DELIVERED" &&
         data.orderData.paidAmount !== +oldOrderData.totalCost
       ) {
         await ordersRepository.updateOrderTimeline({
@@ -920,97 +906,6 @@ export class OrdersService {
               name: data.loggedInUser.name,
             },
             message: `تم تغيير المبلغ المدفوع من ${oldOrderData.paidAmount} إلى ${newOrder.paidAmount}`,
-          },
-        });
-      }
-
-      // Update delivery date
-      if (
-        data.orderData.deliveryDate &&
-        oldOrderData?.deliveryDate?.toString() !==
-          newOrder.deliveryDate?.toString()
-      ) {
-        await ordersRepository.updateOrderTimeline({
-          orderID: oldOrderData.id,
-          data: {
-            type: "ORDER_DELIVERY",
-            date: newOrder.updatedAt,
-            old: null,
-            new: null,
-            by: {
-              id: data.loggedInUser.id,
-              name: data.loggedInUser.name,
-            },
-            message: "تم توصيل الطلب",
-          },
-        });
-      }
-
-      // Forward company
-      if (
-        data.orderData.forwardedCompanyID &&
-        oldOrderData?.company?.id !== newOrder.company?.id
-      ) {
-        await ordersRepository.updateOrderTimeline({
-          orderID: oldOrderData.id,
-          data: {
-            type: "COMPANY_CHANGE",
-            date: newOrder.updatedAt,
-            old: oldOrderData.company && {
-              id: oldOrderData.company.id,
-              name: oldOrderData.company.name,
-            },
-            new: newOrder.company && {
-              id: newOrder.company.id,
-              name: newOrder.company.name,
-            },
-            by: {
-              id: data.loggedInUser.id,
-              name: data.loggedInUser.name,
-            },
-            message: `تم احالة الطلب من ${oldOrderData.company.name} إلى ${newOrder.company.name} بواسطة ${data.loggedInUser.name}`,
-          },
-        });
-      }
-
-      // Confirm order
-      if (data.orderData.confirmed && !oldOrderData.confirmed) {
-        await ordersRepository.updateOrderTimeline({
-          orderID: oldOrderData.id,
-          data: {
-            type: "ORDER_CONFIRMATION",
-            date: newOrder.updatedAt,
-            old: null,
-            new: null,
-            by: {
-              id: data.loggedInUser.id,
-              name: data.loggedInUser.name,
-            },
-            message: `تم تأكيد الطلب من قبل ${data.loggedInUser.name}`,
-          },
-        });
-      }
-
-      // Process order
-      if (data.orderData.processed && !oldOrderData.processed) {
-        await ordersRepository.updateOrderTimeline({
-          orderID: oldOrderData.id,
-          data: {
-            type: "ORDER_PROCESS",
-            date: newOrder.updatedAt,
-            old: null,
-            new: null,
-            by: {
-              id: data.loggedInUser.id,
-              name: data.loggedInUser.name,
-            },
-            message: `تم معالجة الطلب من قبل ${
-              data.loggedInUser.role === "INQUIRY_EMPLOYEE"
-                ? "موظف الدعم"
-                : data.loggedInUser.role === "EMERGENCY_EMPLOYEE"
-                ? "موظف المتابعة"
-                : data.loggedInUser.name
-            }`,
           },
         });
       }

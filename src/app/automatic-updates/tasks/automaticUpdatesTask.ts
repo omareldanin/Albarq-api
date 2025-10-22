@@ -64,6 +64,7 @@ export const automaticUpdatesTask = async () => {
             status: true,
             updatedAt: true,
             paidAmount: true,
+            deliveryCost: true,
             totalCost: true,
             createdAt: true,
             client: {
@@ -89,6 +90,7 @@ export const automaticUpdatesTask = async () => {
           const hoursDifference = difference / (1000 * 3600);
           const hours24 = lastUpdate.getHours();
           let paidAmount: number | undefined = undefined;
+          let clientNet: number | undefined = undefined;
 
           if (
             automaticUpdate.checkAfter &&
@@ -111,9 +113,10 @@ export const automaticUpdatesTask = async () => {
             order.paidAmount === 0
           ) {
             paidAmount = order?.totalCost;
+            clientNet = order?.paidAmount - order.deliveryCost;
           }
 
-          await prisma.order.update({
+          const newOrder = await prisma.order.update({
             where: {
               id: order.id,
             },
@@ -121,6 +124,7 @@ export const automaticUpdatesTask = async () => {
               status: automaticUpdate.newOrderStatus,
               secondaryStatus: automaticUpdate.returnCondition,
               paidAmount: paidAmount,
+              clientNet: clientNet,
               automaticUpdate: {
                 connect: {
                   id: automaticUpdate.id,
@@ -133,7 +137,7 @@ export const automaticUpdatesTask = async () => {
             orderID: order.id,
             data: {
               type: "STATUS_CHANGE",
-              date: order.updatedAt,
+              date: newOrder.updatedAt,
               old: {
                 value: order.status,
               },

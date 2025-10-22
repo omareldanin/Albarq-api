@@ -53,6 +53,7 @@
             <th>عنوان المستلم</th>
             <th>مبلغ الوصل</th>
             <th>المبلغ المستلم</th>
+            <th>المبلغ المستقطع</th>
             <th>صافي الفرع</th>
             <th>الحالة</th>
           </tr>
@@ -76,11 +77,14 @@
               <td>{{mapPhones recipientPhones}}</td>
               <td>{{localizeGovernorate governorate}}
                 -
-                {{location.name}}
-                -
-                {{recipientAddress}}</td>
+                {{location.name}}</td>
               <td>{{currency totalCost}}</td>
               <td>{{currency paidAmount}}</td>
+              <td>{{isBaghdad
+                  governorate
+                  @root.reportData.branchReport.baghdadDeliveryCost
+                  @root.reportData.branchReport.governoratesDeliveryCost
+                }}</td>
               <td>{{currency branchNet}}</td>
               <td class="{{colorizeRow status}}">{{localizeOrderStatus
                   status
@@ -88,15 +92,7 @@
             </tr>
           {{/each}}
         </tbody>
-        {{!-- <tfoot>
-				<tr>
-					<td colspan="7">المجموع</td>
-					<td>{{currency reportData.totalCost}}</td>
-					<td>{{currency reportData.paidAmount}}</td>
-					<td>{{currency reportData.deliveryAgentNet}}</td>
-					<td></td>
-				</tr>
-			</tfoot> --}}
+
       </table>
       <!-- Force page break before totals, if needed -->
       <div style="page-break-inside: avoid; break-inside: avoid;">
