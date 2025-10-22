@@ -66,6 +66,7 @@ export const sendNotification = async (data: NotificationCreateType) => {
           orderId: data.orderId || null,
           chatId: data.chatId || null,
           receiptNumber: data.receiptNumber || null,
+          userId: data.userID || null,
           notificationId: createdNotification ? createdNotification.id : null,
         },
       }),

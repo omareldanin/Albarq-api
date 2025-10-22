@@ -2461,7 +2461,10 @@ export class OrdersRepository {
           data.orderData.forwardedBranchId === -1
             ? null
             : data.orderData.forwardedBranchId,
-        receivedBranchId: data.orderData.receivedBranchId,
+        receivedBranchId:
+          data.orderData.receivedBranchId === -1
+            ? null
+            : data.orderData.receivedBranchId,
         forwardedRepo:
           data.orderData.secondaryStatus === "IN_REPOSITORY"
             ? null

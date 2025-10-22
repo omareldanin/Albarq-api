@@ -616,12 +616,14 @@ export class OrdersService {
       data.orderData.branchID = data.loggedInUser.branchId;
     }
 
-    if (
-      data.orderData.deliveryAgentID &&
-      oldOrderData.client.branchId === data.loggedInUser.branchId &&
-      oldOrderData.forwardedBranchId === data.loggedInUser.branchId
-    ) {
-      data.orderData.forwardedBranchId = -1;
+    if (data.orderData.branchID) {
+      if (oldOrderData.client.branchId !== data.orderData.branchID) {
+        data.orderData.forwardedBranchId = oldOrderData.client.branchId!!;
+        data.orderData.receivedBranchId = data.orderData.branchID;
+      } else if (oldOrderData.client.branchId === data.orderData.branchID) {
+        data.orderData.forwardedBranchId = -1;
+        data.orderData.receivedBranchId = -1;
+      }
     }
 
     if (oldOrderData.deliveryAgent && data.orderData.deliveryAgentID) {
