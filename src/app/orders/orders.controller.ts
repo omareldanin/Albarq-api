@@ -826,6 +826,100 @@ export class OrdersController {
     });
   });
 
+  getRepositorOrdersStatistics = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+    const type = req.query.type;
+
+    const user = await prisma.employee.findUnique({
+      where: {
+        id: loggedInUser.id,
+      },
+      select: {
+        branch: {
+          select: {
+            id: true,
+            repositories: {
+              select: {
+                id: true,
+                type: true,
+                name: true,
+                mainRepository: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const exportRepo = user?.branch?.repositories.find(
+      (repo) => repo.type === "EXPORT"
+    );
+    const branchs = await prisma.branch.findMany({
+      where: {
+        companyId: loggedInUser.companyID!!,
+      },
+      select: {
+        id: true,
+        name: true,
+        repositories: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    if (type === "forwarded") {
+      const ordersStatisticsByStatus = await prisma.order.groupBy({
+        by: ["branchId"],
+        _count: {
+          id: true,
+        },
+        where: {
+          deleted: false,
+          secondaryStatus: "IN_CAR",
+          forwardedRepo: exportRepo?.id,
+        },
+      });
+      res.status(200).json({
+        status: "success",
+        data: ordersStatisticsByStatus.map((status) => {
+          return {
+            count: status._count.id,
+            branchId: status.branchId,
+            branchName: branchs.find(
+              (branch) => +branch.id === +status.branchId!!
+            )?.name,
+          };
+        }),
+      });
+    } else {
+      const ordersStatisticsByStatus = await prisma.order.groupBy({
+        by: ["forwardedBranchId"],
+        _count: {
+          id: true,
+        },
+        where: {
+          deleted: false,
+          secondaryStatus: "IN_CAR",
+          repositoryId: exportRepo?.id,
+        },
+      });
+      res.status(200).json({
+        status: "success",
+        data: ordersStatisticsByStatus.map((status) => {
+          return {
+            count: status._count.id,
+            branchId: status.forwardedBranchId,
+            branchName: branchs.find(
+              (branch) => +branch.id === +status.forwardedBranchId!!
+            )?.name,
+          };
+        }),
+      });
+    }
+  });
+
   getCLientOrdersStatistics = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
     const status = req.query.status;
