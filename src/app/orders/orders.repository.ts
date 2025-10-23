@@ -2971,18 +2971,18 @@ export class OrdersRepository {
             : data.loggedInUser.role === "REPOSITORIY_EMPLOYEE" ||
               data.loggedInUser.role === "BRANCH_MANAGER"
             ? [
-                // {
-                //   branch: {
-                //     id: data.loggedInUser.branchId,
-                //   },
-                //   status: {not: "WITH_RECEIVING_AGENT"},
-                // },
-                // {
-                //   client: {
-                //     branchId: data.loggedInUser?.branchId,
-                //   },
-                //   status: {not: "WITH_RECEIVING_AGENT"},
-                // },
+                {
+                  branch: {
+                    id: data.loggedInUser.branchId,
+                  },
+                  status: {not: "WITH_RECEIVING_AGENT"},
+                },
+                {
+                  client: {
+                    branchId: data.loggedInUser?.branchId,
+                  },
+                  status: {not: "WITH_RECEIVING_AGENT"},
+                },
                 {
                   status: "WITH_RECEIVING_AGENT",
                   deliveryAgent: {
