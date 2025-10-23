@@ -918,7 +918,7 @@ export class OrdersController {
         },
         where: {
           deleted: false,
-          status: "WITH_DELIVERY_AGENT",
+          status: "WITH_RECEIVING_AGENT",
           deliveryAgent: {
             branchId: loggedInUser.branchId,
           },
