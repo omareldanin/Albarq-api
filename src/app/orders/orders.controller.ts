@@ -872,7 +872,20 @@ export class OrdersController {
         },
       },
     });
-
+    const deliveries = await prisma.employee.findMany({
+      where: {
+        companyId: loggedInUser.companyID!!,
+        branchId: loggedInUser.branchId,
+      },
+      select: {
+        id: true,
+        user: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
     if (type === "forwarded") {
       const ordersStatisticsByStatus = await prisma.order.groupBy({
         by: ["branchId"],
@@ -894,6 +907,32 @@ export class OrdersController {
             branchName: branchs.find(
               (branch) => +branch.id === +status.branchId!!
             )?.name,
+          };
+        }),
+      });
+    } else if (type === "WITH_RECEIVING_AGENT") {
+      const ordersStatisticsByStatus = await prisma.order.groupBy({
+        by: ["deliveryAgentId"],
+        _count: {
+          id: true,
+        },
+        where: {
+          deleted: false,
+          status: "WITH_DELIVERY_AGENT",
+          deliveryAgent: {
+            branchId: loggedInUser.branchId,
+          },
+        },
+      });
+      res.status(200).json({
+        status: "success",
+        data: ordersStatisticsByStatus.map((status) => {
+          return {
+            count: status._count.id,
+            deliveryAgentId: status.deliveryAgentId,
+            name: deliveries.find(
+              (branch) => +branch.id === +status.deliveryAgentId!!
+            )?.user.name,
           };
         }),
       });

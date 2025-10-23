@@ -1666,13 +1666,19 @@ export class OrdersRepository {
                             branch: {
                               id: data.loggedInUser.branchId,
                             },
+                            status: {not: "WITH_RECEIVING_AGENT"},
                           },
                           {
-                            client: !data.loggedInUser?.mainRepository
-                              ? {
-                                  branchId: data.loggedInUser?.branchId,
-                                }
-                              : undefined,
+                            client: {
+                              branchId: data.loggedInUser?.branchId,
+                            },
+                            status: {not: "WITH_RECEIVING_AGENT"},
+                          },
+                          {
+                            status: "WITH_RECEIVING_AGENT",
+                            deliveryAgent: {
+                              branchId: data.loggedInUser.branchId,
+                            },
                           },
                         ]
                       : data.loggedInUser?.role !== "COMPANY_MANAGER"
@@ -1790,13 +1796,19 @@ export class OrdersRepository {
                           branch: {
                             id: data.loggedInUser.branchId,
                           },
+                          status: {not: "WITH_RECEIVING_AGENT"},
                         },
                         {
-                          client: !data.loggedInUser?.mainRepository
-                            ? {
-                                branchId: data.loggedInUser?.branchId,
-                              }
-                            : undefined,
+                          client: {
+                            branchId: data.loggedInUser?.branchId,
+                          },
+                          status: {not: "WITH_RECEIVING_AGENT"},
+                        },
+                        {
+                          status: "WITH_RECEIVING_AGENT",
+                          deliveryAgent: {
+                            branchId: data.loggedInUser.branchId,
+                          },
                         },
                       ]
                     : data.loggedInUser?.role !== "COMPANY_MANAGER"
@@ -2963,10 +2975,18 @@ export class OrdersRepository {
                   branch: {
                     id: data.loggedInUser.branchId,
                   },
+                  status: {not: "WITH_RECEIVING_AGENT"},
                 },
                 {
                   client: {
                     branchId: data.loggedInUser?.branchId,
+                  },
+                  status: {not: "WITH_RECEIVING_AGENT"},
+                },
+                {
+                  status: "WITH_RECEIVING_AGENT",
+                  deliveryAgent: {
+                    branchId: data.loggedInUser.branchId,
                   },
                 },
               ]
