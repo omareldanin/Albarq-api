@@ -133,6 +133,7 @@ export class OrdersController {
       status,
       getIncoming,
       getOutComing,
+      branchId,
     } = req.query;
 
     const loggedInUser = res.locals.user as loggedInUserType;
@@ -215,6 +216,8 @@ export class OrdersController {
           storeId: store_id ? Number(store_id) : undefined,
           clientId: client_id ? Number(client_id) : undefined,
           governorate: governorate ? (governorate as Governorate) : undefined,
+          forwardedBranchId: getIncoming && branchId ? +branchId : undefined,
+          branchId: !getIncoming && branchId ? +branchId : undefined,
           forwardedRepo: getOutComing
             ? returnRepo?.id
             : getIncoming
