@@ -20,6 +20,7 @@ import {orderReform, orderSelect, OrderStatusData} from "./orders.responses";
 import {AppError} from "../../lib/AppError";
 import {OrdersRepository} from "./orders.repository";
 import {generateReceipts} from "./helpers/generateReceipts";
+import {governorateArabicNames} from "../locations/locations.repository";
 const XlsxPopulate = require("xlsx-populate");
 
 const employeesRepository = new EmployeesRepository();
@@ -893,6 +894,28 @@ export class OrdersController {
             branchName: branchs.find(
               (branch) => +branch.id === +status.branchId!!
             )?.name,
+          };
+        }),
+      });
+    } else if (type === "inrepo") {
+      const ordersStatisticsByStatus = await prisma.order.groupBy({
+        by: ["governorate"],
+        _count: {
+          id: true,
+        },
+        where: {
+          deleted: false,
+          secondaryStatus: "IN_REPOSITORY",
+          repositoryId: exportRepo?.id,
+        },
+      });
+      res.status(200).json({
+        status: "success",
+        data: ordersStatisticsByStatus.map((status) => {
+          return {
+            count: status._count.id,
+            governorate: status.governorate,
+            governorateName: governorateArabicNames[status.governorate],
           };
         }),
       });
