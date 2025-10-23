@@ -2791,6 +2791,50 @@ export class OrdersRepository {
               {
                 deleted: false,
               },
+              {
+                forwardedBranchId:
+                  data.filters.orderType === "forwardedAll" &&
+                  (data.loggedInUser?.role === "COMPANY_MANAGER" ||
+                    data.loggedInUser?.mainRepository) &&
+                  data.filters.branchID
+                    ? data.filters.branchID
+                    : data.filters.orderType === "forwardedAll" &&
+                      (data.loggedInUser?.role === "COMPANY_MANAGER" ||
+                        data.loggedInUser?.mainRepository)
+                    ? {
+                        not: null,
+                      }
+                    : data.filters.orderType === "forwardedAll"
+                    ? data.loggedInUser?.branchId
+                    : data.filters.orderType === "receivedAll" &&
+                      data.filters.branchID &&
+                      data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                      !data.loggedInUser?.mainCompany
+                    ? data.filters.branchID
+                    : undefined,
+              },
+              {
+                receivedBranchId:
+                  data.filters.orderType === "receivedAll" &&
+                  (data.loggedInUser?.role === "COMPANY_MANAGER" ||
+                    data.loggedInUser?.mainRepository) &&
+                  data.filters.branchID
+                    ? data.filters.branchID
+                    : data.filters.orderType === "receivedAll" &&
+                      (data.loggedInUser?.role === "COMPANY_MANAGER" ||
+                        data.loggedInUser?.mainRepository)
+                    ? {
+                        not: null,
+                      }
+                    : data.filters.orderType === "forwardedAll" &&
+                      data.filters.branchID &&
+                      data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                      !data.loggedInUser?.mainCompany
+                    ? data.filters.branchID
+                    : data.filters.orderType === "receivedAll"
+                    ? data.loggedInUser?.branchId
+                    : undefined,
+              },
               // inquiry filters
               {
                 OR: [

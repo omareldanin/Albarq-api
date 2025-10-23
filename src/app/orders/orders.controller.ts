@@ -812,6 +812,7 @@ export class OrdersController {
       deliveryAgentReport: req.query.delivery_agent_report,
       governorateReport: req.query.governorate_report,
       companyReport: req.query.company_report,
+      orderType: req.query.orderType,
     });
 
     const statistics = await ordersService.getOrdersStatistics({

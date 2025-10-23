@@ -414,6 +414,8 @@ export const OrdersFiltersOpenAPISchema = generateSchema(OrdersFiltersSchema);
 
 export const OrdersStatisticsFiltersSchema = z.object({
   clientID: z.coerce.number().optional(),
+  branchID: z.coerce.number().optional(),
+  orderType: z.string().optional(),
   deliveryAgentID: z.coerce.number().optional(),
   companyID: z.coerce.number().optional(),
   startDate: z.coerce.date().optional(),
