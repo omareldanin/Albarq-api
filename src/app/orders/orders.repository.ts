@@ -1968,6 +1968,7 @@ export class OrdersRepository {
     const order = await prisma.order.findFirst({
       where: {
         receiptNumber: data.orderID,
+        deleted: false,
       },
       select: orderSelect,
     });
@@ -2052,6 +2053,7 @@ export class OrdersRepository {
     const order = await prisma.order.findUnique({
       where: {
         id: data.orderID,
+        deleted: false,
       },
       select: orderSelect,
     });
@@ -2064,6 +2066,7 @@ export class OrdersRepository {
     const order = await prisma.order.findFirst({
       where: {
         receiptNumber: data.orderReceiptNumber,
+        deleted: false,
       },
       orderBy: {
         id: "desc",
