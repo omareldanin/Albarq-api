@@ -67,6 +67,7 @@ model Employee {
   departmentId            Int?
   clientId                Int?
   clientAssistantRole     String?
+  orderType               String?
   emergency               Boolean                          @default(false)
   mainEmergency           Boolean                          @default(false)
   deliveryAgentReports    DeliveryAgentReport[]
@@ -888,6 +889,7 @@ enum EmployeeRole {
   REPOSITORIY_EMPLOYEE
   INQUIRY_EMPLOYEE
   CLIENT_ASSISTANT
+  EMPLOYEE_CLIENT_ASSISTANT
   CLIENT
   ADMIN
   ADMIN_ASSISTANT

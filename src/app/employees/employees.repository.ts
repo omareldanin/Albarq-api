@@ -51,6 +51,7 @@ export class EmployeesRepository {
         residencyCard: data.employeeData.residencyCard,
         clientAssistantRole: data.employeeData.clientAssistantRole,
         salary: data.employeeData.salary,
+        orderType: data.employeeData.orderType,
         role:
           data.employeeData.role === "EMERGENCY_EMPLOYEE" ||
           data.employeeData.role === "MAIN_EMERGENCY_EMPLOYEE"
@@ -212,6 +213,13 @@ export class EmployeesRepository {
               : {in: data.filters.roles},
         },
         {
+          clientId:
+            data.loggedInUser.role !== "CLIENT" &&
+            data.loggedInUser.role !== "CLIENT_ASSISTANT"
+              ? null
+              : undefined,
+        },
+        {
           role: data.filters.role,
         },
         {
@@ -364,12 +372,7 @@ export class EmployeesRepository {
         id: data.employeeID,
       },
       select: {
-        // id: true,
-        // user: {
-        //     select: {
-        //         name: true
-        //     }
-        // }
+        orderType: true,
         inquiryBranches: {
           select: {
             branch: {
@@ -457,6 +460,7 @@ export class EmployeesRepository {
       }),
       inquiryGovernorates: employee?.inquiryGovernorates,
       inquiryStatuses: employee?.inquiryStatuses,
+      orderType: employee?.orderType,
     };
   }
 
@@ -494,6 +498,7 @@ export class EmployeesRepository {
         idCard: data.employeeData.idCard,
         residencyCard: data.employeeData.residencyCard,
         clientAssistantRole: data.employeeData.clientAssistantRole,
+        orderType: data.employeeData.orderType,
         salary: data.employeeData.salary,
         role:
           data.employeeData.role === "EMERGENCY_EMPLOYEE" ||

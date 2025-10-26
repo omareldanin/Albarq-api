@@ -37,6 +37,7 @@ export class EmployeesService {
       data.loggedInUser.role !== AdminRole.ADMIN_ASSISTANT &&
       data.loggedInUser.role !== EmployeeRole.CLIENT &&
       data.loggedInUser.role !== EmployeeRole.CLIENT_ASSISTANT &&
+      data.loggedInUser.role !== EmployeeRole.EMPLOYEE_CLIENT_ASSISTANT &&
       !data.loggedInUser.permissions.includes("MANAGE_EMPLOYEES")
     ) {
       throw new AppError("ليس مصرح لك القيام بهذا الفعل", 403);

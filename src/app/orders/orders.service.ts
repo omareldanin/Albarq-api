@@ -277,6 +277,7 @@ export class OrdersService {
     let inquiryCompaniesIDs: number[] | undefined = undefined;
     let inquiryClientsIDs: number[] | undefined = undefined;
     let inquiryDeliveryAgentIDs: number[] | undefined = undefined;
+    let orderType: string | undefined = data.filters.orderType;
 
     if (data.loggedInUser.role === "RECEIVING_AGENT") {
       const inquiryEmployeeStuff =
@@ -325,7 +326,7 @@ export class OrdersService {
             },
           };
         }
-
+        orderType = inquiryEmployeeStuff.orderType || data.filters.orderType;
         inquiryStatuses =
           inquiryEmployeeStuff.inquiryStatuses &&
           inquiryEmployeeStuff.inquiryStatuses.length > 0
@@ -403,6 +404,7 @@ export class OrdersService {
           inquiryCompaniesIDs,
           inquiryClientsIDs,
           inquiryDeliveryAgentsIDs: inquiryDeliveryAgentIDs,
+          orderType,
         },
         loggedInUser: data.loggedInUser,
       });

@@ -12,6 +12,7 @@ export const employeeSelect = {
   residencyCard: true,
   clientAssistantRole: true,
   emergency: true,
+  orderType: true,
   user: {
     select: {
       id: true,
@@ -156,6 +157,7 @@ export const employeeReform = (
     // TODO
     id: employee.user.id,
     name: employee.user.name,
+    orderType: employee.orderType,
     username: employee.user.username,
     phone: employee.user.phone,
     avatar: employee.user.avatar,

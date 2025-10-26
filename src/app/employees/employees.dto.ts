@@ -44,6 +44,7 @@ export const EmployeeCreateSchema = z.object({
   avatar: z.string().optional(),
   idCard: z.string().optional(),
   residencyCard: z.string().optional(),
+  orderType: z.string().optional(),
   companyID: z.coerce.number().optional(),
   deliveryCost: z.coerce.number().optional(),
   inquiryBranchesIDs: z

@@ -13,17 +13,12 @@ export class EmployeesController {
   createEmployee = catchAsync(async (req, res) => {
     let employeeInput = req.body;
     const loggedInUser = res.locals.user;
-    console.log(employeeInput);
 
     if (req.files) {
       const files = req.files as {
         [fieldname: string]: Express.MulterS3.File[];
       };
-      //   employeeData.avatar = files.avatar ? files.avatar[0].location : undefined;
-      //   employeeData.idCard = files.idCard ? files.idCard[0].location : undefined;
-      //   employeeData.residencyCard = files.residencyCard
-      //     ? files.residencyCard[0].location
-      //     : undefined;
+
       employeeInput = {
         ...req.body,
         avatar: files.avatar ? files.avatar[0].location : undefined,
