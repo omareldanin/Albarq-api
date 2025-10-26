@@ -1231,6 +1231,7 @@ export class OrdersService {
     let inquiryCompaniesIDs: number[] | undefined = undefined;
     let inquiryClientsIDs: number[] | undefined = undefined;
     let inquiryDeliveryAgentsIDs: number[] | undefined = undefined;
+    let orderType: string | undefined = data.filters.orderType;
 
     if (data.loggedInUser.role === "INQUIRY_EMPLOYEE") {
       const inquiryEmployeeStuff =
@@ -1238,6 +1239,8 @@ export class OrdersService {
           employeeID: data.loggedInUser.id,
         });
       if (inquiryEmployeeStuff) {
+        orderType = inquiryEmployeeStuff.orderType || data.filters.orderType;
+
         inquiryStatuses =
           inquiryEmployeeStuff.inquiryStatuses &&
           inquiryEmployeeStuff.inquiryStatuses.length > 0
@@ -1322,6 +1325,7 @@ export class OrdersService {
         inquiryCompaniesIDs,
         inquiryClientsIDs,
         inquiryDeliveryAgentsIDs,
+        orderType,
       },
       loggedInUser: data.loggedInUser,
     });

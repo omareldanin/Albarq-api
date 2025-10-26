@@ -673,7 +673,9 @@ export class OrdersRepository {
                 notes: data.filters.notes,
               },
               {
-                branch: data.filters.inquiryBranchesIDs
+                branch: data.filters.orderType
+                  ? undefined
+                  : data.filters.inquiryBranchesIDs
                   ? {
                       id: {
                         in: data.filters.inquiryBranchesIDs,
@@ -937,6 +939,24 @@ export class OrdersRepository {
                         : undefined,
                   },
                 ],
+              },
+              {
+                forwardedBranchId:
+                  data.filters.orderType === "forwarded" &&
+                  data.filters.inquiryBranchesIDs
+                    ? {in: data.filters.inquiryBranchesIDs}
+                    : data.filters.orderType === "forwarded"
+                    ? data.loggedInUser.branchId
+                    : undefined,
+              },
+              {
+                receivedBranchId:
+                  data.filters.orderType === "receiving" &&
+                  data.filters.inquiryBranchesIDs
+                    ? {in: data.filters.inquiryBranchesIDs}
+                    : data.filters.orderType === "receiving"
+                    ? data.loggedInUser.branchId
+                    : undefined,
               },
             ],
           } satisfies Prisma.OrderWhereInput)
@@ -2667,7 +2687,9 @@ export class OrdersRepository {
                   : undefined,
               },
               {
-                branch: data.filters.inquiryBranchesIDs
+                branch: data.filters.orderType
+                  ? undefined
+                  : data.filters.inquiryBranchesIDs
                   ? {
                       id: {
                         in: data.filters.inquiryBranchesIDs,
@@ -2710,6 +2732,24 @@ export class OrdersRepository {
                       },
                     }
                   : undefined,
+              },
+              {
+                forwardedBranchId:
+                  data.filters.orderType === "forwarded" &&
+                  data.filters.inquiryBranchesIDs
+                    ? {in: data.filters.inquiryBranchesIDs}
+                    : data.filters.orderType === "forwarded"
+                    ? data.loggedInUser.branchId
+                    : undefined,
+              },
+              {
+                receivedBranchId:
+                  data.filters.orderType === "receiving" &&
+                  data.filters.inquiryBranchesIDs
+                    ? {in: data.filters.inquiryBranchesIDs}
+                    : data.filters.orderType === "receiving"
+                    ? data.loggedInUser.branchId
+                    : undefined,
               },
             ],
           }
