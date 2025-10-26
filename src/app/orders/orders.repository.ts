@@ -546,399 +546,395 @@ export class OrdersRepository {
     const where =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
         ? ({
-            OR: [
+            AND: [
+              // Search by receiptNumber, recipientName, recipientPhone, recipientAddress
               {
-                AND: [
-                  // Search by receiptNumber, recipientName, recipientPhone, recipientAddress
+                OR: [
                   {
-                    OR: [
-                      {
-                        receiptNumber: data.filters.search
-                          ? data.filters.search
-                          : undefined,
-                      },
-                      {
-                        branchReportId: data.filters.search
-                          ? Number.isNaN(+data.filters.search)
-                            ? undefined
-                            : data.filters.search.length > 9
-                            ? undefined
-                            : +data.filters.search
-                          : undefined,
-                      },
-                      {
-                        clientReport: data.filters.search
-                          ? Number.isNaN(+data.filters.search)
-                            ? undefined
-                            : data.filters.search.length > 9
-                            ? undefined
-                            : {
-                                some: {
-                                  id: +data.filters.search,
-                                },
-                              }
-                          : undefined,
-                      },
-                      {
-                        repositoryReport: data.filters.search
-                          ? Number.isNaN(+data.filters.search)
-                            ? undefined
-                            : data.filters.search.length > 9
-                            ? undefined
-                            : {
-                                some: {
-                                  id: +data.filters.search,
-                                },
-                              }
-                          : undefined,
-                      },
-                      {
-                        companyReport: data.filters.search
-                          ? Number.isNaN(+data.filters.search)
-                            ? undefined
-                            : data.filters.search.length > 9
-                            ? undefined
-                            : {
-                                some: {
-                                  id: +data.filters.search,
-                                },
-                              }
-                          : undefined,
-                      },
-                      {
-                        deliveryAgentReportId: data.filters.search
-                          ? Number.isNaN(+data.filters.search)
-                            ? undefined
-                            : data.filters.search.length > 9
-                            ? undefined
-                            : +data.filters.search
-                          : undefined,
-                      },
-                      {
-                        governorateReportId: data.filters.search
-                          ? Number.isNaN(+data.filters.search)
-                            ? undefined
-                            : data.filters.search.length > 9
-                            ? undefined
-                            : +data.filters.search
-                          : undefined,
-                      },
-                      {
-                        recipientName: {
-                          contains: data.filters.search,
-                          mode: "insensitive",
-                        },
-                      },
-                      {
-                        recipientPhones: data.filters.search
-                          ? {
-                              has: data.filters.search,
-                            }
-                          : undefined,
-                      },
-                      {
-                        recipientAddress: {
-                          contains: data.filters.search,
-                          mode: "insensitive",
-                        },
-                      },
-                    ],
-                  },
-                  {
-                    deleted: data.filters.deleted,
-                  },
-                  // Filter by orderID
-                  {
-                    id: data.filters.orderID,
-                  },
-                  {
-                    confirmed: data.filters.confirmed,
-                  },
-                  {
-                    processed: data.filters.processed,
-                  },
-                  {
-                    processingStatus: data.filters.processingStatus,
-                  },
-                  {
-                    status: data.filters.status,
-                  },
-                  {
-                    governorate: data.filters.inquiryGovernorates
-                      ? {
-                          in: data.filters.inquiryGovernorates,
-                        }
-                      : undefined,
-                  },
-                  // Filter by notes
-                  {
-                    notes: data.filters.notes,
-                  },
-                  {
-                    branch: data.filters.inquiryBranchesIDs
-                      ? {
-                          id: {
-                            in: data.filters.inquiryBranchesIDs,
-                          },
-                        }
-                      : data.loggedInUser.mainRepository
-                      ? undefined
-                      : {
-                          id: data.loggedInUser.branchId,
-                        },
-                  },
-                  {
-                    store: data.filters.inquiryStoresIDs
-                      ? {
-                          id: {
-                            in: data.filters.inquiryStoresIDs,
-                          },
-                        }
+                    receiptNumber: data.filters.search
+                      ? data.filters.search
                       : undefined,
                   },
                   {
-                    company: {
-                      id: data.filters.companyID,
+                    branchReportId: data.filters.search
+                      ? Number.isNaN(+data.filters.search)
+                        ? undefined
+                        : data.filters.search.length > 9
+                        ? undefined
+                        : +data.filters.search
+                      : undefined,
+                  },
+                  {
+                    clientReport: data.filters.search
+                      ? Number.isNaN(+data.filters.search)
+                        ? undefined
+                        : data.filters.search.length > 9
+                        ? undefined
+                        : {
+                            some: {
+                              id: +data.filters.search,
+                            },
+                          }
+                      : undefined,
+                  },
+                  {
+                    repositoryReport: data.filters.search
+                      ? Number.isNaN(+data.filters.search)
+                        ? undefined
+                        : data.filters.search.length > 9
+                        ? undefined
+                        : {
+                            some: {
+                              id: +data.filters.search,
+                            },
+                          }
+                      : undefined,
+                  },
+                  {
+                    companyReport: data.filters.search
+                      ? Number.isNaN(+data.filters.search)
+                        ? undefined
+                        : data.filters.search.length > 9
+                        ? undefined
+                        : {
+                            some: {
+                              id: +data.filters.search,
+                            },
+                          }
+                      : undefined,
+                  },
+                  {
+                    deliveryAgentReportId: data.filters.search
+                      ? Number.isNaN(+data.filters.search)
+                        ? undefined
+                        : data.filters.search.length > 9
+                        ? undefined
+                        : +data.filters.search
+                      : undefined,
+                  },
+                  {
+                    governorateReportId: data.filters.search
+                      ? Number.isNaN(+data.filters.search)
+                        ? undefined
+                        : data.filters.search.length > 9
+                        ? undefined
+                        : +data.filters.search
+                      : undefined,
+                  },
+                  {
+                    recipientName: {
+                      contains: data.filters.search,
+                      mode: "insensitive",
                     },
                   },
-                  // Filter by startDate
                   {
-                    createdAt: data.filters.startDate
+                    recipientPhones: data.filters.search
                       ? {
-                          gt: startDate,
-                        }
-                      : undefined,
-                  },
-                  // Filter by endDate
-                  {
-                    createdAt: data.filters.endDate
-                      ? {
-                          lte: endDate,
+                          has: data.filters.search,
                         }
                       : undefined,
                   },
                   {
-                    location: data.filters.inquiryLocationsIDs
-                      ? {
-                          id: {
-                            in: data.filters.inquiryLocationsIDs,
+                    recipientAddress: {
+                      contains: data.filters.search,
+                      mode: "insensitive",
+                    },
+                  },
+                ],
+              },
+              {
+                deleted: data.filters.deleted,
+              },
+              // Filter by orderID
+              {
+                id: data.filters.orderID,
+              },
+              {
+                confirmed: data.filters.confirmed,
+              },
+              {
+                processed: data.filters.processed,
+              },
+              {
+                processingStatus: data.filters.processingStatus,
+              },
+              {
+                status: data.filters.status,
+              },
+              {
+                governorate: data.filters.inquiryGovernorates
+                  ? {
+                      in: data.filters.inquiryGovernorates,
+                    }
+                  : undefined,
+              },
+              // Filter by notes
+              {
+                notes: data.filters.notes,
+              },
+              {
+                branch: data.filters.inquiryBranchesIDs
+                  ? {
+                      id: {
+                        in: data.filters.inquiryBranchesIDs,
+                      },
+                    }
+                  : data.loggedInUser.mainRepository
+                  ? undefined
+                  : {
+                      id: data.loggedInUser.branchId,
+                    },
+              },
+              {
+                store: data.filters.inquiryStoresIDs
+                  ? {
+                      id: {
+                        in: data.filters.inquiryStoresIDs,
+                      },
+                    }
+                  : undefined,
+              },
+              {
+                company: {
+                  id: data.filters.companyID,
+                },
+              },
+              // Filter by startDate
+              {
+                createdAt: data.filters.startDate
+                  ? {
+                      gt: startDate,
+                    }
+                  : undefined,
+              },
+              // Filter by endDate
+              {
+                createdAt: data.filters.endDate
+                  ? {
+                      lte: endDate,
+                    }
+                  : undefined,
+              },
+              {
+                location: data.filters.inquiryLocationsIDs
+                  ? {
+                      id: {
+                        in: data.filters.inquiryLocationsIDs,
+                      },
+                    }
+                  : undefined,
+              },
+              {
+                deliveryAgent: data.filters.inquiryDeliveryAgentsIDs
+                  ? {
+                      id: {
+                        in: data.filters.inquiryDeliveryAgentsIDs,
+                      },
+                    }
+                  : undefined,
+              },
+              {
+                AND: [
+                  data.filters.clientReport === "true"
+                    ? {
+                        clientReport: {
+                          some: {
+                            report: {
+                              deleted: false,
+                            },
                           },
-                        }
-                      : undefined,
-                  },
+                        },
+                      }
+                    : {},
                   {
-                    deliveryAgent: data.filters.inquiryDeliveryAgentsIDs
-                      ? {
-                          id: {
-                            in: data.filters.inquiryDeliveryAgentsIDs,
+                    OR:
+                      data.filters.clientReport === "false"
+                        ? [
+                            {
+                              clientReport: {
+                                none: {},
+                              },
+                            },
+                            {
+                              clientReport: {
+                                some: {
+                                  report: {
+                                    deleted: true,
+                                  },
+                                },
+                              },
+                            },
+                          ]
+                        : undefined,
+                  },
+                ],
+              },
+              // Filter by repositoryReport
+              {
+                AND: [
+                  data.filters.repositoryReport === "true"
+                    ? {
+                        repositoryReport: {
+                          some: {
+                            report: {
+                              deleted: false,
+                            },
                           },
-                        }
-                      : undefined,
-                  },
+                        },
+                      }
+                    : {},
                   {
-                    AND: [
-                      data.filters.clientReport === "true"
-                        ? {
-                            clientReport: {
-                              some: {
-                                report: {
-                                  deleted: false,
+                    OR:
+                      data.filters.repositoryReport === "false"
+                        ? [
+                            {
+                              repositoryReport: {
+                                none: {},
+                              },
+                            },
+                            {
+                              repositoryReport: {
+                                some: {
+                                  report: {
+                                    deleted: true,
+                                  },
                                 },
                               },
                             },
-                          }
-                        : {},
-                      {
-                        OR:
-                          data.filters.clientReport === "false"
-                            ? [
-                                {
-                                  clientReport: {
-                                    none: {},
-                                  },
-                                },
-                                {
-                                  clientReport: {
-                                    some: {
-                                      report: {
-                                        deleted: true,
-                                      },
-                                    },
-                                  },
-                                },
-                              ]
-                            : undefined,
-                      },
-                    ],
+                          ]
+                        : undefined,
                   },
-                  // Filter by repositoryReport
+                ],
+              },
+              // Filter by branchReport
+              {
+                AND: [
+                  data.filters.branchReport === "true"
+                    ? {
+                        branchReport: {
+                          some: {
+                            report: {
+                              deleted: false,
+                            },
+                          },
+                        },
+                      }
+                    : {},
                   {
-                    AND: [
-                      data.filters.repositoryReport === "true"
-                        ? {
-                            repositoryReport: {
-                              some: {
-                                report: {
-                                  deleted: false,
+                    OR:
+                      data.filters.branchReport === "false"
+                        ? [
+                            {
+                              branchReport: {
+                                none: {},
+                              },
+                            },
+                            {
+                              branchReport: {
+                                some: {
+                                  report: {
+                                    deleted: true,
+                                  },
                                 },
                               },
                             },
-                          }
-                        : {},
-                      {
-                        OR:
-                          data.filters.repositoryReport === "false"
-                            ? [
-                                {
-                                  repositoryReport: {
-                                    none: {},
-                                  },
-                                },
-                                {
-                                  repositoryReport: {
-                                    some: {
-                                      report: {
-                                        deleted: true,
-                                      },
-                                    },
-                                  },
-                                },
-                              ]
-                            : undefined,
-                      },
-                    ],
+                          ]
+                        : undefined,
                   },
-                  // Filter by branchReport
+                ],
+              },
+              // Filter by deliveryAgentReport
+              {
+                AND: [
                   {
-                    AND: [
-                      data.filters.branchReport === "true"
-                        ? {
-                            branchReport: {
-                              some: {
-                                report: {
-                                  deleted: false,
+                    AND:
+                      data.filters.deliveryAgentReport === "true"
+                        ? [
+                            {deliveryAgentReport: {isNot: null}},
+                            {
+                              deliveryAgentReport: {
+                                report: {deleted: false},
+                              },
+                            },
+                          ]
+                        : undefined,
+                  },
+                  {
+                    OR:
+                      data.filters.deliveryAgentReport === "false"
+                        ? [
+                            {deliveryAgentReport: {is: null}},
+                            {
+                              deliveryAgentReport: {
+                                report: {deleted: true},
+                              },
+                            },
+                          ]
+                        : undefined,
+                  },
+                ],
+              },
+              // Filter by governorateReport
+              {
+                AND: [
+                  {
+                    AND:
+                      data.filters.governorateReport === "true"
+                        ? [
+                            {governorateReport: {isNot: null}},
+                            {
+                              governorateReport: {report: {deleted: false}},
+                            },
+                          ]
+                        : undefined,
+                  },
+                  {
+                    OR:
+                      data.filters.governorateReport === "false"
+                        ? [
+                            {governorateReport: {is: null}},
+                            {
+                              governorateReport: {report: {deleted: true}},
+                            },
+                          ]
+                        : undefined,
+                  },
+                ],
+              },
+              // Filter by companyReport
+              {
+                AND: [
+                  data.filters.companyReport === "true"
+                    ? {
+                        companyReport: {
+                          some: {
+                            report: {
+                              deleted: false,
+                            },
+                          },
+                        },
+                      }
+                    : {},
+                  {
+                    OR:
+                      data.filters.companyReport === "false"
+                        ? [
+                            {
+                              companyReport: {
+                                none: {},
+                              },
+                            },
+                            {
+                              companyReport: {
+                                some: {
+                                  report: {
+                                    deleted: true,
+                                  },
                                 },
                               },
                             },
-                          }
-                        : {},
-                      {
-                        OR:
-                          data.filters.branchReport === "false"
-                            ? [
-                                {
-                                  branchReport: {
-                                    none: {},
-                                  },
-                                },
-                                {
-                                  branchReport: {
-                                    some: {
-                                      report: {
-                                        deleted: true,
-                                      },
-                                    },
-                                  },
-                                },
-                              ]
-                            : undefined,
-                      },
-                    ],
-                  },
-                  // Filter by deliveryAgentReport
-                  {
-                    AND: [
-                      {
-                        AND:
-                          data.filters.deliveryAgentReport === "true"
-                            ? [
-                                {deliveryAgentReport: {isNot: null}},
-                                {
-                                  deliveryAgentReport: {
-                                    report: {deleted: false},
-                                  },
-                                },
-                              ]
-                            : undefined,
-                      },
-                      {
-                        OR:
-                          data.filters.deliveryAgentReport === "false"
-                            ? [
-                                {deliveryAgentReport: {is: null}},
-                                {
-                                  deliveryAgentReport: {
-                                    report: {deleted: true},
-                                  },
-                                },
-                              ]
-                            : undefined,
-                      },
-                    ],
-                  },
-                  // Filter by governorateReport
-                  {
-                    AND: [
-                      {
-                        AND:
-                          data.filters.governorateReport === "true"
-                            ? [
-                                {governorateReport: {isNot: null}},
-                                {
-                                  governorateReport: {report: {deleted: false}},
-                                },
-                              ]
-                            : undefined,
-                      },
-                      {
-                        OR:
-                          data.filters.governorateReport === "false"
-                            ? [
-                                {governorateReport: {is: null}},
-                                {
-                                  governorateReport: {report: {deleted: true}},
-                                },
-                              ]
-                            : undefined,
-                      },
-                    ],
-                  },
-                  // Filter by companyReport
-                  {
-                    AND: [
-                      data.filters.companyReport === "true"
-                        ? {
-                            companyReport: {
-                              some: {
-                                report: {
-                                  deleted: false,
-                                },
-                              },
-                            },
-                          }
-                        : {},
-                      {
-                        OR:
-                          data.filters.companyReport === "false"
-                            ? [
-                                {
-                                  companyReport: {
-                                    none: {},
-                                  },
-                                },
-                                {
-                                  companyReport: {
-                                    some: {
-                                      report: {
-                                        deleted: true,
-                                      },
-                                    },
-                                  },
-                                },
-                              ]
-                            : undefined,
-                      },
-                    ],
+                          ]
+                        : undefined,
                   },
                 ],
               },
