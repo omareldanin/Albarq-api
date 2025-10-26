@@ -354,13 +354,7 @@ export class ReportsService {
       });
     }
 
-    // TODO
     const pdf = await generateReport(data.reportData.type, reportData, orders);
-    // const pdf = await generateReport(
-    //     await ordersRepository.getAllOrders(0, 100, {
-    //         sort: "receiptNumber:desc"
-    //     })
-    // );
 
     return pdf;
   }
@@ -506,9 +500,77 @@ export class ReportsService {
 
     const ordersIDs = orders.map((order) => order.id);
 
-    const ordersData = await ordersRepository.getOrdersByIDs({
+    let ordersData = await ordersRepository.getOrdersByIDs({
       ordersIDs: ordersIDs,
     });
+
+    for (const [index, order] of ordersData.entries()) {
+      const timeline = await prisma.orderTimeline.findMany({
+        where: {
+          type: "PAID_AMOUNT_CHANGE",
+          orderId: order?.id,
+        },
+      });
+
+      for (const time of timeline) {
+        if (time.createdAt > reportData?.createdAt!!) {
+          const value = JSON.parse(time.old?.toString() || "{}") as {
+            value?: number;
+          };
+
+          if (value.value !== undefined && order) {
+            order.paidAmount = +value.value;
+            if (
+              reportData?.type === "CLIENT" &&
+              order.governorate === "BAGHDAD"
+            ) {
+              console.log(reportData.clientReport?.baghdadDeliveryCost);
+
+              order.clientNet =
+                +value.value - reportData.clientReport?.baghdadDeliveryCost!!;
+            }
+            if (
+              reportData?.type === "CLIENT" &&
+              order.governorate !== "BAGHDAD"
+            ) {
+              order.clientNet =
+                +value.value -
+                reportData.clientReport?.governoratesDeliveryCost!!;
+            }
+
+            if (
+              reportData?.type === "BRANCH" &&
+              order.governorate === "BAGHDAD"
+            ) {
+              order.branchNet =
+                +value.value - reportData.branchReport?.baghdadDeliveryCost!!;
+            }
+            if (
+              reportData?.type === "BRANCH" &&
+              order.governorate !== "BAGHDAD"
+            ) {
+              order.branchNet =
+                +value.value -
+                reportData.branchReport?.governoratesDeliveryCost!!;
+            }
+            if (reportData?.type === "DELIVERY_AGENT") {
+              const weight = order.weight || 0;
+
+              const deliveryAgentNet =
+                reportData.deliveryAgentReport?.deliveryAgentDeliveryCost!! +
+                weight * 250;
+
+              const companyNet = (order.paidAmount || 0) - deliveryAgentNet;
+
+              order.deliveryAgentNet = deliveryAgentNet;
+              order.companyNet = companyNet;
+            }
+            ordersData[index] = order;
+            break;
+          }
+        }
+      }
+    }
 
     if (ordersData.length === 0) {
       throw new AppError("لا يوجد طلبات", 404);

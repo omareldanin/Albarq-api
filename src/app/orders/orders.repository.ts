@@ -1979,7 +1979,7 @@ export class OrdersRepository {
       orderBy: {
         id: "asc",
       },
-      select: orderSelect,
+      select: {...orderSelect},
     });
     return orders.map(orderReform);
   }

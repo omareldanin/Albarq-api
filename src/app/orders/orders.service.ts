@@ -891,8 +891,7 @@ export class OrdersService {
       // Update paid amount
       if (
         (data.orderData.paidAmount || data.orderData.paidAmount === 0) &&
-        +oldOrderData.paidAmount !== +newOrder.paidAmount &&
-        data.orderData.paidAmount !== +oldOrderData.totalCost
+        +oldOrderData.paidAmount !== +newOrder.paidAmount
       ) {
         await ordersRepository.updateOrderTimeline({
           orderID: oldOrderData.id,
