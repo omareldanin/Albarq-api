@@ -129,6 +129,7 @@ export class OrdersController {
       page,
       store_id,
       repository_id,
+      to_repository_id,
       governorate,
       secondaryStatus,
       status,
@@ -200,15 +201,18 @@ export class OrdersController {
       {
         where: {
           deleted: false,
-          repositoryId: getOutComing
-            ? undefined
-            : repository_id
-            ? Number(repository_id)
-            : secondaryStatus === "IN_CAR"
-            ? undefined
-            : status === "RETURNED"
-            ? returnRepo?.id
-            : exportRepo?.id,
+          repositoryId:
+            getOutComing && to_repository_id
+              ? Number(to_repository_id)
+              : getOutComing
+              ? undefined
+              : repository_id
+              ? Number(repository_id)
+              : secondaryStatus === "IN_CAR"
+              ? undefined
+              : status === "RETURNED"
+              ? returnRepo?.id
+              : exportRepo?.id,
           secondaryStatus: secondaryStatus as SecondaryStatus,
           status:
             status === "RETURNED"
@@ -221,6 +225,8 @@ export class OrdersController {
           branchId: !getIncoming && branchId ? +branchId : undefined,
           forwardedRepo: getOutComing
             ? returnRepo?.id
+            : getIncoming && to_repository_id
+            ? Number(to_repository_id)
             : getIncoming
             ? undefined
             : secondaryStatus === "IN_CAR"

@@ -4,7 +4,6 @@ import {Logger} from "../../../lib/logger";
 import type {NotificationCreateType} from "../notifications.dto";
 import {NotificationsRepository} from "../notifications.repository";
 import {prisma} from "../../../database/db";
-import {chat} from "googleapis/build/src/apis/chat";
 
 admin.initializeApp({
   credential: admin.credential.cert({
