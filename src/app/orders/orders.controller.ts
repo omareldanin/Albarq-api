@@ -248,6 +248,7 @@ export class OrdersController {
 
     res.status(200).json({
       status: "success",
+      pagesCount: results.pagesCount,
       data: {
         count: results.dataCount,
         pageCount: results.pagesCount,
