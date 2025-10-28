@@ -377,7 +377,17 @@ export class OrdersService {
 
       inquiryStoresIDs = employee?.managedStores.map((s) => s.id);
     }
-
+    if (data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT") {
+      const employee = await prisma.employee.findUnique({
+        where: {
+          id: data.loggedInUser.id,
+        },
+        select: {
+          inquiryStores: true,
+        },
+      });
+      inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
+    }
     let size = data.filters.size || 500;
 
     if (size > 550 && data.filters.forMobile !== true) {
@@ -683,13 +693,30 @@ export class OrdersService {
             });
           const clientAssitants = await prisma.employee.findMany({
             where: {
-              clientId: oldOrderData.client.id,
+              AND: [
+                {role: {in: ["CLIENT_ASSISTANT", "EMPLOYEE_CLIENT_ASSISTANT"]}},
+                {
+                  OR: [
+                    {
+                      clientId: oldOrderData.client.id,
+                    },
+                    {
+                      inquiryStores: {
+                        some: {
+                          storeId: oldOrderData.store.id,
+                        },
+                      },
+                    },
+                  ],
+                },
+              ],
             },
             select: {
               id: true,
               orderStatus: true,
             },
           });
+
           clientAssitants.forEach(async (e) => {
             if (
               data.orderData.status &&
@@ -711,6 +738,7 @@ export class OrdersService {
               });
             }
           });
+
           orderInquiryEmployees.forEach(async (e) => {
             await sendNotification({
               orderId: newOrder.id,
@@ -1296,9 +1324,21 @@ export class OrdersService {
         },
         select: {
           managedStores: true,
+          inquiryStores: true,
         },
       });
       inquiryStoresIDs = employee?.managedStores.map((s) => s.id);
+    }
+    if (data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT") {
+      const employee = await prisma.employee.findUnique({
+        where: {
+          id: data.loggedInUser.id,
+        },
+        select: {
+          inquiryStores: true,
+        },
+      });
+      inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
     }
     // show orders/statistics without client reports to the client unless he searches for them
     let clientReport = data.filters.clientReport;
@@ -1398,7 +1438,10 @@ export class OrdersService {
       };
     }
 
-    if (data.loggedInUser.role === "CLIENT_ASSISTANT") {
+    if (
+      data.loggedInUser.role === "CLIENT_ASSISTANT" ||
+      data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT"
+    ) {
       const employee = await prisma.employee.findUnique({
         where: {
           id: data.loggedInUser.id,

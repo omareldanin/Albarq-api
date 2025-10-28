@@ -1164,7 +1164,8 @@ export class OrdersRepository {
               {
                 store: {
                   id:
-                    data.loggedInUser?.role === "CLIENT_ASSISTANT"
+                    data.loggedInUser?.role === "CLIENT_ASSISTANT" ||
+                    data.loggedInUser?.role === "EMPLOYEE_CLIENT_ASSISTANT"
                       ? {in: data.filters.inquiryStoresIDs}
                       : data.filters.storeID,
                 },
@@ -1619,6 +1620,7 @@ export class OrdersRepository {
                   OR:
                     (data.loggedInUser?.role === "CLIENT" ||
                       data.loggedInUser?.role === "INQUIRY_EMPLOYEE" ||
+                      data.loggedInUser?.role === "EMPLOYEE_CLIENT_ASSISTANT" ||
                       data.loggedInUser?.role === "CLIENT_ASSISTANT") &&
                     !data.filters.receiptNumber
                       ? [
@@ -1759,6 +1761,7 @@ export class OrdersRepository {
                 OR:
                   data.loggedInUser?.role === "CLIENT" ||
                   data.loggedInUser?.role === "INQUIRY_EMPLOYEE" ||
+                  data.loggedInUser?.role === "EMPLOYEE_CLIENT_ASSISTANT" ||
                   data.loggedInUser?.role === "CLIENT_ASSISTANT"
                     ? [
                         {
@@ -2787,7 +2790,8 @@ export class OrdersRepository {
               },
               {
                 storeId:
-                  data.loggedInUser.role === "CLIENT_ASSISTANT"
+                  data.loggedInUser.role === "CLIENT_ASSISTANT" ||
+                  data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT"
                     ? {in: data.filters.inquiryStoresIDs}
                     : data.filters.storeID,
               },
@@ -2890,61 +2894,6 @@ export class OrdersRepository {
                     ? data.loggedInUser?.branchId
                     : undefined,
               },
-              // inquiry filters
-              {
-                OR: [
-                  {
-                    status: data.filters.inquiryStatuses
-                      ? {
-                          in: data.filters.inquiryStatuses,
-                        }
-                      : undefined,
-                  },
-                  {
-                    governorate: data.filters.inquiryGovernorates
-                      ? {
-                          in: data.filters.inquiryGovernorates,
-                        }
-                      : undefined,
-                  },
-                  {
-                    branch: data.filters.inquiryBranchesIDs
-                      ? {
-                          id: {
-                            in: data.filters.inquiryBranchesIDs,
-                          },
-                        }
-                      : undefined,
-                  },
-                  {
-                    store: data.filters.inquiryStoresIDs
-                      ? {
-                          id: {
-                            in: data.filters.inquiryStoresIDs,
-                          },
-                        }
-                      : undefined,
-                  },
-                  {
-                    company: data.filters.inquiryCompaniesIDs
-                      ? {
-                          id: {
-                            in: data.filters.inquiryCompaniesIDs,
-                          },
-                        }
-                      : undefined,
-                  },
-                  {
-                    location: data.filters.inquiryLocationsIDs
-                      ? {
-                          id: {
-                            in: data.filters.inquiryLocationsIDs,
-                          },
-                        }
-                      : undefined,
-                  },
-                ],
-              },
             ],
           } satisfies Prisma.OrderWhereInput);
 
@@ -2961,6 +2910,7 @@ export class OrdersRepository {
         OR:
           data.loggedInUser.role === "CLIENT" ||
           data.loggedInUser.role === "INQUIRY_EMPLOYEE" ||
+          data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT" ||
           data.loggedInUser.role === "CLIENT_ASSISTANT"
             ? [
                 {

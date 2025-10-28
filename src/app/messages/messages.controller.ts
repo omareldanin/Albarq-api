@@ -228,8 +228,23 @@ export class MessagesController {
         chats: [],
       };
     }
+    if (
+      user.role === "EMPLOYEE_CLIENT_ASSISTANT" &&
+      !employee?.permissions.includes("MESSAGES")
+    ) {
+      return {
+        totalUnSeened: 0,
+        pageCounts: 0,
+        count: 0,
+        page: 1,
+        chats: [],
+      };
+    }
     if (user.role === "CLIENT_ASSISTANT") {
       inquiryStoresIDs = employee?.managedStores.map((s) => s.id);
+    }
+    if (user.role === "EMPLOYEE_CLIENT_ASSISTANT") {
+      inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
     }
     const chats = await prisma.chat.findManyPaginated(
       {
@@ -240,7 +255,10 @@ export class MessagesController {
                   some: {
                     seenByClient: user.role === "CLIENT" ? false : undefined,
                     seenByClientAssistant:
-                      user.role === "CLIENT_ASSISTANT" ? false : undefined,
+                      user.role === "CLIENT_ASSISTANT" ||
+                      user.role === "EMPLOYEE_CLIENT_ASSISTANT"
+                        ? false
+                        : undefined,
                     seenByDelivery:
                       user.role === "DELIVERY_AGENT" ? false : undefined,
                     seenByBranchManager:
@@ -315,7 +333,8 @@ export class MessagesController {
                   status:
                     status && status !== "null"
                       ? (status as OrderStatus)
-                      : user.role === "CLIENT_ASSISTANT"
+                      : user.role === "CLIENT_ASSISTANT" ||
+                        user.role === "EMPLOYEE_CLIENT_ASSISTANT"
                       ? {in: employee?.orderStatus}
                       : undefined,
                   clientId: user.role === "CLIENT" ? user.id : undefined,
@@ -330,7 +349,8 @@ export class MessagesController {
                   deliveryAgentId:
                     user.role === "DELIVERY_AGENT" ? user.id : undefined,
                   storeId:
-                    user.role === "CLIENT_ASSISTANT"
+                    user.role === "CLIENT_ASSISTANT" ||
+                    user.role === "EMPLOYEE_CLIENT_ASSISTANT"
                       ? {in: inquiryStoresIDs}
                       : undefined,
                 },
@@ -382,7 +402,10 @@ export class MessagesController {
       where: {
         seenByClient: user.role === "CLIENT" ? false : undefined,
         seenByClientAssistant:
-          user.role === "CLIENT_ASSISTANT" ? false : undefined,
+          user.role === "CLIENT_ASSISTANT" ||
+          user.role === "EMPLOYEE_CLIENT_ASSISTANT"
+            ? false
+            : undefined,
         seenByDelivery: user.role === "DELIVERY_AGENT" ? false : undefined,
         seenByBranchManager: user.role === "BRANCH_MANAGER" ? false : undefined,
         seenByCompanyManager:
@@ -451,13 +474,15 @@ export class MessagesController {
                   branchId:
                     user.role !== "COMPANY_MANAGER" &&
                     user.role !== "CLIENT_ASSISTANT" &&
+                    user.role !== "EMPLOYEE_CLIENT_ASSISTANT" &&
                     user.role !== "DELIVERY_AGENT"
                       ? employee?.branchId
                       : undefined,
                   deliveryAgentId:
                     user.role === "DELIVERY_AGENT" ? user.id : undefined,
                   storeId:
-                    user.role === "CLIENT_ASSISTANT"
+                    user.role === "CLIENT_ASSISTANT" ||
+                    user.role === "EMPLOYEE_CLIENT_ASSISTANT"
                       ? {in: inquiryStoresIDs}
                       : undefined,
                 },
@@ -507,6 +532,12 @@ export class MessagesController {
       }
     }
 
+    if (employee?.role === "EMPLOYEE_CLIENT_ASSISTANT") {
+      if (!employee?.permissions.includes("MESSAGES")) {
+        return [];
+      }
+    }
+
     await prisma.message.updateMany({
       where: {
         Chat: {
@@ -517,7 +548,10 @@ export class MessagesController {
         seenByClient: employee ? undefined : true,
         seenByDelivery: employee?.role === "DELIVERY_AGENT" ? true : undefined,
         seenByClientAssistant:
-          employee?.role === "CLIENT_ASSISTANT" ? true : undefined,
+          employee?.role === "CLIENT_ASSISTANT" ||
+          employee?.role === "EMPLOYEE_CLIENT_ASSISTANT"
+            ? true
+            : undefined,
         seenByBranchManager:
           employee?.role === "BRANCH_MANAGER" ? true : undefined,
         seenByCompanyManager:
@@ -526,15 +560,6 @@ export class MessagesController {
           employee?.role === "INQUIRY_EMPLOYEE" ? true : undefined,
       },
     });
-
-    // let chatMembers = await this.getOrderChatMembers(orderId);
-
-    // const initialMessages=await this.getChatMessages(orderId,userId)
-
-    // chatMembers.forEach((member) => {
-    //   io.to(`${member}`).emit("newMessage", "");
-    // });
-    // io.to(`chat_${orderId}`).emit("chatMessages", initialMessages);
 
     const messages = await prisma.message.findMany({
       where: {
@@ -580,7 +605,10 @@ export class MessagesController {
       },
     });
 
-    if (loggedInUser.role === "CLIENT_ASSISTANT") {
+    if (
+      loggedInUser.role === "CLIENT_ASSISTANT" ||
+      loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT"
+    ) {
       const clientAssistant = await prisma.employee.findUnique({
         where: {
           id: loggedInUser.id,
@@ -648,7 +676,9 @@ export class MessagesController {
           },
         },
         seenByClient: loggedInUser.role === "CLIENT",
-        seenByClientAssistant: loggedInUser.role === "CLIENT_ASSISTANT",
+        seenByClientAssistant:
+          loggedInUser.role === "CLIENT_ASSISTANT" ||
+          loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT",
         seenByDelivery: loggedInUser.role === "DELIVERY_AGENT",
         seenByBranchManager: loggedInUser.role === "BRANCH_MANAGER",
         seenByCompanyManager: loggedInUser.role === "COMPANY_MANAGER",
@@ -791,11 +821,18 @@ export class MessagesController {
     if (user.role === "CLIENT_ASSISTANT") {
       inquiryStoresIDs = employee?.managedStores.map((s) => s.id);
     }
+    if (user.role === "EMPLOYEE_CLIENT_ASSISTANT") {
+      inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
+    }
+
     const result = await prisma.message.updateMany({
       where: {
         seenByClient: user.role === "CLIENT" ? false : undefined,
         seenByClientAssistant:
-          user.role === "CLIENT_ASSISTANT" ? false : undefined,
+          user.role === "CLIENT_ASSISTANT" ||
+          user.role === "EMPLOYEE_CLIENT_ASSISTANT"
+            ? false
+            : undefined,
         seenByDelivery: user.role === "DELIVERY_AGENT" ? false : undefined,
         seenByBranchManager: user.role === "BRANCH_MANAGER" ? false : undefined,
         seenByCompanyManager:
@@ -873,7 +910,10 @@ export class MessagesController {
       data: {
         seenByClient: user.role === "CLIENT" ? true : undefined,
         seenByClientAssistant:
-          user.role === "CLIENT_ASSISTANT" ? true : undefined,
+          user.role === "CLIENT_ASSISTANT" ||
+          user.role === "EMPLOYEE_CLIENT_ASSISTANT"
+            ? true
+            : undefined,
         seenByDelivery: user.role === "DELIVERY_AGENT" ? true : undefined,
         seenByBranchManager: user.role === "BRANCH_MANAGER" ? true : undefined,
         seenByCompanyManager:

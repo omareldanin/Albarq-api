@@ -43,9 +43,15 @@ export class StoresRepository {
     minified?: boolean;
     branchID?: number;
     name?: string;
+    inquiryStoresIDs?: number[];
   }) {
     const where = {
       AND: [
+        {
+          id: filters.inquiryStoresIDs
+            ? {in: filters.inquiryStoresIDs}
+            : undefined,
+        },
         {deleted: filters.deleted === "true"},
         {company: {id: filters.companyID}},
         {

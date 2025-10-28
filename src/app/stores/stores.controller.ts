@@ -4,6 +4,7 @@ import type {loggedInUserType} from "../../types/user";
 import {StoreCreateSchema, StoreUpdateSchema} from "./stores.dto";
 import {StoresRepository} from "./stores.repository";
 import {EmployeesRepository} from "../employees/employees.repository";
+import {prisma} from "../../database/db";
 
 const storesRepository = new StoresRepository();
 const employeesRepository = new EmployeesRepository();
@@ -35,6 +36,8 @@ export class StoresController {
     const loggedInUser = res.locals.user as loggedInUserType;
     let companyID: number | undefined;
     let name: string | undefined;
+    let inquiryStoresIDs: number[] | undefined = undefined;
+
     if (req.query.name) {
       name = req.query.name + "";
     }
@@ -58,6 +61,17 @@ export class StoresController {
       clientAssistantID = loggedInUser.id;
     }
 
+    if (loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT") {
+      const employee = await prisma.employee.findUnique({
+        where: {
+          id: loggedInUser.id,
+        },
+        select: {
+          inquiryStores: true,
+        },
+      });
+      inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
+    }
     // Show only stores of the same branch as the logged in user
     let branchID: number | undefined = req.query.branch_id
       ? +req.query.branch_id
@@ -105,6 +119,7 @@ export class StoresController {
       minified: minified,
       branchID: branchID,
       name: name,
+      inquiryStoresIDs,
     });
 
     res.status(200).json({
