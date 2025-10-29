@@ -346,6 +346,7 @@ model Order {
   recipientAddress       String
   details                String                   @default("")
   notes                  String                   @default("")
+  clientNotes            String                   @default("")
   deliveryType           DeliveryType             @default(NORMAL)
   governorate            Governorate
   currentLocation        String                   @default("")
@@ -482,6 +483,7 @@ model CustomerOutput {
 model ClientOrderReceipt {
   id            Int      @id @default(autoincrement())
   receiptNumber String   @default("")
+  notes         String?   @default("")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   branchId      Int

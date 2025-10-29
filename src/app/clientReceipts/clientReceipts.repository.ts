@@ -16,10 +16,7 @@ export class clientReceiptsRepository {
         id: true,
       },
     });
-
-    // if (!store) {
-    //   throw new AppError("العميل غير موجود", 400);
-    // }
+    console.log(data.receiptData);
 
     const receiptData: any = {
       receiptNumber: data.receiptData.receiptNumber,
@@ -34,7 +31,7 @@ export class clientReceiptsRepository {
     }
 
     const createdReceipt = await prisma.clientOrderReceipt.create({
-      data: receiptData,
+      data: {...receiptData, notes: data.receiptData.notes},
       select: clientReceiptSelect,
     });
 

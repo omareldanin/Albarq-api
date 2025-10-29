@@ -136,6 +136,7 @@ export class OrdersService {
           receiptNumber: true,
           storeId: true,
           branchId: true,
+          notes: true,
           store: {
             select: {
               clientId: true,
@@ -161,12 +162,9 @@ export class OrdersService {
         throw new AppError("رقم الوصل غير صالح", 500);
       }
       data.orderOrOrdersData.receiptNumber = clientReceipt?.receiptNumber;
+      data.orderOrOrdersData.notes = clientReceipt?.notes || "";
       data.orderOrOrdersData.clientOrderReceiptId = clientReceipt?.id + "";
     }
-
-    // const deliveryAgentID = await employeesRepository.getDeliveryAgentIDByLocationID({
-    //     locationID: data.orderOrOrdersData.locationID
-    // });
 
     let branchID = undefined;
     const branch = await branchesRepository.getBranchByLocation({

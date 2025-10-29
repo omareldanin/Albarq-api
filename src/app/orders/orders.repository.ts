@@ -334,7 +334,7 @@ export class OrdersRepository {
           ? data.orderData.receiptNumber
           : randomId,
         recipientAddress: data.orderData.recipientAddress,
-        notes: data.orderData.notes,
+        clientNotes: data.orderData.notes,
         details: data.orderData.details,
         deliveryType: data.orderData.deliveryType,
         printed: data.orderData.clientOrderReceiptId ? true : false,

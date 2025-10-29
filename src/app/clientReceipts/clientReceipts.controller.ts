@@ -81,6 +81,7 @@ export class ClientReceiptController {
           storeId: storeId,
           branchId: branchId,
           receiptNumber: receiptId,
+          notes: receipt.notes,
         },
       });
 

@@ -5,6 +5,7 @@ export const clientReceiptSelect = {
   receiptNumber: true,
   storeId: true,
   branchId: true,
+  notes: true,
   store: {
     select: {
       name: true,
