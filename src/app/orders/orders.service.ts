@@ -157,7 +157,7 @@ export class OrdersService {
       ) {
         throw new AppError("رقم الوصل غير صالح", 500);
       }
-      if (clientID !== clientReceipt?.store?.clientId) {
+      if (clientReceipt?.store && clientID !== clientReceipt?.store?.clientId) {
         throw new AppError("رقم الوصل غير صالح", 500);
       }
       data.orderOrOrdersData.receiptNumber = clientReceipt?.receiptNumber;
