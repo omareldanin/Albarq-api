@@ -33,7 +33,7 @@ const messageController = new MessagesController();
 export class OrdersRepository {
   generateRandomId() {
     const now = new Date(
-      new Date().toLocaleString("en-US", {timeZone: "Asia/Gaza"})
+      new Date().toLocaleString("en-US", {timeZone: "Asia/Baghdad"})
     );
     // Format date as YYMMDD
     const month = String(now.getMonth() + 1).padStart(2, "0");

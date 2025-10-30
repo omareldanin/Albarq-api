@@ -10,18 +10,26 @@ import {prisma} from "../../database/db";
 
 const clientReceiptRepository = new clientReceiptsRepository();
 
+let counter = 0;
+let lastSecond = 0;
 export class ClientReceiptController {
-  generateRandomId() {
+  generateOrderId() {
     const now = new Date(
-      new Date().toLocaleString("en-US", {timeZone: "Asia/Gaza"})
+      new Date().toLocaleString("en-US", {timeZone: "Asia/Baghdad"})
     );
-    // Format date as YYMMDD
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
-    const datePart = `${month}${day}`;
-    const timestampPart = Date.now().toString().slice(-5);
+    const seconds = Math.floor(now.getTime() / 1000);
 
-    return `${datePart}${timestampPart}`;
+    if (seconds !== lastSecond) {
+      counter = 0;
+      lastSecond = seconds;
+    }
+    counter++;
+
+    const counterPart = String(counter).padStart(2, "0");
+    const timePart = String(seconds).slice(-5);
+    return `${month}${day}${timePart}${counterPart}`;
   }
 
   createReceipts = catchAsync(async (req, res) => {
@@ -34,11 +42,11 @@ export class ClientReceiptController {
 
     for (const receipt of receipts) {
       let isUnique = false;
-      let receiptId = this.generateRandomId();
+      let receiptId = this.generateOrderId();
       let storeId: undefined | number;
       let branchId: undefined | number;
       while (!isUnique) {
-        receiptId = this.generateRandomId(); // Assuming generateRandomId is in scope
+        receiptId = this.generateOrderId(); // Assuming generateRandomId is in scope
 
         const exists = await prisma.clientOrderReceipt.count({
           where: {

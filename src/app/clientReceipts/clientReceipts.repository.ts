@@ -16,7 +16,6 @@ export class clientReceiptsRepository {
         id: true,
       },
     });
-    console.log(data.receiptData);
 
     const receiptData: any = {
       receiptNumber: data.receiptData.receiptNumber,
