@@ -12,6 +12,7 @@ export const clientReceiptSelect = {
       client: {
         select: {
           id: true,
+          showNumbers: true,
           user: {
             select: {
               name: true,
@@ -35,6 +36,7 @@ export const clientReceiptSelect = {
         select: {
           id: true,
           logo: true,
+          name: true,
         },
       },
     },
@@ -52,9 +54,15 @@ export const receiptReform = (
   const receiptReformed = {
     ...receipt,
     // TODO
+    branch: {
+      name: receipt.branch.name,
+      companyLogo: receipt.branch?.company.logo,
+      companyName: receipt.branch?.company.name,
+    },
     client: {
       name: receipt.store?.client.user.name,
       phone: receipt.store?.client.user.phone,
+      showNumbers: receipt.store?.client.showNumbers,
       companyLogo: receipt.branch?.company.logo,
       companyId: receipt.store?.client.company.id,
     },

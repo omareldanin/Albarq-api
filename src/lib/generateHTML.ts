@@ -75,6 +75,13 @@ export const generateHTML = async (template: string, data: object) => {
       return "";
     });
 
+    hb.registerHelper("showNumber", (showNumber, number) => {
+      if (showNumber) {
+        return number;
+      }
+
+      return "لا يوجد";
+    });
     hb.registerHelper("colorizeHeader", (secondaryReportType) => {
       if (secondaryReportType === SecondaryReportType.RETURNED) {
         return "bg-red";

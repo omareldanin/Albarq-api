@@ -85,7 +85,7 @@ export class StoresController {
         employeeID: loggedInUser.id,
       });
 
-      if (!employee?.repository || !employee.repository.mainRepository) {
+      if (!loggedInUser.mainRepository) {
         branchID = employee?.branch?.id;
       }
     }
