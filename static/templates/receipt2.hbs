@@ -3,23 +3,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>فاتورة</title>
-    <style>
-      .logo { width: 80px; } table { width: 100%; margin-top: 15px; border: 1px
-      solid #ccc; } td, th { border: 1px solid #ccc; padding: 5px 0; text-align:
-      center; font-size: 12px; } th { background-color: rgba(255, 255, 0, 0.26);
-      }.footer{ display: flex;justify-content: space-between; align-items: end;
-      margin-top: 20px; } .footer div{ font-weight: lighter !important; }
-      .info{margin-top: 10px;} .item{ display: flex; } .item span{ display:
-      block; width: 50%;font-size: 12px; border: 1px solid #dcdcdc; padding:
-      5px;} .item span:first-child{ border-left:none } .removeTop{ border-top:
-      none !important; } .address .item{ flex-direction: column;margin-top:
-      10px; } .address span{ width: unset !important; text-align: center; }
-      .address .item span:first-child{ border-bottom:none;border-left: 1px solid
-      #dcdcdc }.details{margin-top: 15px;} .details .head{ text-align: center;
-      padding: 5px;background-color: rgba(255, 255, 0, 0.26); border: 1px solid
-      #dcdcdc } .details .item span:first-child{ background-color: rgba(255,
-      255, 0, 0.26); }
-    </style>
+    <link rel="stylesheet" href="../styles/receiptStyle.css" />
   </head>
   <body style="direction: rtl">
     {{#each orders}}

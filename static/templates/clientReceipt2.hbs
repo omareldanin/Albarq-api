@@ -3,25 +3,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>فاتورة</title>
-    <style>
-      .logo { width: 80px; } .footer{ display: flex;justify-content:
-      space-between; align-items: end; margin-top: 20px; } .info{margin-top:
-      10px;} .item{ display: flex; } .item span{ display: block; width:
-      50%;font-size: 14px; border: 1px solid #333; padding: 5px;} .item
-      span:first-child{ border-left:none } .removeTop{ border-top: none
-      !important; } .address .item{ flex-direction: column;margin-top: 10px; }
-      .address span{ width: unset !important; text-align: center; } .address
-      .item span:first-child{ border-bottom:none;border-left: 1px solid #333
-      }.details{margin-top: 15px;} .details .head{ text-align: center; padding:
-      5px;background-color: rgba(255, 255, 0, 0.26); border: 1px solid #333 }
-      .details .item span:first-child{ background-color: rgba(255, 255, 0,
-      0.26); } @media print { * { -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important; color-adjust: exact !important; }
-      span, div { border-color: #000 !important; /* Darker border for visibility
-      */ } .item span { border: 1px solid #000 !important; /* Force black
-      borders */ } /* Remove any unwanted scaling or shadows */ body {
-      -webkit-filter: none !important; filter: none !important; } }
-    </style>
+    <link rel="stylesheet" href="../styles/receiptStyle.css" />
+
   </head>
   <body style="direction: rtl">
     {{#each receipts}}
