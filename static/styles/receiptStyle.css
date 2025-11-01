@@ -44,6 +44,7 @@
   padding: 5px;
   background-color: rgba(255, 255, 0, 0.26);
   border: 1px solid #333;
+  font-size: 14px;
 }
 .details .item span:first-child {
   background-color: rgba(255, 255, 0, 0.26);

@@ -1980,7 +1980,7 @@ export class OrdersRepository {
         },
       },
       orderBy: {
-        id: "asc",
+        id: "desc",
       },
       select: {...orderSelect},
     });
