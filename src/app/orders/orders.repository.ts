@@ -2193,7 +2193,7 @@ export class OrdersRepository {
       // Update governorates orders costs
       for (const order of governoratesOrders) {
         // const weight = order.weight || 0;
-        const deliveryCost = data.costs.baghdadDeliveryCost || 0;
+        const deliveryCost = data.costs.governoratesDeliveryCost || 0;
         // let weightedDeliveryCost =
         //   deliveryCost +
         //   weight * order.company?.additionalPriceForEveryKilogram;
@@ -3107,9 +3107,6 @@ export class OrdersRepository {
 
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
-
-    console.log(startOfDay);
-    console.log(endOfDay);
 
     const todayOrdersStatistics = await prisma.order.aggregate({
       _sum: {
