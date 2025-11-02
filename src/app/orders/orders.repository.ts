@@ -2683,6 +2683,9 @@ export class OrdersRepository {
                   : undefined,
               },
               {
+                deleted: false,
+              },
+              {
                 governorate: data.filters.inquiryGovernorates
                   ? {
                       in: data.filters.inquiryGovernorates,
@@ -3099,6 +3102,15 @@ export class OrdersRepository {
         },
       });
 
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    console.log(startOfDay);
+    console.log(endOfDay);
+
     const todayOrdersStatistics = await prisma.order.aggregate({
       _sum: {
         totalCost: true,
@@ -3109,18 +3121,9 @@ export class OrdersRepository {
       where: {
         ...filtersReformed,
         // deleted: false,
-        deliveryDate:
-          data.loggedInUser.role === "DELIVERY_AGENT"
-            ? {
-                gte: new Date(new Date().setHours(0, 0, 0, 0)),
-              }
-            : undefined,
-        receivedAt:
-          data.loggedInUser.role !== "DELIVERY_AGENT"
-            ? {
-                gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
-              }
-            : undefined,
+        ...(data.loggedInUser.role === "DELIVERY_AGENT"
+          ? {deliveryDate: {gte: startOfDay, lte: endOfDay}}
+          : {receivedAt: {gte: startOfDay, lte: endOfDay}}),
       },
     });
 
