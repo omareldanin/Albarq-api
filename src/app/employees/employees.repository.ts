@@ -182,9 +182,13 @@ export class EmployeesRepository {
     loggedInUser: loggedInUserType;
   }) {
     let emergency = false;
+    let mainEmergency = false;
 
     if (data.filters.roles?.includes("EMERGENCY_EMPLOYEE")) {
       emergency = true;
+    }
+    if (data.filters.roles?.includes("MAIN_EMERGENCY_EMPLOYEE")) {
+      mainEmergency = true;
     }
 
     const where = {
@@ -224,6 +228,13 @@ export class EmployeesRepository {
         },
         {
           emergency:
+            data.filters.role === "INQUIRY_EMPLOYEE" ||
+            data.filters.roles?.includes("INQUIRY_EMPLOYEE")
+              ? false
+              : undefined,
+        },
+        {
+          mainEmergency:
             data.filters.role === "INQUIRY_EMPLOYEE" ||
             data.filters.roles?.includes("INQUIRY_EMPLOYEE")
               ? false
@@ -313,6 +324,12 @@ export class EmployeesRepository {
             emergency
               ? {
                   emergency: true,
+                  role: "INQUIRY_EMPLOYEE",
+                  companyId: data.loggedInUser.companyID ?? undefined,
+                }
+              : mainEmergency
+              ? {
+                  mainEmergency: true,
                   role: "INQUIRY_EMPLOYEE",
                   companyId: data.loggedInUser.companyID ?? undefined,
                 }

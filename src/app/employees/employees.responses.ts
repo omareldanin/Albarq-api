@@ -12,6 +12,7 @@ export const employeeSelect = {
   residencyCard: true,
   clientAssistantRole: true,
   emergency: true,
+  mainEmergency: true,
   orderType: true,
   user: {
     select: {
@@ -43,7 +44,6 @@ export const employeeSelect = {
   _count: {
     select: {
       orders: true,
-      // deliveryAgentsLocations: true
     },
   },
   managedStores: {
@@ -167,6 +167,7 @@ export const employeeReform = (
     salary: employee.salary,
     role: employee.role,
     emergency: employee.emergency,
+    mainEmergency: employee.mainEmergency,
     permissions: employee.permissions,
     orderStatus: employee.orderStatus,
     deliveryCost: employee.deliveryCost,
