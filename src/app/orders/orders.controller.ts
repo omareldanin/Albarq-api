@@ -708,7 +708,7 @@ export class OrdersController {
         pdfId: +pdfId,
       },
       orderBy: {
-        id: "desc",
+        createdAt: "desc",
       },
       select: orderSelect,
     });
