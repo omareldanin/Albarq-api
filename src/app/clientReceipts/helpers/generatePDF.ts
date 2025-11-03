@@ -25,19 +25,12 @@ export const generatePDF = async (
     await page.setContent(html);
     css && (await page.addStyleTag({content: css}));
 
-    const isLandscape = options.landscape === true;
-
     const pdf = await page.pdf({
-      width: isLandscape ? "210mm" : "148mm",
-      height: isLandscape ? "148mm" : "210mm",
-      landscape: isLandscape,
+      width: "100mm",
+      height: "100mm",
+      landscape: options.landscape,
       printBackground: true,
-      margin: {
-        top: "5mm",
-        right: "5mm",
-        bottom: "5mm",
-        left: "5mm",
-      },
+      margin: {top: "10px", right: "10px", bottom: "10px", left: "10px"},
     });
 
     await browser.close();
