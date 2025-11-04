@@ -1479,39 +1479,40 @@ export class OrdersRepository {
                 },
               },
               {
-                OR: data.filters.orderType
-                  ? []
-                  : data.filters.governorate &&
-                    data.filters.governorateReport === "false"
-                  ? [
-                      {
-                        branch: {
-                          governorate: data.filters.governorate,
+                OR:
+                  data.filters.orderType && data.filters.orderType !== "inside"
+                    ? []
+                    : data.filters.governorate &&
+                      data.filters.governorateReport === "false"
+                    ? [
+                        {
+                          branch: {
+                            governorate: data.filters.governorate,
+                          },
                         },
-                      },
-                    ]
-                  : [
-                      {
-                        branch: data.filters.inquiryBranchesIDs
-                          ? {
-                              id: {
-                                in: data.filters.inquiryBranchesIDs,
-                              },
-                            }
-                          : {
-                              id: data.filters.branchID,
-                            },
-                      },
-                      {
-                        client:
-                          data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-                          !data.loggedInUser?.mainRepository
+                      ]
+                    : [
+                        {
+                          branch: data.filters.inquiryBranchesIDs
                             ? {
-                                branchId: data.loggedInUser?.branchId,
+                                id: {
+                                  in: data.filters.inquiryBranchesIDs,
+                                },
                               }
-                            : undefined,
-                      },
-                    ],
+                            : {
+                                id: data.filters.branchID,
+                              },
+                        },
+                        {
+                          client:
+                            data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                            !data.loggedInUser?.mainRepository
+                              ? {
+                                  branchId: data.loggedInUser?.branchId,
+                                }
+                              : undefined,
+                        },
+                      ],
               },
               {
                 governorate:
@@ -1557,6 +1558,8 @@ export class OrdersRepository {
                       data.loggedInUser?.role !== "COMPANY_MANAGER" &&
                       !data.loggedInUser?.mainCompany
                     ? data.filters.branchID
+                    : data.filters.orderType === "inside"
+                    ? {equals: null}
                     : undefined,
               },
               {
@@ -1579,6 +1582,8 @@ export class OrdersRepository {
                     ? data.filters.branchID
                     : data.filters.orderType === "receivedAll"
                     ? data.loggedInUser?.branchId
+                    : data.filters.orderType === "inside"
+                    ? {equals: null}
                     : undefined,
               },
             ],
@@ -2101,6 +2106,7 @@ export class OrdersRepository {
 
   async updateOrdersCosts(data: {
     ordersIDs: string[];
+    clientId?: number;
     costs: {
       baghdadDeliveryCost?: number;
       governoratesDeliveryCost?: number;
@@ -2248,7 +2254,6 @@ export class OrdersRepository {
         });
       }
     }
-
     if (
       data.costs.governoratesDeliveryCost &&
       data.costs.reportType === ReportType.BRANCH
@@ -2282,6 +2287,68 @@ export class OrdersRepository {
         });
       }
     }
+
+    if (
+      !data.costs.baghdadDeliveryCost &&
+      !data.costs.governoratesDeliveryCost &&
+      data.costs.reportType === ReportType.BRANCH
+    ) {
+      // Get Baghdad orders
+      const orders = await prisma.order.findMany({
+        where: {
+          id: {
+            in: data.ordersIDs,
+          },
+        },
+        select: {
+          id: true,
+          paidAmount: true,
+          governorate: true,
+          weight: true,
+          client: {
+            select: {
+              governoratesDeliveryCosts: true,
+            },
+          },
+        },
+      });
+
+      // Update Baghdad orders costs
+      for (const order of orders) {
+        const governoratesDeliveryCosts = order.client
+          .governoratesDeliveryCosts as {
+          governorate: Governorate;
+          cost: number;
+        }[];
+
+        let deliveryCost: number | undefined = 0;
+
+        if (governoratesDeliveryCosts) {
+          deliveryCost =
+            governoratesDeliveryCosts.find(
+              (governorateDeliveryCost: {
+                governorate: Governorate;
+                cost: number;
+              }) => {
+                return (
+                  governorateDeliveryCost.governorate === order.governorate
+                );
+              }
+            )?.cost || 0;
+        }
+
+        await prisma.order.update({
+          where: {
+            id: order.id,
+          },
+          data: {
+            branchNet: order.paidAmount - deliveryCost,
+            branchDeliveryCost: deliveryCost,
+          },
+        });
+      }
+    }
+
     // Update delivery agent delivery cost
     if (data.costs.deliveryAgentDeliveryCost) {
       // get orders

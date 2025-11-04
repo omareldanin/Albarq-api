@@ -396,6 +396,7 @@ model Order {
   oldDeliveryCost        Float                    @default(0)
   receivedBranchId       Int?
   branchNet              Float                    @default(0)
+  branchDeliveryCost     Float                    @default(0)
   chat                   Chat?
   CustomerOutput         CustomerOutput[]
   automaticUpdate        AutomaticUpdate?         @relation(fields: [automaticUpdateId], references: [id])

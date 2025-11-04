@@ -118,6 +118,7 @@ export const orderSelect = {
   forwardedRepo: true,
   forwardedBranchId: true,
   receivedBranchId: true,
+  branchDeliveryCost: true,
   processedBy: {
     select: {
       user: {
