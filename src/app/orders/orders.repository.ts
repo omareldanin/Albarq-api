@@ -3175,25 +3175,20 @@ export class OrdersRepository {
         },
       });
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
-
     const todayOrdersStatistics = await prisma.order.aggregate({
-      _sum: {
-        totalCost: true,
-      },
-      _count: {
-        id: true,
-      },
+      _sum: {totalCost: true},
+      _count: {id: true},
       where: {
         ...filtersReformed,
-        // deleted: false,
-        ...(data.loggedInUser.role === "DELIVERY_AGENT"
-          ? {deliveryDate: {gte: startOfDay, lte: endOfDay}}
-          : {receivedAt: {gte: startOfDay, lte: endOfDay}}),
+        deleted: false,
+        deliveryDate:
+          data.loggedInUser.role === "DELIVERY_AGENT"
+            ? {gte: new Date(Date.now() - 22 * 60 * 60 * 1000)}
+            : undefined,
+        receivedAt:
+          data.loggedInUser.role !== "DELIVERY_AGENT"
+            ? {gte: new Date(Date.now() - 22 * 60 * 60 * 1000)}
+            : undefined,
       },
     });
 

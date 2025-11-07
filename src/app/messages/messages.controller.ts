@@ -173,6 +173,7 @@ export class MessagesController {
         inquiryStores: true,
         permissions: true,
         orderStatus: true,
+        mainEmergency: true,
       },
     });
 
@@ -300,6 +301,8 @@ export class MessagesController {
                               in: inquiryBranchesIDs,
                             },
                           }
+                        : employee?.mainEmergency
+                        ? undefined
                         : {
                             id: employee?.branchId!!,
                           },
