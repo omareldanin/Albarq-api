@@ -703,6 +703,9 @@ export class OrdersRepository {
                 storeId: data.filters.storeID,
               },
               {
+                locationId: data.filters.locationID,
+              },
+              {
                 company: {
                   id: data.filters.companyID,
                 },
@@ -719,7 +722,7 @@ export class OrdersRepository {
               {
                 createdAt: data.filters.endDate
                   ? {
-                      lte: endDate,
+                      lt: endDate,
                     }
                   : undefined,
               },
