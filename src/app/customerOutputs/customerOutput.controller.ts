@@ -260,6 +260,7 @@ export class CustomerOutputController {
       repositoryId,
       repositoryName,
       receivingAgentId,
+      orderIds,
     } = req.body;
 
     let ordersIDs: string[] = [];
@@ -308,6 +309,7 @@ export class CustomerOutputController {
       {
         where: {
           AND: [
+            {orderId: orderIds ? {in: orderIds} : undefined},
             {repositoryId: returnsRepo.id},
             type === "client" ? {storeId: storeId ? +storeId : null} : {},
             type === "client"
@@ -455,6 +457,7 @@ export class CustomerOutputController {
     await prisma.customerOutput.deleteMany({
       where: {
         AND: [
+          {orderId: orderIds ? {in: orderIds} : undefined},
           {repositoryId: returnsRepo.id},
           type === "client" ? {storeId: storeId ? +storeId : null} : {},
           type === "client"
