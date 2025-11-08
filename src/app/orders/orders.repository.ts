@@ -668,6 +668,9 @@ export class OrdersRepository {
                     }
                   : undefined,
               },
+              {
+                governorate: data.filters.governorate,
+              },
               // Filter by notes
               {
                 notes: data.filters.notes,
@@ -695,6 +698,9 @@ export class OrdersRepository {
                       },
                     }
                   : undefined,
+              },
+              {
+                storeId: data.filters.storeID,
               },
               {
                 company: {
