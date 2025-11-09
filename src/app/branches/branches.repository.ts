@@ -9,8 +9,6 @@ export class BranchesRepository {
       data: {
         name: data.name,
         governorate: data.governorate,
-        branchCLient: data.branchCLient,
-        branchOrder: data.branchOrder,
         company: {
           connect: {
             id: companyID,
@@ -109,8 +107,6 @@ export class BranchesRepository {
       data: {
         name: data.branchData.name,
         governorate: data.branchData.governorate,
-        branchCLient: data.branchData.branchCLient,
-        branchOrder: data.branchData.branchOrder,
       },
       select: branchSelect,
     });

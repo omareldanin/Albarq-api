@@ -4,8 +4,6 @@ export const branchSelect = {
   id: true,
   name: true,
   governorate: true,
-  branchCLient: true,
-  branchOrder: true,
   company: {
     select: {
       id: true,

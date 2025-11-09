@@ -6,8 +6,6 @@ import {z} from "zod";
 export const BranchCreateSchema = z.object({
   name: z.string().min(3),
   governorate: z.nativeEnum(Governorate),
-  branchCLient: z.coerce.number().min(0),
-  branchOrder: z.coerce.number().min(0),
 });
 
 export type BranchCreateType = z.infer<typeof BranchCreateSchema>;
