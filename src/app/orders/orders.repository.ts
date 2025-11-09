@@ -1515,7 +1515,6 @@ export class OrdersRepository {
                         {
                           client:
                             data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-                            data.loggedInUser?.role !== "DELIVERY_AGENT" &&
                             !data.loggedInUser?.mainRepository
                               ? {
                                   branchId: data.loggedInUser?.branchId,
