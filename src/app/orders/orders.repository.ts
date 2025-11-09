@@ -1500,7 +1500,8 @@ export class OrdersRepository {
                           },
                         },
                       ]
-                    : [
+                    : data.loggedInUser?.role !== "DELIVERY_AGENT"
+                    ? [
                         {
                           branch: data.filters.inquiryBranchesIDs
                             ? {
@@ -1509,7 +1510,7 @@ export class OrdersRepository {
                                 },
                               }
                             : {
-                                id: data.filters.branchID,
+                                id: undefined,
                               },
                         },
                         {
@@ -1521,7 +1522,8 @@ export class OrdersRepository {
                                 }
                               : undefined,
                         },
-                      ],
+                      ]
+                    : undefined,
               },
               {
                 governorate:
@@ -1597,6 +1599,7 @@ export class OrdersRepository {
               },
             ],
           } satisfies Prisma.OrderWhereInput);
+    console.log(data.filters.branchID);
 
     if (data.filters.minified === true || data.filters.forMobile === true) {
       const paginatedOrders = await prisma.order.findManyPaginated(
