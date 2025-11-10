@@ -611,22 +611,22 @@ export class OrdersController {
     const returnedReport = oldOrder.repositoryReport.find(
       (r) => r.secondaryType === "RETURNED"
     );
-    // // Remove the order from the repository report
-    // if (returnedReport) {
-    //   await ordersRepository.removeOrderFromRepositoryReport({
-    //     orderID: oldOrder.id,
-    //     repositoryReportID: returnedReport.id,
-    //     orderData: {
-    //       totalCost: oldOrder.totalCost,
-    //       paidAmount: oldOrder.paidAmount,
-    //       deliveryCost: oldOrder.deliveryCost,
-    //       clientNet: oldOrder.clientNet,
-    //       deliveryAgentNet: oldOrder.deliveryAgentNet,
-    //       companyNet: oldOrder.companyNet,
-    //       governorate: oldOrder.governorate,
-    //     },
-    //   });
-    // }
+    // Remove the order from the repository report
+    if (returnedReport) {
+      await ordersRepository.removeOrderFromRepositoryReport({
+        orderID: oldOrder.id,
+        repositoryReportID: returnedReport.id,
+        orderData: {
+          totalCost: oldOrder.totalCost,
+          paidAmount: oldOrder.paidAmount,
+          deliveryCost: oldOrder.deliveryCost,
+          clientNet: oldOrder.clientNet,
+          deliveryAgentNet: oldOrder.deliveryAgentNet,
+          companyNet: oldOrder.companyNet,
+          governorate: oldOrder.governorate,
+        },
+      });
+    }
 
     const customerOutput = await prisma.customerOutput.deleteMany({
       where: {

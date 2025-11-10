@@ -659,6 +659,11 @@ export class OrdersRepository {
                 processingStatus: data.filters.processingStatus,
               },
               {
+                status: data.filters.statuses
+                  ? {in: data.filters.statuses}
+                  : undefined,
+              },
+              {
                 status: data.filters.status,
               },
               {
@@ -689,6 +694,17 @@ export class OrdersRepository {
                   : {
                       id: data.loggedInUser.branchId,
                     },
+              },
+              {
+                branchId: data.filters.orderType
+                  ? undefined
+                  : data.filters.branchID,
+              },
+              {
+                clientId: data.filters.clientID,
+              },
+              {
+                deliveryAgentId: data.filters.deliveryAgentID,
               },
               {
                 store: data.filters.inquiryStoresIDs
@@ -951,20 +967,56 @@ export class OrdersRepository {
               },
               {
                 forwardedBranchId:
-                  data.filters.orderType === "forwarded" &&
-                  data.filters.inquiryBranchesIDs
-                    ? {in: data.filters.inquiryBranchesIDs}
-                    : data.filters.orderType === "forwarded"
-                    ? data.loggedInUser.branchId
+                  data.filters.orderType === "forwarded"
+                    ? data.filters.branchID
                     : undefined,
               },
               {
                 receivedBranchId:
-                  data.filters.orderType === "receiving" &&
-                  data.filters.inquiryBranchesIDs
-                    ? {in: data.filters.inquiryBranchesIDs}
-                    : data.filters.orderType === "receiving"
-                    ? data.loggedInUser.branchId
+                  data.filters.orderType === "received"
+                    ? data.filters.branchID
+                    : undefined,
+              },
+              {
+                forwardedBranchId:
+                  data.filters.orderType === "forwardedAll" &&
+                  data.loggedInUser?.mainRepository &&
+                  data.filters.branchID
+                    ? data.filters.branchID
+                    : data.filters.orderType === "forwardedAll" &&
+                      data.loggedInUser?.mainRepository
+                    ? {
+                        not: null,
+                      }
+                    : data.filters.orderType === "forwardedAll"
+                    ? data.loggedInUser?.branchId
+                    : data.filters.orderType === "receivedAll" &&
+                      data.filters.branchID &&
+                      !data.loggedInUser?.mainCompany
+                    ? data.filters.branchID
+                    : data.filters.orderType === "inside"
+                    ? {equals: null}
+                    : undefined,
+              },
+              {
+                receivedBranchId:
+                  data.filters.orderType === "receivedAll" &&
+                  data.loggedInUser?.mainRepository &&
+                  data.filters.branchID
+                    ? data.filters.branchID
+                    : data.filters.orderType === "receivedAll" &&
+                      data.loggedInUser?.mainRepository
+                    ? {
+                        not: null,
+                      }
+                    : data.filters.orderType === "forwardedAll" &&
+                      data.filters.branchID &&
+                      !data.loggedInUser?.mainCompany
+                    ? data.filters.branchID
+                    : data.filters.orderType === "receivedAll"
+                    ? data.loggedInUser?.branchId
+                    : data.filters.orderType === "inside"
+                    ? {equals: null}
                     : undefined,
               },
             ],
