@@ -1670,7 +1670,6 @@ export class OrdersRepository {
                         some: {
                           receivingAgentId: data.loggedInUser.id,
                           report: {
-                            confirmed: false,
                             deleted: false,
                           },
                         },
@@ -1696,9 +1695,6 @@ export class OrdersRepository {
                             clientReport: {
                               none: {
                                 secondaryType: "DELIVERED",
-                                report: {
-                                  confirmed: true,
-                                },
                               },
                             },
                             status: {
@@ -1709,9 +1705,6 @@ export class OrdersRepository {
                             clientReport: {
                               none: {
                                 secondaryType: "RETURNED",
-                                report: {
-                                  confirmed: true,
-                                },
                               },
                             },
                             status: {
@@ -1817,7 +1810,6 @@ export class OrdersRepository {
                       some: {
                         receivingAgentId: data.loggedInUser.id,
                         report: {
-                          confirmed: false,
                           deleted: false,
                         },
                       },
@@ -1842,9 +1834,6 @@ export class OrdersRepository {
                           clientReport: {
                             none: {
                               secondaryType: "DELIVERED",
-                              report: {
-                                confirmed: true,
-                              },
                             },
                           },
                           status: {
@@ -1855,9 +1844,6 @@ export class OrdersRepository {
                           clientReport: {
                             none: {
                               secondaryType: "RETURNED",
-                              report: {
-                                confirmed: true,
-                              },
                             },
                           },
                           status: {
@@ -3056,9 +3042,6 @@ export class OrdersRepository {
                   clientReport: {
                     none: {
                       secondaryType: "DELIVERED",
-                      report: {
-                        confirmed: true,
-                      },
                     },
                   },
                   status: {
@@ -3069,9 +3052,6 @@ export class OrdersRepository {
                   clientReport: {
                     none: {
                       secondaryType: "RETURNED",
-                      report: {
-                        confirmed: true,
-                      },
                     },
                   },
                   status: {
