@@ -467,7 +467,7 @@ export class OrdersController {
           notIn: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED", "DELIVERED"],
         },
         companyId: loggedInUser.companyID!!,
-        confirmed: true,
+        // confirmed: true,
         deleted: false,
       },
       select: orderSelect,
