@@ -440,100 +440,133 @@ export class OrdersController {
       throw new AppError("لا يوجد مخزن وارد لهذا الفرع!", 404);
     }
 
-    let oldOrder = await ordersRepository.getOrderByReceiptNumber({
-      orderReceiptNumber: params.orderReceiptNumber,
+    // let oldOrder = await ordersRepository.getOrderByReceiptNumber({
+    //   orderReceiptNumber: params.orderReceiptNumber,
+    // });
+
+    // if (!oldOrder) {
+    //   oldOrder = await ordersRepository.getOrder({
+    //     orderID: params.orderReceiptNumber,
+    //   });
+    //   if (!oldOrder) {
+    //     throw new AppError("الطلب غير موجود", 404);
+    //   }
+    // }
+
+    const checkOrders = await prisma.order.findMany({
+      where: {
+        OR: [
+          {
+            receiptNumber: params.orderReceiptNumber,
+          },
+          {
+            id: params.orderReceiptNumber,
+          },
+        ],
+        status: {
+          notIn: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED", "DELIVERED"],
+        },
+        companyId: loggedInUser.companyID!!,
+        confirmed: true,
+        deleted: false,
+      },
+      select: orderSelect,
     });
 
-    if (!oldOrder) {
-      oldOrder = await ordersRepository.getOrder({
-        orderID: params.orderReceiptNumber,
-      });
-      if (!oldOrder) {
-        throw new AppError("الطلب غير موجود", 404);
-      }
+    if (checkOrders.length === 0) {
+      throw new AppError("الطلب غير موجود", 404);
     }
 
-    if (orderData.secondaryStatus === "IN_CAR") {
-      if (exportRepo?.mainRepository) {
-        const repository = await prisma.repository.findFirst({
-          where: {
-            id: orderData.repositoryID,
-          },
-          select: {
-            branchId: true,
-            branch: {
-              select: {
-                governorate: true,
+    if (checkOrders.length > 1) {
+      res.status(200).json({
+        multi: true,
+        data: checkOrders.map((order) => orderReform(order)),
+      });
+    } else {
+      let oldOrder = checkOrders[0];
+
+      if (orderData.secondaryStatus === "IN_CAR") {
+        if (exportRepo?.mainRepository) {
+          const repository = await prisma.repository.findFirst({
+            where: {
+              id: orderData.repositoryID,
+            },
+            select: {
+              branchId: true,
+              branch: {
+                select: {
+                  governorate: true,
+                },
               },
             },
-          },
-        });
+          });
 
-        if (repository?.branch.governorate !== oldOrder?.governorate) {
-          throw new AppError("الطلب غير مرتبط بهذا الفرع", 400);
-        }
-        if (repository.branchId === oldOrder.client.branchId) {
-          orderData.forwardedBranchId = -1;
+          if (repository?.branch.governorate !== oldOrder?.governorate) {
+            throw new AppError("الطلب غير مرتبط بهذا الفرع", 400);
+          }
+          if (repository.branchId === oldOrder.client.branchId) {
+            orderData.forwardedBranchId = -1;
+          } else {
+            orderData.receivedBranchId = repository?.branchId;
+          }
+          orderData.forwardedRepo = exportRepo?.id;
+          orderData.branchID = repository.branchId;
         } else {
-          orderData.receivedBranchId = repository?.branchId;
+          const mainRepository = await prisma.repository.findFirst({
+            where: {
+              mainRepository: true,
+              company: loggedInUser.companyID
+                ? {
+                    id: loggedInUser.companyID,
+                  }
+                : undefined,
+              type: "EXPORT",
+            },
+            select: {
+              id: true,
+            },
+          });
+          orderData.repositoryID = mainRepository?.id;
+          orderData.forwardedRepo = exportRepo?.id;
+          orderData.forwardedBranchId = user.branch?.id;
         }
-        orderData.forwardedRepo = exportRepo?.id;
-        orderData.branchID = repository.branchId;
       } else {
-        const mainRepository = await prisma.repository.findFirst({
-          where: {
-            mainRepository: true,
-            company: loggedInUser.companyID
-              ? {
-                  id: loggedInUser.companyID,
-                }
-              : undefined,
-            type: "EXPORT",
-          },
-          select: {
-            id: true,
-          },
-        });
-        orderData.repositoryID = mainRepository?.id;
-        orderData.forwardedRepo = exportRepo?.id;
-        orderData.forwardedBranchId = user.branch?.id;
+        if (user.branch?.id !== oldOrder.client.branchId) {
+          orderData.forwardedBranchId = oldOrder.client.branchId || undefined;
+        }
+        if (
+          oldOrder.receivedBranchId &&
+          oldOrder.receivedBranchId !== user.branch?.id
+        ) {
+          orderData.receivedBranchId = user.branch?.id;
+        }
+        orderData.repositoryID = exportRepo?.id;
+        orderData.branchID = user.branch?.id;
       }
-    } else {
-      if (user.branch?.id !== oldOrder.client.branchId) {
-        orderData.forwardedBranchId = oldOrder.client.branchId || undefined;
-      }
+
       if (
-        oldOrder.receivedBranchId &&
-        oldOrder.receivedBranchId !== user.branch?.id
+        oldOrder?.status === "RETURNED" ||
+        oldOrder?.status === "REPLACED" ||
+        oldOrder?.status === "PARTIALLY_RETURNED"
       ) {
-        orderData.receivedBranchId = user.branch?.id;
+        throw new AppError("هذا الطلب مرتجع!", 400);
       }
-      orderData.repositoryID = exportRepo?.id;
-      orderData.branchID = user.branch?.id;
+
+      orderData.confirmed = true;
+
+      const order = await ordersService.updateOrder({
+        params: {
+          orderID: oldOrder?.id,
+        },
+        orderData: orderData,
+        loggedInUser: loggedInUser,
+      });
+
+      res.status(200).json({
+        status: "success",
+        data: order,
+      });
     }
-
-    if (
-      oldOrder?.status === "RETURNED" ||
-      oldOrder?.status === "REPLACED" ||
-      oldOrder?.status === "PARTIALLY_RETURNED"
-    ) {
-      throw new AppError("هذا الطلب مرتجع!", 400);
-    }
-
-    orderData.confirmed = true;
-
-    const order = await ordersService.updateOrder({
-      params: {
-        orderID: oldOrder?.id,
-      },
-      orderData: orderData,
-      loggedInUser: loggedInUser,
-    });
-
-    res.status(200).json({
-      status: "success",
-      data: order,
-    });
   });
 
   addReturnedOrderToRepository = catchAsync(async (req, res) => {
@@ -577,76 +610,106 @@ export class OrdersController {
       throw new AppError("لا يوجد مخزن راوجع لهذا الفرع!", 404);
     }
 
-    let oldOrder = await ordersRepository.getOrderByReceiptNumber({
-      orderReceiptNumber: params.orderReceiptNumber,
+    const checkOrders = await prisma.order.findMany({
+      where: {
+        OR: [
+          {
+            receiptNumber: params.orderReceiptNumber,
+          },
+          {
+            id: params.orderReceiptNumber,
+          },
+        ],
+        status: {in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"]},
+        companyId: loggedInUser.companyID!!,
+        confirmed: true,
+        deleted: false,
+      },
+      select: orderSelect,
     });
 
-    if (!oldOrder) {
-      oldOrder = await ordersRepository.getOrder({
-        orderID: params.orderReceiptNumber,
+    if (checkOrders.length === 0) {
+      throw new AppError("الطلب غير موجود", 404);
+    }
+
+    if (checkOrders.length > 1) {
+      res.status(200).json({
+        multi: true,
+        data: checkOrders.map((order) => orderReform(order)),
       });
-      if (!oldOrder) {
-        throw new AppError("الطلب غير موجود", 404);
+    } else {
+      // let oldOrder = await ordersRepository.getOrderByReceiptNumber({
+      //   orderReceiptNumber: params.orderReceiptNumber,
+      // });
+
+      // if (!oldOrder) {
+      //   oldOrder = await ordersRepository.getOrder({
+      //     orderID: params.orderReceiptNumber,
+      //   });
+      //   if (!oldOrder) {
+      //     throw new AppError("الطلب غير موجود", 404);
+      //   }
+      // }
+      let oldOrder = checkOrders[0];
+
+      if (!orderData.repositoryID) {
+        orderData.repositoryID = returnsRepo?.id;
       }
-    }
 
-    if (!orderData.repositoryID) {
-      orderData.repositoryID = returnsRepo?.id;
-    }
+      if (
+        oldOrder?.status !== "RETURNED" &&
+        oldOrder?.status !== "REPLACED" &&
+        oldOrder?.status !== "PARTIALLY_RETURNED"
+      ) {
+        throw new AppError("هذا الطلب غير مرتجع!", 400);
+      }
 
-    if (
-      oldOrder?.status !== "RETURNED" &&
-      oldOrder?.status !== "REPLACED" &&
-      oldOrder?.status !== "PARTIALLY_RETURNED"
-    ) {
-      throw new AppError("هذا الطلب غير مرتجع!", 400);
-    }
+      if (
+        oldOrder.secondaryStatus === "IN_REPOSITORY" &&
+        oldOrder.repository?.id === returnsRepo?.id
+      ) {
+        throw new AppError("هذا الطلب موجود في مخزن!", 400);
+      }
+      const returnedReport = oldOrder.repositoryReport.find(
+        (r) => r.secondaryType === "RETURNED"
+      );
+      // Remove the order from the repository report
+      if (returnedReport) {
+        await ordersRepository.removeOrderFromRepositoryReport({
+          orderID: oldOrder.id,
+          repositoryReportID: returnedReport.id,
+          orderData: {
+            totalCost: oldOrder.totalCost,
+            paidAmount: oldOrder.paidAmount,
+            deliveryCost: oldOrder.deliveryCost,
+            clientNet: oldOrder.clientNet,
+            deliveryAgentNet: oldOrder.deliveryAgentNet,
+            companyNet: oldOrder.companyNet,
+            governorate: oldOrder.governorate,
+          },
+        });
+      }
 
-    if (
-      oldOrder.secondaryStatus === "IN_REPOSITORY" &&
-      oldOrder.repository?.id === returnsRepo?.id
-    ) {
-      throw new AppError("هذا الطلب موجود في مخزن!", 400);
-    }
-    const returnedReport = oldOrder.repositoryReport.find(
-      (r) => r.secondaryType === "RETURNED"
-    );
-    // Remove the order from the repository report
-    if (returnedReport) {
-      await ordersRepository.removeOrderFromRepositoryReport({
-        orderID: oldOrder.id,
-        repositoryReportID: returnedReport.id,
-        orderData: {
-          totalCost: oldOrder.totalCost,
-          paidAmount: oldOrder.paidAmount,
-          deliveryCost: oldOrder.deliveryCost,
-          clientNet: oldOrder.clientNet,
-          deliveryAgentNet: oldOrder.deliveryAgentNet,
-          companyNet: oldOrder.companyNet,
-          governorate: oldOrder.governorate,
+      await prisma.customerOutput.deleteMany({
+        where: {
+          orderId: oldOrder.id,
+          targetRepositoryId: returnedReport?.id,
         },
       });
+
+      const order = await ordersService.updateOrder({
+        params: {
+          orderID: oldOrder.id,
+        },
+        orderData: orderData,
+        loggedInUser: loggedInUser,
+      });
+
+      res.status(200).json({
+        status: "success",
+        data: order,
+      });
     }
-
-    const customerOutput = await prisma.customerOutput.deleteMany({
-      where: {
-        orderId: oldOrder.id,
-        targetRepositoryId: returnedReport?.id,
-      },
-    });
-
-    const order = await ordersService.updateOrder({
-      params: {
-        orderID: oldOrder.id,
-      },
-      orderData: orderData,
-      loggedInUser: loggedInUser,
-    });
-
-    res.status(200).json({
-      status: "success",
-      data: order,
-    });
   });
 
   repositoryConfirmOrderByReceiptNumber = catchAsync(async (req, res) => {

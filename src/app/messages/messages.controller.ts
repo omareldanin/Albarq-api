@@ -345,6 +345,7 @@ export class MessagesController {
                   branchId:
                     user.role !== "COMPANY_MANAGER" &&
                     user.role !== "CLIENT_ASSISTANT" &&
+                    user.role !== "EMPLOYEE_CLIENT_ASSISTANT" &&
                     !user.mainRepository &&
                     user.role !== "DELIVERY_AGENT"
                       ? employee?.branchId
