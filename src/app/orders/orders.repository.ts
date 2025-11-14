@@ -1766,6 +1766,7 @@ export class OrdersRepository {
                         ]
                       : data.loggedInUser?.role !== "COMPANY_MANAGER" &&
                         data.loggedInUser?.role !== "CLIENT" &&
+                        data.loggedInUser?.role !== "RECEIVING_AGENT" &&
                         data.loggedInUser?.role !== "CLIENT_ASSISTANT" &&
                         data.loggedInUser?.role !== "INQUIRY_EMPLOYEE" &&
                         data.loggedInUser?.role !==
