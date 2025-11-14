@@ -21,6 +21,7 @@ import {AppError} from "../../lib/AppError";
 import {OrdersRepository} from "./orders.repository";
 import {generateReceipts} from "./helpers/generateReceipts";
 import {governorateArabicNames} from "../locations/locations.repository";
+import {generateOrdersReport} from "./helpers/generateOrdersReport";
 const XlsxPopulate = require("xlsx-populate");
 
 const employeesRepository = new EmployeesRepository();
@@ -220,9 +221,20 @@ export class OrdersController {
               : (status as OrderStatus),
           storeId: store_id ? Number(store_id) : undefined,
           clientId: client_id ? Number(client_id) : undefined,
+          client:
+            secondaryStatus === "IN_REPOSITORY" && branchId
+              ? {
+                  branchId: +branchId,
+                }
+              : undefined,
           governorate: governorate ? (governorate as Governorate) : undefined,
           forwardedBranchId: getIncoming && branchId ? +branchId : undefined,
-          branchId: !getIncoming && branchId ? +branchId : undefined,
+          branchId:
+            secondaryStatus === "IN_REPOSITORY"
+              ? undefined
+              : !getIncoming && branchId
+              ? +branchId
+              : undefined,
           forwardedRepo: getOutComing
             ? returnRepo?.id
             : getIncoming && to_repository_id
@@ -857,6 +869,165 @@ export class OrdersController {
       ordersData: ordersData,
       ordersFilters: filters,
     });
+
+    const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
+    // Set headers for a PDF response
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=generated.pdf");
+
+    res.send(pdfBuffer);
+  });
+
+  getRepositoryOrdersPDF = catchAsync(async (req, res) => {
+    const ordersData = OrdersReportPDFCreateSchema.parse(req.body);
+
+    const {
+      client_id,
+      store_id,
+      repository_id,
+      to_repository_id,
+      governorate,
+      secondaryStatus,
+      status,
+      getIncoming,
+      getOutComing,
+      branchId,
+    } = req.query;
+
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    const user = await prisma.employee.findUnique({
+      where: {
+        id: loggedInUser.id,
+      },
+      select: {
+        branch: {
+          select: {
+            id: true,
+            repositories: {
+              select: {
+                id: true,
+                type: true,
+                name: true,
+                mainRepository: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const exportRepo = user?.branch?.repositories.find(
+      (repo) => repo.type === "EXPORT"
+    );
+    const returnRepo = user?.branch?.repositories.find(
+      (repo) => repo.type === "RETURN"
+    );
+
+    if (!user) {
+      throw new AppError("حسابك غير موجود", 404);
+    }
+
+    if (!exportRepo && status !== "RETURNED") {
+      throw new AppError("لا يوجد مخزن وارد للفرع الخاص بك ", 404);
+    }
+
+    if (!returnRepo && status === "RETURNED") {
+      throw new AppError("لا يوجد مخزن راوجع للفرع الخاص بك ", 404);
+    }
+
+    let orders: ReturnType<typeof orderReform>[];
+    let ordersIDs: string[] = [];
+
+    if (ordersData.ordersIDs === "*") {
+      const results = await prisma.order.findMany({
+        where: {
+          deleted: false,
+          repositoryId:
+            getOutComing && to_repository_id
+              ? Number(to_repository_id)
+              : getOutComing
+              ? undefined
+              : repository_id
+              ? Number(repository_id)
+              : secondaryStatus === "IN_CAR"
+              ? undefined
+              : status === "RETURNED"
+              ? returnRepo?.id
+              : exportRepo?.id,
+          secondaryStatus: secondaryStatus as SecondaryStatus,
+          status:
+            status === "RETURNED"
+              ? {in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"]}
+              : (status as OrderStatus),
+          storeId: store_id ? Number(store_id) : undefined,
+          clientId: client_id ? Number(client_id) : undefined,
+          client:
+            secondaryStatus === "IN_REPOSITORY" && branchId
+              ? {
+                  branchId: +branchId,
+                }
+              : undefined,
+          governorate: governorate ? (governorate as Governorate) : undefined,
+          forwardedBranchId: getIncoming && branchId ? +branchId : undefined,
+          companyId: loggedInUser.companyID!!,
+          branchId:
+            secondaryStatus === "IN_REPOSITORY"
+              ? undefined
+              : !getIncoming && branchId
+              ? +branchId
+              : undefined,
+          forwardedRepo: getOutComing
+            ? returnRepo?.id
+            : getIncoming && to_repository_id
+            ? Number(to_repository_id)
+            : getIncoming
+            ? undefined
+            : secondaryStatus === "IN_CAR"
+            ? exportRepo?.id
+            : undefined,
+        },
+        orderBy: {
+          updatedAt: "desc",
+        },
+        select: orderSelect,
+      });
+      orders = results.map((order) => orderReform(order));
+
+      for (const order of orders) {
+        if (order) {
+          ordersIDs.push(order.id);
+        }
+      }
+    } else {
+      orders = await ordersRepository.getOrdersByIDs({
+        ordersIDs: ordersData.ordersIDs,
+      });
+      ordersIDs = ordersData.ordersIDs;
+    }
+
+    if (!orders || orders.length === 0) {
+      throw new AppError("لا يوجد طلبات لعمل التقرير", 400);
+    }
+
+    let ordersMetaData: object;
+
+    ordersMetaData = {
+      date: new Date(),
+      count: orders.length,
+      baghdadCount: orders.filter((order) => order?.governorate === "BAGHDAD")
+        .length,
+      governoratesCount: orders.filter(
+        (order) => order?.governorate !== "BAGHDAD"
+      ).length,
+      company: orders[0]?.company,
+    };
+
+    const pdf = await generateOrdersReport(
+      ordersData.type,
+      ordersMetaData,
+      orders
+    );
 
     const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
     // Set headers for a PDF response

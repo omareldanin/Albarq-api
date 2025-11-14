@@ -367,6 +367,20 @@ router.route("/orders/pdf").post(
         #swagger.tags = ['Orders Routes']
     */
 );
+
+router.route("/repository-orders/pdf").post(
+  isLoggedIn,
+  isAutherized([
+    ...Object.values(AdminRole),
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  ordersController.getRepositoryOrdersPDF
+  /*
+        #swagger.tags = ['Orders Routes']
+    */
+);
+
 router.route("/orders/getByStore").get(
   isLoggedIn,
   isAutherized([
