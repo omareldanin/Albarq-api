@@ -1894,7 +1894,8 @@ export class OrdersRepository {
                           },
                         },
                       ]
-                    : data.loggedInUser?.role !== "COMPANY_MANAGER"
+                    : data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                      data.loggedInUser?.role !== "RECEIVING_AGENT"
                     ? [
                         {
                           branch: {
@@ -3102,7 +3103,8 @@ export class OrdersRepository {
                   },
                 },
               ]
-            : data.loggedInUser?.role !== "COMPANY_MANAGER"
+            : data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+              data.loggedInUser?.role !== "RECEIVING_AGENT"
             ? [
                 {
                   branch: {
