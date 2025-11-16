@@ -15,7 +15,12 @@ import {
 } from "./orders.dto";
 import {OrdersService} from "./orders.service";
 import {EmployeesRepository} from "../employees/employees.repository";
-import {Governorate, OrderStatus, SecondaryStatus} from "@prisma/client";
+import {
+  Governorate,
+  OrderStatus,
+  Prisma,
+  SecondaryStatus,
+} from "@prisma/client";
 import {orderReform, orderSelect, OrderStatusData} from "./orders.responses";
 import {AppError} from "../../lib/AppError";
 import {OrdersRepository} from "./orders.repository";
@@ -182,10 +187,9 @@ export class OrdersController {
     }
 
     if (
-      (loggedInUser.role === "BRANCH_MANAGER" &&
-        !repository_id &&
-        getIncoming) ||
-      (loggedInUser.role === "BRANCH_MANAGER" && !repository_id && getOutComing)
+      loggedInUser.role === "BRANCH_MANAGER" &&
+      !repository_id &&
+      getIncoming
     ) {
       throw res.status(200).json({
         status: "success",
@@ -451,19 +455,6 @@ export class OrdersController {
     if (!exportRepo) {
       throw new AppError("لا يوجد مخزن وارد لهذا الفرع!", 404);
     }
-
-    // let oldOrder = await ordersRepository.getOrderByReceiptNumber({
-    //   orderReceiptNumber: params.orderReceiptNumber,
-    // });
-
-    // if (!oldOrder) {
-    //   oldOrder = await ordersRepository.getOrder({
-    //     orderID: params.orderReceiptNumber,
-    //   });
-    //   if (!oldOrder) {
-    //     throw new AppError("الطلب غير موجود", 404);
-    //   }
-    // }
 
     const checkOrders = await prisma.order.findMany({
       where: {
@@ -1219,6 +1210,158 @@ export class OrdersController {
             branchId: status.forwardedBranchId,
             branchName: branchs.find(
               (branch) => +branch.id === +status.forwardedBranchId!!
+            )?.name,
+          };
+        }),
+      });
+    }
+  });
+
+  getReturnedRepositorOrdersStatistics = catchAsync(async (req, res) => {
+    const {
+      repository_id,
+      to_repository_id,
+      governorate,
+      secondaryStatus,
+      status,
+      getIncoming,
+      getOutComing,
+      branchId,
+      type,
+    } = req.query;
+
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    const user = await prisma.employee.findUnique({
+      where: {
+        id: loggedInUser.id,
+      },
+      select: {
+        branch: {
+          select: {
+            id: true,
+            repositories: {
+              select: {
+                id: true,
+                type: true,
+                name: true,
+                mainRepository: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const exportRepo = user?.branch?.repositories.find(
+      (repo) => repo.type === "EXPORT"
+    );
+    const returnRepo = user?.branch?.repositories.find(
+      (repo) => repo.type === "RETURN"
+    );
+
+    if (
+      loggedInUser.role === "BRANCH_MANAGER" &&
+      !repository_id &&
+      getIncoming
+    ) {
+      throw res.status(200).json({
+        status: "success",
+        data: [],
+      });
+    }
+
+    const where = {
+      deleted: false,
+      repositoryId:
+        getOutComing && to_repository_id
+          ? Number(to_repository_id)
+          : getOutComing
+          ? undefined
+          : repository_id
+          ? Number(repository_id)
+          : secondaryStatus === "IN_CAR"
+          ? undefined
+          : status === "RETURNED"
+          ? returnRepo?.id
+          : exportRepo?.id,
+      secondaryStatus: secondaryStatus as SecondaryStatus,
+      status:
+        status === "RETURNED"
+          ? {in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"]}
+          : (status as OrderStatus),
+
+      client:
+        secondaryStatus === "IN_REPOSITORY" && branchId
+          ? {
+              branchId: +branchId,
+            }
+          : undefined,
+      governorate: governorate ? (governorate as Governorate) : undefined,
+      forwardedBranchId: getIncoming && branchId ? +branchId : undefined,
+      branchId:
+        secondaryStatus === "IN_REPOSITORY"
+          ? undefined
+          : !getIncoming && branchId
+          ? +branchId
+          : undefined,
+      forwardedRepo: getOutComing
+        ? returnRepo?.id
+        : getIncoming && to_repository_id
+        ? Number(to_repository_id)
+        : getIncoming
+        ? undefined
+        : secondaryStatus === "IN_CAR"
+        ? exportRepo?.id
+        : undefined,
+    } satisfies Prisma.OrderWhereInput;
+
+    const repositories = await prisma.repository.findMany({
+      where: {
+        companyId: loggedInUser.companyID!!,
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    if (type === "forwarded") {
+      const ordersStatisticsByStatus = await prisma.order.groupBy({
+        by: ["repositoryId"],
+        _count: {
+          id: true,
+        },
+        where: where,
+      });
+      res.status(200).json({
+        status: "success",
+        data: ordersStatisticsByStatus.map((status) => {
+          return {
+            count: status._count.id,
+            repositoryId: status.repositoryId,
+            repoName: repositories.find(
+              (repository) => +repository.id === +status.repositoryId!!
+            )?.name,
+          };
+        }),
+      });
+    } else {
+      const ordersStatisticsByStatus = await prisma.order.groupBy({
+        by: ["forwardedRepo"],
+        _count: {
+          id: true,
+        },
+        where: where,
+      });
+      res.status(200).json({
+        status: "success",
+        data: ordersStatisticsByStatus.map((status) => {
+          return {
+            count: status._count.id,
+            repositoryId: status.forwardedRepo,
+            repoName: repositories.find(
+              (repository) => +repository.id === +status.forwardedRepo!!
             )?.name,
           };
         }),

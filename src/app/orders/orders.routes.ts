@@ -335,6 +335,20 @@ router.route("/orders/repositoryStatusStatistics").get(
   ordersController.getRepositorOrdersStatistics
 );
 
+router.route("/orders/returnedRepositoryStatusStatistics").get(
+  isLoggedIn,
+  isAutherized([
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+    EmployeeRole.COMPANY_MANAGER,
+    ClientRole.CLIENT,
+    EmployeeRole.CLIENT_ASSISTANT,
+    // TODO: Remove later
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  ordersController.getReturnedRepositorOrdersStatistics
+);
 router.route("/orders/repositoryOrders").get(
   isLoggedIn,
   isAutherized([

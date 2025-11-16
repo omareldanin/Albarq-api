@@ -574,13 +574,6 @@ export class OrdersService {
 
     if (
       data.orderData.status === "WITH_RECEIVING_AGENT" &&
-      oldOrderData.status !== "READY_TO_SEND"
-    ) {
-      throw new AppError("هذا الطلب غير جاهز للارسال", 403);
-    }
-
-    if (
-      data.orderData.status === "WITH_RECEIVING_AGENT" &&
       data.loggedInUser.role === "RECEIVING_AGENT"
     ) {
       data.orderData.deliveryAgentID = data.loggedInUser.id;
