@@ -215,6 +215,7 @@ model Branch {
   locations           Location[]
   orders              Order[]
   repositories        Repository[]
+  transctions         Transaction[]
 
   @@unique([name, companyId])
 }
@@ -839,15 +840,17 @@ model ClosedStatus {
 
 model Transaction {
   id                      Int      @id @default(autoincrement())
-  paidAmount              Float  @default(0)
+  paidAmount              Float    @default(0)
   type                    TransactionType
   for                     String
   employeeId              Int?
   createdById             Int?
-  createdBy               User?                @relation(fields: [createdById], references: [id])
+  branchId                Int?
+  createdBy               User?                 @relation(fields: [createdById], references: [id])
   employee                Employee?             @relation(fields: [employeeId], references: [id])
   companyId               Int
-  company                 Company  @relation(fields: [companyId], references: [id])
+  company                 Company               @relation(fields: [companyId], references: [id])
+  branch                  Branch?                @relation(fields: [branchId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

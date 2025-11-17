@@ -9,6 +9,7 @@ import {transactionSelect} from "./transactions.responses";
 export class TransactionsRepository {
   async createTransaction(
     companyId: number | undefined,
+    branchId: number | undefined,
     data: TransactionCreateType
   ) {
     if (!companyId) {
@@ -22,6 +23,7 @@ export class TransactionsRepository {
         for: data.for,
         employeeId: data.employeeId ?? null,
         createdById: data.createdById ?? null,
+        branchId: branchId,
         companyId,
       },
       select: transactionSelect,
@@ -35,10 +37,12 @@ export class TransactionsRepository {
     size: number;
     companyId?: number;
     employeeId?: number;
+    branchId?: number;
     type?: TransactionType;
   }) {
     const where = {
       companyId: filters.companyId,
+      branchId: filters.branchId,
       createdById: filters.employeeId,
       type: filters.type ? filters.type : undefined,
     };

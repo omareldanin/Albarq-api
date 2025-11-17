@@ -18,6 +18,7 @@ export class TransactionsController {
 
     const createdTransaction = await transactionsRepository.createTransaction(
       companyId,
+      loggedInUser.branchId,
       transactionData
     );
 
@@ -85,6 +86,7 @@ export class TransactionsController {
       size,
       companyId,
       employeeId,
+      branchId: loggedInUser.branchId,
       type,
     });
 
