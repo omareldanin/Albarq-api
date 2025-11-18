@@ -210,32 +210,32 @@ export class ReportsRepository {
                   }
                 : undefined,
             },
-            {
-              clientReport: data.filters.branch
-                ? {
-                    orders: {
-                      some: {
-                        branch: {
-                          id: data.filters.branch,
-                        },
-                      },
-                    },
-                  }
-                : undefined,
-            },
-            {
-              clientReport: data.filters.branch
-                ? {
-                    orders: {
-                      some: {
-                        branch: {
-                          id: data.filters.branch,
-                        },
-                      },
-                    },
-                  }
-                : undefined,
-            },
+            // {
+            //   clientReport: data.filters.branch
+            //     ? {
+            //         orders: {
+            //           some: {
+            //             branch: {
+            //               id: data.filters.branch,
+            //             },
+            //           },
+            //         },
+            //       }
+            //     : undefined,
+            // },
+            // {
+            //   clientReport: data.filters.branch
+            //     ? {
+            //         orders: {
+            //           some: {
+            //             branch: {
+            //               id: data.filters.branch,
+            //             },
+            //           },
+            //         },
+            //       }
+            //     : undefined,
+            // },
             {
               clientReport: data.filters.branch
                 ? {

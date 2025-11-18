@@ -85,6 +85,11 @@ export class StoresRepository {
           select: {
             id: true,
             name: true,
+            client: {
+              select: {
+                branchId: true,
+              },
+            },
           },
         },
         {

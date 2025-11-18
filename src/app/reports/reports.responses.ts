@@ -92,6 +92,7 @@ export const reportSelect = {
   },
   branchReport: {
     select: {
+      type: true,
       id: true,
       branch: {
         select: {
@@ -234,6 +235,7 @@ export const reportReform = (
       branch: report.branchReport.branch,
       baghdadDeliveryCost: report.branchReport.baghdadDeliveryCost,
       governoratesDeliveryCost: report.branchReport.governoratesDeliveryCost,
+      type: report.branchReport.type,
     },
     governorateReport: report.governorateReport && {
       reportNumber: report.governorateReport.id,

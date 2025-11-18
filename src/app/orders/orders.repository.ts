@@ -3433,6 +3433,7 @@ export class OrdersRepository {
         await prisma.employee.findMany({
           where: {
             AND: [
+              {deleted: false},
               {role: "INQUIRY_EMPLOYEE"},
               {
                 OR: [
