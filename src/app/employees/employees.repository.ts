@@ -282,6 +282,7 @@ export class EmployeesRepository {
           where: where,
           select: {
             id: true,
+            branchId: true,
             user: {
               select: {
                 name: true,
@@ -299,6 +300,7 @@ export class EmployeesRepository {
           return {
             id: employee.id,
             name: employee.user.name,
+            branchId: employee.branchId,
           };
         }),
         pagesCount: employees.pagesCount,
