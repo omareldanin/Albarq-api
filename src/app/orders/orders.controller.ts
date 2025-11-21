@@ -547,7 +547,7 @@ export class OrdersController {
         }
         orderData.repositoryID = exportRepo?.id;
         orderData.branchID = user.branch?.id;
-        orderData.deliveryAgentID = null;
+        // orderData.deliveryAgentID = null;
       }
 
       if (
