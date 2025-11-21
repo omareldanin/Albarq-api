@@ -514,6 +514,7 @@ export class OrdersController {
           }
           orderData.forwardedRepo = exportRepo?.id;
           orderData.branchID = repository.branchId;
+          orderData.deliveryAgentID = null;
         } else {
           const mainRepository = await prisma.repository.findFirst({
             where: {
@@ -532,6 +533,7 @@ export class OrdersController {
           orderData.repositoryID = mainRepository?.id;
           orderData.forwardedRepo = exportRepo?.id;
           orderData.forwardedBranchId = user.branch?.id;
+          orderData.deliveryAgentID = null;
         }
       } else {
         if (user.branch?.id !== oldOrder.client.branchId) {
@@ -545,6 +547,7 @@ export class OrdersController {
         }
         orderData.repositoryID = exportRepo?.id;
         orderData.branchID = user.branch?.id;
+        orderData.deliveryAgentID = null;
       }
 
       if (

@@ -781,7 +781,15 @@ export class OrdersService {
                   ? "تم استلام الطلب من العميل بواسطه مندوب الاستلام"
                   : `تم تغيير حالة الطلب من ${localizeOrderStatus(
                       oldOrderData.status
-                    )} إلى ${localizeOrderStatus(newOrder.status)}`,
+                    )} إلى ${localizeOrderStatus(newOrder.status)} ${
+                      newOrder.status === "PROCESSING" ||
+                      newOrder.status === "POSTPONED" ||
+                      newOrder.status === "RETURNED"
+                        ? newOrder.notes
+                          ? `(${newOrder.notes})`
+                          : ""
+                        : ""
+                    }`,
             },
           });
         }

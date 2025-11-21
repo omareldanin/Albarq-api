@@ -558,21 +558,6 @@ router.route("/orders/:orderID").patch(
     ]
   ),
   ordersController.updateOrder
-  /*
-        #swagger.tags = ['Orders Routes']
-
-        #swagger.requestBody = {
-            required: true,
-            content: {
-                "application/json": {
-                    "schema": { $ref: "#/components/schemas/OrderUpdateSchema" },
-                    "examples": {
-                        "OrderUpdateExample": { $ref: "#/components/examples/OrderUpdateExample" }
-                    }
-                }
-            }
-        }
-    */
 );
 
 router
