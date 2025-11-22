@@ -1689,7 +1689,8 @@ export class OrdersRepository {
                       data.loggedInUser?.role === "INQUIRY_EMPLOYEE" ||
                       data.loggedInUser?.role === "EMPLOYEE_CLIENT_ASSISTANT" ||
                       data.loggedInUser?.role === "CLIENT_ASSISTANT") &&
-                    !data.filters.receiptNumber
+                    !data.filters.receiptNumber &&
+                    !data.filters.search
                       ? [
                           {
                             clientReport: {
