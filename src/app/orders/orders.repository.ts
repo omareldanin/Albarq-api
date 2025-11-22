@@ -1827,12 +1827,12 @@ export class OrdersRepository {
             : {
                 ...where,
                 OR:
-                  data.loggedInUser?.role === "CLIENT" ||
-                  data.loggedInUser?.role === "INQUIRY_EMPLOYEE" ||
-                  data.loggedInUser?.role === "EMPLOYEE_CLIENT_ASSISTANT" ||
-                  (data.loggedInUser?.role === "CLIENT_ASSISTANT" &&
-                    !data.filters.receiptNumber &&
-                    !data.filters.search)
+                  (data.loggedInUser?.role === "CLIENT" ||
+                    data.loggedInUser?.role === "INQUIRY_EMPLOYEE" ||
+                    data.loggedInUser?.role === "EMPLOYEE_CLIENT_ASSISTANT" ||
+                    data.loggedInUser?.role === "CLIENT_ASSISTANT") &&
+                  !data.filters.receiptNumber &&
+                  !data.filters.search
                     ? [
                         {
                           clientReport: {
