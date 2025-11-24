@@ -5,6 +5,7 @@ import type {
 } from "./transactions.dto";
 import {transactionSelect} from "./transactions.responses";
 import {reportReform, reportSelect} from "../reports/reports.responses";
+import {loggedInUserType} from "../../types/user";
 
 export class TransactionsRepository {
   async createTransaction(
@@ -42,9 +43,28 @@ export class TransactionsRepository {
     type?: string;
     start_date?: string;
     end_date?: string;
+    loggedInUser?: loggedInUserType;
   }) {
     let startDate = new Date();
     let endDate = new Date();
+
+    const isMainRepository =
+      filters.loggedInUser?.mainRepository ||
+      filters.loggedInUser?.role === "COMPANY_MANAGER";
+
+    const mainBranch = await prisma.branch.findFirst({
+      where: {
+        companyId: filters.companyId,
+        repositories: {
+          some: {
+            mainRepository: true,
+          },
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
 
     if (filters.start_date) {
       startDate = new Date(filters.start_date);
@@ -237,7 +257,11 @@ export class TransactionsRepository {
 
     const forwardedReports = await prisma.branchReport.findMany({
       where: {
-        branchId: filters.branchId,
+        branchId: isMainRepository ? undefined : filters.branchId,
+        report: {
+          companyId: filters.companyId,
+          deleted: false,
+        },
         type: "forwarded",
       },
       include: {
@@ -273,7 +297,11 @@ export class TransactionsRepository {
 
     const receivedReports = await prisma.branchReport.findMany({
       where: {
-        branchId: filters.branchId,
+        branchId: isMainRepository ? undefined : filters.branchId,
+        report: {
+          companyId: filters.companyId,
+          deleted: false,
+        },
         type: "received",
       },
       include: {
@@ -302,6 +330,12 @@ export class TransactionsRepository {
           select: {
             governorate: true,
             deliveryAgentNet: true,
+            client: {
+              select: {
+                branchId: true,
+              },
+            },
+            deliveryCost: true,
           },
         },
       },
@@ -314,9 +348,10 @@ export class TransactionsRepository {
       },
       where: {
         type: "BRANCH",
+        companyId: filters.companyId,
         branchReport: {
-          branchId: filters.branchId,
-          type: "received",
+          branchId: isMainRepository ? undefined : filters.branchId,
+          type: isMainRepository ? "forwarded" : "received",
         },
       },
     });
@@ -328,9 +363,10 @@ export class TransactionsRepository {
       },
       where: {
         type: "BRANCH",
+        companyId: filters.companyId,
         branchReport: {
-          branchId: filters.branchId,
-          type: "forwarded",
+          branchId: isMainRepository ? undefined : filters.branchId,
+          type: isMainRepository ? "received" : "forwarded",
         },
       },
     });
@@ -393,6 +429,7 @@ export class TransactionsRepository {
       {
         where: {
           AND: [
+            {companyId: filters.companyId},
             {
               createdAt: filters.start_date
                 ? {
@@ -419,23 +456,6 @@ export class TransactionsRepository {
             {
               OR: [
                 {
-                  clientReport: {
-                    secondaryType: "DELIVERED",
-                    clientId: filters.clientId,
-                    client: {
-                      branchId: filters.branchId,
-                    },
-                  },
-                },
-                {
-                  deliveryAgentReport: {
-                    deliveryAgentId: filters.deliveryAgentId,
-                    deliveryAgent: {
-                      branchId: filters.branchId,
-                    },
-                  },
-                },
-                {
                   branchReport: {
                     type:
                       filters.type === "forwardedAll"
@@ -443,7 +463,29 @@ export class TransactionsRepository {
                         : filters.type === "receivedAll"
                         ? "received"
                         : undefined,
-                    branchId: filters.branchId,
+                    branchId: isMainRepository ? undefined : filters.branchId,
+                    id: {gt: -1},
+                  },
+                },
+                {
+                  clientReport: {
+                    secondaryType: "DELIVERED",
+                    clientId: filters.clientId,
+                    client: {
+                      branchId: isMainRepository
+                        ? mainBranch?.id
+                        : filters.branchId,
+                    },
+                  },
+                },
+                {
+                  deliveryAgentReport: {
+                    deliveryAgentId: filters.deliveryAgentId,
+                    deliveryAgent: {
+                      branchId: isMainRepository
+                        ? mainBranch?.id
+                        : filters.branchId,
+                    },
                   },
                 },
               ],
@@ -480,22 +522,36 @@ export class TransactionsRepository {
         forwardedReports.forEach((report) => {
           report.orders.forEach((order) => {
             if (order.governorate === "BAGHDAD") {
-              branchProfit += order.deliveryCost - report.baghdadDeliveryCost;
+              branchProfit += isMainRepository
+                ? report.baghdadDeliveryCost
+                : order.deliveryCost - report.baghdadDeliveryCost;
             } else {
-              branchProfit +=
-                order.deliveryCost - report.governoratesDeliveryCost;
+              branchProfit += isMainRepository
+                ? report.governoratesDeliveryCost
+                : order.deliveryCost - report.governoratesDeliveryCost;
             }
           });
         });
       } else if (filters.type === "receivedAll") {
         receivedReports.forEach((report) => {
           report.orders.forEach((order) => {
-            if (order.governorate === "BAGHDAD") {
-              branchProfit +=
-                report.baghdadDeliveryCost - order.deliveryAgentNet;
+            if (order.client.branchId === mainBranch?.id && isMainRepository) {
+              if (order.governorate === "BAGHDAD") {
+                branchProfit += order.deliveryCost - report.baghdadDeliveryCost;
+              } else {
+                branchProfit +=
+                  order.deliveryCost - report.governoratesDeliveryCost;
+              }
             } else {
-              branchProfit +=
-                report.governoratesDeliveryCost - order.deliveryAgentNet;
+              if (order.governorate === "BAGHDAD") {
+                branchProfit += isMainRepository
+                  ? -report.baghdadDeliveryCost
+                  : report.baghdadDeliveryCost - order.deliveryAgentNet;
+              } else {
+                branchProfit += isMainRepository
+                  ? -report.governoratesDeliveryCost
+                  : report.governoratesDeliveryCost - order.deliveryAgentNet;
+              }
             }
           });
         });
@@ -503,21 +559,35 @@ export class TransactionsRepository {
         forwardedReports.forEach((report) => {
           report.orders.forEach((order) => {
             if (order.governorate === "BAGHDAD") {
-              branchProfit += order.deliveryCost - report.baghdadDeliveryCost;
+              branchProfit += isMainRepository
+                ? report.baghdadDeliveryCost
+                : order.deliveryCost - report.baghdadDeliveryCost;
             } else {
-              branchProfit +=
-                order.deliveryCost - report.governoratesDeliveryCost;
+              branchProfit += isMainRepository
+                ? report.governoratesDeliveryCost
+                : order.deliveryCost - report.governoratesDeliveryCost;
             }
           });
         });
         receivedReports.forEach((report) => {
           report.orders.forEach((order) => {
-            if (order.governorate === "BAGHDAD") {
-              branchProfit +=
-                report.baghdadDeliveryCost - order.deliveryAgentNet;
+            if (order.client.branchId === mainBranch?.id && isMainRepository) {
+              if (order.governorate === "BAGHDAD") {
+                branchProfit += order.deliveryCost - report.baghdadDeliveryCost;
+              } else {
+                branchProfit +=
+                  order.deliveryCost - report.governoratesDeliveryCost;
+              }
             } else {
-              branchProfit +=
-                report.governoratesDeliveryCost - order.deliveryAgentNet;
+              if (order.governorate === "BAGHDAD") {
+                branchProfit += isMainRepository
+                  ? -report.baghdadDeliveryCost
+                  : report.baghdadDeliveryCost - order.deliveryAgentNet;
+              } else {
+                branchProfit += isMainRepository
+                  ? -report.governoratesDeliveryCost
+                  : report.governoratesDeliveryCost - order.deliveryAgentNet;
+              }
             }
           });
         });

@@ -55,6 +55,7 @@ export class TransactionsController {
     const loggedInUser = res.locals.user as loggedInUserType;
 
     const {type, deliveryAgentId, clientId, start_date, end_date} = req.query;
+
     const companyId = loggedInUser.companyID!!;
 
     let size = req.query.size ? +req.query.size : 10;
@@ -91,6 +92,7 @@ export class TransactionsController {
       type: type?.toString(),
       start_date: start_date?.toString(),
       end_date: end_date?.toString(),
+      loggedInUser,
     });
 
     res.status(200).json({
@@ -117,6 +119,23 @@ export class TransactionsController {
 
     let startDate = new Date();
     let endDate = new Date();
+
+    const isMainRepository =
+      loggedInUser?.mainRepository || loggedInUser?.role === "COMPANY_MANAGER";
+
+    const mainBranch = await prisma.branch.findFirst({
+      where: {
+        companyId: loggedInUser.companyID!!,
+        repositories: {
+          some: {
+            mainRepository: true,
+          },
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
 
     if (start_date) {
       startDate = new Date(start_date.toString());
@@ -218,7 +237,7 @@ export class TransactionsController {
 
     const forwardedReports = await prisma.branchReport.findMany({
       where: {
-        branchId: loggedInUser.branchId,
+        branchId: isMainRepository ? undefined : loggedInUser.branchId,
         type: "forwarded",
       },
       include: {
@@ -255,7 +274,7 @@ export class TransactionsController {
 
     const receivedReports = await prisma.branchReport.findMany({
       where: {
-        branchId: loggedInUser.branchId,
+        branchId: isMainRepository ? undefined : loggedInUser.branchId,
         type: "received",
       },
       include: {
@@ -285,6 +304,12 @@ export class TransactionsController {
             governorate: true,
             deliveryAgentNet: true,
             clientId: true,
+            client: {
+              select: {
+                branchId: true,
+              },
+            },
+            deliveryCost: true,
           },
         },
       },
@@ -356,10 +381,13 @@ export class TransactionsController {
           );
           clientOrders.forEach((order) => {
             if (order.governorate === "BAGHDAD") {
-              branchProfit += order.deliveryCost - report.baghdadDeliveryCost;
+              branchProfit += isMainRepository
+                ? report.baghdadDeliveryCost
+                : order.deliveryCost - report.baghdadDeliveryCost;
             } else {
-              branchProfit +=
-                order.deliveryCost - report.governoratesDeliveryCost;
+              branchProfit += isMainRepository
+                ? report.governoratesDeliveryCost
+                : order.deliveryCost - report.governoratesDeliveryCost;
             }
           });
         });
@@ -369,12 +397,23 @@ export class TransactionsController {
             (o) => o.clientId === client.id
           );
           clientOrders.forEach((order) => {
-            if (order.governorate === "BAGHDAD") {
-              branchProfit +=
-                report.baghdadDeliveryCost - order.deliveryAgentNet;
+            if (order.client.branchId === mainBranch?.id && isMainRepository) {
+              if (order.governorate === "BAGHDAD") {
+                branchProfit += order.deliveryCost - report.baghdadDeliveryCost;
+              } else {
+                branchProfit +=
+                  order.deliveryCost - report.governoratesDeliveryCost;
+              }
             } else {
-              branchProfit +=
-                report.governoratesDeliveryCost - order.deliveryAgentNet;
+              if (order.governorate === "BAGHDAD") {
+                branchProfit += isMainRepository
+                  ? -report.baghdadDeliveryCost
+                  : report.baghdadDeliveryCost - order.deliveryAgentNet;
+              } else {
+                branchProfit += isMainRepository
+                  ? -report.governoratesDeliveryCost
+                  : report.governoratesDeliveryCost - order.deliveryAgentNet;
+              }
             }
           });
         });

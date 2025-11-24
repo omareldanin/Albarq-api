@@ -832,6 +832,7 @@ export class OrdersController {
 
   getOrdersReportPDF = catchAsync(async (req, res) => {
     const ordersData = OrdersReportPDFCreateSchema.parse(req.body);
+    const loggedInUser = res.locals.user as loggedInUserType;
 
     const filters = OrdersFiltersSchema.parse({
       confirmed: req.query.confirmed,
@@ -862,6 +863,7 @@ export class OrdersController {
     const pdf = await ordersService.getOrdersReportPDF({
       ordersData: ordersData,
       ordersFilters: filters,
+      loggedInUser: loggedInUser,
     });
 
     const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);

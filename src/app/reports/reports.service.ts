@@ -40,6 +40,9 @@ export class ReportsService {
   }) {
     let orders: ReturnType<typeof orderReform>[];
     let ordersIDs: string[] = [];
+    console.log(data.ordersFilters);
+    console.log(data.reportData);
+
     if (data.reportData.ordersIDs === "*") {
       orders = (
         await ordersRepository.getAllOrdersPaginated({

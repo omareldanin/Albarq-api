@@ -1090,6 +1090,7 @@ export class OrdersService {
   getOrdersReportPDF = async (data: {
     ordersData: OrdersReportPDFCreateType;
     ordersFilters: OrdersFiltersType;
+    loggedInUser?: loggedInUserType;
   }) => {
     let orders: ReturnType<typeof orderReform>[];
     let ordersIDs: string[] = [];
@@ -1098,7 +1099,7 @@ export class OrdersService {
       orders = (
         await ordersRepository.getAllOrdersPaginated({
           filters: {...data.ordersFilters, size: 5000},
-          loggedInUser: undefined,
+          loggedInUser: data.loggedInUser,
         })
       ).orders as ReturnType<typeof orderReform>[];
 
