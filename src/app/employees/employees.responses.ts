@@ -180,7 +180,9 @@ export const employeeReform = (
     ordersCount: employee._count.orders,
     createdAt: employee.user.createdAt.toISOString(),
     updatedAt: employee.user.updatedAt.toISOString(),
-    managedStores: employee.managedStores,
+    managedStores: employee.inquiryStores.map((store) => {
+      return store.store;
+    }),
     inquiryBranches: employee.inquiryBranches.map((branch) => {
       return branch.branch;
     }),

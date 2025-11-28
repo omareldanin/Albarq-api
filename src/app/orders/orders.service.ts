@@ -799,7 +799,7 @@ export class OrdersService {
       if (
         data.orderData.deliveryAgentID &&
         oldOrderData.deliveryAgent?.id !== newOrder.deliveryAgent?.id &&
-        oldOrderData.status !== "READY_TO_SEND"
+        newOrder.status !== "WITH_RECEIVING_AGENT"
       ) {
         await ordersRepository.updateOrderTimeline({
           orderID: oldOrderData.id,
@@ -852,8 +852,10 @@ export class OrdersService {
 
       // Update Repository
       if (
-        data.orderData.repositoryID &&
-        oldOrderData?.repository?.id !== newOrder.repository?.id
+        (data.orderData.repositoryID &&
+          oldOrderData?.repository?.id !== newOrder.repository?.id) ||
+        (data.orderData.secondaryStatus !== oldOrderData.secondaryStatus &&
+          data.orderData.repositoryID)
       ) {
         await ordersRepository.updateOrderTimeline({
           orderID: oldOrderData.id,

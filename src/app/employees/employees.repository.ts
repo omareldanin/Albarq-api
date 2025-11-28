@@ -91,18 +91,21 @@ export class EmployeesRepository {
               },
             }
           : undefined,
-        managedStores: data.employeeData.storesIDs
-          ? {
-              connect: data.employeeData.storesIDs.map((storeID) => {
-                return {
-                  id: storeID,
-                };
-              }),
-            }
-          : undefined,
         inquiryStores: data.employeeData.inquiryStoresIDs
           ? {
               create: data.employeeData.inquiryStoresIDs.map((storeID) => {
+                return {
+                  store: {
+                    connect: {
+                      id: storeID,
+                    },
+                  },
+                };
+              }),
+            }
+          : data.employeeData.storesIDs
+          ? {
+              create: data.employeeData.storesIDs.map((storeID) => {
                 return {
                   store: {
                     connect: {
@@ -544,15 +547,6 @@ export class EmployeesRepository {
               },
             }
           : undefined,
-        managedStores: data.employeeData.storesIDs
-          ? {
-              set: data.employeeData.storesIDs.map((storeID) => {
-                return {
-                  id: storeID,
-                };
-              }),
-            }
-          : undefined,
         inquiryClients: data.employeeData.inquiryClientsIDs
           ? {
               deleteMany: {
@@ -575,6 +569,21 @@ export class EmployeesRepository {
                 inquiryEmployeeId: data.employeeID,
               },
               create: data.employeeData.inquiryStoresIDs.map((storeID) => {
+                return {
+                  store: {
+                    connect: {
+                      id: storeID,
+                    },
+                  },
+                };
+              }),
+            }
+          : data.employeeData.storesIDs
+          ? {
+              deleteMany: {
+                inquiryEmployeeId: data.employeeID,
+              },
+              create: data.employeeData.storesIDs.map((storeID) => {
                 return {
                   store: {
                     connect: {
