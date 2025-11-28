@@ -369,11 +369,11 @@ export class OrdersService {
           id: data.loggedInUser.id,
         },
         select: {
-          managedStores: true,
+          inquiryStores: true,
         },
       });
 
-      inquiryStoresIDs = employee?.managedStores.map((s) => s.id);
+      inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
     }
     if (data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT") {
       const employee = await prisma.employee.findUnique({
@@ -386,6 +386,7 @@ export class OrdersService {
       });
       inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
     }
+
     let size = data.filters.size || 500;
 
     if (size > 550 && data.filters.forMobile !== true) {
@@ -1325,11 +1326,10 @@ export class OrdersService {
           id: data.loggedInUser.id,
         },
         select: {
-          managedStores: true,
           inquiryStores: true,
         },
       });
-      inquiryStoresIDs = employee?.managedStores.map((s) => s.id);
+      inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
     }
     if (data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT") {
       const employee = await prisma.employee.findUnique({
