@@ -322,7 +322,7 @@ export class MessagesController {
       };
     }
     if (user.role === "CLIENT_ASSISTANT") {
-      inquiryStoresIDs = employee?.managedStores.map((s) => s.id);
+      inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
     }
     if (user.role === "EMPLOYEE_CLIENT_ASSISTANT") {
       inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
