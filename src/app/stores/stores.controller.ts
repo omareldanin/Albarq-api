@@ -57,11 +57,14 @@ export class StoresController {
     let clientAssistantID = req.query.client_assistant_id
       ? +req.query.client_assistant_id
       : undefined;
-    if (loggedInUser.role === EmployeeRole.CLIENT_ASSISTANT) {
-      clientAssistantID = loggedInUser.id;
-    }
+    // if (loggedInUser.role === EmployeeRole.CLIENT_ASSISTANT) {
+    //   clientAssistantID = loggedInUser.id;
+    // }
 
-    if (loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT") {
+    if (
+      loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT" ||
+      loggedInUser.role === "CLIENT_ASSISTANT"
+    ) {
       const employee = await prisma.employee.findUnique({
         where: {
           id: loggedInUser.id,
