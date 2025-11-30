@@ -1100,9 +1100,9 @@ export class OrdersService {
 
     if (data.ordersData.ordersIDs === "*") {
       orders = (
-        await ordersRepository.getAllOrdersPaginated({
+        await this.getAllOrders({
           filters: {...data.ordersFilters, size: 5000},
-          loggedInUser: data.loggedInUser,
+          loggedInUser: data.loggedInUser!!,
         })
       ).orders as ReturnType<typeof orderReform>[];
 
