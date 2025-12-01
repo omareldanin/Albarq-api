@@ -171,9 +171,11 @@ export class ReportController {
 
   getReportPDF = catchAsync(async (req, res) => {
     const params = {reportID: +req.params.reportID};
+    const loggedInUser: loggedInUserType = res.locals.user;
 
     const pdf = await reportsService.getReportPDF({
       params: params,
+      loggedInUser,
     });
 
     // Ensure PDF data is received as a Buffer or convert it

@@ -26,11 +26,12 @@
               class="{{colorizeTitle reportData.clientReport.secondaryType}}"
             >كشف الراجع للعميل</td>
           {{/if}}
-          <td style="width: 25%">عدد الطلبيات:
-            <span>{{add
-                reportData.baghdadOrdersCount
-                reportData.governoratesOrdersCount
-              }}</span></td>
+          <td style="width: 25%">عدد طلبيات بغداد:
+            <span>{{reportData.baghdadOrdersCount}}</span></td>
+
+          <td style="width: 25%">الاجمالي:
+            <span>{{currency reportData.baghdadTotal}}</span></td>
+
           <td style="width: 25%" rowspan="3"><img
               src="{{reportData.company.logo}}"
             /></td>
@@ -40,10 +41,12 @@
             <span>{{date reportData.createdAt}}</span></td>
           <td style="width: 25%">العميل:
             <span>{{reportData.clientReport.client.name}}</span></td>
-          <td style="width: 25%">عدد طلبيات بغداد:
-            <span>{{reportData.baghdadOrdersCount}}</span></td>
-          <td style="width: 25%">
+          <td style="width: 25%">عدد طلبيات المحافظات:
+            <span>{{reportData.governoratesOrdersCount}}</span></td>
+          <td style="width: 25%">الاجمالي:
+            <span>{{currency reportData.otherTotal}}</span></td>
 
+          <td style="width: 25%">
           </td>
         </tr>
 
@@ -56,8 +59,11 @@
           {{/if}}
           <td style="width: 25%">الصفحة:
             <span>{{reportData.clientReport.store.name}}</span></td>
-          <td style="width: 25%">عدد طلبيات المحافظات:
-            <span>{{reportData.governoratesOrdersCount}}</span></td>
+          <td style="width: 25%">عدد البريد الداخلي:
+            <span>{{reportData.insideOrdersCount}}</span></td>
+          <td style="width: 25%">الاجمالي:
+            <span>{{currency reportData.insideTotal}}</span></td>
+
           <td style="width: 25%"></td>
         </tr>
         <tr>
@@ -67,7 +73,15 @@
               {{reportData.createdBy.name}}
             </span>
           </td>
-          <td style="width: 25%"></td>
+
+          <td style="width: 25%">عدد الطلبيات:
+            <span>{{add
+                reportData.baghdadOrdersCount
+                reportData.governoratesOrdersCount
+              }}</span></td>
+          <td style="width: 25%">الاجمالي:
+            <span>{{currency reportData.total}}</span></td>
+
           <td style="width: 25%"></td>
         </tr>
       </table>
@@ -79,6 +93,7 @@
             <th>#</th>
             <th>رقم الوصل</th>
             <th>أنشئ في</th>
+            <th>اسم المستلم</th>
             <th>هاتف المستلم</th>
             <th>عنوان المستلم</th>
             <th>مبلغ الوصل</th>
@@ -97,6 +112,7 @@
               <td class="nowrap">{{inc @index}}</td>
               <td>{{receiptNumber}}</td>
               <td>{{date createdAt}}</td>
+              <td>{{recipientName}}</td>
               <td>{{mapPhones recipientPhones}}</td>
               <td>{{localizeGovernorate governorate}} - {{location.name}}</td>
               <td>{{currency totalCost}}</td>

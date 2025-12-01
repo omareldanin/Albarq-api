@@ -7,6 +7,7 @@ export const reportSelect = {
   createdBy: {
     select: {
       id: true,
+      branchId: true,
       user: {
         select: {
           id: true,
@@ -203,6 +204,12 @@ export const reportReform = (
   const reportData = {
     ...report,
     createdBy: report.createdBy.user,
+    insideOrdersCount: 0,
+    total: 0,
+    baghdadTotal: 0,
+    insideTotal: 0,
+    otherTotal: 0,
+    createdByBrachId: report.createdBy.branchId,
     secondaryType:
       report.type === "CLIENT"
         ? report.clientReport?.secondaryType

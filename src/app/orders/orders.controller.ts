@@ -862,7 +862,7 @@ export class OrdersController {
 
     const pdf = await ordersService.getOrdersReportPDF({
       ordersData: ordersData,
-      ordersFilters: filters,
+      ordersFilters: {...filters, size: 10000},
       loggedInUser: loggedInUser,
     });
 
@@ -1454,7 +1454,7 @@ export class OrdersController {
   getReceivingAgentStores = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
 
-    const {receivingAgentId, clientId} = req.query;
+    const {receivingAgentId, clientId, storeId} = req.query;
 
     let inquiryClientsIDs: number[] | undefined = undefined;
 
@@ -1477,6 +1477,7 @@ export class OrdersController {
       where: {
         AND: [
           {clientId: clientId ? +clientId : {in: inquiryClientsIDs}},
+          {storeId: storeId ? +storeId : {in: inquiryClientsIDs}},
           {status: {in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"]}},
           {
             deleted: false,

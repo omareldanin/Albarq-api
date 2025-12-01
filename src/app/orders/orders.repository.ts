@@ -1601,6 +1601,52 @@ export class OrdersRepository {
                     ? data.filters.branchID
                     : undefined,
               },
+              // {
+              //   OR: [
+              //     {
+              //       AND: [
+              //         {
+              //           forwardedBranchId:
+              //             data.filters.orderType === "forwarded"
+              //               ? data.filters.branchID
+              //               : undefined,
+              //         },
+              //         {
+              //           receivedBranchId:
+              //             data.filters.orderType === "received"
+              //               ? data.filters.branchID
+              //               : undefined,
+              //         },
+              //       ],
+              //     },
+              //     data.filters.orderType === "forwarded" ||
+              //     data.filters.orderType === "received"
+              //       ? {
+              //           AND: [
+              //             {
+              //               branch: {
+              //                 id: data.filters.branchID,
+              //                 governorate: "BAGHDAD",
+              //               },
+              //             },
+
+              //             {
+              //               receivedBranchId: null,
+              //             },
+              //             {
+              //               forwardedBranchId: null,
+              //             },
+              //           ],
+              //         }
+              //       : {},
+              //     // {
+              //     //   branch: {
+              //     //     governorate: "BAGHDAD",
+              //     //     id: data.filters.branchID,
+              //     //   },
+              //     // },
+              //   ],
+              // },
               {
                 forwardedBranchId:
                   data.filters.orderType === "forwardedAll" &&

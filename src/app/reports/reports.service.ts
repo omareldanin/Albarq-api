@@ -40,8 +40,6 @@ export class ReportsService {
   }) {
     let orders: ReturnType<typeof orderReform>[];
     let ordersIDs: string[] = [];
-    console.log(data.ordersFilters);
-    console.log(data.reportData);
 
     if (data.reportData.ordersIDs === "*") {
       orders = (
@@ -253,6 +251,11 @@ export class ReportsService {
       companyNet: 0,
       branchNet: 0,
     };
+    let insideOrdersCount = 0;
+    let total = 0;
+    let baghdadTotal = 0;
+    let otherTotal = 0;
+    let insideTotal = 0;
 
     for (const order of orders) {
       // @ts-expect-error Fix later
@@ -336,6 +339,26 @@ export class ReportsService {
       if (!order) {
         continue;
       }
+      if (
+        reportData?.type === "CLIENT" &&
+        reportData.clientReport?.branch?.id === order?.branch?.id
+      ) {
+        insideOrdersCount += 1;
+      }
+      total += order?.paidAmount || 0;
+      if (
+        reportData?.type === "CLIENT" &&
+        reportData.clientReport?.branch?.id === order?.branch?.id
+      ) {
+        insideOrdersCount += 1;
+        insideTotal += order?.paidAmount || 0;
+      }
+      if (reportData?.type === "CLIENT" && order?.governorate === "BAGHDAD") {
+        baghdadTotal += order?.paidAmount;
+      }
+      if (reportData?.type === "CLIENT" && order?.governorate !== "BAGHDAD") {
+        otherTotal += order?.paidAmount || 0;
+      }
       await ordersRepository.updateOrderTimeline({
         orderID: order.id,
         data: {
@@ -357,6 +380,11 @@ export class ReportsService {
       });
     }
 
+    reportData.insideOrdersCount = insideOrdersCount;
+    reportData.total = total;
+    reportData.insideTotal = insideTotal;
+    reportData.baghdadTotal = baghdadTotal;
+    reportData.otherTotal = otherTotal;
     const pdf = await generateReport(data.reportData.type, reportData, orders);
 
     return pdf;
@@ -470,7 +498,10 @@ export class ReportsService {
     return report;
   }
 
-  async getReportPDF(data: {params: {reportID: number}}) {
+  async getReportPDF(data: {
+    params: {reportID: number};
+    loggedInUser?: loggedInUserType;
+  }) {
     const reportData = await reportsRepository.getReport({
       reportID: data.params.reportID,
     });
@@ -479,6 +510,33 @@ export class ReportsService {
       throw new AppError("الكشف المطلوب موجود بسلة المحذوفات", 404);
     }
 
+    if (
+      data.loggedInUser &&
+      data.loggedInUser.role !== "COMPANY_MANAGER" &&
+      !data.loggedInUser.mainRepository
+    ) {
+      if (
+        reportData?.type === "DELIVERY_AGENT" &&
+        reportData.createdByBrachId !== data.loggedInUser.branchId
+      ) {
+        throw new AppError("غير مصرح لك بالاطلاع علي هذا الكشف", 400);
+      } else if (
+        reportData?.type === "CLIENT" &&
+        reportData.createdByBrachId !== data.loggedInUser.branchId
+      ) {
+        throw new AppError("غير مصرح لك بالاطلاع علي هذا الكشف", 400);
+      } else if (
+        reportData?.type === "BRANCH" &&
+        reportData.branchReport?.branch.id !== data.loggedInUser.branchId
+      ) {
+        throw new AppError("غير مصرح لك بالاطلاع علي هذا الكشف", 400);
+      }
+    }
+    let insideOrdersCount = 0;
+    let total = 0;
+    let baghdadTotal = 0;
+    let otherTotal = 0;
+    let insideTotal = 0;
     // TODO: fix this
     // @ts-expect-error Fix later
     const orders: Order[] = reportData?.repositoryReport
@@ -527,8 +585,6 @@ export class ReportsService {
               reportData?.type === "CLIENT" &&
               order.governorate === "BAGHDAD"
             ) {
-              console.log(reportData.clientReport?.baghdadDeliveryCost);
-
               order.clientNet =
                 +value.value - reportData.clientReport?.baghdadDeliveryCost!!;
             }
@@ -540,7 +596,6 @@ export class ReportsService {
                 +value.value -
                 reportData.clientReport?.governoratesDeliveryCost!!;
             }
-
             if (
               reportData?.type === "BRANCH" &&
               order.governorate === "BAGHDAD"
@@ -573,6 +628,28 @@ export class ReportsService {
           }
         }
       }
+      total += order?.paidAmount || 0;
+      if (
+        reportData?.type === "CLIENT" &&
+        reportData.clientReport?.branch?.id === order?.branch?.id
+      ) {
+        insideOrdersCount += 1;
+        insideTotal += order?.paidAmount || 0;
+      }
+      if (reportData?.type === "CLIENT" && order?.governorate === "BAGHDAD") {
+        baghdadTotal += order?.paidAmount;
+      }
+      if (reportData?.type === "CLIENT" && order?.governorate !== "BAGHDAD") {
+        otherTotal += order?.paidAmount || 0;
+      }
+    }
+
+    if (reportData) {
+      reportData.insideOrdersCount = insideOrdersCount;
+      reportData.total = total;
+      reportData.insideTotal = insideTotal;
+      reportData.baghdadTotal = baghdadTotal;
+      reportData.otherTotal = otherTotal;
     }
 
     if (ordersData.length === 0) {

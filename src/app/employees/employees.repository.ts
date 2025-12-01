@@ -193,6 +193,15 @@ export class EmployeesRepository {
     if (data.filters.roles?.includes("MAIN_EMERGENCY_EMPLOYEE")) {
       mainEmergency = true;
     }
+    let deliveryStartDate = new Date();
+    let deliveryEndDate = new Date();
+
+    if (data.filters.ordersStartDate) {
+      deliveryStartDate = new Date(data.filters.ordersStartDate);
+    }
+    if (data.filters.ordersEndDate) {
+      deliveryEndDate = new Date(data.filters.ordersEndDate);
+    }
 
     const where = {
       AND: [
@@ -310,17 +319,6 @@ export class EmployeesRepository {
       };
     }
 
-    let startDate = new Date();
-    let endDate = new Date();
-
-    if (data.filters.ordersStartDate) {
-      startDate = new Date(data.filters.ordersStartDate);
-      // startDate.setHours(0, 0, 0, 0);
-    }
-    if (data.filters.ordersEndDate) {
-      endDate = new Date(data.filters.ordersEndDate);
-    }
-
     const employees = await prisma.employee.findManyPaginated(
       {
         where: {
@@ -356,7 +354,7 @@ export class EmployeesRepository {
                     {
                       deliveryDate: data.filters.ordersStartDate
                         ? {
-                            gte: startDate,
+                            gte: deliveryStartDate,
                           }
                         : undefined,
                     },
@@ -364,7 +362,7 @@ export class EmployeesRepository {
                     {
                       deliveryDate: data.filters.ordersEndDate
                         ? {
-                            lt: endDate,
+                            lt: deliveryEndDate,
                           }
                         : undefined,
                     },

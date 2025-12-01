@@ -389,10 +389,6 @@ export class OrdersService {
 
     let size = data.filters.size || 500;
 
-    if (size > 550 && data.filters.forMobile !== true) {
-      size = 10;
-    }
-
     const {orders, ordersMetaData, pagesCount} =
       await ordersRepository.getAllOrdersPaginated({
         filters: {
@@ -569,6 +565,13 @@ export class OrdersService {
       !data.orderData.recipientName &&
       !data.orderData.recipientPhones &&
       !data.orderData.recipientAddress
+    ) {
+      throw new AppError("لقد تم اضافه هذا الطلب مسبقا", 403);
+    }
+
+    if (
+      data.orderData.status === oldOrderData.status &&
+      data.loggedInUser.role === "RECEIVING_AGENT"
     ) {
       throw new AppError("لقد تم اضافه هذا الطلب مسبقا", 403);
     }
