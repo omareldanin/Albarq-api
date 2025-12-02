@@ -7,6 +7,8 @@ import {clientReceiptsRepository} from "./clientReceipts.repository";
 import {AppError} from "../../lib/AppError";
 import {generateReceipts} from "./helpers/generateReceipts";
 import {prisma} from "../../database/db";
+import {Prisma} from "@prisma/client";
+import {clientReceiptSelect, receiptReform} from "./clientReceipts.responses";
 
 const clientReceiptRepository = new clientReceiptsRepository();
 
@@ -33,79 +35,101 @@ export class ClientReceiptController {
   }
 
   createReceipts = catchAsync(async (req, res) => {
-    let receipts: clientReceiptCreateType[];
-    receipts = req.body.map((receipt: unknown) =>
-      clientReceiptCreateSchema.parse(receipt)
+    // 1. Validate all input at once
+    const receipts: clientReceiptCreateType[] = req.body.map((r: unknown) =>
+      clientReceiptCreateSchema.parse(r)
     );
 
-    const createdReceipts = [];
+    // ==== Extract storeIds & prefetch stores ====
+    const storeIds = [
+      ...new Set(receipts.filter((r) => r.storeId).map((r) => r.storeId!)),
+    ];
 
-    for (const receipt of receipts) {
-      let isUnique = false;
-      let receiptId = this.generateOrderId();
-      let storeId: undefined | number;
-      let branchId: undefined | number;
-      while (!isUnique) {
-        receiptId = this.generateOrderId(); // Assuming generateRandomId is in scope
+    let storesMap: Record<number, {branchId: number}> = {};
 
-        const exists = await prisma.clientOrderReceipt.count({
-          where: {
-            receiptNumber: receiptId,
-          },
-        });
-
-        if (exists === 0) {
-          isUnique = true;
-        }
-      }
-
-      if (receipt.storeId) {
-        const store = await prisma.store.findUnique({
-          where: {
-            id: receipt.storeId,
-          },
-          select: {
-            client: {
-              select: {
-                id: true,
-                branchId: true,
-              },
-            },
-          },
-        });
-        if (receipt.branchId && store?.client.branchId !== receipt.branchId) {
-          throw new AppError("هذا العميل لا ينتمي لهذا الفرع", 400);
-        }
-        storeId = receipt.storeId;
-        branchId = store?.client.branchId || undefined;
-      }
-      if (receipt.branchId && !receipt.storeId) {
-        branchId = receipt.branchId;
-      }
-
-      const createdReceipt = await clientReceiptRepository.createClientReceipt({
-        storeId: receipt.storeId,
-        receiptData: {
-          storeId: storeId,
-          branchId: branchId,
-          receiptNumber: receiptId,
-          notes: receipt.notes,
+    if (storeIds.length > 0) {
+      const stores = await prisma.store.findMany({
+        where: {id: {in: storeIds}},
+        select: {
+          id: true,
+          client: {select: {branchId: true}},
         },
       });
 
-      if (!createdReceipt) {
-        throw new AppError("Failed to create order", 500);
+      storesMap = Object.fromEntries(
+        stores.map((s) => [s.id, {branchId: s.client.branchId!!}])
+      );
+    }
+
+    // ==== Generate unique receipt IDs in memory FAST ====
+    const usedIds = new Set<string>();
+
+    const generateFastUniqueId = () => {
+      let id = "";
+      do {
+        id = this.generateOrderId(); // must be truly random
+      } while (usedIds.has(id));
+      usedIds.add(id);
+      return id;
+    };
+
+    // ==== Prepare database rows ====
+    const rowsToInsert: Prisma.ClientOrderReceiptCreateManyInput[] = [];
+
+    const receiptsToReturn = [];
+
+    for (const receipt of receipts) {
+      let branchId: number | undefined = undefined;
+
+      if (receipt.storeId) {
+        const storeInfo = storesMap[receipt.storeId];
+        if (!storeInfo) {
+          throw new AppError("Store not found", 404);
+        }
+
+        // Branch validation
+        if (receipt.branchId && storeInfo.branchId !== receipt.branchId) {
+          throw new AppError("هذا العميل لا ينتمي لهذا الفرع", 400);
+        }
+
+        branchId = storeInfo.branchId;
       }
 
-      createdReceipts.push(createdReceipt);
+      if (!branchId && receipt.branchId) {
+        branchId = receipt.branchId;
+      }
+
+      const receiptId = generateFastUniqueId();
+
+      rowsToInsert.push({
+        storeId: receipt.storeId || null,
+        branchId: branchId!!,
+        receiptNumber: receiptId,
+        notes: receipt.notes || null,
+      });
+
+      receiptsToReturn.push({
+        storeId: receipt.storeId,
+        branchId,
+        receiptNumber: receiptId,
+        notes: receipt.notes,
+      });
     }
-    const pdf = await generateReceipts(createdReceipts);
+
+    // ==== Insert ALL receipts at once (super fast) ====
+    const createdReceipt = await prisma.clientOrderReceipt.createManyAndReturn({
+      data: rowsToInsert,
+      select: clientReceiptSelect,
+    });
+
+    // ==== Now generate PDF ====
+    const pdf = await generateReceipts(
+      createdReceipt.map((r) => receiptReform(r))
+    );
     const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
-    // Set headers for a PDF response
+
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "attachment; filename=generated.pdf");
-    console.log("PDF size:", pdfBuffer.length);
-
     res.send(pdfBuffer);
   });
 }

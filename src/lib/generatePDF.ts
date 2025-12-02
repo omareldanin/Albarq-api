@@ -1,4 +1,3 @@
-import puppeteer from "puppeteer";
 import {AppError} from "./AppError";
 import {Logger} from "./logger";
 import {browserPromise} from "./puppeteerInstance";
