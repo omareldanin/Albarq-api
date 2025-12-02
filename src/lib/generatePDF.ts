@@ -1,3 +1,4 @@
+import puppeteer from "puppeteer";
 import {AppError} from "./AppError";
 import {Logger} from "./logger";
 import {browserPromise} from "./puppeteerInstance";
@@ -14,7 +15,11 @@ export const generatePDF = async (
   }
 ) => {
   try {
-    const browser = await browserPromise;
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      ignoreDefaultArgs: ["--disable-extensions"],
+    });
     const page = await browser.newPage();
 
     await page.emulateMediaType("print");
