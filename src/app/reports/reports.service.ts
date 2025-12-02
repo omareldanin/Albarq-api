@@ -507,65 +507,53 @@ export class ReportsService {
       reportID: data.params.reportID,
     });
 
+    if (!reportData) {
+      throw new AppError("الكشف المطلوب غير موجود", 404);
+    }
     if (reportData?.deleted) {
       throw new AppError("الكشف المطلوب موجود بسلة المحذوفات", 404);
     }
 
-    if (
-      data.loggedInUser &&
-      data.loggedInUser.role !== "COMPANY_MANAGER" &&
-      !data.loggedInUser.mainRepository
-    ) {
+    // ===== Permission check =====
+    const user = data.loggedInUser;
+    if (user && user.role !== "COMPANY_MANAGER" && !user.mainRepository) {
+      const isSameBranch = reportData.createdByBrachId === user.branchId;
+      const type = reportData.type;
+
       if (
-        reportData?.type === "DELIVERY_AGENT" &&
-        reportData.createdByBrachId !== data.loggedInUser.branchId
-      ) {
-        throw new AppError("غير مصرح لك بالاطلاع علي هذا الكشف", 400);
-      } else if (
-        reportData?.type === "CLIENT" &&
-        reportData.createdByBrachId !== data.loggedInUser.branchId
-      ) {
-        throw new AppError("غير مصرح لك بالاطلاع علي هذا الكشف", 400);
-      } else if (
-        reportData?.type === "BRANCH" &&
-        reportData.branchReport?.branch.id !== data.loggedInUser.branchId
+        (type === "CLIENT" && !isSameBranch) ||
+        (type === "DELIVERY_AGENT" && !isSameBranch) ||
+        (type === "BRANCH" &&
+          reportData.branchReport?.branch.id !== user.branchId)
       ) {
         throw new AppError("غير مصرح لك بالاطلاع علي هذا الكشف", 400);
       }
     }
-    let insideOrdersCount = 0;
-    let total = 0;
-    let baghdadTotal = 0;
-    let otherTotal = 0;
-    let insideTotal = 0;
+
+    // ========= Extract orders ==========
     // TODO: fix this
     // @ts-expect-error Fix later
-    const orders: Order[] = reportData?.repositoryReport
-      ? // @tts-expect-error: Unreachable code error
-        reportData?.repositoryReport.repositoryReportOrders
-      : reportData?.branchReport
-      ? // @tts-expect-error: Unreachable code error
-        reportData?.branchReport.branchReportOrders
-      : reportData?.clientReport
-      ? // @tts-expect-error: Unreachable code error
-        reportData?.clientReport.clientReportOrders
-      : reportData?.deliveryAgentReport
-      ? // @tts-expect-error: Unreachable code error
-        reportData?.deliveryAgentReport.deliveryAgentReportOrders
-      : reportData?.governorateReport
-      ? // @tts-expect-error: Unreachable code error
-        reportData?.governorateReport.governorateReportOrders
-      : reportData?.companyReport
-      ? // @tts-expect-error: Unreachable code error
-        reportData?.companyReport.companyReportOrders
-      : [];
+    const orders: Order[] =
+      reportData.repositoryReport?.repositoryReportOrders ??
+      reportData.branchReport?.branchReportOrders ??
+      reportData.clientReport?.clientReportOrders ??
+      reportData.deliveryAgentReport?.deliveryAgentReportOrders ??
+      reportData.governorateReport?.governorateReportOrders ??
+      reportData.companyReport?.companyReportOrders ??
+      [];
 
-    const ordersIDs = orders.map((order) => order.id);
+    if (orders.length === 0) {
+      throw new AppError("لا يوجد طلبات", 404);
+    }
 
+    const ordersIDs = orders.map((o) => o.id);
+
+    // ========= Fetch orders data ==========
     let ordersData = await ordersRepository.getOrdersByIDs({
-      ordersIDs: ordersIDs,
+      ordersIDs,
     });
 
+    // ========= Fetch all timelines in one query ==========
     const timelines = await prisma.orderTimeline.findMany({
       where: {
         type: "PAID_AMOUNT_CHANGE",
@@ -573,120 +561,114 @@ export class ReportsService {
       },
     });
 
+    // ========= Group timelines by order ==========
     const timelineMap = timelines.reduce<Record<string, OrderTimeline[]>>(
       (acc, t) => {
-        if (!acc[t.orderId]) acc[t.orderId] = [];
-        acc[t.orderId].push(t);
+        const id = Number(t.orderId);
+        if (!acc[id]) acc[id] = [];
+        acc[id].push(t);
         return acc;
       },
       {}
     );
 
-    for (const [index, order] of ordersData.entries()) {
-      if (!order) {
-        break;
-      }
-      const timelineList = timelineMap[order.id] || [];
+    // Sort each timeline list descending by date (fastest access)
+    Object.values(timelineMap).forEach((list) =>
+      list.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    );
 
-      for (const time of timelineList) {
-        if (time.createdAt > reportData?.createdAt!!) {
-          const value = JSON.parse(time.old?.toString() || "{}") as {
+    // ========= Pre-calculate reusable variables ==========
+    const type = reportData.type;
+    const createdAt = reportData.createdAt!!;
+
+    const branchId = reportData.clientReport?.branch?.id;
+
+    const baghdadCost =
+      (type === "CLIENT" && reportData.clientReport?.baghdadDeliveryCost) ||
+      (type === "BRANCH" && reportData.branchReport?.baghdadDeliveryCost) ||
+      0;
+
+    const governorateCost =
+      (type === "CLIENT" &&
+        reportData.clientReport?.governoratesDeliveryCost) ||
+      (type === "BRANCH" &&
+        reportData.branchReport?.governoratesDeliveryCost) ||
+      0;
+
+    const deliveryBaseCost =
+      type === "DELIVERY_AGENT"
+        ? reportData.deliveryAgentReport?.deliveryAgentDeliveryCost || 0
+        : 0;
+
+    // ========= Accumulators ==========
+    let insideOrdersCount = 0;
+    let total = 0;
+    let insideTotal = 0;
+    let baghdadTotal = 0;
+    let otherTotal = 0;
+
+    // ========= Process all orders FAST ==========
+    for (const order of ordersData) {
+      if (!order) continue;
+
+      const paidBefore = order.paidAmount || 0;
+      let newPaidAmount = paidBefore;
+
+      // ==== Find latest paidAmountChange AFTER report created ====
+      const tList = timelineMap[order.id];
+      if (tList && tList.length) {
+        const latest = tList.find((t) => t.createdAt > createdAt);
+        if (latest) {
+          const val = JSON.parse(latest.old?.toString() || "{}") as {
             value?: number;
           };
-
-          if (value.value !== undefined) {
-            order.paidAmount = +value.value;
-
-            // All your net calculation logic stays the same
-            if (
-              reportData?.type === "CLIENT" &&
-              order.governorate === "BAGHDAD"
-            ) {
-              order.clientNet =
-                +value.value - reportData.clientReport?.baghdadDeliveryCost!!;
-            }
-
-            if (
-              reportData?.type === "CLIENT" &&
-              order.governorate !== "BAGHDAD"
-            ) {
-              order.clientNet =
-                +value.value -
-                reportData.clientReport?.governoratesDeliveryCost!!;
-            }
-
-            if (
-              reportData?.type === "BRANCH" &&
-              order.governorate === "BAGHDAD"
-            ) {
-              order.branchNet =
-                +value.value - reportData.branchReport?.baghdadDeliveryCost!!;
-            }
-
-            if (
-              reportData?.type === "BRANCH" &&
-              order.governorate !== "BAGHDAD"
-            ) {
-              order.branchNet =
-                +value.value -
-                reportData.branchReport?.governoratesDeliveryCost!!;
-            }
-
-            if (reportData?.type === "DELIVERY_AGENT") {
-              const weight = order.weight || 0;
-              const deliveryAgentNet =
-                reportData.deliveryAgentReport?.deliveryAgentDeliveryCost!! +
-                weight * 250;
-
-              const companyNet = (order.paidAmount || 0) - deliveryAgentNet;
-
-              order.deliveryAgentNet = deliveryAgentNet;
-              order.companyNet = companyNet;
-            }
-
-            ordersData[index] = order;
-            break;
-          }
+          if (val.value !== undefined) newPaidAmount = Number(val.value);
         }
       }
 
-      // Counters
-      total += order?.paidAmount || 0;
+      // ==== Update net amounts only once ====
+      order.paidAmount = newPaidAmount;
 
-      if (
-        reportData?.type === "CLIENT" &&
-        reportData.clientReport?.branch?.id === order?.branch?.id
-      ) {
-        insideOrdersCount += 1;
-        insideTotal += order?.paidAmount || 0;
+      if (type === "CLIENT") {
+        if (order.governorate === "BAGHDAD")
+          order.clientNet = newPaidAmount - baghdadCost;
+        else order.clientNet = newPaidAmount - governorateCost;
+
+        if (branchId === order.branch?.id) {
+          insideOrdersCount++;
+          insideTotal += newPaidAmount;
+        }
+
+        if (order.governorate === "BAGHDAD") baghdadTotal += newPaidAmount;
+        else otherTotal += newPaidAmount;
       }
 
-      if (reportData?.type === "CLIENT" && order?.governorate === "BAGHDAD") {
-        baghdadTotal += order?.paidAmount || 0;
+      if (type === "BRANCH") {
+        if (order.governorate === "BAGHDAD")
+          order.branchNet = newPaidAmount - baghdadCost;
+        else order.branchNet = newPaidAmount - governorateCost;
       }
 
-      if (reportData?.type === "CLIENT" && order?.governorate !== "BAGHDAD") {
-        otherTotal += order?.paidAmount || 0;
+      if (type === "DELIVERY_AGENT") {
+        const weightCost = (order.weight || 0) * 250;
+        const deliveryNet = deliveryBaseCost + weightCost;
+        order.deliveryAgentNet = deliveryNet;
+        order.companyNet = newPaidAmount - deliveryNet;
       }
+
+      total += newPaidAmount;
     }
 
-    if (reportData) {
-      reportData.insideOrdersCount = insideOrdersCount;
-      reportData.total = total;
-      reportData.insideTotal = insideTotal;
-      reportData.baghdadTotal = baghdadTotal;
-      reportData.otherTotal = otherTotal;
-    }
+    // ========= Assign totals to reportData ==========
+    reportData.insideOrdersCount = insideOrdersCount;
+    reportData.total = total;
+    reportData.insideTotal = insideTotal;
+    reportData.baghdadTotal = baghdadTotal;
+    reportData.otherTotal = otherTotal;
 
-    if (ordersData.length === 0) {
-      throw new AppError("لا يوجد طلبات", 404);
-    }
-    const pdf = await generateReport(
-      // @ts-expect-error Fix later
-      reportData.type,
-      reportData,
-      ordersData
-    );
+    // ========= Generate PDF ==========
+    const pdf = await generateReport(reportData.type, reportData, ordersData);
+
     return pdf;
   }
 
