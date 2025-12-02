@@ -448,7 +448,8 @@ export class MessagesController {
                     user.role !== "CLIENT_ASSISTANT" &&
                     user.role !== "EMPLOYEE_CLIENT_ASSISTANT" &&
                     !user.mainRepository &&
-                    user.role !== "DELIVERY_AGENT"
+                    user.role !== "DELIVERY_AGENT" &&
+                    user.role !== "BRANCH_MANAGER"
                       ? employee?.branchId
                       : undefined,
                   deliveryAgentId:
@@ -615,6 +616,7 @@ export class MessagesController {
                     user.role !== "COMPANY_MANAGER" &&
                     user.role !== "CLIENT_ASSISTANT" &&
                     user.role !== "EMPLOYEE_CLIENT_ASSISTANT" &&
+                    user.role !== "BRANCH_MANAGER" &&
                     user.role !== "DELIVERY_AGENT"
                       ? employee?.branchId
                       : undefined,
