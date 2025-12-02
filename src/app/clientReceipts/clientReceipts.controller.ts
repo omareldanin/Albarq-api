@@ -3,14 +3,11 @@ import {
   clientReceiptCreateSchema,
   clientReceiptCreateType,
 } from "./clientReceipts.dto";
-import {clientReceiptsRepository} from "./clientReceipts.repository";
 import {AppError} from "../../lib/AppError";
 import {generateReceipts} from "./helpers/generateReceipts";
 import {prisma} from "../../database/db";
 import {Prisma} from "@prisma/client";
 import {clientReceiptSelect, receiptReform} from "./clientReceipts.responses";
-
-const clientReceiptRepository = new clientReceiptsRepository();
 
 let counter = 0;
 let lastSecond = 0;

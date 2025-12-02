@@ -262,6 +262,7 @@ export class MessagesController {
     let inquiryLocationsIDs: number[] | undefined = undefined;
     let inquiryBranchesIDs: number[] | undefined = undefined;
     let inquiryStoresIDs: number[] | undefined = undefined;
+    let orderType: string | undefined = undefined;
 
     if (user.role === "INQUIRY_EMPLOYEE") {
       const inquiryEmployeeStuff =
@@ -269,6 +270,8 @@ export class MessagesController {
           employeeID: +user.id,
         });
       if (inquiryEmployeeStuff) {
+        orderType = inquiryEmployeeStuff.orderType || undefined;
+
         inquiryStatuses =
           inquiryEmployeeStuff.inquiryStatuses &&
           inquiryEmployeeStuff.inquiryStatuses.length > 0
@@ -375,7 +378,9 @@ export class MessagesController {
                         : undefined,
                     },
                     {
-                      branch: inquiryBranchesIDs
+                      branch: orderType
+                        ? undefined
+                        : inquiryBranchesIDs
                         ? {
                             id: {
                               in: inquiryBranchesIDs,
@@ -410,6 +415,22 @@ export class MessagesController {
                           }
                         : undefined,
                     },
+                    {
+                      forwardedBranchId:
+                        orderType === "forwarded" && inquiryBranchesIDs
+                          ? {in: inquiryBranchesIDs}
+                          : orderType === "forwarded"
+                          ? employee?.branchId
+                          : undefined,
+                    },
+                    {
+                      receivedBranchId:
+                        orderType === "receiving" && inquiryBranchesIDs
+                          ? {in: inquiryBranchesIDs}
+                          : orderType === "receiving"
+                          ? employee?.branchId
+                          : undefined,
+                    },
                   ],
                 }
               : {
@@ -436,6 +457,21 @@ export class MessagesController {
                     user.role === "CLIENT_ASSISTANT" ||
                     user.role === "EMPLOYEE_CLIENT_ASSISTANT"
                       ? {in: inquiryStoresIDs}
+                      : undefined,
+                  OR:
+                    user.role === "BRANCH_MANAGER"
+                      ? [
+                          {
+                            branch: {
+                              id: employee?.branchId!!,
+                            },
+                          },
+                          {
+                            client: {
+                              branchId: employee?.branchId,
+                            },
+                          },
+                        ]
                       : undefined,
                 },
         },
@@ -501,11 +537,14 @@ export class MessagesController {
               ? {
                   AND: [
                     {
-                      status: inquiryStatuses
-                        ? {
-                            in: inquiryStatuses,
-                          }
-                        : undefined,
+                      status:
+                        status && status !== "null"
+                          ? (status as OrderStatus)
+                          : inquiryStatuses
+                          ? {
+                              in: inquiryStatuses,
+                            }
+                          : undefined,
                     },
                     {
                       governorate: inquiryGovernorates
@@ -515,17 +554,19 @@ export class MessagesController {
                         : undefined,
                     },
                     {
-                      branch: inquiryBranchesIDs
+                      branch: orderType
+                        ? undefined
+                        : inquiryBranchesIDs
                         ? {
                             id: {
                               in: inquiryBranchesIDs,
                             },
                           }
-                        : !user.mainRepository
-                        ? {
-                            id: user.branchId,
-                          }
-                        : undefined,
+                        : employee?.mainEmergency
+                        ? undefined
+                        : {
+                            id: employee?.branchId!!,
+                          },
                     },
                     {
                       store: inquiryStoresIDs
@@ -550,6 +591,22 @@ export class MessagesController {
                           }
                         : undefined,
                     },
+                    {
+                      forwardedBranchId:
+                        orderType === "forwarded" && inquiryBranchesIDs
+                          ? {in: inquiryBranchesIDs}
+                          : orderType === "forwarded"
+                          ? employee?.branchId
+                          : undefined,
+                    },
+                    {
+                      receivedBranchId:
+                        orderType === "receiving" && inquiryBranchesIDs
+                          ? {in: inquiryBranchesIDs}
+                          : orderType === "receiving"
+                          ? employee?.branchId
+                          : undefined,
+                    },
                   ],
                 }
               : {
@@ -568,6 +625,21 @@ export class MessagesController {
                     user.role === "CLIENT_ASSISTANT" ||
                     user.role === "EMPLOYEE_CLIENT_ASSISTANT"
                       ? {in: inquiryStoresIDs}
+                      : undefined,
+                  OR:
+                    user.role === "BRANCH_MANAGER"
+                      ? [
+                          {
+                            branch: {
+                              id: employee?.branchId!!,
+                            },
+                          },
+                          {
+                            client: {
+                              branchId: employee?.branchId,
+                            },
+                          },
+                        ]
                       : undefined,
                 },
         },
