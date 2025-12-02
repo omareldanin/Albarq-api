@@ -3,6 +3,7 @@ import {
   ClientRole,
   EmployeeRole,
   type Order,
+  OrderTimeline,
   ReportType,
 } from "@prisma/client";
 import {AppError} from "../../lib/AppError";
@@ -565,22 +566,38 @@ export class ReportsService {
       ordersIDs: ordersIDs,
     });
 
-    for (const [index, order] of ordersData.entries()) {
-      const timeline = await prisma.orderTimeline.findMany({
-        where: {
-          type: "PAID_AMOUNT_CHANGE",
-          orderId: order?.id,
-        },
-      });
+    const timelines = await prisma.orderTimeline.findMany({
+      where: {
+        type: "PAID_AMOUNT_CHANGE",
+        orderId: {in: ordersIDs},
+      },
+    });
 
-      for (const time of timeline) {
+    const timelineMap = timelines.reduce<Record<string, OrderTimeline[]>>(
+      (acc, t) => {
+        if (!acc[t.orderId]) acc[t.orderId] = [];
+        acc[t.orderId].push(t);
+        return acc;
+      },
+      {}
+    );
+
+    for (const [index, order] of ordersData.entries()) {
+      if (!order) {
+        break;
+      }
+      const timelineList = timelineMap[order.id] || [];
+
+      for (const time of timelineList) {
         if (time.createdAt > reportData?.createdAt!!) {
           const value = JSON.parse(time.old?.toString() || "{}") as {
             value?: number;
           };
 
-          if (value.value !== undefined && order) {
+          if (value.value !== undefined) {
             order.paidAmount = +value.value;
+
+            // All your net calculation logic stays the same
             if (
               reportData?.type === "CLIENT" &&
               order.governorate === "BAGHDAD"
@@ -588,6 +605,7 @@ export class ReportsService {
               order.clientNet =
                 +value.value - reportData.clientReport?.baghdadDeliveryCost!!;
             }
+
             if (
               reportData?.type === "CLIENT" &&
               order.governorate !== "BAGHDAD"
@@ -596,6 +614,7 @@ export class ReportsService {
                 +value.value -
                 reportData.clientReport?.governoratesDeliveryCost!!;
             }
+
             if (
               reportData?.type === "BRANCH" &&
               order.governorate === "BAGHDAD"
@@ -603,6 +622,7 @@ export class ReportsService {
               order.branchNet =
                 +value.value - reportData.branchReport?.baghdadDeliveryCost!!;
             }
+
             if (
               reportData?.type === "BRANCH" &&
               order.governorate !== "BAGHDAD"
@@ -611,9 +631,9 @@ export class ReportsService {
                 +value.value -
                 reportData.branchReport?.governoratesDeliveryCost!!;
             }
+
             if (reportData?.type === "DELIVERY_AGENT") {
               const weight = order.weight || 0;
-
               const deliveryAgentNet =
                 reportData.deliveryAgentReport?.deliveryAgentDeliveryCost!! +
                 weight * 250;
@@ -623,12 +643,16 @@ export class ReportsService {
               order.deliveryAgentNet = deliveryAgentNet;
               order.companyNet = companyNet;
             }
+
             ordersData[index] = order;
             break;
           }
         }
       }
+
+      // Counters
       total += order?.paidAmount || 0;
+
       if (
         reportData?.type === "CLIENT" &&
         reportData.clientReport?.branch?.id === order?.branch?.id
@@ -636,9 +660,11 @@ export class ReportsService {
         insideOrdersCount += 1;
         insideTotal += order?.paidAmount || 0;
       }
+
       if (reportData?.type === "CLIENT" && order?.governorate === "BAGHDAD") {
-        baghdadTotal += order?.paidAmount;
+        baghdadTotal += order?.paidAmount || 0;
       }
+
       if (reportData?.type === "CLIENT" && order?.governorate !== "BAGHDAD") {
         otherTotal += order?.paidAmount || 0;
       }
