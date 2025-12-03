@@ -1,6 +1,6 @@
 import {Logger} from "../../../lib/logger";
 import {AppError} from "../../../lib/AppError";
-import {browserPromise} from "../../../lib/puppeteerInstance";
+import puppeteer from "puppeteer";
 
 // html and css content or html and css file path
 
@@ -14,7 +14,11 @@ export const generatePDF = async (
   }
 ) => {
   try {
-    const browser = await browserPromise;
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      ignoreDefaultArgs: ["--disable-extensions"],
+    });
     const page = await browser.newPage();
 
     await page.emulateMediaType("print");
