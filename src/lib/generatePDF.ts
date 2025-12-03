@@ -1,6 +1,6 @@
 import {AppError} from "./AppError";
 import {Logger} from "./logger";
-import {browserPromise} from "./puppeteerInstance";
+import {getBrowser} from "./puppeteerInstance";
 
 // html and css content or html and css file path
 
@@ -14,7 +14,7 @@ export const generatePDF = async (
   }
 ) => {
   try {
-    const browser = await browserPromise; // reuse browser
+    const browser = await getBrowser();
     const page = await browser.newPage();
 
     await page.emulateMediaType("print");
