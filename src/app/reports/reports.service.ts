@@ -346,20 +346,21 @@ export class ReportsService {
       ) {
         insideOrdersCount += 1;
       }
-      total += order?.paidAmount || 0;
+      total += order?.clientNet || 0;
       if (
         reportData?.type === "CLIENT" &&
         reportData.clientReport?.branch?.id === order?.branch?.id
       ) {
         insideOrdersCount += 1;
-        insideTotal += order?.paidAmount || 0;
+        insideTotal += order?.clientNet || 0;
       }
       if (reportData?.type === "CLIENT" && order?.governorate === "BAGHDAD") {
-        baghdadTotal += order?.paidAmount;
+        baghdadTotal += order?.clientNet;
       }
       if (reportData?.type === "CLIENT" && order?.governorate !== "BAGHDAD") {
-        otherTotal += order?.paidAmount || 0;
+        otherTotal += order?.clientNet || 0;
       }
+
       await ordersRepository.updateOrderTimeline({
         orderID: order.id,
         data: {
@@ -630,17 +631,23 @@ export class ReportsService {
       order.paidAmount = newPaidAmount;
 
       if (type === "CLIENT") {
-        if (order.governorate === "BAGHDAD")
+        if (order.governorate === "BAGHDAD") {
           order.clientNet = newPaidAmount - baghdadCost;
-        else order.clientNet = newPaidAmount - governorateCost;
-
-        if (branchId === order.branch?.id) {
-          insideOrdersCount++;
-          insideTotal += newPaidAmount;
+          total += newPaidAmount - baghdadCost;
+          baghdadTotal += newPaidAmount - baghdadCost;
+          if (branchId === order.branch?.id) {
+            insideOrdersCount++;
+            insideTotal += newPaidAmount - baghdadCost;
+          }
+        } else {
+          order.clientNet = newPaidAmount - governorateCost;
+          otherTotal += newPaidAmount - governorateCost;
+          total += newPaidAmount - governorateCost;
+          if (branchId === order.branch?.id) {
+            insideOrdersCount++;
+            insideTotal += newPaidAmount - governorateCost;
+          }
         }
-
-        if (order.governorate === "BAGHDAD") baghdadTotal += newPaidAmount;
-        else otherTotal += newPaidAmount;
       }
 
       if (type === "BRANCH") {
@@ -655,8 +662,6 @@ export class ReportsService {
         order.deliveryAgentNet = deliveryNet;
         order.companyNet = newPaidAmount - deliveryNet;
       }
-
-      total += newPaidAmount;
     }
 
     // ========= Assign totals to reportData ==========
