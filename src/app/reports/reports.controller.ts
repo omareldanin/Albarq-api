@@ -224,7 +224,7 @@ export class ReportController {
     res.setHeader("Content-Disposition", "attachment; filename=generated.pdf");
     console.log("PDF size:", pdfBuffer.length);
 
-    res.send(pdfBuffer);
+    res.end(pdfBuffer); // fastest
   });
 
   updateReport = catchAsync(async (req, res) => {
