@@ -42,13 +42,16 @@ export class OrdersRepository {
     const day = String(now.getDate()).padStart(2, "0");
     const datePart = `${month}${day}`;
 
-    // last 4 digits of timestamp
-    const ts = Date.now().toString().slice(-4);
+    // Use last 3 digits of timestamp → more space for counter
+    const ts = Date.now().toString().slice(-3);
 
-    // 1-digit counter (0 → 9), resets automatically
-    counter = (counter + 1) % 10;
+    // 2-digit counter (00–99)
+    counter = (counter + 1) % 100;
 
-    return `${datePart}${ts}${counter}`;
+    const ctr = String(counter).padStart(2, "0");
+
+    // Final ID → same length as before
+    return `${datePart}${ts}${ctr}`;
   }
 
   async getDeliverCost(clientId: number, governorate: Governorate) {
