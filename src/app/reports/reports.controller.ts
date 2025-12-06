@@ -223,7 +223,6 @@ export class ReportController {
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "attachment; filename=generated.pdf");
     console.log("PDF size:", pdfBuffer.length);
-
     res.end(pdfBuffer); // fastest
   });
 
