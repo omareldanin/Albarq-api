@@ -670,6 +670,7 @@ export class ReportsService {
     reportData.insideTotal = insideTotal;
     reportData.baghdadTotal = baghdadTotal;
     reportData.otherTotal = otherTotal;
+    console.log("orders complete---------------------------");
 
     // ========= Generate PDF ==========
     const pdf = await generateReport(reportData.type, reportData, ordersData);
