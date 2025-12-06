@@ -56,6 +56,8 @@ export const generateReport = async (
     );
 
     const html = await generateHTML(template, {reportData, orders});
+    console.log("html complete---------------------------");
+
     const pdf = await generatePDF(html, css);
 
     return pdf;
