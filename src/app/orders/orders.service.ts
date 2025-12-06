@@ -78,12 +78,14 @@ export class OrdersService {
           throw new AppError("لا يوجد فرع مرتبط بالموقع", 500);
         }
         branchID = branch.id;
+
         const createdOrder = await ordersRepository.createOrder({
           companyID: data.loggedInUser.companyID as number,
           clientID,
           loggedInUser: data.loggedInUser,
           orderData: {...order, confirmed, status, branchID},
         });
+
         if (!createdOrder) {
           throw new AppError("Failed to create order", 500);
         }

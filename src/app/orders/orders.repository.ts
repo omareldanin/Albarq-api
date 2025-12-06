@@ -43,6 +43,7 @@ export class OrdersRepository {
 
     return `${datePart}${timestampPart}`;
   }
+
   async getDeliverCost(clientId: number, governorate: Governorate) {
     const client = await prisma.client.findUnique({
       where: {
@@ -308,7 +309,18 @@ export class OrdersRepository {
         : 0;
     }
 
-    let randomId = this.generateRandomId();
+    const usedIds = new Set<string>();
+
+    const generateFastUniqueId = () => {
+      let id = "";
+      do {
+        id = this.generateRandomId(); // must be truly random
+      } while (usedIds.has(id));
+      usedIds.add(id);
+      return id;
+    };
+
+    let randomId = generateFastUniqueId();
 
     // Create order
     const createdOrder = await prisma.order.create({
