@@ -30,18 +30,26 @@ import {MessagesController} from "../messages/messages.controller";
 
 const messageController = new MessagesController();
 
+let counter = 0;
+let lastSecond = 0;
 export class OrdersRepository {
   generateRandomId() {
     const now = new Date(
       new Date().toLocaleString("en-US", {timeZone: "Asia/Baghdad"})
     );
-    // Format date as YYMMDD
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
-    const datePart = `${month}${day}`;
-    const timestampPart = Date.now().toString().slice(-5);
+    const seconds = Math.floor(now.getTime() / 1000);
 
-    return `${datePart}${timestampPart}`;
+    if (seconds !== lastSecond) {
+      counter = 0;
+      lastSecond = seconds;
+    }
+    counter++;
+
+    const counterPart = String(counter).padStart(2, "0");
+    const timePart = String(seconds).slice(-5);
+    return `${month}${day}${timePart}`;
   }
 
   async getDeliverCost(clientId: number, governorate: Governorate) {
@@ -309,18 +317,7 @@ export class OrdersRepository {
         : 0;
     }
 
-    const usedIds = new Set<string>();
-
-    const generateFastUniqueId = () => {
-      let id = "";
-      do {
-        id = this.generateRandomId(); // must be truly random
-      } while (usedIds.has(id));
-      usedIds.add(id);
-      return id;
-    };
-
-    let randomId = generateFastUniqueId();
+    let randomId = this.generateRandomId();
 
     // Create order
     const createdOrder = await prisma.order.create({
