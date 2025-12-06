@@ -7,25 +7,38 @@ export const generatePDF = async (
   css?: string,
   options = {landscape: true}
 ) => {
-  try {
-    const browser = await getBrowser();
-    const page = await browser.newPage();
+  const browser = await getBrowser();
+  const page = await browser.newPage();
 
-    await page.emulateMediaType("print");
-    await page.setContent(html);
-    if (css) await page.addStyleTag({content: css});
+  try {
+    // Use fast loading mode
+    await page.setContent(
+      `
+      <style>${css ?? ""}</style>
+      ${html}
+    `,
+      {
+        waitUntil: "domcontentloaded", // MUCH FASTER
+      }
+    );
 
     const pdf = await page.pdf({
       format: "A4",
       landscape: options.landscape,
       printBackground: true,
-      margin: {top: "20px", right: "20px", bottom: "20px", left: "20px"},
+      margin: {
+        top: "20px",
+        right: "20px",
+        bottom: "20px",
+        left: "20px",
+      },
     });
 
-    await page.close();
     return pdf;
-  } catch (error) {
-    Logger.error(error);
+  } catch (err) {
+    Logger.error(err);
     throw new AppError("حدث خطأ أثناء انشاء ملف ال PDF", 500);
+  } finally {
+    await page.close().catch(() => {});
   }
 };
