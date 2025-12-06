@@ -37,8 +37,11 @@ export class OrdersRepository {
     const now = new Date(
       new Date().toLocaleString("en-US", {timeZone: "Asia/Baghdad"})
     );
+    // Format date as YYMMDD
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
+    const datePart = `${month}${day}`;
+    const timestampPart = Date.now().toString().slice(-5);
     const seconds = Math.floor(now.getTime() / 1000);
 
     if (seconds !== lastSecond) {
@@ -48,8 +51,7 @@ export class OrdersRepository {
     counter++;
 
     const counterPart = String(counter).padStart(2, "0");
-    const timePart = String(seconds).slice(-5);
-    return `${month}${day}${timePart}`;
+    return `${datePart}${timestampPart}${counterPart}`;
   }
 
   async getDeliverCost(clientId: number, governorate: Governorate) {
