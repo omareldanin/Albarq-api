@@ -222,6 +222,10 @@ export class ReportController {
     // Set headers for a PDF response
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "attachment; filename=generated.pdf");
+    res.setHeader("Content-Length", pdfBuffer.length);
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Accept-Ranges", "none"); // prevents chunking on some setups
+    res.removeHeader("ETag"); // VERY IMPORTANT
     console.log("PDF size:", pdfBuffer.length);
     res.end(pdfBuffer); // fastest
   });

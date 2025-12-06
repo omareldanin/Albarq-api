@@ -74,6 +74,7 @@ app.use(
 );
 
 // Routes
+app.disable("etag");
 
 app.use("/api/v1", apiRouter);
 
