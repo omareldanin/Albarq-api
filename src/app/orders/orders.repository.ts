@@ -31,27 +31,24 @@ import {MessagesController} from "../messages/messages.controller";
 const messageController = new MessagesController();
 
 let counter = 0;
-let lastSecond = 0;
+
 export class OrdersRepository {
   generateRandomId() {
     const now = new Date(
       new Date().toLocaleString("en-US", {timeZone: "Asia/Baghdad"})
     );
-    // Format date as YYMMDD
+
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
     const datePart = `${month}${day}`;
-    const timestampPart = Date.now().toString().slice(-5);
-    const seconds = Math.floor(now.getTime() / 1000);
 
-    if (seconds !== lastSecond) {
-      counter = 0;
-      lastSecond = seconds;
-    }
-    counter++;
+    // last 4 digits of timestamp
+    const ts = Date.now().toString().slice(-4);
 
-    const counterPart = String(counter).padStart(2, "0");
-    return `${datePart}${timestampPart}${counterPart}`;
+    // 1-digit counter (0 → 9), resets automatically
+    counter = (counter + 1) % 10;
+
+    return `${datePart}${ts}${counter}`;
   }
 
   async getDeliverCost(clientId: number, governorate: Governorate) {
