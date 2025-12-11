@@ -2243,10 +2243,7 @@ export class OrdersRepository {
       reportType?: ReportType;
     };
   }) {
-    if (
-      data.costs.baghdadDeliveryCost &&
-      data.costs.reportType === ReportType.CLIENT
-    ) {
+    if (data.costs.reportType === ReportType.CLIENT) {
       // Get Baghdad orders
       const baghdadOrders = await prisma.order.findMany({
         where: {
@@ -2297,10 +2294,7 @@ export class OrdersRepository {
       }
     }
 
-    if (
-      data.costs.governoratesDeliveryCost &&
-      data.costs.reportType === ReportType.CLIENT
-    ) {
+    if (data.costs.reportType === ReportType.CLIENT) {
       // get governorates orders
       const governoratesOrders = await prisma.order.findMany({
         where: {
