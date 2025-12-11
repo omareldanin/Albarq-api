@@ -685,7 +685,7 @@ export class OrdersService {
           data.orderData.status === "PROCESSING"
         ) {
           const orderInquiryEmployees =
-            await ordersRepository.getOrderInquiryEmployees({
+            await ordersRepository.getOrderInquiryEmployeesForNotifications({
               orderID: oldOrderData.id,
             });
           const clientAssitants = await prisma.employee.findMany({

@@ -3500,6 +3500,7 @@ export class OrdersRepository {
       avatar: string;
       role: string;
     }[] = [];
+
     const inquiryEmployees =
       (
         await prisma.employee.findMany({
@@ -3599,6 +3600,140 @@ export class OrdersRepository {
     return orderInquiryEmployees;
   }
 
+  async getOrderInquiryEmployeesForNotifications(data: {
+    orderID: string | undefined;
+  }) {
+    const order = await prisma.order.findUnique({
+      where: {
+        id: data.orderID,
+      },
+      select: {
+        branchId: true,
+        storeId: true,
+        companyId: true,
+        locationId: true,
+        status: true,
+        governorate: true,
+        client: {
+          select: {
+            branchId: true,
+          },
+        },
+        deliveryAgent: {
+          select: {
+            id: true,
+          },
+        },
+        location: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new AppError("الطلب غير موجود", 404);
+    }
+
+    const orderInquiryEmployees: {
+      id: number;
+      name: string;
+      phone: string;
+      avatar: string;
+      role: string;
+    }[] = [];
+
+    const inquiryEmployees =
+      (
+        await prisma.employee.findMany({
+          where: {
+            AND: [
+              {deleted: false},
+              {role: "INQUIRY_EMPLOYEE"},
+              {
+                inquiryBranches: order?.branchId
+                  ? {
+                      some: {
+                        branchId: {
+                          in: [order.branchId, order.client.branchId!!],
+                        },
+                      },
+                    }
+                  : undefined,
+              },
+            ],
+          },
+          select: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                phone: true,
+                avatar: true,
+              },
+            },
+            inquiryStatuses: true,
+            inquiryGovernorates: true,
+            inquiryLocations: true,
+            inquiryStores: true,
+            inquiryDeliveryAgents: true,
+            role: true,
+          },
+        })
+      ).forEach((inquiryEmployee) => {
+        const inquiryLocation = inquiryEmployee.inquiryLocations.find(
+          (e) => e.locationId === order.locationId
+        );
+        const inquiryStore = inquiryEmployee.inquiryStores.find(
+          (e) => e.storeId === order.storeId
+        );
+        const inquiryDelivery = inquiryEmployee.inquiryDeliveryAgents.find(
+          (e) => e.deliveryAgentId === order.deliveryAgent?.id
+        );
+        if (
+          inquiryEmployee.inquiryStatuses.length > 0 &&
+          !inquiryEmployee.inquiryStatuses.includes(order?.status)
+        ) {
+          return;
+        }
+        if (
+          inquiryEmployee.inquiryGovernorates.length > 0 &&
+          !inquiryEmployee.inquiryGovernorates.includes(order?.governorate)
+        ) {
+          return;
+        }
+        if (inquiryEmployee.inquiryStores.length > 0 && !inquiryStore) {
+          return;
+        }
+        if (inquiryEmployee.inquiryLocations.length > 0 && !inquiryLocation) {
+          return;
+        }
+        if (
+          inquiryEmployee.inquiryDeliveryAgents.length > 0 &&
+          order.deliveryAgent &&
+          !inquiryDelivery
+        ) {
+          return;
+        }
+        orderInquiryEmployees.push({
+          id: inquiryEmployee.user?.id ?? null,
+          name: inquiryEmployee.user?.name ?? null,
+          phone: inquiryEmployee.user?.phone ?? null,
+          avatar: inquiryEmployee.user?.avatar ?? null,
+          role: inquiryEmployee.role,
+        });
+        // return {
+        //   id: inquiryEmployee.user?.id ?? null,
+        //   name: inquiryEmployee.user?.name ?? null,
+        //   phone: inquiryEmployee.user?.phone ?? null,
+        //   avatar: inquiryEmployee.user?.avatar ?? null,
+        //   role: inquiryEmployee.role,
+        // };
+      }) ?? [];
+
+    return orderInquiryEmployees;
+  }
   async getOrderStatus(data: {orderID: string}) {
     const order = await prisma.order.findUnique({
       where: {
