@@ -2256,6 +2256,7 @@ export class OrdersRepository {
           id: true,
           paidAmount: true,
           weight: true,
+          deliveryCost: true,
           company: {
             select: {
               additionalPriceForEvery500000IraqiDinar: true,
@@ -2269,7 +2270,8 @@ export class OrdersRepository {
       // Update Baghdad orders costs
       for (const order of baghdadOrders) {
         // const weight = order.weight || 0;
-        const deliveryCost = data.costs.baghdadDeliveryCost || 0;
+        const deliveryCost =
+          data.costs.baghdadDeliveryCost || order.deliveryCost;
         // let weightedDeliveryCost =
         //   deliveryCost +
         //   weight * order.company?.additionalPriceForEveryKilogram;
@@ -2308,6 +2310,7 @@ export class OrdersRepository {
         select: {
           id: true,
           paidAmount: true,
+          deliveryCost: true,
           weight: true,
           company: {
             select: {
@@ -2322,7 +2325,8 @@ export class OrdersRepository {
       // Update governorates orders costs
       for (const order of governoratesOrders) {
         // const weight = order.weight || 0;
-        const deliveryCost = data.costs.governoratesDeliveryCost || 0;
+        const deliveryCost =
+          data.costs.governoratesDeliveryCost || order.deliveryCost;
         // let weightedDeliveryCost =
         //   deliveryCost +
         //   weight * order.company?.additionalPriceForEveryKilogram;
