@@ -398,6 +398,8 @@ export class ReportsRepository {
       };
     }
 
+    console.log(data.filters);
+
     const paginatedReports = await prisma.report.findManyPaginated(
       {
         where: where,
