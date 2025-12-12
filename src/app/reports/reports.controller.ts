@@ -115,7 +115,6 @@ export class ReportController {
       });
       return;
     }
-    console.log(filters);
 
     const {page, pagesCount, reports, reportsMetaData} =
       await reportsService.getAllReports({

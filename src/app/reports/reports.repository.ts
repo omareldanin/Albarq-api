@@ -210,32 +210,6 @@ export class ReportsRepository {
                   }
                 : undefined,
             },
-            // {
-            //   clientReport: data.filters.branch
-            //     ? {
-            //         orders: {
-            //           some: {
-            //             branch: {
-            //               id: data.filters.branch,
-            //             },
-            //           },
-            //         },
-            //       }
-            //     : undefined,
-            // },
-            // {
-            //   clientReport: data.filters.branch
-            //     ? {
-            //         orders: {
-            //           some: {
-            //             branch: {
-            //               id: data.filters.branch,
-            //             },
-            //           },
-            //         },
-            //       }
-            //     : undefined,
-            // },
             {
               clientReport: data.filters.branch
                 ? {
@@ -297,10 +271,9 @@ export class ReportsRepository {
         },
         {
           clientReport: {
-            secondaryType:
-              data.filters.type === "CLIENT"
-                ? data.filters.secondaryType
-                : undefined,
+            secondaryType: data.filters.secondaryType
+              ? data.filters.secondaryType
+              : undefined,
           },
         },
         {
@@ -397,8 +370,6 @@ export class ReportsRepository {
         },
       };
     }
-
-    console.log(data.filters);
 
     const paginatedReports = await prisma.report.findManyPaginated(
       {
