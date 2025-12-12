@@ -84,7 +84,7 @@ export class ReportController {
       createdByID: req.query.created_by_id,
       deleted: req.query.deleted,
       minified: req.query.minified,
-      secondaryType: undefined,
+      secondaryType: req.query.secondaryReportType,
     });
 
     if (
