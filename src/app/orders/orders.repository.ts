@@ -3650,7 +3650,7 @@ export class OrdersRepository {
                   ? {
                       some: {
                         branchId: {
-                          in: [order.branchId, order.client.branchId!!],
+                          in: [order.branchId],
                         },
                       },
                     }
@@ -3728,6 +3728,7 @@ export class OrdersRepository {
 
     return orderInquiryEmployees;
   }
+
   async getOrderStatus(data: {orderID: string}) {
     const order = await prisma.order.findUnique({
       where: {
