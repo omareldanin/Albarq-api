@@ -12,7 +12,7 @@ const generatePDF_1 = require("./generatePDF");
 const logger_1 = require("../../../lib/logger");
 const generateReceipts = async (receipts) => {
     try {
-        const templatePath = node_path_1.default.join(__dirname, "../../../../static/templates/clientReceipt.hbs");
+        const templatePath = node_path_1.default.join(__dirname, "../../../static/templates/clientReceipt.hbs");
         // const css = await fs.readFile(
         //   path.join(__dirname, "../../../../static/styles/receiptStyle.css"),
         //   "utf8"

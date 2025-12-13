@@ -12,7 +12,7 @@ export const generateReceipts = async (
   try {
     const templatePath = path.join(
       __dirname,
-      "../../../../static/templates/clientReceipt.hbs"
+      "../../../static/templates/clientReceipt.hbs"
     );
 
     // const css = await fs.readFile(
