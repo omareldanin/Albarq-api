@@ -7,6 +7,8 @@ import {generatePDF} from "../../..//lib/generatePDF";
 import type {orderReform} from "../../../app/orders/orders.responses";
 import {Logger} from "../../../lib/logger";
 import type {reportReform} from "../reports.responses";
+import {uploadPdfToSpaces} from "../../../lib/uploadPdfToSpaces";
+import {prisma} from "../../../database/db";
 
 export const generateReport = async (
   reportType: ReportType,
@@ -43,9 +45,17 @@ export const generateReport = async (
     );
 
     const html = await generateHTML(template, {reportData, orders});
-    console.log("html complete---------------------------");
 
     const pdf = await generatePDF(html, css);
+
+    const pdfUrl = await uploadPdfToSpaces(pdf, reportData?.id!!);
+
+    await prisma.report.update({
+      where: {id: reportData?.id},
+      data: {
+        url: pdfUrl,
+      },
+    });
 
     return pdf;
   } catch (error) {

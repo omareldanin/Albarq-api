@@ -27,6 +27,10 @@ import {OrdersRepository} from "./orders.repository";
 import {generateReceipts} from "./helpers/generateReceipts";
 import {governorateArabicNames} from "../locations/locations.repository";
 import {generateOrdersReport} from "./helpers/generateOrdersReport";
+import fs from "fs";
+import path from "path";
+import csv from "csv-parser";
+
 const XlsxPopulate = require("xlsx-populate");
 
 const employeesRepository = new EmployeesRepository();
@@ -1813,7 +1817,7 @@ export class OrdersController {
     });
   });
 
-  generateExcelSheet = catchAsync(async (req, res) => {
+  generateExcelSheet = catchAsync(async (_req, res) => {
     const loggedInUser = res.locals.user as {companyID: number};
 
     // إنشاء ملف جديد
@@ -1927,5 +1931,66 @@ export class OrdersController {
     );
     res.setHeader("Content-Disposition", "attachment; filename=template.xlsx");
     res.send(Buffer.from(buffer));
+  });
+
+  updateOrderCsv = catchAsync(async (_req, res) => {
+    const filePath = path.join(process.cwd(), "data", "orders.csv");
+
+    const rows: any[] = [];
+
+    // 1️⃣ Read CSV
+    await new Promise<void>((resolve, reject) => {
+      fs.createReadStream(filePath)
+        .pipe(csv())
+        .on("data", (row) => rows.push(row))
+        .on("end", resolve)
+        .on("error", reject);
+    });
+
+    const updatedIds: string[] = [];
+    const skippedIds: string[] = [];
+
+    const cleanInt = (value: any) =>
+      !value || value === "NULL" ? null : Number(value);
+
+    const cleanString = (value: any) =>
+      !value || value === "NULL" ? null : value;
+
+    // 2️⃣ Run updates
+    await Promise.all(
+      rows.map(async (row) => {
+        if (!row.id || !row.status) {
+          skippedIds.push(row.id);
+          return;
+        }
+
+        const result = await prisma.order.updateMany({
+          where: {id: row.id},
+          data: {
+            status: row.status,
+            secondaryStatus: cleanString(row.secondaryStatus),
+            forwardedBranchId: cleanInt(row.forwardedBranchId),
+            receivedBranchId: cleanInt(row.receivedBranchId),
+            deliveryAgentId: cleanInt(row.deliveryAgentId),
+            branchId: cleanInt(row.branchId),
+          },
+        });
+
+        if (result.count > 0) {
+          updatedIds.push(row.id);
+        } else {
+          skippedIds.push(row.id);
+        }
+      })
+    );
+
+    res.status(200).json({
+      status: "success",
+      totalRows: rows.length,
+      updatedCount: updatedIds.length,
+      skippedCount: skippedIds.length,
+      updatedIds,
+      skippedIds,
+    });
   });
 }

@@ -47,93 +47,93 @@ export class MessagesController {
       avatar: string;
       role: string;
     }[] = [];
-    const inquiryEmployees =
-      (
-        await prisma.employee.findMany({
-          where: {
-            AND: [
-              {role: "INQUIRY_EMPLOYEE"},
-              {
-                OR: [
-                  {
-                    inquiryBranches: order?.branchId
-                      ? {
-                          some: {
-                            branchId: order.branchId,
-                          },
-                        }
-                      : undefined,
-                  },
-                  {
-                    id: order.branchId!!,
-                  },
-                ],
-              },
-              {
-                mainEmergency: false,
-              },
-            ],
-          },
-          select: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                phone: true,
-                avatar: true,
-              },
+
+    (
+      await prisma.employee.findMany({
+        where: {
+          AND: [
+            {role: "INQUIRY_EMPLOYEE"},
+            {
+              OR: [
+                {
+                  inquiryBranches: order?.branchId
+                    ? {
+                        some: {
+                          branchId: order.branchId,
+                        },
+                      }
+                    : undefined,
+                },
+                {
+                  id: order.branchId!!,
+                },
+              ],
             },
-            inquiryStatuses: true,
-            inquiryGovernorates: true,
-            inquiryLocations: true,
-            inquiryStores: true,
-            inquiryDeliveryAgents: true,
-            role: true,
+            {
+              mainEmergency: false,
+            },
+          ],
+        },
+        select: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              avatar: true,
+            },
           },
-        })
-      ).forEach((inquiryEmployee) => {
-        const inquiryLocation = inquiryEmployee.inquiryLocations.find(
-          (e) => e.locationId === order.locationId
-        );
-        const inquiryStore = inquiryEmployee.inquiryStores.find(
-          (e) => e.storeId === order.storeId
-        );
-        const inquiryDelivery = inquiryEmployee.inquiryDeliveryAgents.find(
-          (e) => e.deliveryAgentId === order.deliveryAgent?.id
-        );
-        if (
-          inquiryEmployee.inquiryStatuses.length > 0 &&
-          !inquiryEmployee.inquiryStatuses.includes(order?.status)
-        ) {
-          return;
-        }
-        if (
-          inquiryEmployee.inquiryGovernorates.length > 0 &&
-          !inquiryEmployee.inquiryGovernorates.includes(order?.governorate)
-        ) {
-          return;
-        }
-        if (inquiryEmployee.inquiryStores.length > 0 && !inquiryStore) {
-          return;
-        }
-        if (inquiryEmployee.inquiryLocations.length > 0 && !inquiryLocation) {
-          return;
-        }
-        if (
-          inquiryEmployee.inquiryDeliveryAgents.length > 0 &&
-          order.deliveryAgent &&
-          !inquiryDelivery
-        ) {
-          return;
-        }
-        orderInquiryEmployees.push({
-          id: inquiryEmployee.user?.id ?? null,
-          name: inquiryEmployee.user?.name ?? null,
-          phone: inquiryEmployee.user?.phone ?? null,
-          avatar: inquiryEmployee.user?.avatar ?? null,
-          role: inquiryEmployee.role,
-        });
-      }) ?? [];
+          inquiryStatuses: true,
+          inquiryGovernorates: true,
+          inquiryLocations: true,
+          inquiryStores: true,
+          inquiryDeliveryAgents: true,
+          role: true,
+        },
+      })
+    ).forEach((inquiryEmployee) => {
+      const inquiryLocation = inquiryEmployee.inquiryLocations.find(
+        (e) => e.locationId === order.locationId
+      );
+      const inquiryStore = inquiryEmployee.inquiryStores.find(
+        (e) => e.storeId === order.storeId
+      );
+      const inquiryDelivery = inquiryEmployee.inquiryDeliveryAgents.find(
+        (e) => e.deliveryAgentId === order.deliveryAgent?.id
+      );
+      if (
+        inquiryEmployee.inquiryStatuses.length > 0 &&
+        !inquiryEmployee.inquiryStatuses.includes(order?.status)
+      ) {
+        return;
+      }
+      if (
+        inquiryEmployee.inquiryGovernorates.length > 0 &&
+        !inquiryEmployee.inquiryGovernorates.includes(order?.governorate)
+      ) {
+        return;
+      }
+      if (inquiryEmployee.inquiryStores.length > 0 && !inquiryStore) {
+        return;
+      }
+      if (inquiryEmployee.inquiryLocations.length > 0 && !inquiryLocation) {
+        return;
+      }
+      if (
+        inquiryEmployee.inquiryDeliveryAgents.length > 0 &&
+        order.deliveryAgent &&
+        !inquiryDelivery
+      ) {
+        return;
+      }
+      orderInquiryEmployees.push({
+        id: inquiryEmployee.user?.id ?? null,
+        name: inquiryEmployee.user?.name ?? null,
+        phone: inquiryEmployee.user?.phone ?? null,
+        avatar: inquiryEmployee.user?.avatar ?? null,
+        role: inquiryEmployee.role,
+      });
+    }) ?? [];
 
     return orderInquiryEmployees;
   }
@@ -901,7 +901,7 @@ export class MessagesController {
 
   getUserChatMessages = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
-    const {size, page, orderId} = req.query;
+    const {orderId} = req.query;
 
     if (!orderId) {
       return;
@@ -914,7 +914,7 @@ export class MessagesController {
     res.status(201).json({...chats});
   });
 
-  markAllSeen = catchAsync(async (req, res) => {
+  markAllSeen = catchAsync(async (_req, res) => {
     const user = res.locals.user as loggedInUserType;
 
     const employee = await prisma.employee.findUnique({
@@ -982,7 +982,7 @@ export class MessagesController {
       inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
     }
 
-    const result = await prisma.message.updateMany({
+    await prisma.message.updateMany({
       where: {
         seenByClient: user.role === "CLIENT" ? false : undefined,
         seenByClientAssistant:

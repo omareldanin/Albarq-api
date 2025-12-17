@@ -1304,6 +1304,16 @@
         }
       }
     },
+    "/api/v1/orders/update-from-csv": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/v1/orders": {
       "post": {
         "description": "",

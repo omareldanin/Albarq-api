@@ -17,7 +17,6 @@ const generatePDF = async (html, css, options = { landscape: true }) => {
     `, {
             waitUntil: "domcontentloaded", // MUCH FASTER
         });
-        console.log("page complete---------------------------");
         const pdf = await page.pdf({
             format: "A4",
             landscape: options.landscape,
@@ -29,7 +28,6 @@ const generatePDF = async (html, css, options = { landscape: true }) => {
                 left: "20px",
             },
         });
-        console.log("pdf complete---------------------------");
         return pdf;
     }
     catch (err) {

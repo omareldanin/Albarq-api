@@ -580,6 +580,7 @@ model Report {
   createdAt               DateTime             @default(now())
   updatedAt               DateTime             @updatedAt
   branchNet               Float                @default(0)
+  url                     String?                
   branchReport            BranchReport?
   clientReport            ClientReport?
   companyReport           CompanyReport?

@@ -479,21 +479,21 @@ class ReportsService {
             order.paidAmount = newPaidAmount;
             if (type === "CLIENT") {
                 if (order.governorate === "BAGHDAD") {
-                    order.clientNet = newPaidAmount - baghdadCost;
-                    total += newPaidAmount - baghdadCost;
-                    baghdadTotal += newPaidAmount - baghdadCost;
+                    order.clientNet = newPaidAmount - order.deliveryCost;
+                    total += newPaidAmount - order.deliveryCost;
+                    baghdadTotal += newPaidAmount - order.deliveryCost;
                     if (branchId === order.branch?.id) {
                         insideOrdersCount++;
-                        insideTotal += newPaidAmount - baghdadCost;
+                        insideTotal += newPaidAmount - order.deliveryCost;
                     }
                 }
                 else {
-                    order.clientNet = newPaidAmount - governorateCost;
-                    otherTotal += newPaidAmount - governorateCost;
-                    total += newPaidAmount - governorateCost;
+                    order.clientNet = newPaidAmount - order.deliveryCost;
+                    otherTotal += newPaidAmount - order.deliveryCost;
+                    total += newPaidAmount - order.deliveryCost;
                     if (branchId === order.branch?.id) {
                         insideOrdersCount++;
-                        insideTotal += newPaidAmount - governorateCost;
+                        insideTotal += newPaidAmount - order.deliveryCost;
                     }
                 }
             }
@@ -516,7 +516,6 @@ class ReportsService {
         reportData.insideTotal = insideTotal;
         reportData.baghdadTotal = baghdadTotal;
         reportData.otherTotal = otherTotal;
-        console.log("orders complete---------------------------");
         // ========= Generate PDF ==========
         const pdf = await (0, generateReport_1.generateReport)(reportData.type, reportData, ordersData);
         return pdf;

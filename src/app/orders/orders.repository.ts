@@ -3499,101 +3499,100 @@ export class OrdersRepository {
       role: string;
     }[] = [];
 
-    const inquiryEmployees =
-      (
-        await prisma.employee.findMany({
-          where: {
-            AND: [
-              {deleted: false},
-              {role: "INQUIRY_EMPLOYEE"},
-              {
-                OR: [
-                  {
-                    inquiryBranches: order?.branchId
-                      ? {
-                          some: {
-                            branchId: order.branchId,
-                          },
-                        }
-                      : undefined,
-                  },
-                  {
-                    id: order.branchId!!,
-                  },
-                ],
-              },
-              {
-                mainEmergency: false,
-              },
-            ],
-          },
-          select: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                phone: true,
-                avatar: true,
-              },
+    (
+      await prisma.employee.findMany({
+        where: {
+          AND: [
+            {deleted: false},
+            {role: "INQUIRY_EMPLOYEE"},
+            {
+              OR: [
+                {
+                  inquiryBranches: order?.branchId
+                    ? {
+                        some: {
+                          branchId: order.branchId,
+                        },
+                      }
+                    : undefined,
+                },
+                {
+                  id: order.branchId!!,
+                },
+              ],
             },
-            inquiryStatuses: true,
-            inquiryGovernorates: true,
-            inquiryLocations: true,
-            inquiryStores: true,
-            inquiryDeliveryAgents: true,
-            role: true,
+            {
+              mainEmergency: false,
+            },
+          ],
+        },
+        select: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              avatar: true,
+            },
           },
-        })
-      ).forEach((inquiryEmployee) => {
-        const inquiryLocation = inquiryEmployee.inquiryLocations.find(
-          (e) => e.locationId === order.locationId
-        );
-        const inquiryStore = inquiryEmployee.inquiryStores.find(
-          (e) => e.storeId === order.storeId
-        );
-        const inquiryDelivery = inquiryEmployee.inquiryDeliveryAgents.find(
-          (e) => e.deliveryAgentId === order.deliveryAgent?.id
-        );
-        if (
-          inquiryEmployee.inquiryStatuses.length > 0 &&
-          !inquiryEmployee.inquiryStatuses.includes(order?.status)
-        ) {
-          return;
-        }
-        if (
-          inquiryEmployee.inquiryGovernorates.length > 0 &&
-          !inquiryEmployee.inquiryGovernorates.includes(order?.governorate)
-        ) {
-          return;
-        }
-        if (inquiryEmployee.inquiryStores.length > 0 && !inquiryStore) {
-          return;
-        }
-        if (inquiryEmployee.inquiryLocations.length > 0 && !inquiryLocation) {
-          return;
-        }
-        if (
-          inquiryEmployee.inquiryDeliveryAgents.length > 0 &&
-          order.deliveryAgent &&
-          !inquiryDelivery
-        ) {
-          return;
-        }
-        orderInquiryEmployees.push({
-          id: inquiryEmployee.user?.id ?? null,
-          name: inquiryEmployee.user?.name ?? null,
-          phone: inquiryEmployee.user?.phone ?? null,
-          avatar: inquiryEmployee.user?.avatar ?? null,
-          role: inquiryEmployee.role,
-        });
-        // return {
-        //   id: inquiryEmployee.user?.id ?? null,
-        //   name: inquiryEmployee.user?.name ?? null,
-        //   phone: inquiryEmployee.user?.phone ?? null,
-        //   avatar: inquiryEmployee.user?.avatar ?? null,
-        //   role: inquiryEmployee.role,
-        // };
-      }) ?? [];
+          inquiryStatuses: true,
+          inquiryGovernorates: true,
+          inquiryLocations: true,
+          inquiryStores: true,
+          inquiryDeliveryAgents: true,
+          role: true,
+        },
+      })
+    ).forEach((inquiryEmployee) => {
+      const inquiryLocation = inquiryEmployee.inquiryLocations.find(
+        (e) => e.locationId === order.locationId
+      );
+      const inquiryStore = inquiryEmployee.inquiryStores.find(
+        (e) => e.storeId === order.storeId
+      );
+      const inquiryDelivery = inquiryEmployee.inquiryDeliveryAgents.find(
+        (e) => e.deliveryAgentId === order.deliveryAgent?.id
+      );
+      if (
+        inquiryEmployee.inquiryStatuses.length > 0 &&
+        !inquiryEmployee.inquiryStatuses.includes(order?.status)
+      ) {
+        return;
+      }
+      if (
+        inquiryEmployee.inquiryGovernorates.length > 0 &&
+        !inquiryEmployee.inquiryGovernorates.includes(order?.governorate)
+      ) {
+        return;
+      }
+      if (inquiryEmployee.inquiryStores.length > 0 && !inquiryStore) {
+        return;
+      }
+      if (inquiryEmployee.inquiryLocations.length > 0 && !inquiryLocation) {
+        return;
+      }
+      if (
+        inquiryEmployee.inquiryDeliveryAgents.length > 0 &&
+        order.deliveryAgent &&
+        !inquiryDelivery
+      ) {
+        return;
+      }
+      orderInquiryEmployees.push({
+        id: inquiryEmployee.user?.id ?? null,
+        name: inquiryEmployee.user?.name ?? null,
+        phone: inquiryEmployee.user?.phone ?? null,
+        avatar: inquiryEmployee.user?.avatar ?? null,
+        role: inquiryEmployee.role,
+      });
+      // return {
+      //   id: inquiryEmployee.user?.id ?? null,
+      //   name: inquiryEmployee.user?.name ?? null,
+      //   phone: inquiryEmployee.user?.phone ?? null,
+      //   avatar: inquiryEmployee.user?.avatar ?? null,
+      //   role: inquiryEmployee.role,
+      // };
+    }) ?? [];
 
     return orderInquiryEmployees;
   }
@@ -3642,93 +3641,92 @@ export class OrdersRepository {
       role: string;
     }[] = [];
 
-    const inquiryEmployees =
-      (
-        await prisma.employee.findMany({
-          where: {
-            AND: [
-              {deleted: false},
-              {role: "INQUIRY_EMPLOYEE"},
-              {
-                inquiryBranches: order?.branchId
-                  ? {
-                      some: {
-                        branchId: {
-                          in: [order.branchId],
-                        },
+    (
+      await prisma.employee.findMany({
+        where: {
+          AND: [
+            {deleted: false},
+            {role: "INQUIRY_EMPLOYEE"},
+            {
+              inquiryBranches: order?.branchId
+                ? {
+                    some: {
+                      branchId: {
+                        in: [order.branchId],
                       },
-                    }
-                  : undefined,
-              },
-            ],
-          },
-          select: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                phone: true,
-                avatar: true,
-              },
+                    },
+                  }
+                : undefined,
             },
-            inquiryStatuses: true,
-            inquiryGovernorates: true,
-            inquiryLocations: true,
-            inquiryStores: true,
-            inquiryDeliveryAgents: true,
-            role: true,
+          ],
+        },
+        select: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              avatar: true,
+            },
           },
-        })
-      ).forEach((inquiryEmployee) => {
-        const inquiryLocation = inquiryEmployee.inquiryLocations.find(
-          (e) => e.locationId === order.locationId
-        );
-        const inquiryStore = inquiryEmployee.inquiryStores.find(
-          (e) => e.storeId === order.storeId
-        );
-        const inquiryDelivery = inquiryEmployee.inquiryDeliveryAgents.find(
-          (e) => e.deliveryAgentId === order.deliveryAgent?.id
-        );
-        if (
-          inquiryEmployee.inquiryStatuses.length > 0 &&
-          !inquiryEmployee.inquiryStatuses.includes(order?.status)
-        ) {
-          return;
-        }
-        if (
-          inquiryEmployee.inquiryGovernorates.length > 0 &&
-          !inquiryEmployee.inquiryGovernorates.includes(order?.governorate)
-        ) {
-          return;
-        }
-        if (inquiryEmployee.inquiryStores.length > 0 && !inquiryStore) {
-          return;
-        }
-        if (inquiryEmployee.inquiryLocations.length > 0 && !inquiryLocation) {
-          return;
-        }
-        if (
-          inquiryEmployee.inquiryDeliveryAgents.length > 0 &&
-          order.deliveryAgent &&
-          !inquiryDelivery
-        ) {
-          return;
-        }
-        orderInquiryEmployees.push({
-          id: inquiryEmployee.user?.id ?? null,
-          name: inquiryEmployee.user?.name ?? null,
-          phone: inquiryEmployee.user?.phone ?? null,
-          avatar: inquiryEmployee.user?.avatar ?? null,
-          role: inquiryEmployee.role,
-        });
-        // return {
-        //   id: inquiryEmployee.user?.id ?? null,
-        //   name: inquiryEmployee.user?.name ?? null,
-        //   phone: inquiryEmployee.user?.phone ?? null,
-        //   avatar: inquiryEmployee.user?.avatar ?? null,
-        //   role: inquiryEmployee.role,
-        // };
-      }) ?? [];
+          inquiryStatuses: true,
+          inquiryGovernorates: true,
+          inquiryLocations: true,
+          inquiryStores: true,
+          inquiryDeliveryAgents: true,
+          role: true,
+        },
+      })
+    ).forEach((inquiryEmployee) => {
+      const inquiryLocation = inquiryEmployee.inquiryLocations.find(
+        (e) => e.locationId === order.locationId
+      );
+      const inquiryStore = inquiryEmployee.inquiryStores.find(
+        (e) => e.storeId === order.storeId
+      );
+      const inquiryDelivery = inquiryEmployee.inquiryDeliveryAgents.find(
+        (e) => e.deliveryAgentId === order.deliveryAgent?.id
+      );
+      if (
+        inquiryEmployee.inquiryStatuses.length > 0 &&
+        !inquiryEmployee.inquiryStatuses.includes(order?.status)
+      ) {
+        return;
+      }
+      if (
+        inquiryEmployee.inquiryGovernorates.length > 0 &&
+        !inquiryEmployee.inquiryGovernorates.includes(order?.governorate)
+      ) {
+        return;
+      }
+      if (inquiryEmployee.inquiryStores.length > 0 && !inquiryStore) {
+        return;
+      }
+      if (inquiryEmployee.inquiryLocations.length > 0 && !inquiryLocation) {
+        return;
+      }
+      if (
+        inquiryEmployee.inquiryDeliveryAgents.length > 0 &&
+        order.deliveryAgent &&
+        !inquiryDelivery
+      ) {
+        return;
+      }
+      orderInquiryEmployees.push({
+        id: inquiryEmployee.user?.id ?? null,
+        name: inquiryEmployee.user?.name ?? null,
+        phone: inquiryEmployee.user?.phone ?? null,
+        avatar: inquiryEmployee.user?.avatar ?? null,
+        role: inquiryEmployee.role,
+      });
+      // return {
+      //   id: inquiryEmployee.user?.id ?? null,
+      //   name: inquiryEmployee.user?.name ?? null,
+      //   phone: inquiryEmployee.user?.phone ?? null,
+      //   avatar: inquiryEmployee.user?.avatar ?? null,
+      //   role: inquiryEmployee.role,
+      // };
+    }) ?? [];
 
     return orderInquiryEmployees;
   }

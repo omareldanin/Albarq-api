@@ -26,6 +26,7 @@ export const reportSelect = {
   branchNet: true,
   companyNet: true,
   type: true,
+  url: true,
   createdAt: true,
   updatedAt: true,
   clientReport: {

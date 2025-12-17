@@ -37,7 +37,7 @@ class MessagesController {
             throw new AppError_1.AppError("الطلب غير موجود", 404);
         }
         const orderInquiryEmployees = [];
-        const inquiryEmployees = (await db_1.prisma.employee.findMany({
+        (await db_1.prisma.employee.findMany({
             where: {
                 AND: [
                     { role: "INQUIRY_EMPLOYEE" },
@@ -784,14 +784,14 @@ class MessagesController {
     });
     getUserChatMessages = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const loggedInUser = res.locals.user;
-        const { size, page, orderId } = req.query;
+        const { orderId } = req.query;
         if (!orderId) {
             return;
         }
         const chats = await this.getChatMessages(orderId?.toString(), loggedInUser.id);
         res.status(201).json({ ...chats });
     });
-    markAllSeen = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    markAllSeen = (0, catchAsync_1.catchAsync)(async (_req, res) => {
         const user = res.locals.user;
         const employee = await db_1.prisma.employee.findUnique({
             where: {
@@ -854,7 +854,7 @@ class MessagesController {
         if (user.role === "EMPLOYEE_CLIENT_ASSISTANT") {
             inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
         }
-        const result = await db_1.prisma.message.updateMany({
+        await db_1.prisma.message.updateMany({
             where: {
                 seenByClient: user.role === "CLIENT" ? false : undefined,
                 seenByClientAssistant: user.role === "CLIENT_ASSISTANT" ||

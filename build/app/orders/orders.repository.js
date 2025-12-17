@@ -3175,7 +3175,7 @@ class OrdersRepository {
             throw new AppError_1.AppError("الطلب غير موجود", 404);
         }
         const orderInquiryEmployees = [];
-        const inquiryEmployees = (await db_1.prisma.employee.findMany({
+        (await db_1.prisma.employee.findMany({
             where: {
                 AND: [
                     { deleted: false },
@@ -3290,7 +3290,7 @@ class OrdersRepository {
             throw new AppError_1.AppError("الطلب غير موجود", 404);
         }
         const orderInquiryEmployees = [];
-        const inquiryEmployees = (await db_1.prisma.employee.findMany({
+        (await db_1.prisma.employee.findMany({
             where: {
                 AND: [
                     { deleted: false },

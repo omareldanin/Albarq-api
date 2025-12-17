@@ -11,7 +11,7 @@ const logger_1 = require("./lib/logger");
 const address = `http://localhost:${config_1.env.PORT}`;
 const socket_io_1 = require("socket.io");
 const http_1 = __importDefault(require("http"));
-const backup_1 = require("./backup");
+// import {automaticBackUpCronJob} from "./backup";
 const newServer = http_1.default.createServer(app_1.default);
 // Middlewares
 exports.io = new socket_io_1.Server(newServer, {
@@ -39,11 +39,11 @@ exports.io.on("connection", (socket) => {
         console.log("🔥 Client disconnected:", socket.id);
     });
 });
-const server = newServer.listen(config_1.env.PORT, () => {
+newServer.listen(config_1.env.PORT, () => {
     console.info("------------------------------------------------------------------------------------------\n");
     logger_1.Logger.debug(`Starting APP On -> ${address}`);
     automaticUpdatesCronJob_1.automaticUpdatesCronJob.start();
-    backup_1.automaticBackUpCronJob.start();
+    // automaticBackUpCronJob.start();
 });
 // process.on("uncaughtException", (err) => {
 //   // console.log("UNCAUGHT EXCEPTION! 💥 Shutting down...");

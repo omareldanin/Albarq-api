@@ -12,6 +12,7 @@ const upload = multer();
 const router = Router();
 const ordersController = new OrdersController();
 
+router.post("/orders/update-from-csv", ordersController.updateOrderCsv);
 router
   .route("/orders")
   .post(

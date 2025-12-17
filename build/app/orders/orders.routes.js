@@ -15,6 +15,7 @@ const multer_1 = __importDefault(require("multer"));
 const upload = (0, multer_1.default)();
 const router = (0, express_1.Router)();
 const ordersController = new orders_controller_1.OrdersController();
+router.post("/orders/update-from-csv", ordersController.updateOrderCsv);
 router
     .route("/orders")
     .post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([

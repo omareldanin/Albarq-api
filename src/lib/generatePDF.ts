@@ -22,7 +22,6 @@ export const generatePDF = async (
         waitUntil: "domcontentloaded", // MUCH FASTER
       }
     );
-    console.log("page complete---------------------------");
 
     const pdf = await page.pdf({
       format: "A4",
@@ -35,7 +34,6 @@ export const generatePDF = async (
         left: "20px",
       },
     });
-    console.log("pdf complete---------------------------");
 
     return pdf;
   } catch (err) {

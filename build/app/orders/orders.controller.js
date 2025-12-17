@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrdersController = void 0;
 const db_1 = require("../../database/db");
@@ -12,6 +15,9 @@ const orders_repository_1 = require("./orders.repository");
 const generateReceipts_1 = require("./helpers/generateReceipts");
 const locations_repository_1 = require("../locations/locations.repository");
 const generateOrdersReport_1 = require("./helpers/generateOrdersReport");
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const csv_parser_1 = __importDefault(require("csv-parser"));
 const XlsxPopulate = require("xlsx-populate");
 const employeesRepository = new employees_repository_1.EmployeesRepository();
 const ordersService = new orders_service_1.OrdersService();
@@ -1537,7 +1543,7 @@ class OrdersController {
             status: "success",
         });
     });
-    generateExcelSheet = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    generateExcelSheet = (0, catchAsync_1.catchAsync)(async (_req, res) => {
         const loggedInUser = res.locals.user;
         // إنشاء ملف جديد
         const workbook = await XlsxPopulate.fromBlankAsync();
@@ -1619,6 +1625,54 @@ class OrdersController {
         res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         res.setHeader("Content-Disposition", "attachment; filename=template.xlsx");
         res.send(Buffer.from(buffer));
+    });
+    updateOrderCsv = (0, catchAsync_1.catchAsync)(async (_req, res) => {
+        const filePath = path_1.default.join(process.cwd(), "data", "orders.csv");
+        const rows = [];
+        // 1️⃣ Read CSV
+        await new Promise((resolve, reject) => {
+            fs_1.default.createReadStream(filePath)
+                .pipe((0, csv_parser_1.default)())
+                .on("data", (row) => rows.push(row))
+                .on("end", resolve)
+                .on("error", reject);
+        });
+        const updatedIds = [];
+        const skippedIds = [];
+        const cleanInt = (value) => !value || value === "NULL" ? null : Number(value);
+        const cleanString = (value) => !value || value === "NULL" ? null : value;
+        // 2️⃣ Run updates
+        await Promise.all(rows.map(async (row) => {
+            if (!row.id || !row.status) {
+                skippedIds.push(row.id);
+                return;
+            }
+            const result = await db_1.prisma.order.updateMany({
+                where: { id: row.id },
+                data: {
+                    status: row.status,
+                    secondaryStatus: cleanString(row.secondaryStatus),
+                    forwardedBranchId: cleanInt(row.forwardedBranchId),
+                    receivedBranchId: cleanInt(row.receivedBranchId),
+                    deliveryAgentId: cleanInt(row.deliveryAgentId),
+                    branchId: cleanInt(row.branchId),
+                },
+            });
+            if (result.count > 0) {
+                updatedIds.push(row.id);
+            }
+            else {
+                skippedIds.push(row.id);
+            }
+        }));
+        res.status(200).json({
+            status: "success",
+            totalRows: rows.length,
+            updatedCount: updatedIds.length,
+            skippedCount: skippedIds.length,
+            updatedIds,
+            skippedIds,
+        });
     });
 }
 exports.OrdersController = OrdersController;

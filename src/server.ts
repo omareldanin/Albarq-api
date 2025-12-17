@@ -6,7 +6,7 @@ import {Logger} from "./lib/logger";
 const address = `http://localhost:${env.PORT}`;
 import {Server} from "socket.io";
 import http from "http";
-import {automaticBackUpCronJob} from "./backup";
+// import {automaticBackUpCronJob} from "./backup";
 const newServer = http.createServer(app);
 
 // Middlewares
@@ -39,13 +39,13 @@ io.on("connection", (socket) => {
   });
 });
 
-const server = newServer.listen(env.PORT, () => {
+newServer.listen(env.PORT, () => {
   console.info(
     "------------------------------------------------------------------------------------------\n"
   );
   Logger.debug(`Starting APP On -> ${address}`);
   automaticUpdatesCronJob.start();
-  automaticBackUpCronJob.start();
+  // automaticBackUpCronJob.start();
 });
 
 // process.on("uncaughtException", (err) => {

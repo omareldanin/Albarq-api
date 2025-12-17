@@ -223,6 +223,7 @@ export const orderSelect = {
       storeId: true,
       report: {
         select: {
+          url: true,
           deleted: true,
         },
       },
@@ -236,6 +237,7 @@ export const orderSelect = {
       repositoryId: true,
       report: {
         select: {
+          url: true,
           deleted: true,
         },
       },
@@ -248,6 +250,7 @@ export const orderSelect = {
       type: true,
       report: {
         select: {
+          url: true,
           deleted: true,
         },
       },
@@ -259,6 +262,7 @@ export const orderSelect = {
       deliveryAgentId: true,
       report: {
         select: {
+          url: true,
           deleted: true,
         },
       },
@@ -270,6 +274,7 @@ export const orderSelect = {
       governorate: true,
       report: {
         select: {
+          url: true,
           deleted: true,
         },
       },
@@ -282,6 +287,7 @@ export const orderSelect = {
       companyId: true,
       report: {
         select: {
+          url: true,
           deleted: true,
         },
       },
@@ -375,34 +381,40 @@ export const orderReform = (
         clientId: report?.clientId,
         storeId: report?.storeId,
         deleted: report?.report.deleted,
+        url: report.report.url,
       })),
     repositoryReport: order.repositoryReport.map((report) => ({
       id: report?.id,
       secondaryType: report?.secondaryType,
       repositoryId: report?.repositoryId,
       deleted: report.report.deleted,
+      url: report.report.url,
     })),
     branchReport: order.branchReport.map((report) => ({
       id: report?.id,
       branchId: report?.branchId,
       type: report.type,
       deleted: report.report.deleted,
+      url: report.report.url,
     })),
     deliveryAgentReport: order.deliveryAgentReport && {
       id: order.deliveryAgentReport?.id,
       deliveryAgentId: order.deliveryAgentReport?.deliveryAgentId,
       deleted: order.deliveryAgentReport?.report.deleted,
+      url: order.deliveryAgentReport?.report.url,
     },
     governorateReport: order.governorateReport && {
       id: order.governorateReport?.id,
       governorate: order.governorateReport?.governorate,
       deleted: order.governorateReport?.report.deleted,
+      url: order.governorateReport?.report.url,
     },
     companyReport: order.companyReport.map((report) => ({
       id: report?.id,
       secondaryType: report?.secondaryType,
       companyId: report?.companyId,
       deleted: report.report.deleted,
+      url: report.report.url,
     })),
   };
   return orderReformed;
@@ -473,16 +485,19 @@ export const mobileOrderReform = (
       branchId: report?.branchId,
       type: report.type,
       deleted: report.report.deleted,
+      url: report.report.url,
     })),
     deliveryAgentReport: order.deliveryAgentReport && {
       id: order.deliveryAgentReport?.id,
       deliveryAgentId: order.deliveryAgentReport?.deliveryAgentId,
       deleted: order.deliveryAgentReport?.report.deleted,
+      url: order.deliveryAgentReport.report.url,
     },
     governorateReport: order.governorateReport && {
       id: order.governorateReport?.id,
       governorate: order.governorateReport?.governorate,
       deleted: order.governorateReport?.report.deleted,
+      url: order.governorateReport?.report.url,
     },
     companyReport: null,
   };
