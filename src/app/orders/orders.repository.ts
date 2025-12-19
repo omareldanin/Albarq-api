@@ -104,6 +104,7 @@ export class OrdersRepository {
     let quantity = 0;
     let weight = (data.orderData.weight as number) || 0;
     let status: OrderStatus = "REGISTERED";
+    let secondaryStatus: SecondaryStatus = "WITH_CLIENT";
     let receivingBranchId: number | undefined = undefined;
     let forwardedBranchId: number | undefined = undefined;
     const client = await prisma.client.findUnique({
@@ -124,25 +125,63 @@ export class OrdersRepository {
       data.loggedInUser.role !== "CLIENT" &&
       data.loggedInUser.role !== "CLIENT_ASSISTANT"
     ) {
-      const repository = await prisma.repository.findFirst({
-        where: {
-          type: "EXPORT",
-          branch: {
-            id: data.orderData.branchID,
+      if (data.loggedInUser.mainRepository) {
+        const repository = await prisma.repository.findFirst({
+          where: {
+            type: "EXPORT",
+            branch: {
+              id: data.orderData.branchID,
+            },
           },
-        },
-        select: {
-          id: true,
-        },
-      });
-      if (!repository) {
-        throw new AppError("لا يوجد مخزن فرز مرتبط بالفرع", 404);
-      }
-      receivingBranchId = data.orderData.branchID;
-      forwardedBranchId = client?.branchId || undefined;
+          select: {
+            id: true,
+          },
+        });
 
-      data.orderData.repositoryID = repository.id;
-      status = "IN_GOV_REPOSITORY";
+        if (!repository) {
+          throw new AppError("لا يوجد مخزن فرز مرتبط بالفرع", 404);
+        }
+        receivingBranchId = data.orderData.branchID;
+        forwardedBranchId = client?.branchId || undefined;
+
+        data.orderData.repositoryID = repository.id;
+        secondaryStatus = "IN_CAR";
+        status = "IN_GOV_REPOSITORY";
+      } else {
+        if (data.orderData.branchID === client.branchId) {
+          const repository = await prisma.repository.findFirst({
+            where: {
+              type: "EXPORT",
+              branch: {
+                id: data.orderData.branchID,
+              },
+            },
+            select: {
+              id: true,
+            },
+          });
+          data.orderData.repositoryID = repository?.id;
+          secondaryStatus = "IN_REPOSITORY";
+          status = "IN_GOV_REPOSITORY";
+        } else {
+          const repository = await prisma.repository.findFirst({
+            where: {
+              type: "EXPORT",
+              mainRepository: true,
+              companyId: data.companyID,
+            },
+            select: {
+              id: true,
+            },
+          });
+          receivingBranchId = data.orderData.branchID;
+          forwardedBranchId = client?.branchId || undefined;
+
+          data.orderData.repositoryID = repository?.id;
+          secondaryStatus = "IN_CAR";
+          status = "IN_MAIN_REPOSITORY";
+        }
+      }
     }
 
     if (data.orderData.withProducts === true) {
@@ -441,11 +480,7 @@ export class OrdersRepository {
           : data.orderData.confirmed,
         receivedAt: data.orderData.confirmed ? new Date() : undefined,
         status: status,
-        secondaryStatus:
-          data.loggedInUser.role !== "CLIENT" &&
-          data.loggedInUser.role !== "CLIENT_ASSISTANT"
-            ? "IN_CAR"
-            : "WITH_CLIENT",
+        secondaryStatus: secondaryStatus,
         deliveryAgent: undefined,
         orderProducts:
           data.orderData.withProducts === false
