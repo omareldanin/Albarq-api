@@ -12,7 +12,7 @@ export const getBrowser = async () => {
       "--disable-setuid-sandbox",
       "--disable-dev-shm-usage",
       "--disable-gpu",
-      "--single-process", // 🔥 HUGE CPU SAVER
+      "--single-process",
       "--no-zygote",
     ],
   });
@@ -25,16 +25,16 @@ export const getBrowser = async () => {
   return browser;
 };
 
-setInterval(async () => {
-  if (!browser) return;
+// setInterval(async () => {
+//   if (!browser) return;
 
-  Logger.warn("Restarting Puppeteer browser (maintenance)");
+//   Logger.warn("Restarting Puppeteer browser (maintenance)");
 
-  try {
-    await browser.close();
-  } catch (err) {
-    Logger.error("Error while closing Puppeteer browser", err);
-  } finally {
-    browser = null;
-  }
-}, 1000 * 60 * 30);
+//   try {
+//     await browser.close();
+//   } catch (err) {
+//     Logger.error("Error while closing Puppeteer browser", err);
+//   } finally {
+//     browser = null;
+//   }
+// }, 1000 * 60 * 30);
