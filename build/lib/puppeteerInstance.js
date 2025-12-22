@@ -7,10 +7,13 @@ exports.getBrowser = void 0;
 const puppeteer_1 = __importDefault(require("puppeteer"));
 const logger_1 = require("../lib/logger");
 let browser = null;
+let launching = null;
 const getBrowser = async () => {
     if (browser)
         return browser;
-    browser = await puppeteer_1.default.launch({
+    if (launching)
+        return launching;
+    launching = puppeteer_1.default.launch({
         headless: true,
         args: [
             "--no-sandbox",
@@ -20,6 +23,8 @@ const getBrowser = async () => {
             "--no-zygote",
         ],
     });
+    browser = await launching;
+    launching = null;
     browser.on("disconnected", () => {
         logger_1.Logger.error("Puppeteer browser disconnected – restarting...");
         browser = null;
