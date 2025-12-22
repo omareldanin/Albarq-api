@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: "my-app",
-      script: "dist/server.js",
+      script: "build/server.js",
       instances: 1, // 🔥 IMPORTANT for Puppeteer
       exec_mode: "fork",
       max_memory_restart: "8000M",
