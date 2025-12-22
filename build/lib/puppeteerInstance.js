@@ -17,7 +17,6 @@ const getBrowser = async () => {
             "--disable-setuid-sandbox",
             "--disable-dev-shm-usage",
             "--disable-gpu",
-            "--single-process",
             "--no-zygote",
         ],
     });
@@ -28,15 +27,18 @@ const getBrowser = async () => {
     return browser;
 };
 exports.getBrowser = getBrowser;
-// setInterval(async () => {
-//   if (!browser) return;
-//   Logger.warn("Restarting Puppeteer browser (maintenance)");
-//   try {
-//     await browser.close();
-//   } catch (err) {
-//     Logger.error("Error while closing Puppeteer browser", err);
-//   } finally {
-//     browser = null;
-//   }
-// }, 1000 * 60 * 30);
+setInterval(async () => {
+    if (!browser)
+        return;
+    logger_1.Logger.warn("Restarting Puppeteer browser (maintenance)");
+    try {
+        await browser.close();
+    }
+    catch (err) {
+        logger_1.Logger.error("Error while closing Puppeteer browser", err);
+    }
+    finally {
+        browser = null;
+    }
+}, 1000 * 60 * 30);
 //# sourceMappingURL=puppeteerInstance.js.map
