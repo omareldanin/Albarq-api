@@ -1,3 +1,4 @@
+import {AppError} from "../../lib/AppError";
 import {catchAsync} from "../../lib/catchAsync";
 import {NotificationUpdateSchema} from "./notifications.dto";
 import {NotificationsRepository} from "./notifications.repository";
@@ -45,9 +46,9 @@ export class NotificationsController {
   updateNotification = catchAsync(async (req, res) => {
     const notificationID = +req.params.notificationID;
 
-    // if (!notificationID) {
-    //   throw new AppError("", 404);
-    // }
+    if (!notificationID) {
+      throw new AppError("", 404);
+    }
     const notificationData = NotificationUpdateSchema.parse(req.body);
 
     const notification = await notificationsRepository.updateNotification({
