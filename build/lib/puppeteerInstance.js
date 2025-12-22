@@ -12,7 +12,14 @@ const getBrowser = async () => {
         return browser;
     browser = await puppeteer_1.default.launch({
         headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu",
+            "--single-process", // 🔥 HUGE CPU SAVER
+            "--no-zygote",
+        ],
     });
     browser.on("disconnected", () => {
         logger_1.Logger.error("Puppeteer browser disconnected – restarting...");
@@ -21,4 +28,18 @@ const getBrowser = async () => {
     return browser;
 };
 exports.getBrowser = getBrowser;
+setInterval(async () => {
+    if (!browser)
+        return;
+    logger_1.Logger.warn("Restarting Puppeteer browser (maintenance)");
+    try {
+        await browser.close();
+    }
+    catch (err) {
+        logger_1.Logger.error("Error while closing Puppeteer browser", err);
+    }
+    finally {
+        browser = null;
+    }
+}, 1000 * 60 * 30);
 //# sourceMappingURL=puppeteerInstance.js.map

@@ -9,8 +9,6 @@ export const generatePDF = async (
 ) => {
   const browser = await getBrowser();
   const page = await browser.newPage();
-  const pages = await browser.pages();
-  console.log("Opened pages:", pages.length);
   try {
     // Use fast loading mode
     await page.setContent(
