@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationsController = void 0;
+const AppError_1 = require("../../lib/AppError");
 const catchAsync_1 = require("../../lib/catchAsync");
 const notifications_dto_1 = require("./notifications.dto");
 const notifications_repository_1 = require("./notifications.repository");
@@ -33,9 +34,9 @@ class NotificationsController {
     });
     updateNotification = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const notificationID = +req.params.notificationID;
-        // if (!notificationID) {
-        //   throw new AppError("", 404);
-        // }
+        if (!notificationID) {
+            throw new AppError_1.AppError("", 404);
+        }
         const notificationData = notifications_dto_1.NotificationUpdateSchema.parse(req.body);
         const notification = await notificationsRepository.updateNotification({
             notificationID: notificationID,

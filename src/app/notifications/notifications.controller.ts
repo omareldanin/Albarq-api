@@ -47,7 +47,7 @@ export class NotificationsController {
     const notificationID = +req.params.notificationID;
 
     if (!notificationID) {
-      throw new AppError("", 404);
+      throw new AppError(" no notificationID", 404);
     }
     const notificationData = NotificationUpdateSchema.parse(req.body);
 
