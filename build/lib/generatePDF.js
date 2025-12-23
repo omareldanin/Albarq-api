@@ -1,11 +1,19 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generatePDF = void 0;
+const puppeteer_1 = __importDefault(require("puppeteer"));
 const AppError_1 = require("./AppError");
 const logger_1 = require("./logger");
-const puppeteerInstance_1 = require("./puppeteerInstance");
+// import {getBrowser} from "./puppeteerInstance";
 const generatePDF = async (html, css, options = { landscape: true }) => {
-    const browser = await (0, puppeteerInstance_1.getBrowser)();
+    const browser = await puppeteer_1.default.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        ignoreDefaultArgs: ["--disable-extensions"],
+    });
     const page = await browser.newPage();
     try {
         // Use fast loading mode
@@ -26,14 +34,12 @@ const generatePDF = async (html, css, options = { landscape: true }) => {
                 left: "20px",
             },
         });
+        await browser.close();
         return pdf;
     }
     catch (err) {
         logger_1.Logger.error(err);
         throw new AppError_1.AppError("حدث خطأ أثناء انشاء ملف ال PDF", 500);
-    }
-    finally {
-        await page.close().catch(() => { });
     }
 };
 exports.generatePDF = generatePDF;

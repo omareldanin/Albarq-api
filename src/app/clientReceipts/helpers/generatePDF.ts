@@ -33,7 +33,7 @@ export const generatePDF = async (
       margin: {top: "10px", right: "10px", bottom: "10px", left: "10px"},
     });
 
-    // await browser.close();
+    await browser.close();
     return pdf;
     // return Buffer.from(Object.values(pdf));
   } catch (error) {

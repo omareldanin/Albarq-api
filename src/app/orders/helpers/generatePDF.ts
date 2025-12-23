@@ -1,6 +1,7 @@
 import {Logger} from "../../../lib/logger";
 import {AppError} from "../../../lib/AppError";
-import {getBrowser} from "../../../lib/puppeteerInstance";
+// import {getBrowser} from "../../../lib/puppeteerInstance";
+import puppeteer from "puppeteer";
 
 // html and css content or html and css file path
 
@@ -13,7 +14,11 @@ export const generatePDF = async (
     landscape: true,
   }
 ) => {
-  const browser = await getBrowser();
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    ignoreDefaultArgs: ["--disable-extensions"],
+  });
   const page = await browser.newPage();
 
   try {
@@ -43,12 +48,11 @@ export const generatePDF = async (
       },
     });
 
+    await browser.close();
     return pdf;
     // return Buffer.from(Object.values(pdf));
   } catch (error) {
     Logger.error(error);
     throw new AppError("حدث خطأ أثناء انشاء ملف ال pdf", 500);
-  } finally {
-    await page.close().catch(() => {});
   }
 };

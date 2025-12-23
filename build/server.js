@@ -39,26 +39,26 @@ exports.io.on("connection", (socket) => {
         console.log("🔥 Client disconnected:", socket.id);
     });
 });
-newServer.listen(config_1.env.PORT, () => {
+const server = newServer.listen(config_1.env.PORT, () => {
     console.info("------------------------------------------------------------------------------------------\n");
     logger_1.Logger.debug(`Starting APP On -> ${address}`);
     automaticUpdatesCronJob_1.automaticUpdatesCronJob.start();
     // automaticBackUpCronJob.start();
 });
-// process.on("uncaughtException", (err) => {
-//   // console.log("UNCAUGHT EXCEPTION! 💥 Shutting down...");
-//   // console.log(err.name, "\n", err.message);
-//   Logger.error("💥 UNCAUGHT EXCEPTION! 💥 Shutting down... 💥");
-//   Logger.error(`${err.name}\n${err.message}`);
-//   process.exit(1);
-// });
-// process.on("unhandledRejection", (err: Error) => {
-//   // console.log("UNHANDLED REJECTION! 💥 Shutting down...");
-//   // console.log(err.name, err.message);
-//   Logger.error("💥 UNHANDLED REJECTION! 💥 Shutting down... 💥");
-//   Logger.error(`${err.name}\n${err.message}`);
-//   server.close(() => {
-//     process.exit(1);
-//   });
-// });
+process.on("uncaughtException", (err) => {
+    // console.log("UNCAUGHT EXCEPTION! 💥 Shutting down...");
+    // console.log(err.name, "\n", err.message);
+    logger_1.Logger.error("💥 UNCAUGHT EXCEPTION! 💥 Shutti ng down... 💥");
+    logger_1.Logger.error(`${err.name}\n${err.message}`);
+    process.exit(1);
+});
+process.on("unhandledRejection", (err) => {
+    // console.log("UNHANDLED REJECTION! 💥 Shutting down...");
+    // console.log(err.name, err.message);
+    logger_1.Logger.error("💥 UNHANDLED REJECTION! 💥 Shutting down... 💥");
+    logger_1.Logger.error(`${err.name}\n${err.message}`);
+    server.close(() => {
+        process.exit(1);
+    });
+});
 //# sourceMappingURL=server.js.map

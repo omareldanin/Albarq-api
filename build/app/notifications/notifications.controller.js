@@ -35,7 +35,7 @@ class NotificationsController {
     updateNotification = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const notificationID = +req.params.notificationID;
         if (!notificationID) {
-            throw new AppError_1.AppError("", 404);
+            throw new AppError_1.AppError(" no notificationID", 404);
         }
         const notificationData = notifications_dto_1.NotificationUpdateSchema.parse(req.body);
         const notification = await notificationsRepository.updateNotification({
