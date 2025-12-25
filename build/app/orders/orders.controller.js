@@ -886,6 +886,36 @@ class OrdersController {
             data: statistics,
         });
     });
+    getOrdersStatisticsV2 = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const loggedInUser = res.locals.user;
+        const filters = orders_dto_1.OrdersStatisticsFiltersSchema.parse({
+            clientID: req.query.client_id,
+            deliveryAgentID: req.query.delivery_agent_id,
+            companyID: req.query.company_id,
+            startDate: req.query.start_date,
+            endDate: req.query.end_date,
+            governorate: req.query.governorate,
+            statuses: req.query.statuses,
+            deliveryType: req.query.delivery_type,
+            storeID: req.query.store_id,
+            locationID: req.query.location_id,
+            clientReport: req.query.client_report,
+            repositoryReport: req.query.repository_report,
+            branchReport: req.query.branch_report,
+            deliveryAgentReport: req.query.delivery_agent_report,
+            governorateReport: req.query.governorate_report,
+            companyReport: req.query.company_report,
+            orderType: req.query.orderType,
+        });
+        const statistics = await ordersService.getOrdersStatisticV2({
+            loggedInUser: loggedInUser,
+            filters: filters,
+        });
+        res.status(200).json({
+            status: "success",
+            data: statistics,
+        });
+    });
     getRepositorOrdersStatistics = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const loggedInUser = res.locals.user;
         const type = req.query.type;

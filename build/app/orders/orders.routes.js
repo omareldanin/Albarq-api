@@ -181,101 +181,17 @@ router.route("/orders/statistics").get(isLoggedIn_1.isLoggedIn, (0, isAutherized
     // TODO: Remove later
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), ordersController.getOrdersStatistics
-/*
-      #swagger.tags = ['Orders Routes']
-
-      #swagger.parameters['statuseses'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['delivery_type'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['location_id'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['store_id'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['client_id'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['company_id'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['client_report'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['branch_report'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['repository_report'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['delivery_agent_report'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['governorate_report'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['company_report'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['start_date'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['end_date'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['governorate'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-  */
-);
+]), ordersController.getOrdersStatistics);
+router.route("/orders/v2/statistics").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
+    client_1.AdminRole.ADMIN,
+    client_1.AdminRole.ADMIN_ASSISTANT,
+    client_1.EmployeeRole.COMPANY_MANAGER,
+    client_1.ClientRole.CLIENT,
+    client_1.EmployeeRole.CLIENT_ASSISTANT,
+    // TODO: Remove later
+    ...Object.values(client_1.EmployeeRole),
+    ...Object.values(client_1.ClientRole),
+]), ordersController.getOrdersStatisticsV2);
 router.route("/orders/clientStatistics").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
