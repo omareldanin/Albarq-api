@@ -197,99 +197,21 @@ router.route("/orders/statistics").get(
     ...Object.values(ClientRole),
   ]),
   ordersController.getOrdersStatistics
-  /*
-        #swagger.tags = ['Orders Routes']
+);
 
-        #swagger.parameters['statuseses'] = {
-            in: 'query',
-            description: '',
-            required: false
-        }
-
-        #swagger.parameters['delivery_type'] = {
-            in: 'query',
-            description: '',
-            required: false
-        }
-
-        #swagger.parameters['location_id'] = {
-            in: 'query',
-            description: '',
-            required: false
-        }
-
-        #swagger.parameters['store_id'] = {
-            in: 'query',
-            description: '',
-            required: false
-        }
-
-        #swagger.parameters['client_id'] = {
-            in: 'query',
-            description: '',
-            required: false
-        }
-
-        #swagger.parameters['company_id'] = {
-            in: 'query',
-            description: '',
-            required: false
-        }
-
-        #swagger.parameters['client_report'] = {
-            in: 'query',
-            description: '',
-            required: false
-        }
-
-        #swagger.parameters['branch_report'] = {
-            in: 'query',
-            description: '',
-            required: false
-        }
-
-        #swagger.parameters['repository_report'] = {
-            in: 'query',
-            description: '',
-            required: false
-        }
-
-        #swagger.parameters['delivery_agent_report'] = {
-            in: 'query',
-            description: '',
-            required: false
-        }
-
-        #swagger.parameters['governorate_report'] = {
-            in: 'query',
-            description: '',
-            required: false
-        }
-
-        #swagger.parameters['company_report'] = {
-            in: 'query',
-            description: '',
-            required: false
-        }
-
-        #swagger.parameters['start_date'] = {
-            in: 'query',
-            description: '',
-            required: false
-        }
-
-        #swagger.parameters['end_date'] = {
-            in: 'query',
-            description: '',
-            required: false
-        }
-
-        #swagger.parameters['governorate'] = {
-            in: 'query',
-            description: '',
-            required: false
-        }
-    */
+router.route("/orders/v2/statistics").get(
+  isLoggedIn,
+  isAutherized([
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+    EmployeeRole.COMPANY_MANAGER,
+    ClientRole.CLIENT,
+    EmployeeRole.CLIENT_ASSISTANT,
+    // TODO: Remove later
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  ordersController.getOrdersStatisticsV2
 );
 
 router.route("/orders/clientStatistics").get(
