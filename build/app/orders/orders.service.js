@@ -1498,12 +1498,31 @@ class OrdersService {
                 },
                 select: {
                     orderStatus: true,
+                    inquiryStores: true,
+                },
+            });
+            const readyToPrint = await db_1.prisma.order.count({
+                where: {
+                    storeId: { in: employee?.inquiryStores.map((s) => s.storeId) },
+                    status: "REGISTERED",
+                    printed: false,
+                    deleted: false,
+                },
+            });
+            const readyToShip = await db_1.prisma.order.count({
+                where: {
+                    storeId: { in: employee?.inquiryStores.map((s) => s.storeId) },
+                    status: "REGISTERED",
+                    printed: true,
+                    deleted: false,
                 },
             });
             const newStatistics = statistics.ordersStatisticsByStatus.filter((status) => employee?.orderStatus.includes(status.status));
             return {
                 ...statistics,
                 ordersStatisticsByStatus: employee?.orderStatus ? newStatistics : [],
+                readyToPrint,
+                readyToShip,
             };
         }
         if (data.loggedInUser.role === "DELIVERY_AGENT") {
@@ -1576,6 +1595,25 @@ class OrdersService {
                     },
                 ],
             };
+        }
+        if (data.loggedInUser.role === "CLIENT") {
+            const readyToPrint = await db_1.prisma.order.count({
+                where: {
+                    clientId: data.loggedInUser.id,
+                    status: "REGISTERED",
+                    printed: false,
+                    deleted: false,
+                },
+            });
+            const readyToShip = await db_1.prisma.order.count({
+                where: {
+                    clientId: data.loggedInUser.id,
+                    status: "REGISTERED",
+                    printed: true,
+                    deleted: false,
+                },
+            });
+            return { ...statistics, readyToPrint, readyToShip };
         }
         return statistics;
     };
