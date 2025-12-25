@@ -1897,6 +1897,23 @@ export class OrdersService {
         },
         select: {
           orderStatus: true,
+          inquiryStores: true,
+        },
+      });
+      const readyToPrint = await prisma.order.count({
+        where: {
+          storeId: {in: employee?.inquiryStores.map((s) => s.storeId)},
+          status: "REGISTERED",
+          printed: false,
+          deleted: false,
+        },
+      });
+      const readyToShip = await prisma.order.count({
+        where: {
+          storeId: {in: employee?.inquiryStores.map((s) => s.storeId)},
+          status: "REGISTERED",
+          printed: true,
+          deleted: false,
         },
       });
 
@@ -1906,6 +1923,8 @@ export class OrdersService {
       return {
         ...statistics,
         ordersStatisticsByStatus: employee?.orderStatus ? newStatistics : [],
+        readyToPrint,
+        readyToShip,
       };
     }
 
@@ -1998,6 +2017,25 @@ export class OrdersService {
       };
     }
 
+    if (data.loggedInUser.role === "CLIENT") {
+      const readyToPrint = await prisma.order.count({
+        where: {
+          clientId: data.loggedInUser.id,
+          status: "REGISTERED",
+          printed: false,
+          deleted: false,
+        },
+      });
+      const readyToShip = await prisma.order.count({
+        where: {
+          clientId: data.loggedInUser.id,
+          status: "REGISTERED",
+          printed: true,
+          deleted: false,
+        },
+      });
+      return {...statistics, readyToPrint, readyToShip};
+    }
     return statistics;
   };
 
