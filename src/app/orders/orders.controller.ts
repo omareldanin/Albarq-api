@@ -1749,6 +1749,40 @@ export class OrdersController {
           };
         }),
       });
+    } else {
+      const ordersStatisticsByStatus = await prisma.order.groupBy({
+        by: ["status"],
+        _count: {
+          id: true,
+        },
+        _sum: {
+          totalCost: true,
+        },
+        where: {
+          clientId: loggedInUser.id,
+          deleted: false,
+          status: {
+            in: ["PROCESSING", "POSTPONED"],
+          },
+        },
+      });
+      const statuses: OrderStatus[] = ["PROCESSING", "POSTPONED"];
+      res.status(200).json({
+        status: "success",
+        data: statuses.map((status) => {
+          const statuscount = ordersStatisticsByStatus.find(
+            (s) => s.status === status
+          );
+
+          return {
+            status: status,
+            count: statuscount?._count.id || 0,
+            totalCost: statuscount?._sum.totalCost || 0,
+            name: OrderStatusData[status].name,
+            icon: OrderStatusData[status].icon,
+          };
+        }),
+      });
     }
   });
 
