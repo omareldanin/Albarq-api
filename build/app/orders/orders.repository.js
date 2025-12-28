@@ -3212,6 +3212,7 @@ class OrdersRepository {
             where: {
                 AND: [
                     { deleted: false },
+                    { role: "INQUIRY_EMPLOYEE" },
                     {
                         OR: [
                             {
