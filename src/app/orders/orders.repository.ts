@@ -1037,44 +1037,20 @@ export class OrdersRepository {
               },
               {
                 forwardedBranchId:
-                  data.filters.orderType === "forwardedAll" &&
-                  data.loggedInUser?.mainRepository &&
-                  data.filters.branchID
-                    ? data.filters.branchID
-                    : data.filters.orderType === "forwardedAll" &&
-                      data.loggedInUser?.mainRepository
-                    ? {
-                        not: null,
-                      }
-                    : data.filters.orderType === "forwardedAll"
-                    ? data.loggedInUser?.branchId
-                    : data.filters.orderType === "receivedAll" &&
-                      data.filters.branchID &&
-                      !data.loggedInUser?.mainCompany
-                    ? data.filters.branchID
-                    : data.filters.orderType === "inside"
-                    ? {equals: null}
+                  data.filters.orderType === "forwarded" &&
+                  data.filters.inquiryBranchesIDs
+                    ? {in: data.filters.inquiryBranchesIDs}
+                    : data.filters.orderType === "forwarded"
+                    ? {not: null}
                     : undefined,
               },
               {
                 receivedBranchId:
-                  data.filters.orderType === "receivedAll" &&
-                  data.loggedInUser?.mainRepository &&
-                  data.filters.branchID
-                    ? data.filters.branchID
-                    : data.filters.orderType === "receivedAll" &&
-                      data.loggedInUser?.mainRepository
-                    ? {
-                        not: null,
-                      }
-                    : data.filters.orderType === "forwardedAll" &&
-                      data.filters.branchID &&
-                      !data.loggedInUser?.mainCompany
-                    ? data.filters.branchID
-                    : data.filters.orderType === "receivedAll"
-                    ? data.loggedInUser?.branchId
-                    : data.filters.orderType === "inside"
-                    ? {equals: null}
+                  data.filters.orderType === "receiving" &&
+                  data.filters.inquiryBranchesIDs
+                    ? {in: data.filters.inquiryBranchesIDs}
+                    : data.filters.orderType === "receiving"
+                    ? {not: null}
                     : undefined,
               },
             ],
@@ -2992,7 +2968,7 @@ export class OrdersRepository {
                   data.filters.inquiryBranchesIDs
                     ? {in: data.filters.inquiryBranchesIDs}
                     : data.filters.orderType === "forwarded"
-                    ? data.loggedInUser.branchId
+                    ? {not: null}
                     : undefined,
               },
               {
@@ -3001,7 +2977,7 @@ export class OrdersRepository {
                   data.filters.inquiryBranchesIDs
                     ? {in: data.filters.inquiryBranchesIDs}
                     : data.filters.orderType === "receiving"
-                    ? data.loggedInUser.branchId
+                    ? {not: null}
                     : undefined,
               },
             ],
@@ -3566,78 +3542,6 @@ export class OrdersRepository {
             {
               OR: [
                 {
-                  branchId: order.branchId,
-                  orderType: null,
-                  inquiryBranches: {
-                    none: {},
-                  },
-                },
-                {
-                  branchId: order.client.branchId,
-                  orderType: null,
-                  inquiryBranches: {
-                    none: {},
-                  },
-                },
-                {
-                  branchId: order.branchId,
-                  orderType: "receiving",
-                  inquiryBranches: {
-                    none: {},
-                  },
-                },
-                {
-                  branchId: order.client.branchId,
-                  orderType: "forwarded",
-                  inquiryBranches: {
-                    none: {},
-                  },
-                },
-                {
-                  branchId: order.branchId,
-                  orderType: null,
-                  inquiryBranches: {
-                    some: {
-                      branchId: {
-                        in: [order.client.branchId!!],
-                      },
-                    },
-                  },
-                },
-                {
-                  branchId: order.client.branchId,
-                  orderType: null,
-                  inquiryBranches: {
-                    some: {
-                      branchId: {
-                        in: [order.branchId!!],
-                      },
-                    },
-                  },
-                },
-                {
-                  branchId: order.branchId,
-                  orderType: "forwarded",
-                  inquiryBranches: {
-                    some: {
-                      branchId: {
-                        in: [order.client.branchId!!],
-                      },
-                    },
-                  },
-                },
-                {
-                  branchId: order.client.branchId,
-                  orderType: "receiving",
-                  inquiryBranches: {
-                    some: {
-                      branchId: {
-                        in: [order.branchId!!],
-                      },
-                    },
-                  },
-                },
-                {
                   branch: {
                     repositories: {
                       some: {
@@ -3848,78 +3752,6 @@ export class OrdersRepository {
             {role: "INQUIRY_EMPLOYEE"},
             {
               OR: [
-                {
-                  branchId: order.branchId,
-                  orderType: null,
-                  inquiryBranches: {
-                    none: {},
-                  },
-                },
-                {
-                  branchId: order.client.branchId,
-                  orderType: null,
-                  inquiryBranches: {
-                    none: {},
-                  },
-                },
-                {
-                  branchId: order.branchId,
-                  orderType: "receiving",
-                  inquiryBranches: {
-                    none: {},
-                  },
-                },
-                {
-                  branchId: order.client.branchId,
-                  orderType: "forwarded",
-                  inquiryBranches: {
-                    none: {},
-                  },
-                },
-                {
-                  branchId: order.branchId,
-                  orderType: null,
-                  inquiryBranches: {
-                    some: {
-                      branchId: {
-                        in: [order.client.branchId!!],
-                      },
-                    },
-                  },
-                },
-                {
-                  branchId: order.client.branchId,
-                  orderType: null,
-                  inquiryBranches: {
-                    some: {
-                      branchId: {
-                        in: [order.branchId!!],
-                      },
-                    },
-                  },
-                },
-                {
-                  branchId: order.branchId,
-                  orderType: "forwarded",
-                  inquiryBranches: {
-                    some: {
-                      branchId: {
-                        in: [order.client.branchId!!],
-                      },
-                    },
-                  },
-                },
-                {
-                  branchId: order.client.branchId,
-                  orderType: "receiving",
-                  inquiryBranches: {
-                    some: {
-                      branchId: {
-                        in: [order.branchId!!],
-                      },
-                    },
-                  },
-                },
                 {
                   branch: {
                     repositories: {
