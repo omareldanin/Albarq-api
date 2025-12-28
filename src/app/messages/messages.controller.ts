@@ -23,6 +23,11 @@ export class MessagesController {
         locationId: true,
         status: true,
         governorate: true,
+        client: {
+          select: {
+            branchId: true,
+          },
+        },
         deliveryAgent: {
           select: {
             id: true,
@@ -56,21 +61,78 @@ export class MessagesController {
             {
               OR: [
                 {
-                  inquiryBranches: order?.branchId
-                    ? {
-                        some: {
-                          branchId: order.branchId,
-                        },
-                      }
-                    : undefined,
+                  branchId: order.branchId,
+                  orderType: null,
+                  inquiryBranches: {
+                    none: {},
+                  },
                 },
                 {
-                  id: order.branchId!!,
+                  branchId: order.client.branchId,
+                  orderType: null,
+                  inquiryBranches: {
+                    none: {},
+                  },
+                },
+                {
+                  branchId: order.branchId,
+                  orderType: "receiving",
+                  inquiryBranches: {
+                    none: {},
+                  },
+                },
+                {
+                  branchId: order.client.branchId,
+                  orderType: "forwarded",
+                  inquiryBranches: {
+                    none: {},
+                  },
+                },
+                {
+                  branchId: order.branchId,
+                  orderType: null,
+                  inquiryBranches: {
+                    some: {
+                      branchId: {
+                        in: [order.client.branchId!!],
+                      },
+                    },
+                  },
+                },
+                {
+                  branchId: order.client.branchId,
+                  orderType: null,
+                  inquiryBranches: {
+                    some: {
+                      branchId: {
+                        in: [order.branchId!!],
+                      },
+                    },
+                  },
+                },
+                {
+                  branchId: order.branchId,
+                  orderType: "forwarded",
+                  inquiryBranches: {
+                    some: {
+                      branchId: {
+                        in: [order.client.branchId!!],
+                      },
+                    },
+                  },
+                },
+                {
+                  branchId: order.client.branchId,
+                  orderType: "receiving",
+                  inquiryBranches: {
+                    some: {
+                      branchId: {
+                        in: [order.branchId!!],
+                      },
+                    },
+                  },
                 },
               ],
-            },
-            {
-              mainEmergency: false,
             },
           ],
         },

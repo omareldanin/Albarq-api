@@ -1364,6 +1364,268 @@ class OrdersController {
     getStatusOrdersStatistics = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const loggedInUser = res.locals.user;
         const status = req.query.status;
+        const deliveryAgentID = loggedInUser.role === "DELIVERY_AGENT" ? loggedInUser.id : undefined;
+        let inquiryStatuses = undefined;
+        let inquiryGovernorates = undefined;
+        let inquiryLocationsIDs = undefined;
+        let inquiryBranchesIDs = undefined;
+        let inquiryStoresIDs = undefined;
+        let inquiryCompaniesIDs = undefined;
+        let inquiryClientsIDs = undefined;
+        let inquiryDeliveryAgentsIDs = undefined;
+        let orderType = undefined;
+        if (loggedInUser.role === "INQUIRY_EMPLOYEE") {
+            const inquiryEmployeeStuff = await employeesRepository.getInquiryEmployeeStuff({
+                employeeID: loggedInUser.id,
+            });
+            if (inquiryEmployeeStuff) {
+                orderType = inquiryEmployeeStuff.orderType || undefined;
+                inquiryStatuses =
+                    inquiryEmployeeStuff.inquiryStatuses &&
+                        inquiryEmployeeStuff.inquiryStatuses.length > 0
+                        ? inquiryEmployeeStuff.inquiryStatuses
+                        : undefined;
+                inquiryGovernorates =
+                    inquiryEmployeeStuff.inquiryGovernorates &&
+                        inquiryEmployeeStuff.inquiryGovernorates.length > 0
+                        ? inquiryEmployeeStuff.inquiryGovernorates
+                        : undefined;
+                inquiryLocationsIDs =
+                    inquiryEmployeeStuff.inquiryLocations &&
+                        inquiryEmployeeStuff.inquiryLocations.length > 0
+                        ? inquiryEmployeeStuff.inquiryLocations
+                        : undefined;
+                inquiryBranchesIDs =
+                    inquiryEmployeeStuff.inquiryBranches &&
+                        inquiryEmployeeStuff.inquiryBranches.length > 0
+                        ? inquiryEmployeeStuff.inquiryBranches
+                        : undefined;
+                inquiryStoresIDs =
+                    inquiryEmployeeStuff.inquiryStores &&
+                        inquiryEmployeeStuff.inquiryStores.length > 0
+                        ? inquiryEmployeeStuff.inquiryStores
+                        : undefined;
+                inquiryCompaniesIDs =
+                    inquiryEmployeeStuff.inquiryCompanies &&
+                        inquiryEmployeeStuff.inquiryCompanies.length > 0
+                        ? inquiryEmployeeStuff.inquiryCompanies
+                        : undefined;
+                inquiryDeliveryAgentsIDs =
+                    inquiryEmployeeStuff.inquiryDeliveryAgents &&
+                        inquiryEmployeeStuff.inquiryDeliveryAgents.length > 0
+                        ? inquiryEmployeeStuff.inquiryDeliveryAgents
+                        : undefined;
+            }
+        }
+        if (loggedInUser.role === "CLIENT_ASSISTANT") {
+            const employee = await db_1.prisma.employee.findUnique({
+                where: {
+                    id: loggedInUser.id,
+                },
+                select: {
+                    inquiryStores: true,
+                },
+            });
+            inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
+        }
+        if (loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT") {
+            const employee = await db_1.prisma.employee.findUnique({
+                where: {
+                    id: loggedInUser.id,
+                },
+                select: {
+                    inquiryStores: true,
+                },
+            });
+            inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
+        }
+        const filtersReformed = loggedInUser.role === "INQUIRY_EMPLOYEE"
+            ? {
+                AND: [
+                    {
+                        status: inquiryStatuses
+                            ? {
+                                in: inquiryStatuses,
+                            }
+                            : undefined,
+                    },
+                    {
+                        deleted: false,
+                    },
+                    {
+                        governorate: inquiryGovernorates
+                            ? {
+                                in: inquiryGovernorates,
+                            }
+                            : undefined,
+                    },
+                    {
+                        branch: orderType
+                            ? undefined
+                            : inquiryBranchesIDs
+                                ? {
+                                    id: {
+                                        in: inquiryBranchesIDs,
+                                    },
+                                }
+                                : loggedInUser.mainRepository
+                                    ? undefined
+                                    : {
+                                        id: loggedInUser.branchId,
+                                    },
+                    },
+                    {
+                        deliveryAgent: inquiryDeliveryAgentsIDs
+                            ? {
+                                id: {
+                                    in: inquiryDeliveryAgentsIDs,
+                                },
+                            }
+                            : undefined,
+                    },
+                    {
+                        store: inquiryStoresIDs
+                            ? {
+                                id: {
+                                    in: inquiryStoresIDs,
+                                },
+                            }
+                            : undefined,
+                    },
+                    {
+                        company: {
+                            id: loggedInUser.companyID,
+                        },
+                    },
+                    {
+                        location: inquiryLocationsIDs
+                            ? {
+                                id: {
+                                    in: inquiryLocationsIDs,
+                                },
+                            }
+                            : undefined,
+                    },
+                    {
+                        forwardedBranchId: orderType === "forwarded" && inquiryBranchesIDs
+                            ? { in: inquiryBranchesIDs }
+                            : orderType === "forwarded"
+                                ? loggedInUser.branchId
+                                : undefined,
+                    },
+                    {
+                        receivedBranchId: orderType === "receiving" && inquiryBranchesIDs
+                            ? { in: inquiryBranchesIDs }
+                            : orderType === "receiving"
+                                ? loggedInUser.branchId
+                                : undefined,
+                    },
+                ],
+            }
+            : {
+                AND: [
+                    {
+                        OR: [
+                            {
+                                company: {
+                                    id: loggedInUser.companyID,
+                                },
+                            },
+                            {
+                                forwardedFrom: {
+                                    id: inquiryCompaniesIDs
+                                        ? {
+                                            in: [
+                                                ...inquiryCompaniesIDs,
+                                                //  companyID as number
+                                            ],
+                                        }
+                                        : loggedInUser.companyID,
+                                },
+                            },
+                        ],
+                    },
+                    {
+                        branch: inquiryBranchesIDs
+                            ? {
+                                id: {
+                                    in: inquiryBranchesIDs,
+                                },
+                            }
+                            : undefined,
+                    },
+                    {
+                        storeId: loggedInUser.role === "CLIENT_ASSISTANT" ||
+                            loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT"
+                            ? { in: inquiryStoresIDs }
+                            : undefined,
+                    },
+                    {
+                        client: {
+                            id: inquiryClientsIDs
+                                ? {
+                                    in: [
+                                        ...inquiryClientsIDs,
+                                        //  companyID as number
+                                    ],
+                                }
+                                : undefined,
+                        },
+                    },
+                    {
+                        deliveryAgent: {
+                            id: deliveryAgentID,
+                        },
+                    },
+                    {
+                        deleted: false,
+                    },
+                    // {
+                    //   forwardedBranchId:
+                    //    orderType === "forwardedAll" &&
+                    //     (loggedInUser?.role === "COMPANY_MANAGER" ||
+                    //       loggedInUser?.mainRepository) &&
+                    //    branchID
+                    //       ?branchID
+                    //       :orderType === "forwardedAll" &&
+                    //         (loggedInUser?.role === "COMPANY_MANAGER" ||
+                    //           loggedInUser?.mainRepository)
+                    //       ? {
+                    //           not: null,
+                    //         }
+                    //       :orderType === "forwardedAll"
+                    //       ? loggedInUser?.branchId
+                    //       :orderType === "receivedAll" &&
+                    //        branchID &&
+                    //         loggedInUser?.role !== "COMPANY_MANAGER" &&
+                    //         !loggedInUser?.mainCompany
+                    //       ?branchID
+                    //       : undefined,
+                    // },
+                    // {
+                    //   receivedBranchId:
+                    //    orderType === "receivedAll" &&
+                    //     (loggedInUser?.role === "COMPANY_MANAGER" ||
+                    //       loggedInUser?.mainRepository) &&
+                    //    branchID
+                    //       ?branchID
+                    //       :orderType === "receivedAll" &&
+                    //         (loggedInUser?.role === "COMPANY_MANAGER" ||
+                    //           loggedInUser?.mainRepository)
+                    //       ? {
+                    //           not: null,
+                    //         }
+                    //       :orderType === "forwardedAll" &&
+                    //        branchID &&
+                    //         loggedInUser?.role !== "COMPANY_MANAGER" &&
+                    //         !loggedInUser?.mainCompany
+                    //       ?branchID
+                    //       :orderType === "receivedAll"
+                    //       ? loggedInUser?.branchId
+                    //       : undefined,
+                    // },
+                ],
+            };
         if (status === "REGISTERED") {
             const ordersStatisticsByStatus = await db_1.prisma.order.groupBy({
                 by: ["status"],
@@ -1373,11 +1635,7 @@ class OrdersController {
                 _sum: {
                     totalCost: true,
                 },
-                where: {
-                    clientId: loggedInUser.id,
-                    deleted: false,
-                    status: { in: ["REGISTERED", "READY_TO_SEND"] },
-                },
+                where: filtersReformed,
             });
             const statuses = ["REGISTERED", "READY_TO_SEND"];
             res.status(200).json({
@@ -1402,17 +1660,6 @@ class OrdersController {
                 },
                 _sum: {
                     totalCost: true,
-                },
-                where: {
-                    clientId: loggedInUser.id,
-                    deleted: false,
-                    status: {
-                        in: [
-                            "WITH_RECEIVING_AGENT",
-                            "IN_MAIN_REPOSITORY",
-                            "IN_GOV_REPOSITORY",
-                        ],
-                    },
                 },
             });
             const statuses = [
@@ -1478,6 +1725,38 @@ class OrdersController {
                 "PARTIALLY_RETURNED",
                 "REPLACED",
             ];
+            res.status(200).json({
+                status: "success",
+                data: statuses.map((status) => {
+                    const statuscount = ordersStatisticsByStatus.find((s) => s.status === status);
+                    return {
+                        status: status,
+                        count: statuscount?._count.id || 0,
+                        totalCost: statuscount?._sum.totalCost || 0,
+                        name: orders_responses_1.OrderStatusData[status].name,
+                        icon: orders_responses_1.OrderStatusData[status].icon,
+                    };
+                }),
+            });
+        }
+        else {
+            const ordersStatisticsByStatus = await db_1.prisma.order.groupBy({
+                by: ["status"],
+                _count: {
+                    id: true,
+                },
+                _sum: {
+                    totalCost: true,
+                },
+                where: {
+                    clientId: loggedInUser.id,
+                    deleted: false,
+                    status: {
+                        in: ["PROCESSING", "POSTPONED"],
+                    },
+                },
+            });
+            const statuses = ["PROCESSING", "POSTPONED"];
             res.status(200).json({
                 status: "success",
                 data: statuses.map((status) => {

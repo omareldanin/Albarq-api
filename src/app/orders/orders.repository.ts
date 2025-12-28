@@ -1643,9 +1643,27 @@ export class OrdersRepository {
                     : data.filters.governorate,
               },
               {
-                repository: {
-                  id: data.filters.repositoryID,
-                },
+                repository:
+                  data.filters.secondaryStatus === "IN_REPOSITORY"
+                    ? {
+                        mainRepository: false,
+                      }
+                    : data.filters.secondaryStatus === "IN_CAR"
+                    ? {
+                        mainRepository: true,
+                      }
+                    : {
+                        id: data.filters.repositoryID,
+                      },
+              },
+              {
+                secondaryStatus:
+                  data.filters.secondaryStatus === "WITH_AGENT"
+                    ? "WITH_AGENT"
+                    : data.filters.secondaryStatus === "IN_REPOSITORY" ||
+                      data.filters.secondaryStatus === "IN_CAR"
+                    ? "IN_REPOSITORY"
+                    : data.filters.secondaryStatus,
               },
               // {
               //   forwardedBranchId:
@@ -3509,6 +3527,11 @@ export class OrdersRepository {
         locationId: true,
         status: true,
         governorate: true,
+        client: {
+          select: {
+            branchId: true,
+          },
+        },
         deliveryAgent: {
           select: {
             id: true,
@@ -3543,16 +3566,76 @@ export class OrdersRepository {
             {
               OR: [
                 {
-                  inquiryBranches: order?.branchId
-                    ? {
-                        some: {
-                          branchId: order.branchId,
-                        },
-                      }
-                    : undefined,
+                  branchId: order.branchId,
+                  orderType: null,
+                  inquiryBranches: {
+                    none: {},
+                  },
                 },
                 {
-                  id: order.branchId!!,
+                  branchId: order.client.branchId,
+                  orderType: null,
+                  inquiryBranches: {
+                    none: {},
+                  },
+                },
+                {
+                  branchId: order.branchId,
+                  orderType: "receiving",
+                  inquiryBranches: {
+                    none: {},
+                  },
+                },
+                {
+                  branchId: order.client.branchId,
+                  orderType: "forwarded",
+                  inquiryBranches: {
+                    none: {},
+                  },
+                },
+                {
+                  branchId: order.branchId,
+                  orderType: null,
+                  inquiryBranches: {
+                    some: {
+                      branchId: {
+                        in: [order.client.branchId!!],
+                      },
+                    },
+                  },
+                },
+                {
+                  branchId: order.client.branchId,
+                  orderType: null,
+                  inquiryBranches: {
+                    some: {
+                      branchId: {
+                        in: [order.branchId!!],
+                      },
+                    },
+                  },
+                },
+                {
+                  branchId: order.branchId,
+                  orderType: "forwarded",
+                  inquiryBranches: {
+                    some: {
+                      branchId: {
+                        in: [order.client.branchId!!],
+                      },
+                    },
+                  },
+                },
+                {
+                  branchId: order.client.branchId,
+                  orderType: "receiving",
+                  inquiryBranches: {
+                    some: {
+                      branchId: {
+                        in: [order.branchId!!],
+                      },
+                    },
+                  },
                 },
               ],
             },
@@ -3683,15 +3766,80 @@ export class OrdersRepository {
             {deleted: false},
             {role: "INQUIRY_EMPLOYEE"},
             {
-              inquiryBranches: order?.branchId
-                ? {
+              OR: [
+                {
+                  branchId: order.branchId,
+                  orderType: null,
+                  inquiryBranches: {
+                    none: {},
+                  },
+                },
+                {
+                  branchId: order.client.branchId,
+                  orderType: null,
+                  inquiryBranches: {
+                    none: {},
+                  },
+                },
+                {
+                  branchId: order.branchId,
+                  orderType: "receiving",
+                  inquiryBranches: {
+                    none: {},
+                  },
+                },
+                {
+                  branchId: order.client.branchId,
+                  orderType: "forwarded",
+                  inquiryBranches: {
+                    none: {},
+                  },
+                },
+                {
+                  branchId: order.branchId,
+                  orderType: null,
+                  inquiryBranches: {
                     some: {
                       branchId: {
-                        in: [order.branchId],
+                        in: [order.client.branchId!!],
                       },
                     },
-                  }
-                : undefined,
+                  },
+                },
+                {
+                  branchId: order.client.branchId,
+                  orderType: null,
+                  inquiryBranches: {
+                    some: {
+                      branchId: {
+                        in: [order.branchId!!],
+                      },
+                    },
+                  },
+                },
+                {
+                  branchId: order.branchId,
+                  orderType: "forwarded",
+                  inquiryBranches: {
+                    some: {
+                      branchId: {
+                        in: [order.client.branchId!!],
+                      },
+                    },
+                  },
+                },
+                {
+                  branchId: order.client.branchId,
+                  orderType: "receiving",
+                  inquiryBranches: {
+                    some: {
+                      branchId: {
+                        in: [order.branchId!!],
+                      },
+                    },
+                  },
+                },
+              ],
             },
           ],
         },
