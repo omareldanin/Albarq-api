@@ -90,7 +90,7 @@ class MessagesController {
                                         },
                                     },
                                 },
-                                orderType: "forwarded",
+                                orderType: "receiving",
                                 inquiryBranches: {
                                     some: {
                                         branchId: {
@@ -107,7 +107,7 @@ class MessagesController {
                                         },
                                     },
                                 },
-                                orderType: "receiving",
+                                orderType: "forwarded",
                                 inquiryBranches: {
                                     some: {
                                         branchId: {
