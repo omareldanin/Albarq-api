@@ -3538,7 +3538,6 @@ export class OrdersRepository {
         where: {
           AND: [
             {deleted: false},
-            {role: "INQUIRY_EMPLOYEE"},
             {
               OR: [
                 {
@@ -3583,7 +3582,7 @@ export class OrdersRepository {
                       },
                     },
                   },
-                  orderType: "forwarded",
+                  orderType: "receiving",
                   inquiryBranches: {
                     some: {
                       branchId: {
@@ -3600,7 +3599,7 @@ export class OrdersRepository {
                       },
                     },
                   },
-                  orderType: "receiving",
+                  orderType: "forwarded",
                   inquiryBranches: {
                     some: {
                       branchId: {
