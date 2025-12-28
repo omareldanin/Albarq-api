@@ -3794,7 +3794,7 @@ export class OrdersRepository {
                       },
                     },
                   },
-                  orderType: "forwarded",
+                  orderType: "receiving",
                   inquiryBranches: {
                     some: {
                       branchId: {
@@ -3811,7 +3811,7 @@ export class OrdersRepository {
                       },
                     },
                   },
-                  orderType: "receiving",
+                  orderType: "forwarded",
                   inquiryBranches: {
                     some: {
                       branchId: {
