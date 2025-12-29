@@ -1709,9 +1709,6 @@ export class OrdersController {
               clientReport: {
                 none: {
                   secondaryType: "DELIVERED",
-                  report: {
-                    confirmed: true,
-                  },
                 },
               },
               status: {
@@ -1722,9 +1719,6 @@ export class OrdersController {
               clientReport: {
                 none: {
                   secondaryType: "RETURNED",
-                  report: {
-                    confirmed: true,
-                  },
                 },
               },
               status: {
