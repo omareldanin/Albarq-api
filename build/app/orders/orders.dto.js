@@ -278,6 +278,8 @@ exports.OrdersFiltersSchema = zod_1.z.object({
     forwardedByID: zod_1.z.coerce.number().optional(),
     forwardedFromID: zod_1.z.coerce.number().optional(),
     clientID: zod_1.z.coerce.number().optional(),
+    updateBy: zod_1.z.coerce.number().optional(),
+    createdBy: zod_1.z.coerce.number().optional(),
     deliveryAgentID: zod_1.z.coerce.number().optional(),
     receiveingAgentID: zod_1.z.coerce.number().optional(),
     clientOrderReceiptId: zod_1.z.coerce.number().optional(),

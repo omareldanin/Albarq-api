@@ -586,7 +586,7 @@ const orderTimelineReform = (timeline) => {
         message: timeline.message,
         old: timeline.old && JSON.parse(timeline.old),
         new: timeline.new && JSON.parse(timeline.new),
-        by: timeline.by && JSON.parse(timeline.by),
+        by: timeline.by,
     };
 };
 exports.orderTimelineReform = orderTimelineReform;

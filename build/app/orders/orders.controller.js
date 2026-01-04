@@ -93,6 +93,8 @@ class OrdersController {
             printed: req.query.printed,
             delivered: req.query.delivered,
             orderType: req.query.orderType,
+            updateBy: req.query.updated_by,
+            createdBy: req.query.created_by,
         });
         const { orders, ordersMetaData, page, pagesCount } = await ordersService.getAllOrders({
             loggedInUser: loggedInUser,

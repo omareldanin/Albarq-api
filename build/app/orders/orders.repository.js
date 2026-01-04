@@ -1487,6 +1487,18 @@ class OrdersRepository {
                                 ? "IN_REPOSITORY"
                                 : data.filters.secondaryStatus,
                     },
+                    {
+                        timeline: {
+                            some: {
+                                by: data.filters.updateBy
+                                    ? {
+                                        path: ["id"],
+                                        equals: data.filters.updateBy, // number: 295
+                                    }
+                                    : undefined,
+                            },
+                        },
+                    },
                     // {
                     //   forwardedBranchId:
                     //     data.filters.orderType === "forwarded"
@@ -1590,6 +1602,7 @@ class OrdersRepository {
                     },
                 ],
             };
+        console.log(data.filters.updateBy);
         if (data.filters.minified === true || data.filters.forMobile === true) {
             const paginatedOrders = await db_1.prisma.order.findManyPaginated({
                 where: data.loggedInUser?.role === "RECEIVING_AGENT" &&
@@ -3072,7 +3085,7 @@ class OrdersRepository {
                     },
                 },
                 type: data.data.type,
-                by: JSON.stringify(data.data.by),
+                by: data.data.by,
                 old: JSON.stringify(data.data.old),
                 new: JSON.stringify(data.data.new),
                 message: data.data.message,
