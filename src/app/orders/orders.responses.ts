@@ -706,6 +706,6 @@ export const orderTimelineReform = (
     message: timeline.message,
     old: timeline.old && JSON.parse(timeline.old as string),
     new: timeline.new && JSON.parse(timeline.new as string),
-    by: timeline.by && JSON.parse(timeline.by as string),
+    by: timeline.by as string,
   };
 };

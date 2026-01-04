@@ -1641,6 +1641,19 @@ export class OrdersRepository {
                     ? "IN_REPOSITORY"
                     : data.filters.secondaryStatus,
               },
+              {
+                timeline: {
+                  some: {
+                    by: data.filters.updateBy
+                      ? {
+                          path: ["id"],
+                          equals: data.filters.updateBy, // number: 295
+                        }
+                      : undefined,
+                  },
+                },
+              },
+
               // {
               //   forwardedBranchId:
               //     data.filters.orderType === "forwarded"
@@ -1749,6 +1762,7 @@ export class OrdersRepository {
               },
             ],
           } satisfies Prisma.OrderWhereInput);
+    console.log(data.filters.updateBy);
 
     if (data.filters.minified === true || data.filters.forMobile === true) {
       const paginatedOrders = await prisma.order.findManyPaginated(
@@ -3381,7 +3395,7 @@ export class OrdersRepository {
           },
         },
         type: data.data.type,
-        by: JSON.stringify(data.data.by),
+        by: data.data.by,
         old: JSON.stringify(data.data.old),
         new: JSON.stringify(data.data.new),
         message: data.data.message,

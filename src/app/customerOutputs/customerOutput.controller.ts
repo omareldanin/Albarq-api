@@ -73,6 +73,7 @@ export class CustomerOutputController {
           id: true,
         },
       });
+      console.log(checkIfExist?.id);
 
       if (checkIfExist) {
         throw new AppError("هذا الطلب موجود بالفعل!", 404);
