@@ -1489,14 +1489,22 @@ class OrdersRepository {
                     },
                     {
                         timeline: {
-                            some: {
-                                by: data.filters.updateBy
-                                    ? {
+                            some: data.filters.updateBy
+                                ? {
+                                    by: {
                                         path: ["id"],
                                         equals: data.filters.updateBy, // number: 295
+                                    },
+                                }
+                                : data.filters.createdBy
+                                    ? {
+                                        type: "ORDER_CREATION",
+                                        by: {
+                                            path: ["id"],
+                                            equals: data.filters.createdBy, // number: 295
+                                        },
                                     }
                                     : undefined,
-                            },
                         },
                     },
                     // {
@@ -1602,7 +1610,6 @@ class OrdersRepository {
                     },
                 ],
             };
-        console.log(data.filters.updateBy);
         if (data.filters.minified === true || data.filters.forMobile === true) {
             const paginatedOrders = await db_1.prisma.order.findManyPaginated({
                 where: data.loggedInUser?.role === "RECEIVING_AGENT" &&

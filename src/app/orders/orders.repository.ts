@@ -1643,14 +1643,22 @@ export class OrdersRepository {
               },
               {
                 timeline: {
-                  some: {
-                    by: data.filters.updateBy
-                      ? {
+                  some: data.filters.updateBy
+                    ? {
+                        by: {
                           path: ["id"],
                           equals: data.filters.updateBy, // number: 295
-                        }
-                      : undefined,
-                  },
+                        },
+                      }
+                    : data.filters.createdBy
+                    ? {
+                        type: "ORDER_CREATION",
+                        by: {
+                          path: ["id"],
+                          equals: data.filters.createdBy, // number: 295
+                        },
+                      }
+                    : undefined,
                 },
               },
 
@@ -1762,7 +1770,6 @@ export class OrdersRepository {
               },
             ],
           } satisfies Prisma.OrderWhereInput);
-    console.log(data.filters.updateBy);
 
     if (data.filters.minified === true || data.filters.forMobile === true) {
       const paginatedOrders = await prisma.order.findManyPaginated(
