@@ -829,9 +829,12 @@ class MessagesController {
         });
         let chatMembers = await this.getOrderChatMembers(orderId);
         chatMembers = chatMembers.filter((e) => +e !== +loggedInUser.id);
-        server_1.io.to(`chat_${chat.orderId}`).emit("newChatMessage", message);
+        server_1.io.to(`chat_${chat.orderId}`).emit("newChatMessage", {
+            ...message,
+            chatId: chat.id,
+        });
         chatMembers.forEach((member) => {
-            server_1.io.to(`${member}`).emit("newMessage", message);
+            server_1.io.to(`${member}`).emit("newMessage", { ...message, chatId: chat.id });
         });
         // const chats=await this.getUserChats(loggedInUser.id)
         chatMembers.forEach(async (e) => {

@@ -934,10 +934,13 @@ export class MessagesController {
     let chatMembers = await this.getOrderChatMembers(orderId);
     chatMembers = chatMembers.filter((e) => +e !== +loggedInUser.id);
 
-    io.to(`chat_${chat.orderId}`).emit("newChatMessage", message);
+    io.to(`chat_${chat.orderId}`).emit("newChatMessage", {
+      ...message,
+      chatId: chat.id,
+    });
 
     chatMembers.forEach((member) => {
-      io.to(`${member}`).emit("newMessage", message);
+      io.to(`${member}`).emit("newMessage", {...message, chatId: chat.id});
     });
     // const chats=await this.getUserChats(loggedInUser.id)
 

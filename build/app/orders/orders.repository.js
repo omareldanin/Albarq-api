@@ -684,6 +684,15 @@ class OrdersRepository {
                             : undefined,
                     },
                     {
+                        // gte deliveryDate day start time (00:00:00) and lte deliveryDate day end time (23:59:59)
+                        updatedAt: data.filters.deliveryDate
+                            ? {
+                                gte: new Date(new Date(data.filters.deliveryDate).setHours(0, 0, 0, 0)),
+                                lte: new Date(new Date(data.filters.deliveryDate).setHours(23, 59, 59, 999)),
+                            }
+                            : undefined,
+                    },
+                    {
                         location: data.filters.inquiryLocationsIDs
                             ? {
                                 id: {
