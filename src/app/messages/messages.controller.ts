@@ -863,6 +863,11 @@ export class MessagesController {
         id: true,
         orderId: true,
         numberOfMessages: true,
+        Order: {
+          select: {
+            receiptNumber: true,
+          },
+        },
       },
     });
 
@@ -876,6 +881,11 @@ export class MessagesController {
           id: true,
           orderId: true,
           numberOfMessages: true,
+          Order: {
+            select: {
+              receiptNumber: true,
+            },
+          },
         },
       });
     }
@@ -940,7 +950,12 @@ export class MessagesController {
     });
 
     chatMembers.forEach((member) => {
-      io.to(`${member}`).emit("newMessage", {...message, chatId: chat.id});
+      io.to(`${member}`).emit("newMessage", {
+        ...message,
+        chatId: chat.id,
+        orderId: chat.orderId,
+        receiptNumber: chat.Order?.receiptNumber,
+      });
     });
     // const chats=await this.getUserChats(loggedInUser.id)
 

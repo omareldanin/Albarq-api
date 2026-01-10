@@ -764,6 +764,11 @@ class MessagesController {
                 id: true,
                 orderId: true,
                 numberOfMessages: true,
+                Order: {
+                    select: {
+                        receiptNumber: true,
+                    },
+                },
             },
         });
         if (!chat) {
@@ -776,6 +781,11 @@ class MessagesController {
                     id: true,
                     orderId: true,
                     numberOfMessages: true,
+                    Order: {
+                        select: {
+                            receiptNumber: true,
+                        },
+                    },
                 },
             });
         }
@@ -834,7 +844,12 @@ class MessagesController {
             chatId: chat.id,
         });
         chatMembers.forEach((member) => {
-            server_1.io.to(`${member}`).emit("newMessage", { ...message, chatId: chat.id });
+            server_1.io.to(`${member}`).emit("newMessage", {
+                ...message,
+                chatId: chat.id,
+                orderId: chat.orderId,
+                receiptNumber: chat.Order?.receiptNumber,
+            });
         });
         // const chats=await this.getUserChats(loggedInUser.id)
         chatMembers.forEach(async (e) => {
