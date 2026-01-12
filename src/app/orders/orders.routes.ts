@@ -164,25 +164,20 @@ router.route("/orders").get(
     */
 );
 
-// TODO: Remove this route
-// router.route("/orders/statuses").get(
-//     isLoggedIn,
-//     // isAutherized([Role.ADMIN]),
-//     getAllOrdersStatuses
-//     /*
-//         #swagger.tags = ['Orders Routes']
-//     */
-// );
-
-// TODO: Remove this route
-// router.route("/orders/today").get(
-//     isLoggedIn,
-//     // isAutherized([Role.ADMIN]),
-//     getTodayOrdersCountAndEarnings
-//     /*
-//         #swagger.tags = ['Orders Routes']
-//     */
-// );
+router.route("/getGeneralInfo").get(
+  isLoggedIn,
+  isAutherized([
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+    EmployeeRole.COMPANY_MANAGER,
+    ClientRole.CLIENT,
+    EmployeeRole.CLIENT_ASSISTANT,
+    // TODO: Remove later
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  ordersController.getGeneralInfo
+);
 
 router.route("/orders/statistics").get(
   isLoggedIn,

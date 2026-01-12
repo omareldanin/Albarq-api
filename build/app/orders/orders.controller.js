@@ -1706,6 +1706,12 @@ class OrdersController {
             skippedIds,
         });
     });
+    getGeneralInfo = (0, catchAsync_1.catchAsync)(async (_req, res) => {
+        res.status(200).json({
+            login: "9647713642110",
+            profile: "9647713642110",
+        });
+    });
 }
 exports.OrdersController = OrdersController;
 //# sourceMappingURL=orders.controller.js.map

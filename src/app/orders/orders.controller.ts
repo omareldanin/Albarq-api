@@ -2029,4 +2029,11 @@ export class OrdersController {
       skippedIds,
     });
   });
+
+  getGeneralInfo = catchAsync(async (_req, res) => {
+    res.status(200).json({
+      login: "9647713642110",
+      profile: "9647713642110",
+    });
+  });
 }
