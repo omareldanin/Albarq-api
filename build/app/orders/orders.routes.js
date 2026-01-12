@@ -154,16 +154,7 @@ router.route("/orders").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAuther
       }
   */
 );
-router.route("/getGeneralInfo").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
-    client_1.AdminRole.ADMIN,
-    client_1.AdminRole.ADMIN_ASSISTANT,
-    client_1.EmployeeRole.COMPANY_MANAGER,
-    client_1.ClientRole.CLIENT,
-    client_1.EmployeeRole.CLIENT_ASSISTANT,
-    // TODO: Remove later
-    ...Object.values(client_1.EmployeeRole),
-    ...Object.values(client_1.ClientRole),
-]), ordersController.getGeneralInfo);
+router.route("/getGeneralInfo").get(ordersController.getGeneralInfo);
 router.route("/orders/statistics").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
