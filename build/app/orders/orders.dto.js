@@ -28,23 +28,12 @@ exports.OrderCreateBaseSchema = zod_1.z.object({
     weight: zod_1.z.number().optional(),
 });
 exports.OrderCreateSchema = zod_1.z
-    .discriminatedUnion("withProducts", [
-    zod_1.z.object({
-        withProducts: zod_1.z.literal(true),
-        products: zod_1.z.array(zod_1.z.object({
-            productID: zod_1.z.coerce.number(),
-            quantity: zod_1.z.number().min(1).default(1),
-            colorID: zod_1.z.coerce.number().optional(),
-            sizeID: zod_1.z.coerce.number().optional(),
-        })),
-    }),
-    zod_1.z.object({
-        withProducts: zod_1.z.literal(false),
-        totalCost: zod_1.z.number(),
-        quantity: zod_1.z.number().default(1),
-        weight: zod_1.z.number().optional(),
-    }),
-])
+    .object({
+    withProducts: zod_1.z.literal(false).optional(),
+    totalCost: zod_1.z.number(),
+    quantity: zod_1.z.number().default(1),
+    weight: zod_1.z.number().optional(),
+})
     .and(exports.OrderCreateBaseSchema);
 exports.OrderCreateOpenAPISchema = (0, zod_openapi_1.generateSchema)(exports.OrderCreateSchema);
 // export const OrderCreateMock = generateMock(OrderCreateSchema);

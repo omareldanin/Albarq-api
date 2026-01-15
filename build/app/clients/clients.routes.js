@@ -17,26 +17,17 @@ router.route("/clients").post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAuth
     client_1.AdminRole.ADMIN_ASSISTANT,
     client_1.EmployeeRole.ACCOUNTANT,
     client_1.EmployeeRole.DATA_ENTRY,
-    client_1.EmployeeRole.BRANCH_MANAGER
+    client_1.EmployeeRole.BRANCH_MANAGER,
 ], [client_1.Permission.ADD_CLIENT]), upload_1.upload.single("avatar"), 
 // upload.none(),
-clientsController.createClient
-/*
-    #swagger.tags = ['Clients Routes']
-
-    #swagger.requestBody = {
-        required: true,
-        content: {
-            "application/json": {
-                schema: { $ref: "#/components/schemas/ClientCreateSchema" },
-                examples: {
-                    ClientCreateExample: { $ref: "#/components/examples/ClientCreateExample" }
-                }
-            }
-        }
-    }
-*/
-);
+clientsController.createClient);
+router
+    .route("/clients/api-key")
+    .post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
+    client_1.EmployeeRole.COMPANY_MANAGER,
+    client_1.AdminRole.ADMIN,
+    client_1.AdminRole.ADMIN_ASSISTANT,
+]), upload_1.upload.none(), clientsController.generateApikey);
 router.route("/clients").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.AdminRole.ADMIN,
@@ -49,20 +40,20 @@ router.route("/clients").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAuthe
     ...Object.values(client_1.EmployeeRole),
 ]), clientsController.getAllClients
 /*
-    #swagger.tags = ['Clients Routes']
+      #swagger.tags = ['Clients Routes']
 
-    #swagger.parameters['page'] = {
-        in: 'query',
-        description: 'Page Number',
-        required: false
-    }
+      #swagger.parameters['page'] = {
+          in: 'query',
+          description: 'Page Number',
+          required: false
+      }
 
-    #swagger.parameters['size'] = {
-        in: 'query',
-        description: 'Page Size (Number of Items per Page) (Default: 10)',
-        required: false
-    }
-*/
+      #swagger.parameters['size'] = {
+          in: 'query',
+          description: 'Page Size (Number of Items per Page) (Default: 10)',
+          required: false
+      }
+  */
 );
 router.route("/clients/:clientID").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.AdminRole.ADMIN,
@@ -72,11 +63,11 @@ router.route("/clients/:clientID").get(isLoggedIn_1.isLoggedIn, (0, isAutherized
     client_1.EmployeeRole.DATA_ENTRY,
     client_1.EmployeeRole.BRANCH_MANAGER,
     client_1.ClientRole.CLIENT,
-    client_1.EmployeeRole.CLIENT_ASSISTANT
+    client_1.EmployeeRole.CLIENT_ASSISTANT,
 ]), clientsController.getClient
 /*
-    #swagger.tags = ['Clients Routes']
-*/
+      #swagger.tags = ['Clients Routes']
+  */
 );
 router.route("/clients/:clientID").patch(isLoggedIn_1.isLoggedIn, 
 //TODO: Maybe add All Clients Roles for profile update
@@ -86,30 +77,34 @@ router.route("/clients/:clientID").patch(isLoggedIn_1.isLoggedIn,
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.EmployeeRole.ACCOUNTANT,
     client_1.EmployeeRole.DATA_ENTRY,
-    client_1.EmployeeRole.BRANCH_MANAGER
+    client_1.EmployeeRole.BRANCH_MANAGER,
 ]), upload_1.upload.single("avatar"), 
 // upload.none(),
 clientsController.updateClient
 /*
-    #swagger.tags = ['Clients Routes']
+      #swagger.tags = ['Clients Routes']
 
-    #swagger.requestBody = {
-        required: true,
-        content: {
-            "application/json": {
-                schema: { $ref: "#/components/schemas/ClientUpdateSchema" },
-                examples: {
-                    ClientUpdateExample: { $ref: "#/components/examples/ClientUpdateExample" }
-                }
-            }
-        }
-    }
-*/
+      #swagger.requestBody = {
+          required: true,
+          content: {
+              "application/json": {
+                  schema: { $ref: "#/components/schemas/ClientUpdateSchema" },
+                  examples: {
+                      ClientUpdateExample: { $ref: "#/components/examples/ClientUpdateExample" }
+                  }
+              }
+          }
+      }
+  */
 );
-router.route("/clients/:clientID").delete(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.AdminRole.ADMIN, client_1.AdminRole.ADMIN_ASSISTANT, client_1.EmployeeRole.COMPANY_MANAGER]), clientsController.deleteClient
+router.route("/clients/:clientID").delete(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
+    client_1.AdminRole.ADMIN,
+    client_1.AdminRole.ADMIN_ASSISTANT,
+    client_1.EmployeeRole.COMPANY_MANAGER,
+]), clientsController.deleteClient
 /*
-    #swagger.tags = ['Clients Routes']
-*/
+      #swagger.tags = ['Clients Routes']
+  */
 );
 router.route("/clients/:clientID/deactivate").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.AdminRole.ADMIN,
@@ -117,16 +112,20 @@ router.route("/clients/:clientID/deactivate").patch(isLoggedIn_1.isLoggedIn, (0,
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.EmployeeRole.ACCOUNTANT,
     client_1.EmployeeRole.DATA_ENTRY,
-    client_1.EmployeeRole.BRANCH_MANAGER
+    client_1.EmployeeRole.BRANCH_MANAGER,
 ]), clientsController.deactivateClient
 /*
-    #swagger.tags = ['Clients Routes']
-*/
+      #swagger.tags = ['Clients Routes']
+  */
 );
-router.route("/clients/:clientID/reactivate").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.AdminRole.ADMIN, client_1.AdminRole.ADMIN_ASSISTANT, client_1.EmployeeRole.COMPANY_MANAGER]), clientsController.reactivateClient
+router.route("/clients/:clientID/reactivate").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
+    client_1.AdminRole.ADMIN,
+    client_1.AdminRole.ADMIN_ASSISTANT,
+    client_1.EmployeeRole.COMPANY_MANAGER,
+]), clientsController.reactivateClient
 /*
-    #swagger.tags = ['Clients Routes']
-*/
+      #swagger.tags = ['Clients Routes']
+  */
 );
 exports.default = router;
 //# sourceMappingURL=clients.routes.js.map

@@ -20,7 +20,9 @@ import type {
 import {
   mobileOrderReform,
   orderReform,
+  orderReformApiKey,
   orderSelect,
+  orderSelectApiKey,
   orderTimelineReform,
   orderTimelineSelect,
   statisticsReformed,
@@ -107,6 +109,7 @@ export class OrdersRepository {
     let secondaryStatus: SecondaryStatus = "WITH_CLIENT";
     let receivingBranchId: number | undefined = undefined;
     let forwardedBranchId: number | undefined = undefined;
+
     const client = await prisma.client.findUnique({
       where: {
         id: data.clientID,
@@ -180,133 +183,6 @@ export class OrdersRepository {
           data.orderData.repositoryID = repository?.id;
           secondaryStatus = "IN_CAR";
           status = "IN_MAIN_REPOSITORY";
-        }
-      }
-    }
-
-    if (data.orderData.withProducts === true) {
-      for (const product of data.orderData.products) {
-        const productData = await prisma.product.findUnique({
-          where: {
-            id: product.productID,
-          },
-          select: {
-            price: true,
-            weight: true,
-          },
-        });
-        if (!productData) {
-          throw new Error("منتج غير موجود");
-        }
-        totalCost += +productData.price * product.quantity;
-        quantity += product.quantity;
-      }
-    }
-
-    // Check if products are available for the specific color and size
-    if (data.orderData.withProducts === true) {
-      for (const product of data.orderData.products) {
-        const productData = await prisma.product.findUnique({
-          where: {
-            id: product.productID,
-          },
-          select: {
-            title: true,
-          },
-        });
-
-        if (!productData) {
-          throw new AppError("منتج غير موجود", 400);
-        }
-
-        const productTitle = productData?.title;
-
-        if (product.colorID) {
-          const productColor = await prisma.productColors.findUnique({
-            where: {
-              productId_colorId: {
-                productId: product.productID,
-                colorId: product.colorID,
-              },
-            },
-            select: {
-              quantity: true,
-              color: {
-                select: {
-                  title: true,
-                },
-              },
-            },
-          });
-
-          if (!productColor) {
-            throw new AppError(
-              `المنتج (${productTitle}) غير متوفر بهذا اللون`,
-              400
-            );
-          }
-
-          if (productColor.quantity < product.quantity) {
-            throw new AppError(
-              `الكمية المتاحة من المنتج (${productTitle}) باللون (${productColor.color.title}) هي (${productColor.quantity})`,
-              400
-            );
-          }
-        }
-
-        if (product.sizeID) {
-          const productSize = await prisma.productSizes.findUnique({
-            where: {
-              productId_sizeId: {
-                productId: product.productID,
-                sizeId: product.sizeID,
-              },
-            },
-            select: {
-              quantity: true,
-              size: {
-                select: {
-                  title: true,
-                },
-              },
-            },
-          });
-
-          if (!productSize) {
-            throw new AppError(
-              `المنتج (${productTitle}) غير متوفر بهذا المقاس`,
-              400
-            );
-          }
-
-          if (productSize.quantity < product.quantity) {
-            throw new AppError(
-              `الكمية المتاحة من المنتج (${productTitle}) بالمقاس (${productSize.size.title}) هي (${productSize.quantity})`,
-              400
-            );
-          }
-        }
-
-        if (product.quantity) {
-          const productQuantity = await prisma.product.findUnique({
-            where: {
-              id: product.productID,
-            },
-            select: {
-              stock: true,
-            },
-          });
-
-          if (!productQuantity) {
-            throw new AppError(`المنتج (${productTitle}) غير متوفر`, 400);
-          }
-
-          if (productQuantity.stock < product.quantity) {
-            throw new AppError(
-              `الكمية المتاحة من المنتج (${productTitle}) هي (${productQuantity.stock})`,
-              400
-            );
-          }
         }
       }
     }
@@ -482,35 +358,7 @@ export class OrdersRepository {
         status: status,
         secondaryStatus: secondaryStatus,
         deliveryAgent: undefined,
-        orderProducts:
-          data.orderData.withProducts === false
-            ? undefined
-            : {
-                create: data.orderData.products.map((product) => {
-                  return {
-                    quantity: product.quantity,
-                    size: product.sizeID
-                      ? {
-                          connect: {
-                            id: product.sizeID,
-                          },
-                        }
-                      : undefined,
-                    color: product.colorID
-                      ? {
-                          connect: {
-                            id: product.colorID,
-                          },
-                        }
-                      : undefined,
-                    product: {
-                      connect: {
-                        id: product.productID,
-                      },
-                    },
-                  };
-                }),
-              },
+        orderProducts: undefined,
       },
       select: orderSelect,
     });
@@ -521,55 +369,6 @@ export class OrdersRepository {
         numberOfMessages: 0,
       },
     });
-    // TODO: Reduce products quantity and color and size quantity
-    if (data.orderData.withProducts === true) {
-      for (const product of data.orderData.products) {
-        if (product.colorID) {
-          await prisma.productColors.update({
-            where: {
-              productId_colorId: {
-                productId: product.productID,
-                colorId: product.colorID,
-              },
-            },
-            data: {
-              quantity: {
-                decrement: product.quantity,
-              },
-            },
-          });
-        }
-
-        if (product.sizeID) {
-          await prisma.productSizes.update({
-            where: {
-              productId_sizeId: {
-                productId: product.productID,
-                sizeId: product.sizeID,
-              },
-            },
-            data: {
-              quantity: {
-                decrement: product.quantity,
-              },
-            },
-          });
-        }
-
-        if (product.quantity) {
-          await prisma.product.update({
-            where: {
-              id: product.productID,
-            },
-            data: {
-              stock: {
-                decrement: product.quantity,
-              },
-            },
-          });
-        }
-      }
-    }
 
     return orderReform(createdOrder);
   }
@@ -2174,6 +1973,326 @@ export class OrdersRepository {
     };
   }
 
+  async getAllOrdersPaginatedApiKey(data: {
+    filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
+    loggedInUser: loggedInUserType | undefined;
+  }) {
+    let startDate = new Date();
+    let endDate = new Date();
+
+    if (data.filters.startDate) {
+      startDate = new Date(data.filters.startDate);
+      startDate.setUTCDate(startDate.getUTCDate() - 1);
+      startDate.setHours(21, 0, 0, 0);
+    }
+    if (data.filters.endDate) {
+      endDate = new Date(data.filters.endDate);
+      endDate.setHours(21, 0, 0, 0);
+    }
+
+    const where = {
+      AND: [
+        {
+          OR: [
+            {
+              receiptNumber: data.filters.search
+                ? data.filters.search
+                : undefined,
+            },
+            {
+              branchReportId: data.filters.search
+                ? Number.isNaN(+data.filters.search)
+                  ? undefined
+                  : data.filters.search.length > 9
+                  ? undefined
+                  : +data.filters.search
+                : undefined,
+            },
+            {
+              clientReport: data.filters.search
+                ? Number.isNaN(+data.filters.search)
+                  ? undefined
+                  : data.filters.search.length > 9
+                  ? undefined
+                  : {
+                      some: {
+                        id: +data.filters.search,
+                      },
+                    }
+                : undefined,
+            },
+            {
+              repositoryReport: data.filters.search
+                ? Number.isNaN(+data.filters.search)
+                  ? undefined
+                  : data.filters.search.length > 9
+                  ? undefined
+                  : {
+                      some: {
+                        id: +data.filters.search,
+                      },
+                    }
+                : undefined,
+            },
+            {
+              companyReport: data.filters.search
+                ? Number.isNaN(+data.filters.search)
+                  ? undefined
+                  : data.filters.search.length > 9
+                  ? undefined
+                  : {
+                      some: {
+                        id: +data.filters.search,
+                      },
+                    }
+                : undefined,
+            },
+            {
+              deliveryAgentReportId: data.filters.search
+                ? Number.isNaN(+data.filters.search)
+                  ? undefined
+                  : data.filters.search.length > 9
+                  ? undefined
+                  : +data.filters.search
+                : undefined,
+            },
+            {
+              governorateReportId: data.filters.search
+                ? Number.isNaN(+data.filters.search)
+                  ? undefined
+                  : data.filters.search.length > 9
+                  ? undefined
+                  : +data.filters.search
+                : undefined,
+            },
+            {
+              recipientName: {
+                contains: data.filters.search,
+                mode: "insensitive",
+              },
+            },
+            {
+              recipientPhones: data.filters.search
+                ? {
+                    has: data.filters.search,
+                  }
+                : undefined,
+            },
+            {
+              recipientAddress: {
+                contains: data.filters.search,
+                mode: "insensitive",
+              },
+            },
+          ],
+        },
+        {
+          confirmed: data.filters.confirmed,
+        },
+        // Filter by orderID
+        {
+          id: data.filters.orderID,
+        },
+        // Filter by status
+        {
+          status: data.filters.statuses
+            ? {in: data.filters.statuses}
+            : undefined,
+        },
+
+        {
+          status: data.filters.status,
+        },
+        // Filter by deliveryType
+        {
+          deliveryType: data.filters.deliveryType,
+        },
+        // Filter by deliveryDate
+        {
+          // gte deliveryDate day start time (00:00:00) and lte deliveryDate day end time (23:59:59)
+          updatedAt: data.filters.deliveryDate
+            ? {
+                gte: new Date(
+                  new Date(data.filters.deliveryDate).setHours(0, 0, 0, 0)
+                ),
+                lte: new Date(
+                  new Date(data.filters.deliveryDate).setHours(23, 59, 59, 999)
+                ),
+              }
+            : undefined,
+        },
+        // Filter by clientID
+        {
+          client: {
+            id: data.filters.clientID,
+          },
+        },
+        // Filter by storeID
+        {
+          store: {
+            id: data.filters.storeID,
+          },
+        },
+        // Filter by locationID
+        {
+          location: {
+            id: data.filters.locationID,
+          },
+        },
+        {
+          receiptNumber: data.filters.receiptNumber,
+        },
+        {
+          printed: data.filters.printed,
+        },
+        {
+          receiptNumber: data.filters.receiptNumbers
+            ? {in: data.filters.receiptNumbers}
+            : undefined,
+        },
+        // Filter by recipientName
+        {
+          recipientName: data.filters.recipientName,
+        },
+        // Filter by recipientPhone
+        {
+          recipientPhones: data.filters.recipientPhone
+            ? {
+                has: data.filters.recipientPhone,
+              }
+            : undefined,
+        },
+        // Filter by recipientAddress
+        {
+          recipientAddress: data.filters.recipientAddress,
+        },
+        // Filter by notes
+        {
+          notes: data.filters.notes,
+        },
+        // Filter by startDate
+        {
+          createdAt: data.filters.startDate
+            ? {
+                gt: startDate,
+              }
+            : undefined,
+        },
+        // Filter by endDate
+        {
+          createdAt: data.filters.endDate
+            ? {
+                lt: endDate,
+              }
+            : undefined,
+        },
+        // Filter by deleted
+        {
+          deleted: data.filters.deleted,
+        },
+        // Filter by clientReport
+        {
+          AND: [
+            data.filters.clientReport === "true"
+              ? {
+                  clientReport: {
+                    some: {
+                      secondaryType:
+                        data.filters.delivered &&
+                        data.filters.orderType === "forwarded"
+                          ? "DELIVERED"
+                          : undefined,
+                      report: {
+                        deleted: false,
+                      },
+                    },
+                  },
+                }
+              : {},
+            {
+              OR:
+                data.filters.clientReport === "false"
+                  ? [
+                      {
+                        clientReport: {
+                          none: {
+                            secondaryType: data.filters.delivered
+                              ? "DELIVERED"
+                              : undefined,
+                          },
+                        },
+                      },
+                      {
+                        clientReport: {
+                          some: {
+                            report: {
+                              deleted: true,
+                            },
+                          },
+                        },
+                      },
+                    ]
+                  : undefined,
+            },
+          ],
+        },
+
+        {
+          governorate: data.filters.governorate,
+        },
+
+        {
+          secondaryStatus: data.filters.secondaryStatus,
+        },
+      ],
+    } satisfies Prisma.OrderWhereInput;
+
+    const paginatedOrders = await prisma.order.findManyPaginated(
+      {
+        where: {
+          ...where,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: orderSelectApiKey,
+      },
+      {
+        page: data.filters.page,
+        size: data.filters.size,
+      }
+    );
+
+    const ordersReformed = paginatedOrders.data.map(orderReformApiKey);
+
+    const ordersMetaDataAggregate = await prisma.order.aggregate({
+      where: where,
+      _count: {
+        id: true,
+      },
+      _sum: {
+        totalCost: true,
+        paidAmount: true,
+        clientNet: true,
+        deliveryAgentNet: true,
+        companyNet: true,
+        deliveryCost: true,
+      },
+    });
+
+    const ordersMetaDataReformed = {
+      count: ordersMetaDataAggregate._count.id,
+      totalCost: ordersMetaDataAggregate._sum.totalCost || 0,
+      paidAmount: ordersMetaDataAggregate._sum.paidAmount || 0,
+      clientNet: ordersMetaDataAggregate._sum.clientNet || 0,
+    };
+
+    return {
+      orders: ordersReformed,
+      ordersMetaData: ordersMetaDataReformed,
+      pagesCount: paginatedOrders.pagesCount,
+    };
+  }
   async getOrdersByIDs(data: {ordersIDs: string[]}) {
     const orders = await prisma.order.findMany({
       where: {
@@ -2284,6 +2403,18 @@ export class OrdersRepository {
     });
 
     const reformedOrder = orderReform(order);
+    return reformedOrder;
+  }
+  async getOrderByIdApiKey(data: {orderID: string}) {
+    const order = await prisma.order.findUnique({
+      where: {
+        id: data.orderID,
+        deleted: false,
+      },
+      select: orderSelectApiKey,
+    });
+
+    const reformedOrder = orderReformApiKey(order);
     return reformedOrder;
   }
 
@@ -3405,6 +3536,22 @@ export class OrdersRepository {
         createdAt: "asc",
       },
     });
+    return orderTimeline.map(orderTimelineReform);
+  }
+
+  async getOrderTimelineApiKey(data: {params: {orderID: string | undefined}}) {
+    const orderTimeline = await prisma.orderTimeline.findMany({
+      where: {
+        order: {
+          id: data.params.orderID,
+        },
+      },
+      select: orderTimelineSelect,
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
     return orderTimeline.map(orderTimelineReform);
   }
 

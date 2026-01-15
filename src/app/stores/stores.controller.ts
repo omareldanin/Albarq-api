@@ -133,6 +133,40 @@ export class StoresController {
     });
   });
 
+  getAllClientStores = catchAsync(async (req, res) => {
+    // Filters
+    const loggedInUser = res.locals.user as loggedInUserType;
+    let companyID: number | undefined;
+    let name: string | undefined;
+
+    if (req.query.name) {
+      name = req.query.name + "";
+    }
+    if (Object.keys(AdminRole).includes(loggedInUser.role)) {
+      companyID = req.query.company_id ? +req.query.company_id : undefined;
+    } else if (loggedInUser.companyID) {
+      companyID = loggedInUser.companyID;
+    }
+
+    let clientID: number | undefined;
+
+    clientID = loggedInUser.id;
+
+    const deleted = "false";
+
+    const {stores} = await storesRepository.getAllClientStoresPaginated({
+      deleted: deleted,
+      clientID,
+      companyID: companyID,
+      name: name,
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: stores,
+    });
+  });
+
   getStore = catchAsync(async (req, res) => {
     const storeID = +req.params.storeID;
 

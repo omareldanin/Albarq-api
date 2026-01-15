@@ -529,9 +529,6 @@
         },
         "/api/v1/clients": {
             "post": {
-                "tags": [
-                    "Clients Routes"
-                ],
                 "description": "",
                 "parameters": [
                     {
@@ -545,21 +542,6 @@
                 "responses": {
                     "default": {
                         "description": ""
-                    }
-                },
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ClientCreateSchema"
-                            },
-                            "examples": {
-                                "ClientCreateExample": {
-                                    "$ref": "#/components/examples/ClientCreateExample"
-                                }
-                            }
-                        }
                     }
                 }
             },
@@ -590,6 +572,25 @@
                         "in": "query",
                         "description": "Page Size (Number of Items per Page) (Default: 10)",
                         "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/clients/api-key": {
+            "post": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "in": "header",
                         "schema": {
                             "type": "string"
                         }
@@ -1016,9 +1017,6 @@
         },
         "/api/v1/public/locations": {
             "get": {
-                "tags": [
-                    "Locations Routes"
-                ],
                 "description": "",
                 "responses": {
                     "default": {
@@ -1533,6 +1531,44 @@
                 }
             }
         },
+        "/api/v1/orders/create": {
+            "post": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "429": {
+                        "description": "Too Many Requests"
+                    }
+                }
+            }
+        },
+        "/api/v1/orders/getAll": {
+            "get": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/getGeneralInfo": {
             "get": {
                 "description": "",
@@ -1810,6 +1846,33 @@
                 }
             }
         },
+        "/api/v1/orders/getOne/{orderID}": {
+            "get": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "orderID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/orders/pdf/{id}": {
             "get": {
                 "description": "",
@@ -1950,6 +2013,36 @@
                 }
             }
         },
+        "/api/v1/orders/{orderID}/orderTimeline": {
+            "get": {
+                "tags": [
+                    "Orders Routes"
+                ],
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "orderID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/orders/{orderID}/chat-members": {
             "get": {
                 "tags": [
@@ -2042,9 +2135,6 @@
         },
         "/api/v1/orders/receipts": {
             "post": {
-                "tags": [
-                    "Orders Routes"
-                ],
                 "description": "",
                 "parameters": [
                     {
@@ -2059,25 +2149,48 @@
                     "default": {
                         "description": ""
                     }
-                },
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/OrdersReceiptsCreateSchema"
-                            },
-                            "examples": {
-                                "OrderCreateExample": {
-                                    "$ref": "#/components/examples/OrdersReceiptsCreateExample"
-                                }
-                            }
+                }
+            }
+        },
+        "/api/v1/orders/receiptsPdf": {
+            "post": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
                         }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
                     }
                 }
             }
         },
         "/api/v1/orders/sendOrders": {
+            "post": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/orders/sendOrderToShipped": {
             "post": {
                 "description": "",
                 "parameters": [
@@ -3086,9 +3199,6 @@
                 }
             },
             "get": {
-                "tags": [
-                    "Stores Routes"
-                ],
                 "description": "",
                 "parameters": [
                     {
@@ -3097,21 +3207,22 @@
                         "schema": {
                             "type": "string"
                         }
-                    },
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/client/stores": {
+            "get": {
+                "description": "",
+                "parameters": [
                     {
-                        "name": "page",
-                        "in": "query",
-                        "description": "Page Number",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "size",
-                        "in": "query",
-                        "description": "Page Size (Number of Items per Page) (Default: 10)",
-                        "required": false,
+                        "name": "authorization",
+                        "in": "header",
                         "schema": {
                             "type": "string"
                         }
@@ -5824,6 +5935,11 @@
                             "boolean"
                         ]
                     },
+                    "isExternal": {
+                        "type": [
+                            "boolean"
+                        ]
+                    },
                     "password": {
                         "type": [
                             "string"
@@ -5954,6 +6070,11 @@
                         ]
                     },
                     "showDeliveryNumber": {
+                        "type": [
+                            "boolean"
+                        ]
+                    },
+                    "isExternal": {
                         "type": [
                             "boolean"
                         ]
@@ -6352,101 +6473,37 @@
             "OrderCreateSchema": {
                 "allOf": [
                     {
-                        "discriminator": {
-                            "propertyName": "withProducts"
-                        },
-                        "oneOf": [
-                            {
+                        "type": [
+                            "object"
+                        ],
+                        "properties": {
+                            "withProducts": {
                                 "type": [
-                                    "object"
+                                    "boolean"
                                 ],
-                                "properties": {
-                                    "withProducts": {
-                                        "type": [
-                                            "boolean"
-                                        ],
-                                        "enum": [
-                                            true
-                                        ]
-                                    },
-                                    "products": {
-                                        "type": [
-                                            "array"
-                                        ],
-                                        "items": {
-                                            "type": [
-                                                "object"
-                                            ],
-                                            "properties": {
-                                                "productID": {
-                                                    "type": [
-                                                        "number"
-                                                    ]
-                                                },
-                                                "quantity": {
-                                                    "default": 1,
-                                                    "type": [
-                                                        "number"
-                                                    ],
-                                                    "minimum": 1
-                                                },
-                                                "colorID": {
-                                                    "type": [
-                                                        "number"
-                                                    ]
-                                                },
-                                                "sizeID": {
-                                                    "type": [
-                                                        "number"
-                                                    ]
-                                                }
-                                            },
-                                            "required": [
-                                                "productID"
-                                            ]
-                                        }
-                                    }
-                                },
-                                "required": [
-                                    "withProducts",
-                                    "products"
+                                "enum": [
+                                    false
                                 ]
                             },
-                            {
+                            "totalCost": {
                                 "type": [
-                                    "object"
-                                ],
-                                "properties": {
-                                    "withProducts": {
-                                        "type": [
-                                            "boolean"
-                                        ],
-                                        "enum": [
-                                            false
-                                        ]
-                                    },
-                                    "totalCost": {
-                                        "type": [
-                                            "number"
-                                        ]
-                                    },
-                                    "quantity": {
-                                        "default": 1,
-                                        "type": [
-                                            "number"
-                                        ]
-                                    },
-                                    "weight": {
-                                        "type": [
-                                            "number"
-                                        ]
-                                    }
-                                },
-                                "required": [
-                                    "withProducts",
-                                    "totalCost"
+                                    "number"
+                                ]
+                            },
+                            "quantity": {
+                                "default": 1,
+                                "type": [
+                                    "number"
+                                ]
+                            },
+                            "weight": {
+                                "type": [
+                                    "number"
                                 ]
                             }
+                        },
+                        "required": [
+                            "totalCost"
                         ]
                     },
                     {

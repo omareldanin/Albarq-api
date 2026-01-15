@@ -8,15 +8,35 @@ import {OrdersController} from "./orders.controller";
 import {preventDuplicateRequests} from "../../middlewares/preventDuplicateRequests";
 
 import multer from "multer";
+import {isApiClient} from "../../middlewares/isApiClient";
 const upload = multer();
 const router = Router();
 const ordersController = new OrdersController();
 
 router.post("/orders/update-from-csv", ordersController.updateOrderCsv);
+
 router
   .route("/orders")
   .post(
     isLoggedIn,
+    isAutherized(
+      [
+        EmployeeRole.COMPANY_MANAGER,
+        EmployeeRole.DATA_ENTRY,
+        EmployeeRole.ACCOUNTANT,
+        ClientRole.CLIENT,
+        EmployeeRole.CLIENT_ASSISTANT,
+      ],
+      [Permission.ADD_ORDER]
+    ),
+    preventDuplicateRequests,
+    ordersController.createOrder
+  );
+
+router
+  .route("/orders/create")
+  .post(
+    isApiClient,
     isAutherized(
       [
         EmployeeRole.COMPANY_MANAGER,
@@ -163,6 +183,18 @@ router.route("/orders").get(
         }
     */
 );
+
+router
+  .route("/orders/getAll")
+  .get(
+    isApiClient,
+    isAutherized([
+      ...Object.values(AdminRole),
+      ...Object.values(EmployeeRole),
+      ...Object.values(ClientRole),
+    ]),
+    ordersController.getAllOrdersApiKey
+  );
 
 router.route("/getGeneralInfo").get(ordersController.getGeneralInfo);
 
@@ -312,6 +344,7 @@ router.route("/orders/getByStore").get(
         #swagger.tags = ['Orders Routes']
     */
 );
+
 router
   .route("/orders/pdf/getAll")
   .get(
@@ -323,6 +356,7 @@ router
     ]),
     ordersController.getPdfs
   );
+
 router.route("/orders/getById/:orderID").get(
   isLoggedIn,
   isAutherized([
@@ -335,6 +369,18 @@ router.route("/orders/getById/:orderID").get(
         #swagger.tags = ['Orders Routes']
     */
 );
+
+router
+  .route("/orders/getOne/:orderID")
+  .get(
+    isApiClient,
+    isAutherized([
+      ...Object.values(AdminRole),
+      ...Object.values(EmployeeRole),
+      ...Object.values(ClientRole),
+    ]),
+    ordersController.getOrderByIdApiKey
+  );
 
 router
   .route("/orders/pdf/:id")
@@ -369,6 +415,19 @@ router.route("/orders/:orderID/timeline").get(
     ...Object.values(ClientRole),
   ]),
   ordersController.getOrderTimeline
+  /*
+        #swagger.tags = ['Orders Routes']
+    */
+);
+
+router.route("/orders/:orderID/orderTimeline").get(
+  isApiClient,
+  isAutherized([
+    ...Object.values(AdminRole),
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  ordersController.getOrderTimelineApiKey
   /*
         #swagger.tags = ['Orders Routes']
     */
@@ -413,30 +472,29 @@ router.route("/orders/:orderID/chat").post(
     */
 );
 
-router.route("/orders/receipts").post(
-  isLoggedIn,
-  isAutherized([
-    ...Object.values(AdminRole),
-    ...Object.values(EmployeeRole),
-    ...Object.values(ClientRole),
-  ]),
-  ordersController.createOrdersReceipts
-  /*
-        #swagger.tags = ['Orders Routes']
+router
+  .route("/orders/receipts")
+  .post(
+    isLoggedIn,
+    isAutherized([
+      ...Object.values(AdminRole),
+      ...Object.values(EmployeeRole),
+      ...Object.values(ClientRole),
+    ]),
+    ordersController.createOrdersReceipts
+  );
 
-        #swagger.requestBody = {
-            required: true,
-            content: {
-                "application/json": {
-                    "schema": { $ref: "#/components/schemas/OrdersReceiptsCreateSchema" },
-                    "examples": {
-                        "OrderCreateExample": { $ref: "#/components/examples/OrdersReceiptsCreateExample" }
-                    }
-                }
-            }
-        }
-    */
-);
+router
+  .route("/orders/receiptsPdf")
+  .post(
+    isApiClient,
+    isAutherized([
+      ...Object.values(AdminRole),
+      ...Object.values(EmployeeRole),
+      ...Object.values(ClientRole),
+    ]),
+    ordersController.createOrdersReceipts
+  );
 
 router.route("/orders/:orderID").patch(
   upload.none(), // Handles form-data without files
@@ -492,6 +550,21 @@ router
       ]
     ),
     ordersController.sendOrdersToReceivingAgent
+  );
+
+router
+  .route("/orders/sendOrderToShipped")
+  .post(
+    isApiClient,
+    isAutherized(
+      [
+        ...Object.values(AdminRole),
+        ...Object.values(EmployeeRole),
+        ...Object.values(ClientRole),
+      ],
+      []
+    ),
+    ordersController.sendOrdersToReceivingAgentApiKey
   );
 
 //  تأكيد مباشر برقم الطل في صفحة ادخال الطلبات المخزن

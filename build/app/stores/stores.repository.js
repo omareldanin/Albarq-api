@@ -101,6 +101,39 @@ class StoresRepository {
             pagesCount: paginatedStores.pagesCount,
         };
     }
+    async getAllClientStoresPaginated(filters) {
+        const where = {
+            AND: [
+                { deleted: filters.deleted === "true" },
+                { company: { id: filters.companyID } },
+                {
+                    client: filters.clientID ? { id: filters.clientID } : undefined,
+                },
+                {
+                    name: filters.name
+                        ? {
+                            contains: filters.name,
+                            mode: "insensitive",
+                        }
+                        : undefined,
+                },
+            ],
+        };
+        const paginatedStores = await db_1.prisma.store.findManyPaginated({
+            where: where,
+            select: {
+                id: true,
+                name: true,
+            },
+        }, {
+            page: 1,
+            size: 10000,
+        });
+        return {
+            stores: paginatedStores.data,
+            pagesCount: paginatedStores.pagesCount,
+        };
+    }
     async getStore(data) {
         const store = await db_1.prisma.store.findUnique({
             where: {

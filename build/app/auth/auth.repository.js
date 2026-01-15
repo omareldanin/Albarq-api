@@ -17,6 +17,7 @@ class AuthRepository {
                     {
                         client: {
                             deleted: false,
+                            isExternal: false,
                         },
                     },
                 ],

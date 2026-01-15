@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.orderTimelineReform = exports.orderTimelineSelect = exports.statisticsReformed = exports.mobileOrderReform = exports.orderReform = exports.orderSelect = exports.orderStatusArabicNames = exports.orderSecondaryStatusArabicNames = exports.OrderStatusData = void 0;
+exports.orderTimelineReform = exports.orderTimelineSelect = exports.statisticsReformed = exports.mobileOrderReform = exports.orderReformApiKey = exports.orderReform = exports.orderSelectApiKey = exports.orderSelect = exports.orderStatusArabicNames = exports.orderSecondaryStatusArabicNames = exports.OrderStatusData = void 0;
 const client_1 = require("@prisma/client");
 exports.OrderStatusData = {
     REGISTERED: {
@@ -322,6 +322,69 @@ exports.orderSelect = {
         },
     },
 };
+exports.orderSelectApiKey = {
+    id: true,
+    totalCost: true,
+    paidAmount: true,
+    deliveryCost: true,
+    clientNet: true,
+    printed: true,
+    receiptNumber: true,
+    quantity: true,
+    weight: true,
+    recipientName: true,
+    recipientPhones: true,
+    recipientAddress: true,
+    clientNotes: true,
+    details: true,
+    status: true,
+    secondaryStatus: true,
+    confirmed: true,
+    deliveryType: true,
+    deliveryDate: true,
+    createdAt: true,
+    updatedAt: true,
+    governorate: true,
+    location: {
+        select: {
+            id: true,
+            name: true,
+        },
+    },
+    store: {
+        select: {
+            id: true,
+            name: true,
+        },
+    },
+    clientReport: {
+        where: {
+            report: {
+                deleted: false,
+            },
+        },
+        select: {
+            id: true,
+            secondaryType: true,
+            clientId: true,
+            storeId: true,
+            report: {
+                select: {
+                    url: true,
+                    deleted: true,
+                },
+            },
+        },
+    },
+    deleted: true,
+    deletedAt: true,
+    deletedBy: {
+        select: {
+            id: true,
+            name: true,
+        },
+    },
+};
 const orderReform = (order) => {
     if (!order) {
         return null;
@@ -409,6 +472,28 @@ const orderReform = (order) => {
     return orderReformed;
 };
 exports.orderReform = orderReform;
+const orderReformApiKey = (order) => {
+    if (!order) {
+        return null;
+    }
+    const orderReformed = {
+        ...order,
+        deleted: order.deleted,
+        deletedBy: order.deleted && order.deletedBy,
+        deletedAt: order.deletedAt?.toISOString(),
+        clientReport: order.clientReport &&
+            order.clientReport.map((report) => ({
+                id: report?.id,
+                secondaryType: report?.secondaryType,
+                clientId: report?.clientId,
+                storeId: report?.storeId,
+                deleted: report?.report.deleted,
+                url: report.report.url,
+            })),
+    };
+    return orderReformed;
+};
+exports.orderReformApiKey = orderReformApiKey;
 const mobileOrderReform = (order) => {
     if (!order) {
         return null;

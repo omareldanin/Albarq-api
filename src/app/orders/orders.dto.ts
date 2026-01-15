@@ -35,25 +35,12 @@ export const OrderCreateBaseSchema = z.object({
 });
 
 export const OrderCreateSchema = z
-  .discriminatedUnion("withProducts", [
-    z.object({
-      withProducts: z.literal(true),
-      products: z.array(
-        z.object({
-          productID: z.coerce.number(),
-          quantity: z.number().min(1).default(1),
-          colorID: z.coerce.number().optional(),
-          sizeID: z.coerce.number().optional(),
-        })
-      ),
-    }),
-    z.object({
-      withProducts: z.literal(false),
-      totalCost: z.number(),
-      quantity: z.number().default(1),
-      weight: z.number().optional(),
-    }),
-  ])
+  .object({
+    withProducts: z.literal(false).optional(),
+    totalCost: z.number(),
+    quantity: z.number().default(1),
+    weight: z.number().optional(),
+  })
   .and(OrderCreateBaseSchema);
 
 export type OrderCreateType = z.infer<typeof OrderCreateSchema>;

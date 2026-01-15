@@ -12,6 +12,7 @@ const isLoggedIn_1 = require("../../middlewares/isLoggedIn");
 const orders_controller_1 = require("./orders.controller");
 const preventDuplicateRequests_1 = require("../../middlewares/preventDuplicateRequests");
 const multer_1 = __importDefault(require("multer"));
+const isApiClient_1 = require("../../middlewares/isApiClient");
 const upload = (0, multer_1.default)();
 const router = (0, express_1.Router)();
 const ordersController = new orders_controller_1.OrdersController();
@@ -19,6 +20,15 @@ router.post("/orders/update-from-csv", ordersController.updateOrderCsv);
 router
     .route("/orders")
     .post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
+    client_1.EmployeeRole.COMPANY_MANAGER,
+    client_1.EmployeeRole.DATA_ENTRY,
+    client_1.EmployeeRole.ACCOUNTANT,
+    client_1.ClientRole.CLIENT,
+    client_1.EmployeeRole.CLIENT_ASSISTANT,
+], [client_1.Permission.ADD_ORDER]), preventDuplicateRequests_1.preventDuplicateRequests, ordersController.createOrder);
+router
+    .route("/orders/create")
+    .post(isApiClient_1.isApiClient, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.EmployeeRole.DATA_ENTRY,
     client_1.EmployeeRole.ACCOUNTANT,
@@ -154,6 +164,13 @@ router.route("/orders").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAuther
       }
   */
 );
+router
+    .route("/orders/getAll")
+    .get(isApiClient_1.isApiClient, (0, isAutherized_1.isAutherized)([
+    ...Object.values(client_1.AdminRole),
+    ...Object.values(client_1.EmployeeRole),
+    ...Object.values(client_1.ClientRole),
+]), ordersController.getAllOrdersApiKey);
 router.route("/getGeneralInfo").get(ordersController.getGeneralInfo);
 router.route("/orders/statistics").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.AdminRole.ADMIN,
@@ -273,6 +290,13 @@ router.route("/orders/getById/:orderID").get(isLoggedIn_1.isLoggedIn, (0, isAuth
   */
 );
 router
+    .route("/orders/getOne/:orderID")
+    .get(isApiClient_1.isApiClient, (0, isAutherized_1.isAutherized)([
+    ...Object.values(client_1.AdminRole),
+    ...Object.values(client_1.EmployeeRole),
+    ...Object.values(client_1.ClientRole),
+]), ordersController.getOrderByIdApiKey);
+router
     .route("/orders/pdf/:id")
     .get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     ...Object.values(client_1.AdminRole),
@@ -293,6 +317,15 @@ router.route("/orders/:orderID/timeline").get(isLoggedIn_1.isLoggedIn, (0, isAut
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
 ]), ordersController.getOrderTimeline
+/*
+      #swagger.tags = ['Orders Routes']
+  */
+);
+router.route("/orders/:orderID/orderTimeline").get(isApiClient_1.isApiClient, (0, isAutherized_1.isAutherized)([
+    ...Object.values(client_1.AdminRole),
+    ...Object.values(client_1.EmployeeRole),
+    ...Object.values(client_1.ClientRole),
+]), ordersController.getOrderTimelineApiKey
 /*
       #swagger.tags = ['Orders Routes']
   */
@@ -324,27 +357,20 @@ router.route("/orders/:orderID/chat").post(isLoggedIn_1.isLoggedIn, (0, isAuther
       #swagger.tags = ['Orders Routes']
   */
 );
-router.route("/orders/receipts").post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
+router
+    .route("/orders/receipts")
+    .post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     ...Object.values(client_1.AdminRole),
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), ordersController.createOrdersReceipts
-/*
-      #swagger.tags = ['Orders Routes']
-
-      #swagger.requestBody = {
-          required: true,
-          content: {
-              "application/json": {
-                  "schema": { $ref: "#/components/schemas/OrdersReceiptsCreateSchema" },
-                  "examples": {
-                      "OrderCreateExample": { $ref: "#/components/examples/OrdersReceiptsCreateExample" }
-                  }
-              }
-          }
-      }
-  */
-);
+]), ordersController.createOrdersReceipts);
+router
+    .route("/orders/receiptsPdf")
+    .post(isApiClient_1.isApiClient, (0, isAutherized_1.isAutherized)([
+    ...Object.values(client_1.AdminRole),
+    ...Object.values(client_1.EmployeeRole),
+    ...Object.values(client_1.ClientRole),
+]), ordersController.createOrdersReceipts);
 router.route("/orders/:orderID").patch(upload.none(), // Handles form-data without files
 isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     ...Object.values(client_1.AdminRole),
@@ -385,6 +411,13 @@ router
     client_1.Permission.CHANGE_ORDER_RECEPIENT_NUMBER,
     client_1.Permission.SEND_ORDER,
 ]), ordersController.sendOrdersToReceivingAgent);
+router
+    .route("/orders/sendOrderToShipped")
+    .post(isApiClient_1.isApiClient, (0, isAutherized_1.isAutherized)([
+    ...Object.values(client_1.AdminRole),
+    ...Object.values(client_1.EmployeeRole),
+    ...Object.values(client_1.ClientRole),
+], []), ordersController.sendOrdersToReceivingAgentApiKey);
 //  تأكيد مباشر برقم الطل في صفحة ادخال الطلبات المخزن
 router.route("/orders/addOrderToRepository/:orderID").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     ...Object.values(client_1.AdminRole),

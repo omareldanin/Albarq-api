@@ -325,6 +325,70 @@ export const orderSelect = {
   },
 } satisfies Prisma.OrderSelect;
 
+export const orderSelectApiKey = {
+  id: true,
+  totalCost: true,
+  paidAmount: true,
+  deliveryCost: true,
+  clientNet: true,
+  printed: true,
+  receiptNumber: true,
+  quantity: true,
+  weight: true,
+  recipientName: true,
+  recipientPhones: true,
+  recipientAddress: true,
+  clientNotes: true,
+  details: true,
+  status: true,
+  secondaryStatus: true,
+  confirmed: true,
+  deliveryType: true,
+  deliveryDate: true,
+  createdAt: true,
+  updatedAt: true,
+  governorate: true,
+  location: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+  store: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+  clientReport: {
+    where: {
+      report: {
+        deleted: false,
+      },
+    },
+    select: {
+      id: true,
+      secondaryType: true,
+      clientId: true,
+      storeId: true,
+      report: {
+        select: {
+          url: true,
+          deleted: true,
+        },
+      },
+    },
+  },
+  deleted: true,
+  deletedAt: true,
+  deletedBy: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+} satisfies Prisma.OrderSelect;
+
 export const orderReform = (
   order: Prisma.OrderGetPayload<{
     select: typeof orderSelect;
@@ -416,6 +480,34 @@ export const orderReform = (
       deleted: report.report.deleted,
       url: report.report.url,
     })),
+  };
+  return orderReformed;
+};
+
+export const orderReformApiKey = (
+  order: Prisma.OrderGetPayload<{
+    select: typeof orderSelectApiKey;
+  }> | null
+) => {
+  if (!order) {
+    return null;
+  }
+
+  const orderReformed = {
+    ...order,
+    deleted: order.deleted,
+    deletedBy: order.deleted && order.deletedBy,
+    deletedAt: order.deletedAt?.toISOString(),
+    clientReport:
+      order.clientReport &&
+      order.clientReport.map((report) => ({
+        id: report?.id,
+        secondaryType: report?.secondaryType,
+        clientId: report?.clientId,
+        storeId: report?.storeId,
+        deleted: report?.report.deleted,
+        url: report.report.url,
+      })),
   };
   return orderReformed;
 };

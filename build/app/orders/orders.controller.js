@@ -110,6 +110,48 @@ class OrdersController {
             },
         });
     });
+    getAllOrdersApiKey = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const loggedInUser = res.locals.user;
+        const filters = orders_dto_1.OrdersFiltersSchema.parse({
+            search: req.query.search,
+            sort: req.query.sort,
+            page: req.query.page,
+            size: req.query.size,
+            confirmed: req.query.confirmed,
+            startDate: req.query.start_date,
+            endDate: req.query.end_date,
+            startDeliveryDate: req.query.delivery_start_date,
+            endDeliveryDate: req.query.delivery_end_date,
+            deliveryDate: req.query.delivery_date,
+            governorate: req.query.governorate,
+            statuses: req.query.statuses,
+            status: req.query.status,
+            deliveryType: req.query.delivery_type,
+            storeID: req.query.store_id,
+            locationID: req.query.location_id,
+            receiptNumber: req.query.receipt_number,
+            receiptNumbers: req.query.receipt_numbers,
+            recipientName: req.query.recipient_name,
+            recipientPhone: req.query.recipient_phone,
+            recipientAddress: req.query.recipient_address,
+            clientReport: req.query.client_report,
+            orderID: req.query.order_id,
+            printed: req.query.printed,
+        });
+        const { orders, ordersMetaData, page, pagesCount } = await ordersService.getAllOrdersApiKey({
+            loggedInUser: loggedInUser,
+            filters: filters,
+        });
+        res.status(200).json({
+            status: "success",
+            page: page,
+            pagesCount: pagesCount,
+            data: {
+                ordersMetaData: ordersMetaData,
+                orders: orders,
+            },
+        });
+    });
     getRepositoryOrders = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const { client_id, size, page, store_id, repository_id, to_repository_id, governorate, secondaryStatus, status, getIncoming, getOutComing, branchId, } = req.query;
         const loggedInUser = res.locals.user;
@@ -261,6 +303,23 @@ class OrdersController {
             orderInquiryEmployees,
         });
     });
+    getOrderByIdApiKey = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const params = {
+            orderID: req.params.orderID,
+        };
+        const order = await ordersService.getOrderByIdApiKey({
+            params: params,
+        });
+        const orderTimeline = await ordersService.getOrderTimeline({
+            params: { orderID: params.orderID },
+            filters: {},
+        });
+        res.status(200).json({
+            status: "success",
+            data: order,
+            orderTimeline,
+        });
+    });
     updateOrder = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const params = {
             orderID: req.params.orderID,
@@ -348,6 +407,28 @@ class OrdersController {
                 status: "success",
             });
         }
+    });
+    sendOrdersToReceivingAgentApiKey = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const ordersIDs = orders_dto_1.OrdersReceiptsCreateSchema.parse(req.body);
+        const loggedInUser = res.locals.user;
+        await db_1.prisma.order.updateMany({
+            data: {
+                status: "READY_TO_SEND",
+            },
+            where: {
+                status: "REGISTERED",
+                deleted: false,
+                client: {
+                    id: loggedInUser.id,
+                },
+                id: {
+                    in: ordersIDs.ordersIDs,
+                },
+            },
+        });
+        res.status(200).json({
+            status: "success",
+        });
     });
     addOrderToRepository = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const params = {
@@ -1506,6 +1587,18 @@ class OrdersController {
         const orderTimeline = await ordersService.getOrderTimeline({
             params: params,
             filters: filters,
+        });
+        res.status(200).json({
+            status: "success",
+            data: orderTimeline,
+        });
+    });
+    getOrderTimelineApiKey = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const params = {
+            orderID: req.params.orderID,
+        };
+        const orderTimeline = await ordersService.getOrderTimelineApiKey({
+            params: params,
         });
         res.status(200).json({
             status: "success",

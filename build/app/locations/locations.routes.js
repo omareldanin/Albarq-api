@@ -15,7 +15,7 @@ router.route("/locations").post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAu
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.EmployeeRole.ACCOUNTANT,
     client_1.EmployeeRole.DATA_ENTRY,
-    client_1.EmployeeRole.BRANCH_MANAGER
+    client_1.EmployeeRole.BRANCH_MANAGER,
 ], [client_1.Permission.ADD_LOCATION]), 
 // (_req, _res, next) => {
 //     apicache.clear("locations");
@@ -23,36 +23,25 @@ router.route("/locations").post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAu
 // },
 locationsController.createLocation
 /*
-    #swagger.tags = ['Locations Routes']
+      #swagger.tags = ['Locations Routes']
 
-    #swagger.requestBody = {
-        required: true,
-        content: {
-            "application/json": {
-                schema: { $ref: "#/components/schemas/LocationCreateSchema" },
-                examples: {
-                    LocationCreateExample: { $ref: "#/components/examples/LocationCreateExample" }
-                }
-            }
-        }
-    }
-*/
+      #swagger.requestBody = {
+          required: true,
+          content: {
+              "application/json": {
+                  schema: { $ref: "#/components/schemas/LocationCreateSchema" },
+                  examples: {
+                      LocationCreateExample: { $ref: "#/components/examples/LocationCreateExample" }
+                  }
+              }
+          }
+      }
+  */
 );
 // TODO: Remove later
-router.route("/public/locations").get(
-// isLoggedIn,
-// isAutherized([Role.ADMIN]),
-// cache("1 hour"),
-// (req, _res, next) => {
-//     // @ts-expect-error
-//     req.apicacheGroup = "locations";
-//     next();
-// },
-locationsController.publicGetAllLocations
-/*
-    #swagger.tags = ['Locations Routes']
-*/
-);
+router
+    .route("/public/locations")
+    .get(locationsController.publicGetAllLocations);
 router.route("/locations").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.AdminRole.ADMIN,
@@ -62,7 +51,7 @@ router.route("/locations").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAut
     client_1.EmployeeRole.BRANCH_MANAGER,
     //TODO: Remove later
     ...Object.values(client_1.EmployeeRole),
-    ...Object.values(client_1.ClientRole)
+    ...Object.values(client_1.ClientRole),
 ]), 
 // cache("1 hour"),
 // (req, _res, next) => {
@@ -72,20 +61,20 @@ router.route("/locations").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAut
 // },
 locationsController.getAllLocations
 /*
-    #swagger.tags = ['Locations Routes']
+      #swagger.tags = ['Locations Routes']
 
-    #swagger.parameters['page'] = {
-        in: 'query',
-        description: 'Page Number',
-        required: false
-    }
+      #swagger.parameters['page'] = {
+          in: 'query',
+          description: 'Page Number',
+          required: false
+      }
 
-    #swagger.parameters['size'] = {
-        in: 'query',
-        description: 'Page Size (Number of Items per Page) (Default: 10)',
-        required: false
-    }
-*/
+      #swagger.parameters['size'] = {
+          in: 'query',
+          description: 'Page Size (Number of Items per Page) (Default: 10)',
+          required: false
+      }
+  */
 );
 router.route("/locations/:locationID").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.AdminRole.ADMIN,
@@ -93,7 +82,7 @@ router.route("/locations/:locationID").get(isLoggedIn_1.isLoggedIn, (0, isAuther
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.EmployeeRole.ACCOUNTANT,
     client_1.EmployeeRole.DATA_ENTRY,
-    client_1.EmployeeRole.BRANCH_MANAGER
+    client_1.EmployeeRole.BRANCH_MANAGER,
 ]), 
 // cache("1 hour"),
 // (req, _res, next) => {
@@ -103,8 +92,8 @@ router.route("/locations/:locationID").get(isLoggedIn_1.isLoggedIn, (0, isAuther
 // },
 locationsController.getLocation
 /*
-    #swagger.tags = ['Locations Routes']
-*/
+      #swagger.tags = ['Locations Routes']
+  */
 );
 router.route("/locations/:locationID").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.AdminRole.ADMIN,
@@ -112,7 +101,7 @@ router.route("/locations/:locationID").patch(isLoggedIn_1.isLoggedIn, (0, isAuth
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.EmployeeRole.ACCOUNTANT,
     client_1.EmployeeRole.DATA_ENTRY,
-    client_1.EmployeeRole.BRANCH_MANAGER
+    client_1.EmployeeRole.BRANCH_MANAGER,
 ]), 
 // (_req, _res, next) => {
 //     apicache.clear("locations");
@@ -120,20 +109,20 @@ router.route("/locations/:locationID").patch(isLoggedIn_1.isLoggedIn, (0, isAuth
 // },
 locationsController.updateLocation
 /*
-    #swagger.tags = ['Locations Routes']
+      #swagger.tags = ['Locations Routes']
 
-    #swagger.requestBody = {
-        required: true,
-        content: {
-            "application/json": {
-                schema: { $ref: "#/components/schemas/LocationUpdateSchema" },
-                examples: {
-                    LocationUpdateExample: { $ref: "#/components/examples/LocationUpdateExample" }
-                }
-            }
-        }
-    }
-*/
+      #swagger.requestBody = {
+          required: true,
+          content: {
+              "application/json": {
+                  schema: { $ref: "#/components/schemas/LocationUpdateSchema" },
+                  examples: {
+                      LocationUpdateExample: { $ref: "#/components/examples/LocationUpdateExample" }
+                  }
+              }
+          }
+      }
+  */
 );
 router.route("/locations/:locationID").delete(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.AdminRole.ADMIN,
@@ -141,7 +130,7 @@ router.route("/locations/:locationID").delete(isLoggedIn_1.isLoggedIn, (0, isAut
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.EmployeeRole.ACCOUNTANT,
     client_1.EmployeeRole.DATA_ENTRY,
-    client_1.EmployeeRole.BRANCH_MANAGER
+    client_1.EmployeeRole.BRANCH_MANAGER,
 ]), 
 // (_req, _res, next) => {
 //     apicache.clear("locations");
@@ -149,8 +138,8 @@ router.route("/locations/:locationID").delete(isLoggedIn_1.isLoggedIn, (0, isAut
 // },
 locationsController.deleteLocation
 /*
-    #swagger.tags = ['Locations Routes']
-*/
+      #swagger.tags = ['Locations Routes']
+  */
 );
 exports.default = router;
 //# sourceMappingURL=locations.routes.js.map

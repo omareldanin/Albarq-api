@@ -424,6 +424,39 @@ export class OrdersService {
     };
   };
 
+  getAllOrdersApiKey = async (data: {
+    filters: OrdersFiltersType;
+    loggedInUser: loggedInUserType;
+  }) => {
+    const clientID = data.loggedInUser.clientId;
+
+    // Show only orders of the same governorate as the branch to the branch manager
+    let governorate: Governorate | undefined = data.filters.governorate;
+
+    // show orders/statistics without client reports to the client unless he searches for them
+    let clientReport = data.filters.clientReport;
+
+    let size = data.filters.size || 200;
+
+    const {orders, ordersMetaData, pagesCount} =
+      await ordersRepository.getAllOrdersPaginatedApiKey({
+        filters: {
+          ...data.filters,
+          clientID,
+          governorate,
+          clientReport,
+          size,
+        },
+        loggedInUser: data.loggedInUser,
+      });
+
+    return {
+      page: data.filters.page,
+      pagesCount: pagesCount,
+      orders: orders,
+      ordersMetaData: ordersMetaData,
+    };
+  };
   getOrder = async (data: {
     params: {
       orderID: string;
@@ -448,6 +481,17 @@ export class OrdersService {
     return order;
   };
 
+  getOrderByIdApiKey = async (data: {
+    params: {
+      orderID: string;
+    };
+  }) => {
+    const order = await ordersRepository.getOrderByIdApiKey({
+      orderID: data.params.orderID,
+    });
+
+    return order;
+  };
   updateOrder = async (data: {
     params: {
       orderID: string;
@@ -2055,6 +2099,16 @@ export class OrdersService {
     return orderTimeline;
   };
 
+  getOrderTimelineApiKey = async (data: {
+    params: {
+      orderID: string;
+    };
+  }) => {
+    const orderTimeline = await ordersRepository.getOrderTimelineApiKey({
+      params: data.params,
+    });
+    return orderTimeline;
+  };
   getOrderChatMembers = async (data: {
     params: {
       orderID: string;

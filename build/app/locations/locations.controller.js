@@ -118,8 +118,9 @@ class LocationsController {
             status: "success",
         });
     });
-    publicGetAllLocations = (0, catchAsync_1.catchAsync)(async (_req, res) => {
-        const locations = await locationsRepository.publicGetAllLocations();
+    publicGetAllLocations = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const governorate = req.query.governorate?.toString().toUpperCase();
+        const locations = await locationsRepository.publicGetAllLocations(governorate);
         res.status(200).json(locations);
     });
 }

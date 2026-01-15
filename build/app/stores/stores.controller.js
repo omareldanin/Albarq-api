@@ -114,6 +114,34 @@ class StoresController {
             data: stores,
         });
     });
+    getAllClientStores = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        // Filters
+        const loggedInUser = res.locals.user;
+        let companyID;
+        let name;
+        if (req.query.name) {
+            name = req.query.name + "";
+        }
+        if (Object.keys(client_1.AdminRole).includes(loggedInUser.role)) {
+            companyID = req.query.company_id ? +req.query.company_id : undefined;
+        }
+        else if (loggedInUser.companyID) {
+            companyID = loggedInUser.companyID;
+        }
+        let clientID;
+        clientID = loggedInUser.id;
+        const deleted = "false";
+        const { stores } = await storesRepository.getAllClientStoresPaginated({
+            deleted: deleted,
+            clientID,
+            companyID: companyID,
+            name: name,
+        });
+        res.status(200).json({
+            status: "success",
+            data: stores,
+        });
+    });
     getStore = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const storeID = +req.params.storeID;
         const store = await storesRepository.getStore({

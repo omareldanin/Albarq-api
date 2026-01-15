@@ -245,8 +245,11 @@ export class LocationsRepository {
     return true;
   }
 
-  async publicGetAllLocations() {
+  async publicGetAllLocations(governorate?: Governorate) {
     const locations = await prisma.location.findMany({
+      where: {
+        governorate: governorate || undefined,
+      },
       select: {
         id: true,
         name: true,

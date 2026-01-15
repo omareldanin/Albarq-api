@@ -32,6 +32,9 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ClientsController = void 0;
 const client_1 = require("@prisma/client");
@@ -44,6 +47,8 @@ const employees_repository_1 = require("../employees/employees.repository");
 const sendNotification_1 = require("../notifications/helpers/sendNotification");
 const clients_dto_1 = require("./clients.dto");
 const clients_repository_1 = require("./clients.repository");
+const crypto_1 = __importDefault(require("crypto"));
+const db_1 = require("../../database/db");
 const clientsRepository = new clients_repository_1.ClientsRepository();
 const employeesRepository = new employees_repository_1.EmployeesRepository();
 // const branchesRepository = new BranchesRepository();
@@ -75,6 +80,35 @@ class ClientsController {
         res.status(200).json({
             status: "success",
             data: createdClient,
+        });
+    });
+    generateApikey = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const { id } = req.body;
+        if (!id) {
+            throw new AppError_1.AppError("Client name and permissions are required", 400);
+        }
+        const client = await clientsRepository.getClient({
+            clientID: id,
+        });
+        if (!client) {
+            throw new AppError_1.AppError("Client not found", 404);
+        }
+        const rawApiKey = `albarq_live_${crypto_1.default.randomBytes(32).toString("hex")}`;
+        const apiKeyHash = crypto_1.default
+            .createHash("sha256")
+            .update(rawApiKey)
+            .digest("hex");
+        await db_1.prisma.client.update({
+            where: {
+                id: client.id,
+            },
+            data: {
+                apiKeyHash,
+            },
+        });
+        res.status(200).json({
+            status: "success",
+            apiKey: rawApiKey,
         });
     });
     getAllClients = (0, catchAsync_1.catchAsync)(async (req, res) => {
