@@ -273,9 +273,7 @@ class OrdersRepository {
                         }),
                     }
                     : undefined,
-                confirmed: data.orderData.forwardedCompanyID
-                    ? false
-                    : data.orderData.confirmed,
+                confirmed: data.orderData.confirmed,
                 receivedAt: data.orderData.confirmed ? new Date() : undefined,
                 status: status,
                 secondaryStatus: secondaryStatus,
