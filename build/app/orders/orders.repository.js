@@ -53,7 +53,6 @@ class OrdersRepository {
     }
     async createOrder(data) {
         let totalCost = 0;
-        let quantity = 0;
         let weight = data.orderData.weight || 0;
         let status = "REGISTERED";
         let secondaryStatus = "WITH_CLIENT";
@@ -176,13 +175,9 @@ class OrdersRepository {
         const createdOrder = await db_1.prisma.order.create({
             data: {
                 id: randomId,
-                totalCost: data.orderData.withProducts === false
-                    ? data.orderData.totalCost
-                    : totalCost,
+                totalCost: data.orderData.totalCost,
                 deliveryCost: deliveryCost,
-                quantity: data.orderData.withProducts === false
-                    ? data.orderData.quantity
-                    : quantity,
+                quantity: data.orderData.quantity,
                 weight: weight,
                 recipientName: data.orderData.recipientName,
                 recipientPhones: data.orderData.recipientPhones
@@ -1655,7 +1650,11 @@ class OrdersRepository {
                                     {
                                         secondaryStatus: "WITH_AGENT",
                                         status: {
-                                            in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
+                                            in: [
+                                                "RETURNED",
+                                                "REPLACED",
+                                                "PARTIALLY_RETURNED",
+                                            ],
                                         },
                                     },
                                 ]

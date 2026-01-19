@@ -221,10 +221,10 @@ export class OrdersController {
     });
 
     const exportRepo = user?.branch?.repositories.find(
-      (repo) => repo.type === "EXPORT"
+      (repo) => repo.type === "EXPORT",
     );
     const returnRepo = user?.branch?.repositories.find(
-      (repo) => repo.type === "RETURN"
+      (repo) => repo.type === "RETURN",
     );
 
     if (!user) {
@@ -263,14 +263,14 @@ export class OrdersController {
             getOutComing && to_repository_id
               ? Number(to_repository_id)
               : getOutComing
-              ? undefined
-              : repository_id
-              ? Number(repository_id)
-              : secondaryStatus === "IN_CAR"
-              ? undefined
-              : status === "RETURNED"
-              ? returnRepo?.id
-              : exportRepo?.id,
+                ? undefined
+                : repository_id
+                  ? Number(repository_id)
+                  : secondaryStatus === "IN_CAR"
+                    ? undefined
+                    : status === "RETURNED"
+                      ? returnRepo?.id
+                      : exportRepo?.id,
           secondaryStatus: secondaryStatus as SecondaryStatus,
           status:
             status === "RETURNED"
@@ -290,17 +290,17 @@ export class OrdersController {
             secondaryStatus === "IN_REPOSITORY"
               ? undefined
               : !getIncoming && branchId
-              ? +branchId
-              : undefined,
+                ? +branchId
+                : undefined,
           forwardedRepo: getOutComing
             ? returnRepo?.id
             : getIncoming && to_repository_id
-            ? Number(to_repository_id)
-            : getIncoming
-            ? undefined
-            : secondaryStatus === "IN_CAR"
-            ? exportRepo?.id
-            : undefined,
+              ? Number(to_repository_id)
+              : getIncoming
+                ? undefined
+                : secondaryStatus === "IN_CAR"
+                  ? exportRepo?.id
+                  : undefined,
         },
         orderBy: {
           updatedAt: "desc",
@@ -310,7 +310,7 @@ export class OrdersController {
       {
         page: page ? +page : 1,
         size: size ? +size : 10,
-      }
+      },
     );
 
     const newData = results.data.map((order) => orderReform(order));
@@ -395,6 +395,7 @@ export class OrdersController {
       orderTimeline,
     });
   });
+
   updateOrder = catchAsync(async (req, res) => {
     const params = {
       orderID: req.params.orderID,
@@ -543,7 +544,7 @@ export class OrdersController {
     });
 
     const exportRepo = user?.branch?.repositories.find(
-      (repo) => repo.type === "EXPORT"
+      (repo) => repo.type === "EXPORT",
     );
 
     if (!user) {
@@ -703,7 +704,7 @@ export class OrdersController {
     });
 
     const returnsRepo = user?.branch?.repositories.find(
-      (repo) => repo.type === "RETURN"
+      (repo) => repo.type === "RETURN",
     );
 
     if (!user) {
@@ -775,7 +776,7 @@ export class OrdersController {
         throw new AppError("هذا الطلب موجود في مخزن!", 400);
       }
       const returnedReport = oldOrder.repositoryReport.find(
-        (r) => r.secondaryType === "RETURNED"
+        (r) => r.secondaryType === "RETURNED",
       );
       // Remove the order from the repository report
       if (returnedReport) {
@@ -822,7 +823,7 @@ export class OrdersController {
     };
     const loggedInUser = res.locals.user as loggedInUserType;
     const orderData = OrderRepositoryConfirmByReceiptNumberSchema.parse(
-      req.body
+      req.body,
     );
 
     const order = await ordersService.repositoryConfirmOrderByReceiptNumber({
@@ -915,7 +916,7 @@ export class OrdersController {
       {
         page: page ? +page : 1,
         size: size ? +size : 2000,
-      }
+      },
     );
 
     res.status(200).json({
@@ -1012,10 +1013,10 @@ export class OrdersController {
     });
 
     const exportRepo = user?.branch?.repositories.find(
-      (repo) => repo.type === "EXPORT"
+      (repo) => repo.type === "EXPORT",
     );
     const returnRepo = user?.branch?.repositories.find(
-      (repo) => repo.type === "RETURN"
+      (repo) => repo.type === "RETURN",
     );
 
     if (!user) {
@@ -1041,14 +1042,14 @@ export class OrdersController {
             getOutComing && to_repository_id
               ? Number(to_repository_id)
               : getOutComing
-              ? undefined
-              : repository_id
-              ? Number(repository_id)
-              : secondaryStatus === "IN_CAR"
-              ? undefined
-              : status === "RETURNED"
-              ? returnRepo?.id
-              : exportRepo?.id,
+                ? undefined
+                : repository_id
+                  ? Number(repository_id)
+                  : secondaryStatus === "IN_CAR"
+                    ? undefined
+                    : status === "RETURNED"
+                      ? returnRepo?.id
+                      : exportRepo?.id,
           secondaryStatus: secondaryStatus as SecondaryStatus,
           status:
             status === "RETURNED"
@@ -1069,17 +1070,17 @@ export class OrdersController {
             secondaryStatus === "IN_REPOSITORY"
               ? undefined
               : !getIncoming && branchId
-              ? +branchId
-              : undefined,
+                ? +branchId
+                : undefined,
           forwardedRepo: getOutComing
             ? returnRepo?.id
             : getIncoming && to_repository_id
-            ? Number(to_repository_id)
-            : getIncoming
-            ? undefined
-            : secondaryStatus === "IN_CAR"
-            ? exportRepo?.id
-            : undefined,
+              ? Number(to_repository_id)
+              : getIncoming
+                ? undefined
+                : secondaryStatus === "IN_CAR"
+                  ? exportRepo?.id
+                  : undefined,
         },
         orderBy: {
           updatedAt: "desc",
@@ -1112,7 +1113,7 @@ export class OrdersController {
       baghdadCount: orders.filter((order) => order?.governorate === "BAGHDAD")
         .length,
       governoratesCount: orders.filter(
-        (order) => order?.governorate !== "BAGHDAD"
+        (order) => order?.governorate !== "BAGHDAD",
       ).length,
       company: orders[0]?.company,
     };
@@ -1120,7 +1121,7 @@ export class OrdersController {
     const pdf = await generateOrdersReport(
       ordersData.type,
       ordersMetaData,
-      orders
+      orders,
     );
 
     const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
@@ -1225,7 +1226,7 @@ export class OrdersController {
     });
 
     const exportRepo = user?.branch?.repositories.find(
-      (repo) => repo.type === "EXPORT"
+      (repo) => repo.type === "EXPORT",
     );
     const branchs = await prisma.branch.findMany({
       where: {
@@ -1274,7 +1275,7 @@ export class OrdersController {
             count: status._count.id,
             branchId: status.branchId,
             branchName: branchs.find(
-              (branch) => +branch.id === +status.branchId!!
+              (branch) => +branch.id === +status.branchId!!,
             )?.name,
           };
         }),
@@ -1300,7 +1301,7 @@ export class OrdersController {
             count: status._count.id,
             deliveryAgentId: status.deliveryAgentId,
             name: deliveries.find(
-              (branch) => +branch.id === +status.deliveryAgentId!!
+              (branch) => +branch.id === +status.deliveryAgentId!!,
             )?.user.name,
           };
         }),
@@ -1346,7 +1347,7 @@ export class OrdersController {
             count: status._count.id,
             branchId: status.forwardedBranchId,
             branchName: branchs.find(
-              (branch) => +branch.id === +status.forwardedBranchId!!
+              (branch) => +branch.id === +status.forwardedBranchId!!,
             )?.name,
           };
         }),
@@ -1391,10 +1392,10 @@ export class OrdersController {
     });
 
     const exportRepo = user?.branch?.repositories.find(
-      (repo) => repo.type === "EXPORT"
+      (repo) => repo.type === "EXPORT",
     );
     const returnRepo = user?.branch?.repositories.find(
-      (repo) => repo.type === "RETURN"
+      (repo) => repo.type === "RETURN",
     );
 
     if (
@@ -1414,14 +1415,14 @@ export class OrdersController {
         getOutComing && to_repository_id
           ? Number(to_repository_id)
           : getOutComing
-          ? undefined
-          : repository_id
-          ? Number(repository_id)
-          : secondaryStatus === "IN_CAR"
-          ? undefined
-          : status === "RETURNED"
-          ? returnRepo?.id
-          : exportRepo?.id,
+            ? undefined
+            : repository_id
+              ? Number(repository_id)
+              : secondaryStatus === "IN_CAR"
+                ? undefined
+                : status === "RETURNED"
+                  ? returnRepo?.id
+                  : exportRepo?.id,
       secondaryStatus: secondaryStatus as SecondaryStatus,
       status:
         status === "RETURNED"
@@ -1440,17 +1441,17 @@ export class OrdersController {
         secondaryStatus === "IN_REPOSITORY"
           ? undefined
           : !getIncoming && branchId
-          ? +branchId
-          : undefined,
+            ? +branchId
+            : undefined,
       forwardedRepo: getOutComing
         ? returnRepo?.id
         : getIncoming && to_repository_id
-        ? Number(to_repository_id)
-        : getIncoming
-        ? undefined
-        : secondaryStatus === "IN_CAR"
-        ? exportRepo?.id
-        : undefined,
+          ? Number(to_repository_id)
+          : getIncoming
+            ? undefined
+            : secondaryStatus === "IN_CAR"
+              ? exportRepo?.id
+              : undefined,
     } satisfies Prisma.OrderWhereInput;
 
     const repositories = await prisma.repository.findMany({
@@ -1478,7 +1479,7 @@ export class OrdersController {
             count: status._count.id,
             repositoryId: status.repositoryId,
             repoName: repositories.find(
-              (repository) => +repository.id === +status.repositoryId!!
+              (repository) => +repository.id === +status.repositoryId!!,
             )?.name,
           };
         }),
@@ -1498,7 +1499,7 @@ export class OrdersController {
             count: status._count.id,
             repositoryId: status.forwardedRepo,
             repoName: repositories.find(
-              (repository) => +repository.id === +status.forwardedRepo!!
+              (repository) => +repository.id === +status.forwardedRepo!!,
             )?.name,
           };
         }),
@@ -1729,7 +1730,7 @@ export class OrdersController {
         status: "success",
         data: statuses.map((status) => {
           const statuscount = ordersStatisticsByStatus.find(
-            (s) => s.status === status
+            (s) => s.status === status,
           );
 
           return {
@@ -1771,7 +1772,7 @@ export class OrdersController {
         status: "success",
         data: statuses.map((status) => {
           const statuscount = ordersStatisticsByStatus.find(
-            (s) => s.status === status
+            (s) => s.status === status,
           );
 
           return {
@@ -1831,7 +1832,7 @@ export class OrdersController {
         status: "success",
         data: statuses.map((status) => {
           const statuscount = ordersStatisticsByStatus.find(
-            (s) => s.status === status
+            (s) => s.status === status,
           );
 
           return {
@@ -1976,7 +1977,7 @@ export class OrdersController {
 
     // استخراج المحافظات الفريدة
     const governorates = Array.from(
-      new Set(locations.map((l) => l.governorateAr?.trim()).filter(Boolean))
+      new Set(locations.map((l) => l.governorateAr?.trim()).filter(Boolean)),
     );
 
     // تجميع المناطق حسب المحافظة
@@ -1993,7 +1994,7 @@ export class OrdersController {
     });
     workbook.definedName(
       "Governorates",
-      `Lists!$A$1:$A$${governorates.length}`
+      `Lists!$A$1:$A$${governorates.length}`,
     );
 
     // إضافة المناطق لكل محافظة
@@ -2011,7 +2012,7 @@ export class OrdersController {
 
       workbook.definedName(
         govSafe,
-        `Lists!$${colLetter}$1:$${colLetter}$${endRow}`
+        `Lists!$${colLetter}$1:$${colLetter}$${endRow}`,
       );
 
       col++;
@@ -2070,7 +2071,7 @@ export class OrdersController {
     const buffer = await workbook.outputAsync();
     res.setHeader(
       "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     );
     res.setHeader("Content-Disposition", "attachment; filename=template.xlsx");
     res.send(Buffer.from(buffer));
@@ -2124,7 +2125,7 @@ export class OrdersController {
         } else {
           skippedIds.push(row.id);
         }
-      })
+      }),
     );
 
     res.status(200).json({

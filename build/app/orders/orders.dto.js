@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OrdersReportPDFCreateSchema = exports.OrdersStatisticsFiltersOpenAPISchema = exports.OrdersStatisticsFiltersSchema = exports.OrdersFiltersOpenAPISchema = exports.OrdersFiltersSchema = exports.OrderChatNotificationCreateSchema = exports.OrderTimelineFiltersSchema = exports.OrderTimelinePieceSchema = exports.OrderTimelinePieceBaseSchema = exports.OrdersReceiptsCreateOpenAPISchema = exports.OrdersReceiptsCreateSchema = exports.OrderRepositoryConfirmByReceiptNumberOpenAPISchema = exports.OrderRepositoryConfirmByReceiptNumberSchema = exports.OrderUpdateOpenAPISchema = exports.OrderUpdateSchema = exports.OrderCreateOpenAPISchema = exports.OrderCreateSchema = exports.OrderCreateBaseSchema = void 0;
+exports.OrdersReportPDFCreateSchema = exports.OrdersStatisticsFiltersOpenAPISchema = exports.OrdersStatisticsFiltersSchema = exports.OrdersFiltersOpenAPISchema = exports.OrdersFiltersSchema = exports.OrderChatNotificationCreateSchema = exports.OrderTimelineFiltersSchema = exports.OrderTimelinePieceSchema = exports.OrderTimelinePieceBaseSchema = exports.OrdersReceiptsCreateOpenAPISchema = exports.OrdersReceiptsCreateSchema = exports.OrderRepositoryConfirmByReceiptNumberOpenAPISchema = exports.OrderRepositoryConfirmByReceiptNumberSchema = exports.OrderUpdateOpenAPISchema = exports.OrderUpdateSchema = exports.OrderCreateOpenAPISchema = exports.OrderCreateSchema = void 0;
 // // import { generateMock } from "@anatine/zod-mock";
 const zod_openapi_1 = require("@anatine/zod-openapi");
 const client_1 = require("@prisma/client");
 const zod_1 = require("zod");
-exports.OrderCreateBaseSchema = zod_1.z.object({
+exports.OrderCreateSchema = zod_1.z.object({
     receiptNumber: zod_1.z.string().optional(),
     clientOrderReceiptId: zod_1.z.coerce.string().optional(),
     recipientName: zod_1.z.string().optional().default("غير معرف"),
@@ -26,15 +26,9 @@ exports.OrderCreateBaseSchema = zod_1.z.object({
     inquiryEmployeesIDs: zod_1.z.array(zod_1.z.coerce.number()).optional(),
     forwardedCompanyID: zod_1.z.coerce.number().optional(),
     weight: zod_1.z.number().optional(),
-});
-exports.OrderCreateSchema = zod_1.z
-    .object({
-    withProducts: zod_1.z.literal(false).optional(),
     totalCost: zod_1.z.number(),
     quantity: zod_1.z.number().default(1),
-    weight: zod_1.z.number().optional(),
-})
-    .and(exports.OrderCreateBaseSchema);
+});
 exports.OrderCreateOpenAPISchema = (0, zod_openapi_1.generateSchema)(exports.OrderCreateSchema);
 // export const OrderCreateMock = generateMock(OrderCreateSchema);
 /* --------------------------------------------------------------- */

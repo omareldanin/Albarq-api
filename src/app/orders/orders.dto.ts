@@ -11,7 +11,7 @@ import {
 } from "@prisma/client";
 import {z} from "zod";
 
-export const OrderCreateBaseSchema = z.object({
+export const OrderCreateSchema = z.object({
   receiptNumber: z.string().optional(),
   clientOrderReceiptId: z.coerce.string().optional(),
   recipientName: z.string().optional().default("غير معرف"),
@@ -32,16 +32,18 @@ export const OrderCreateBaseSchema = z.object({
   inquiryEmployeesIDs: z.array(z.coerce.number()).optional(),
   forwardedCompanyID: z.coerce.number().optional(),
   weight: z.number().optional(),
+  totalCost: z.number(),
+  quantity: z.number().default(1),
 });
 
-export const OrderCreateSchema = z
-  .object({
-    withProducts: z.literal(false).optional(),
-    totalCost: z.number(),
-    quantity: z.number().default(1),
-    weight: z.number().optional(),
-  })
-  .and(OrderCreateBaseSchema);
+// export const OrderCreateSchema = z
+//   .object({
+//     withProducts: z.literal(false).optional(),
+//     totalCost: z.number(),
+//     quantity: z.number().default(1),
+//     weight: z.number().optional(),
+//   })
+//   .and(OrderCreateBaseSchema);
 
 export type OrderCreateType = z.infer<typeof OrderCreateSchema>;
 
@@ -71,12 +73,15 @@ export const OrderUpdateSchema = z
     deliveryDate: z.coerce.date(),
     recipientName: z.string(),
     recipientPhones: z
-      .preprocess((val) => {
-        if (typeof val === "string") {
-          return val.split(",").map((s) => s.trim());
-        }
-        return val;
-      }, z.array(z.string().min(6)))
+      .preprocess(
+        (val) => {
+          if (typeof val === "string") {
+            return val.split(",").map((s) => s.trim());
+          }
+          return val;
+        },
+        z.array(z.string().min(6)),
+      )
       .optional(),
     recipientPhone: z.string().min(6),
     recipientAddress: z.string(),
@@ -134,7 +139,7 @@ export type OrdersReceiptsCreateType = z.infer<
 >;
 
 export const OrdersReceiptsCreateOpenAPISchema = generateSchema(
-  OrdersReceiptsCreateSchema
+  OrdersReceiptsCreateSchema,
 );
 
 // export const OrdersReceiptsCreateMock = generateMock(OrdersReceiptsCreateSchema);
@@ -251,12 +256,15 @@ export type OrderTimelinePieceType = z.infer<typeof OrderTimelinePieceSchema>;
 
 export const OrderTimelineFiltersSchema = z.object({
   type: z.nativeEnum(OrderTimelineType).optional(),
-  types: z.preprocess((val) => {
-    if (typeof val === "string") {
-      return val.split(",");
-    }
-    return val;
-  }, z.array(z.nativeEnum(OrderTimelineType)).optional()),
+  types: z.preprocess(
+    (val) => {
+      if (typeof val === "string") {
+        return val.split(",");
+      }
+      return val;
+    },
+    z.array(z.nativeEnum(OrderTimelineType)).optional(),
+  ),
 });
 
 export type OrderTimelineFiltersType = z.infer<
@@ -328,18 +336,24 @@ export const OrdersFiltersSchema = z.object({
   startDeliveryDate: z.coerce.date().optional(),
   endDeliveryDate: z.coerce.date().optional(),
   governorate: z.nativeEnum(Governorate).optional(),
-  statuses: z.preprocess((val) => {
-    if (typeof val === "string") {
-      return val.split(",");
-    }
-    return val;
-  }, z.array(z.nativeEnum(OrderStatus)).optional()),
-  secondaryStatuses: z.preprocess((val) => {
-    if (typeof val === "string") {
-      return val.split(",");
-    }
-    return val;
-  }, z.array(z.nativeEnum(SecondaryStatus)).optional()),
+  statuses: z.preprocess(
+    (val) => {
+      if (typeof val === "string") {
+        return val.split(",");
+      }
+      return val;
+    },
+    z.array(z.nativeEnum(OrderStatus)).optional(),
+  ),
+  secondaryStatuses: z.preprocess(
+    (val) => {
+      if (typeof val === "string") {
+        return val.split(",");
+      }
+      return val;
+    },
+    z.array(z.nativeEnum(SecondaryStatus)).optional(),
+  ),
   secondaryStatus: z.nativeEnum(SecondaryStatus).optional(),
   status: z.nativeEnum(OrderStatus).optional(),
   processingStatus: z.nativeEnum(ProcessingStatus).optional(),
@@ -410,12 +424,15 @@ export const OrdersStatisticsFiltersSchema = z.object({
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
   governorate: z.nativeEnum(Governorate).optional(),
-  statuses: z.preprocess((val) => {
-    if (typeof val === "string") {
-      return val.split(",");
-    }
-    return val;
-  }, z.array(z.nativeEnum(OrderStatus)).optional()),
+  statuses: z.preprocess(
+    (val) => {
+      if (typeof val === "string") {
+        return val.split(",");
+      }
+      return val;
+    },
+    z.array(z.nativeEnum(OrderStatus)).optional(),
+  ),
   deliveryType: z.nativeEnum(DeliveryType).optional(),
   storeID: z.coerce.number().optional(),
   locationID: z.coerce.number().optional(),
@@ -464,7 +481,7 @@ export type OrdersStatisticsFiltersType = z.infer<
 >;
 
 export const OrdersStatisticsFiltersOpenAPISchema = generateSchema(
-  OrdersStatisticsFiltersSchema
+  OrdersStatisticsFiltersSchema,
 );
 
 // export const OrdersStatisticsFiltersMock = generateMock(OrdersStatisticsFiltersSchema);
