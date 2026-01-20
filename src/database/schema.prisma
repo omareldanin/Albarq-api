@@ -34,6 +34,7 @@ model User {
   tickets          Ticket[]
   ticketResponses  TicketResponse[]
   loginHistory     UsersLoginHistory[]
+  seenMsgs  MessageSeen[]
   transactions                            Transaction[]
 
   @@index([name])
@@ -467,7 +468,21 @@ model Message {
   seenByClientAssistant Boolean      @default(false)
   Chat                  Chat?        @relation(fields: [chatId], references: [id])
   createdBy             User?        @relation(fields: [createdById], references: [id])
+  seenBy                MessageSeen[]
 }
+
+model MessageSeen {
+  id        Int      @id @default(autoincrement())
+  messageId Int
+  userId    Int
+  seenAt    DateTime @default(now())
+
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+}
+
 
 model CustomerOutput {
   id                 Int         @id @default(autoincrement())

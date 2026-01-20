@@ -164,13 +164,13 @@ export class MessagesController {
       })
     ).forEach((inquiryEmployee) => {
       const inquiryLocation = inquiryEmployee.inquiryLocations.find(
-        (e) => e.locationId === order.locationId
+        (e) => e.locationId === order.locationId,
       );
       const inquiryStore = inquiryEmployee.inquiryStores.find(
-        (e) => e.storeId === order.storeId
+        (e) => e.storeId === order.storeId,
       );
       const inquiryDelivery = inquiryEmployee.inquiryDeliveryAgents.find(
-        (e) => e.deliveryAgentId === order.deliveryAgent?.id
+        (e) => e.deliveryAgentId === order.deliveryAgent?.id,
       );
       if (
         inquiryEmployee.inquiryStatuses.length > 0 &&
@@ -306,7 +306,7 @@ export class MessagesController {
     size: number,
     page: number,
     status: string | undefined,
-    unRead?: string
+    unRead?: string,
   ) => {
     const employee = await prisma.employee.findUnique({
       where: {
@@ -408,24 +408,20 @@ export class MessagesController {
             unRead === "true"
               ? {
                   some: {
-                    seenByClient: user.role === "CLIENT" ? false : undefined,
-                    seenByClientAssistant:
-                      user.role === "CLIENT_ASSISTANT" ||
-                      user.role === "EMPLOYEE_CLIENT_ASSISTANT"
-                        ? false
-                        : undefined,
-                    seenByDelivery:
-                      user.role === "DELIVERY_AGENT" ? false : undefined,
-                    seenByBranchManager:
-                      user.role === "BRANCH_MANAGER" ? false : undefined,
-                    seenByCompanyManager:
-                      user.role === "COMPANY_MANAGER" ? false : undefined,
-                    seenByCallCenter:
-                      user.role === "INQUIRY_EMPLOYEE" ? false : undefined,
+                    NOT: {
+                      seenBy: {
+                        some: {
+                          userId: user.id,
+                        },
+                      },
+                    },
+                    createdById: {
+                      not: user.id,
+                    },
                   },
                 }
               : {
-                  some: {}, // Only include chats that have at least one message
+                  some: {},
                 },
           Order:
             user.role === "INQUIRY_EMPLOYEE"
@@ -436,10 +432,10 @@ export class MessagesController {
                         status && status !== "null"
                           ? (status as OrderStatus)
                           : inquiryStatuses
-                          ? {
-                              in: inquiryStatuses,
-                            }
-                          : undefined,
+                            ? {
+                                in: inquiryStatuses,
+                              }
+                            : undefined,
                     },
                     {
                       governorate: inquiryGovernorates
@@ -452,16 +448,16 @@ export class MessagesController {
                       branch: orderType
                         ? undefined
                         : inquiryBranchesIDs
-                        ? {
-                            id: {
-                              in: inquiryBranchesIDs,
-                            },
-                          }
-                        : employee?.mainEmergency
-                        ? undefined
-                        : {
-                            id: employee?.branchId!!,
-                          },
+                          ? {
+                              id: {
+                                in: inquiryBranchesIDs,
+                              },
+                            }
+                          : employee?.mainEmergency
+                            ? undefined
+                            : {
+                                id: employee?.branchId!!,
+                              },
                     },
                     {
                       store: inquiryStoresIDs
@@ -491,16 +487,16 @@ export class MessagesController {
                         orderType === "forwarded" && inquiryBranchesIDs
                           ? {in: inquiryBranchesIDs}
                           : orderType === "forwarded"
-                          ? employee?.branchId
-                          : undefined,
+                            ? employee?.branchId
+                            : undefined,
                     },
                     {
                       receivedBranchId:
                         orderType === "receiving" && inquiryBranchesIDs
                           ? {in: inquiryBranchesIDs}
                           : orderType === "receiving"
-                          ? employee?.branchId
-                          : undefined,
+                            ? employee?.branchId
+                            : undefined,
                     },
                   ],
                 }
@@ -509,9 +505,9 @@ export class MessagesController {
                     status && status !== "null"
                       ? (status as OrderStatus)
                       : user.role === "CLIENT_ASSISTANT" ||
-                        user.role === "EMPLOYEE_CLIENT_ASSISTANT"
-                      ? {in: employee?.orderStatus}
-                      : undefined,
+                          user.role === "EMPLOYEE_CLIENT_ASSISTANT"
+                        ? {in: employee?.orderStatus}
+                        : undefined,
                   clientId: user.role === "CLIENT" ? user.id : undefined,
                   companyId: user?.companyID || undefined,
                   branchId:
@@ -583,25 +579,15 @@ export class MessagesController {
       {
         page,
         size,
-      }
+      },
     );
+
     const unSeenChats = await prisma.message.groupBy({
       by: ["chatId"],
       _count: {
         id: true,
       },
       where: {
-        seenByClient: user.role === "CLIENT" ? false : undefined,
-        seenByClientAssistant:
-          user.role === "CLIENT_ASSISTANT" ||
-          user.role === "EMPLOYEE_CLIENT_ASSISTANT"
-            ? false
-            : undefined,
-        seenByDelivery: user.role === "DELIVERY_AGENT" ? false : undefined,
-        seenByBranchManager: user.role === "BRANCH_MANAGER" ? false : undefined,
-        seenByCompanyManager:
-          user.role === "COMPANY_MANAGER" ? false : undefined,
-        seenByCallCenter: user.role === "INQUIRY_EMPLOYEE" ? false : undefined,
         Chat: {
           Order:
             user.role === "INQUIRY_EMPLOYEE"
@@ -612,10 +598,10 @@ export class MessagesController {
                         status && status !== "null"
                           ? (status as OrderStatus)
                           : inquiryStatuses
-                          ? {
-                              in: inquiryStatuses,
-                            }
-                          : undefined,
+                            ? {
+                                in: inquiryStatuses,
+                              }
+                            : undefined,
                     },
                     {
                       governorate: inquiryGovernorates
@@ -628,16 +614,16 @@ export class MessagesController {
                       branch: orderType
                         ? undefined
                         : inquiryBranchesIDs
-                        ? {
-                            id: {
-                              in: inquiryBranchesIDs,
-                            },
-                          }
-                        : employee?.mainEmergency
-                        ? undefined
-                        : {
-                            id: employee?.branchId!!,
-                          },
+                          ? {
+                              id: {
+                                in: inquiryBranchesIDs,
+                              },
+                            }
+                          : employee?.mainEmergency
+                            ? undefined
+                            : {
+                                id: employee?.branchId!!,
+                              },
                     },
                     {
                       store: inquiryStoresIDs
@@ -667,16 +653,16 @@ export class MessagesController {
                         orderType === "forwarded" && inquiryBranchesIDs
                           ? {in: inquiryBranchesIDs}
                           : orderType === "forwarded"
-                          ? employee?.branchId
-                          : undefined,
+                            ? employee?.branchId
+                            : undefined,
                     },
                     {
                       receivedBranchId:
                         orderType === "receiving" && inquiryBranchesIDs
                           ? {in: inquiryBranchesIDs}
                           : orderType === "receiving"
-                          ? employee?.branchId
-                          : undefined,
+                            ? employee?.branchId
+                            : undefined,
                     },
                   ],
                 }
@@ -714,6 +700,17 @@ export class MessagesController {
                         ]
                       : undefined,
                 },
+        },
+        NOT: {
+          seenBy: {
+            some: {
+              userId: user.id,
+            },
+          },
+        },
+
+        createdById: {
+          not: user.id,
         },
       },
     });
@@ -766,29 +763,6 @@ export class MessagesController {
       }
     }
 
-    await prisma.message.updateMany({
-      where: {
-        Chat: {
-          orderId: orderId,
-        },
-      },
-      data: {
-        seenByClient: employee ? undefined : true,
-        seenByDelivery: employee?.role === "DELIVERY_AGENT" ? true : undefined,
-        seenByClientAssistant:
-          employee?.role === "CLIENT_ASSISTANT" ||
-          employee?.role === "EMPLOYEE_CLIENT_ASSISTANT"
-            ? true
-            : undefined,
-        seenByBranchManager:
-          employee?.role === "BRANCH_MANAGER" ? true : undefined,
-        seenByCompanyManager:
-          employee?.role === "COMPANY_MANAGER" ? true : undefined,
-        seenByCallCenter:
-          employee?.role === "INQUIRY_EMPLOYEE" ? true : undefined,
-      },
-    });
-
     const messages = await prisma.message.findMany({
       where: {
         Chat: {
@@ -810,6 +784,18 @@ export class MessagesController {
       orderBy: {
         createdAt: "desc",
       },
+    });
+
+    const messageIds = messages
+      .filter((m) => m.createdBy?.id !== userId)
+      .map((m) => m.id);
+
+    await prisma.messageSeen.createMany({
+      data: messageIds.map((messageId) => ({
+        messageId,
+        userId,
+      })),
+      skipDuplicates: true,
     });
 
     return {
@@ -982,7 +968,7 @@ export class MessagesController {
       size ? +size : 20,
       page ? +page : 1,
       typeof status === "string" ? status : undefined,
-      unRead + ""
+      unRead + "",
     );
 
     res.status(201).json({...chats});
@@ -997,7 +983,7 @@ export class MessagesController {
     }
     const chats = await this.getChatMessages(
       orderId?.toString(),
-      loggedInUser.id
+      loggedInUser.id,
     );
 
     res.status(201).json({...chats});
@@ -1071,19 +1057,8 @@ export class MessagesController {
       inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
     }
 
-    await prisma.message.updateMany({
+    const unseenMessages = await prisma.message.findMany({
       where: {
-        seenByClient: user.role === "CLIENT" ? false : undefined,
-        seenByClientAssistant:
-          user.role === "CLIENT_ASSISTANT" ||
-          user.role === "EMPLOYEE_CLIENT_ASSISTANT"
-            ? false
-            : undefined,
-        seenByDelivery: user.role === "DELIVERY_AGENT" ? false : undefined,
-        seenByBranchManager: user.role === "BRANCH_MANAGER" ? false : undefined,
-        seenByCompanyManager:
-          user.role === "COMPANY_MANAGER" ? false : undefined,
-        seenByCallCenter: user.role === "INQUIRY_EMPLOYEE" ? false : undefined,
         Chat: {
           Order:
             user.role === "INQUIRY_EMPLOYEE"
@@ -1152,20 +1127,30 @@ export class MessagesController {
                       : undefined,
                 },
         },
+        NOT: {
+          seenBy: {
+            some: {
+              userId: user.id,
+            },
+          },
+        },
+
+        createdById: {
+          not: user.id,
+        },
       },
-      data: {
-        seenByClient: user.role === "CLIENT" ? true : undefined,
-        seenByClientAssistant:
-          user.role === "CLIENT_ASSISTANT" ||
-          user.role === "EMPLOYEE_CLIENT_ASSISTANT"
-            ? true
-            : undefined,
-        seenByDelivery: user.role === "DELIVERY_AGENT" ? true : undefined,
-        seenByBranchManager: user.role === "BRANCH_MANAGER" ? true : undefined,
-        seenByCompanyManager:
-          user.role === "COMPANY_MANAGER" ? true : undefined,
-        seenByCallCenter: user.role === "INQUIRY_EMPLOYEE" ? true : undefined,
+      select: {
+        id: true,
       },
+    });
+    if (!unseenMessages.length) return;
+
+    await prisma.messageSeen.createMany({
+      data: unseenMessages.map((m) => ({
+        messageId: m.id,
+        userId: user.id,
+      })),
+      skipDuplicates: true,
     });
     res.status(200).json({message: "success"});
   });

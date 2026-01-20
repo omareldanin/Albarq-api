@@ -25,7 +25,6 @@ io.on("connection", (socket) => {
   socket.on("joinChat", async (data) => {
     socket.join(`chat_${data.orderId}`);
     socket.join(`${data.userId}`);
-    console.log(`Socket ${socket.id} joined room chat_${data.orderId}`);
   });
   socket.on("saveUserId", (data) => {
     socket.join(`${data.userId}`);
@@ -42,7 +41,7 @@ io.on("connection", (socket) => {
 
 const server = newServer.listen(env.PORT, () => {
   console.info(
-    "------------------------------------------------------------------------------------------\n"
+    "------------------------------------------------------------------------------------------\n",
   );
   Logger.debug(`Starting APP On -> ${address}`);
   automaticUpdatesCronJob.start();

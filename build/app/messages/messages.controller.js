@@ -357,19 +357,20 @@ class MessagesController {
                 messages: unRead === "true"
                     ? {
                         some: {
-                            seenByClient: user.role === "CLIENT" ? false : undefined,
-                            seenByClientAssistant: user.role === "CLIENT_ASSISTANT" ||
-                                user.role === "EMPLOYEE_CLIENT_ASSISTANT"
-                                ? false
-                                : undefined,
-                            seenByDelivery: user.role === "DELIVERY_AGENT" ? false : undefined,
-                            seenByBranchManager: user.role === "BRANCH_MANAGER" ? false : undefined,
-                            seenByCompanyManager: user.role === "COMPANY_MANAGER" ? false : undefined,
-                            seenByCallCenter: user.role === "INQUIRY_EMPLOYEE" ? false : undefined,
+                            NOT: {
+                                seenBy: {
+                                    some: {
+                                        userId: user.id,
+                                    },
+                                },
+                            },
+                            createdById: {
+                                not: user.id,
+                            },
                         },
                     }
                     : {
-                        some: {}, // Only include chats that have at least one message
+                        some: {},
                     },
                 Order: user.role === "INQUIRY_EMPLOYEE"
                     ? {
@@ -524,15 +525,6 @@ class MessagesController {
                 id: true,
             },
             where: {
-                seenByClient: user.role === "CLIENT" ? false : undefined,
-                seenByClientAssistant: user.role === "CLIENT_ASSISTANT" ||
-                    user.role === "EMPLOYEE_CLIENT_ASSISTANT"
-                    ? false
-                    : undefined,
-                seenByDelivery: user.role === "DELIVERY_AGENT" ? false : undefined,
-                seenByBranchManager: user.role === "BRANCH_MANAGER" ? false : undefined,
-                seenByCompanyManager: user.role === "COMPANY_MANAGER" ? false : undefined,
-                seenByCallCenter: user.role === "INQUIRY_EMPLOYEE" ? false : undefined,
                 Chat: {
                     Order: user.role === "INQUIRY_EMPLOYEE"
                         ? {
@@ -638,6 +630,16 @@ class MessagesController {
                                 : undefined,
                         },
                 },
+                NOT: {
+                    seenBy: {
+                        some: {
+                            userId: user.id,
+                        },
+                    },
+                },
+                createdById: {
+                    not: user.id,
+                },
             },
         });
         let totalUnSeened = 0;
@@ -681,24 +683,6 @@ class MessagesController {
                 return [];
             }
         }
-        await db_1.prisma.message.updateMany({
-            where: {
-                Chat: {
-                    orderId: orderId,
-                },
-            },
-            data: {
-                seenByClient: employee ? undefined : true,
-                seenByDelivery: employee?.role === "DELIVERY_AGENT" ? true : undefined,
-                seenByClientAssistant: employee?.role === "CLIENT_ASSISTANT" ||
-                    employee?.role === "EMPLOYEE_CLIENT_ASSISTANT"
-                    ? true
-                    : undefined,
-                seenByBranchManager: employee?.role === "BRANCH_MANAGER" ? true : undefined,
-                seenByCompanyManager: employee?.role === "COMPANY_MANAGER" ? true : undefined,
-                seenByCallCenter: employee?.role === "INQUIRY_EMPLOYEE" ? true : undefined,
-            },
-        });
         const messages = await db_1.prisma.message.findMany({
             where: {
                 Chat: {
@@ -720,6 +704,16 @@ class MessagesController {
             orderBy: {
                 createdAt: "desc",
             },
+        });
+        const messageIds = messages
+            .filter((m) => m.createdBy?.id !== userId)
+            .map((m) => m.id);
+        await db_1.prisma.messageSeen.createMany({
+            data: messageIds.map((messageId) => ({
+                messageId,
+                userId,
+            })),
+            skipDuplicates: true,
         });
         return {
             data: messages,
@@ -943,17 +937,8 @@ class MessagesController {
         if (user.role === "EMPLOYEE_CLIENT_ASSISTANT") {
             inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
         }
-        await db_1.prisma.message.updateMany({
+        const unseenMessages = await db_1.prisma.message.findMany({
             where: {
-                seenByClient: user.role === "CLIENT" ? false : undefined,
-                seenByClientAssistant: user.role === "CLIENT_ASSISTANT" ||
-                    user.role === "EMPLOYEE_CLIENT_ASSISTANT"
-                    ? false
-                    : undefined,
-                seenByDelivery: user.role === "DELIVERY_AGENT" ? false : undefined,
-                seenByBranchManager: user.role === "BRANCH_MANAGER" ? false : undefined,
-                seenByCompanyManager: user.role === "COMPANY_MANAGER" ? false : undefined,
-                seenByCallCenter: user.role === "INQUIRY_EMPLOYEE" ? false : undefined,
                 Chat: {
                     Order: user.role === "INQUIRY_EMPLOYEE"
                         ? {
@@ -1018,18 +1003,29 @@ class MessagesController {
                                 : undefined,
                         },
                 },
+                NOT: {
+                    seenBy: {
+                        some: {
+                            userId: user.id,
+                        },
+                    },
+                },
+                createdById: {
+                    not: user.id,
+                },
             },
-            data: {
-                seenByClient: user.role === "CLIENT" ? true : undefined,
-                seenByClientAssistant: user.role === "CLIENT_ASSISTANT" ||
-                    user.role === "EMPLOYEE_CLIENT_ASSISTANT"
-                    ? true
-                    : undefined,
-                seenByDelivery: user.role === "DELIVERY_AGENT" ? true : undefined,
-                seenByBranchManager: user.role === "BRANCH_MANAGER" ? true : undefined,
-                seenByCompanyManager: user.role === "COMPANY_MANAGER" ? true : undefined,
-                seenByCallCenter: user.role === "INQUIRY_EMPLOYEE" ? true : undefined,
+            select: {
+                id: true,
             },
+        });
+        if (!unseenMessages.length)
+            return;
+        await db_1.prisma.messageSeen.createMany({
+            data: unseenMessages.map((m) => ({
+                messageId: m.id,
+                userId: user.id,
+            })),
+            skipDuplicates: true,
         });
         res.status(200).json({ message: "success" });
     });
