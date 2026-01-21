@@ -34,6 +34,8 @@ import type {
 import {OrdersRepository} from "./orders.repository";
 import {orderReform, orderSelect, OrderStatusData} from "./orders.responses";
 import {prisma} from "../../database/db";
+import {sendOrderProcessingTemplate} from "./helpers/sendMessages";
+import {governorateArabicNames} from "../locations/locations.repository";
 
 const ordersRepository = new OrdersRepository();
 const employeesRepository = new EmployeesRepository();
@@ -222,8 +224,8 @@ export class OrdersService {
       data.loggedInUser.role === "CLIENT"
         ? data.loggedInUser.id
         : data.loggedInUser.role === "CLIENT_ASSISTANT"
-        ? data.loggedInUser.clientId
-        : data.filters.clientID;
+          ? data.loggedInUser.clientId
+          : data.filters.clientID;
     const deliveryAgentID =
       data.loggedInUser.role === EmployeeRole.DELIVERY_AGENT
         ? data.loggedInUser.id
@@ -815,6 +817,17 @@ export class OrdersService {
               }`,
             });
           }
+          if (data.orderData.status === "PROCESSING") {
+            await sendOrderProcessingTemplate(oldOrderData.client.phone, {
+              storeName: oldOrderData.store.name,
+              customerName: oldOrderData.recipientName,
+              orderNumber: oldOrderData.receiptNumber,
+              phone: oldOrderData.recipientPhones[0],
+              price: oldOrderData.totalCost.toLocaleString(),
+              address: `${governorateArabicNames[newOrder.governorate]} - ${newOrder.location.name} - ${newOrder.recipientAddress}`,
+              notes: newOrder.notes,
+            });
+          }
         }
 
         if (
@@ -833,7 +846,7 @@ export class OrdersService {
                 newOrder.status === "WITH_RECEIVING_AGENT"
                   ? "تم استلام الطلب من العميل بواسطه مندوب الاستلام"
                   : `تم تغيير حالة الطلب من ${localizeOrderStatus(
-                      oldOrderData.status
+                      oldOrderData.status,
                     )} إلى ${localizeOrderStatus(newOrder.status)} ${
                       newOrder.status === "PROCESSING" ||
                       newOrder.status === "POSTPONED" ||
@@ -962,10 +975,10 @@ export class OrdersService {
               oldOrderData.branch && newOrder.branch
                 ? `تم تغيير الفرع من ${oldOrderData.branch.name} إلى ${newOrder.branch.name}`
                 : oldOrderData.branch && !newOrder.branch
-                ? `تم إلغاء الفرع ${oldOrderData.branch.name}`
-                : !oldOrderData.branch && newOrder.branch
-                ? `تم تعيين الفرع ${newOrder.branch.name}`
-                : "",
+                  ? `تم إلغاء الفرع ${oldOrderData.branch.name}`
+                  : !oldOrderData.branch && newOrder.branch
+                    ? `تم تعيين الفرع ${newOrder.branch.name}`
+                    : "",
           },
         });
       }
@@ -1023,12 +1036,12 @@ export class OrdersService {
     ) {
       throw new AppError(
         "لا يمكن تأكيد الطلب لأن حالته ليست راجع كلي او جزئي او استبدال",
-        400
+        400,
       );
     }
 
     const repositoryReport = oldOrderData.repositoryReport.find(
-      (r) => r.secondaryType === "RETURNED"
+      (r) => r.secondaryType === "RETURNED",
     );
     // Remove the order from the repository report
     if (repositoryReport) {
@@ -1186,7 +1199,7 @@ export class OrdersService {
         baghdadCount: orders.filter((order) => order?.governorate === "BAGHDAD")
           .length,
         governoratesCount: orders.filter(
-          (order) => order?.governorate !== "BAGHDAD"
+          (order) => order?.governorate !== "BAGHDAD",
         ).length,
         company: orders[0]?.company,
       };
@@ -1197,7 +1210,7 @@ export class OrdersService {
         baghdadCount: orders.filter((order) => order?.governorate === "BAGHDAD")
           .length,
         governoratesCount: orders.filter(
-          (order) => order?.governorate !== "BAGHDAD"
+          (order) => order?.governorate !== "BAGHDAD",
         ).length,
         company: orders[0]?.company,
       };
@@ -1206,7 +1219,7 @@ export class OrdersService {
     const pdf = await generateOrdersReport(
       data.ordersData.type,
       ordersData,
-      orders
+      orders,
     );
     return pdf;
   };
@@ -1244,10 +1257,10 @@ export class OrdersService {
     });
 
     const exportRepo = user?.branch?.repositories.find(
-      (repo) => repo.type === "EXPORT"
+      (repo) => repo.type === "EXPORT",
     );
     const returnRepo = user?.branch?.repositories.find(
-      (repo) => repo.type === "RETURN"
+      (repo) => repo.type === "RETURN",
     );
 
     const results = await prisma.order.count({
@@ -1256,12 +1269,12 @@ export class OrdersService {
         repositoryId: filters.getOutComing
           ? undefined
           : filters.repository_id
-          ? Number(filters.repository_id)
-          : filters.secondaryStatus === "IN_CAR"
-          ? undefined
-          : filters.status === "RETURNED"
-          ? returnRepo?.id
-          : exportRepo?.id,
+            ? Number(filters.repository_id)
+            : filters.secondaryStatus === "IN_CAR"
+              ? undefined
+              : filters.status === "RETURNED"
+                ? returnRepo?.id
+                : exportRepo?.id,
         secondaryStatus: filters.secondaryStatus as SecondaryStatus,
         status:
           filters.status === "RETURNED"
@@ -1275,10 +1288,10 @@ export class OrdersService {
         forwardedRepo: filters.getOutComing
           ? returnRepo?.id
           : filters.getIncoming
-          ? undefined
-          : filters.secondaryStatus === "IN_CAR"
-          ? exportRepo?.id
-          : undefined,
+            ? undefined
+            : filters.secondaryStatus === "IN_CAR"
+              ? exportRepo?.id
+              : undefined,
       },
     });
 
@@ -1293,8 +1306,8 @@ export class OrdersService {
       data.loggedInUser.role === "CLIENT"
         ? data.loggedInUser.id
         : data.loggedInUser.role === "CLIENT_ASSISTANT"
-        ? data.loggedInUser.clientId
-        : data.filters.clientID;
+          ? data.loggedInUser.clientId
+          : data.filters.clientID;
     const deliveryAgentID =
       data.loggedInUser.role === EmployeeRole.DELIVERY_AGENT
         ? data.loggedInUser.id
@@ -1458,7 +1471,7 @@ export class OrdersService {
           ...statistics.ordersStatisticsByStatus.filter(
             (status) =>
               status.status === "READY_TO_SEND" ||
-              status.status === "WITH_RECEIVING_AGENT"
+              status.status === "WITH_RECEIVING_AGENT",
           ),
           {
             status: "RETURNED",
@@ -1481,7 +1494,7 @@ export class OrdersService {
         },
       });
       const newStatistics = statistics.ordersStatisticsByStatus.filter(
-        (status) => employee?.inquiryStatuses.includes(status.status)
+        (status) => employee?.inquiryStatuses.includes(status.status),
       );
 
       return {
@@ -1506,7 +1519,7 @@ export class OrdersService {
       });
 
       const newStatistics = statistics.ordersStatisticsByStatus.filter(
-        (status) => employee?.orderStatus.includes(status.status)
+        (status) => employee?.orderStatus.includes(status.status),
       );
       return {
         ...statistics,
@@ -1522,7 +1535,7 @@ export class OrdersService {
             status.status !== "IN_GOV_REPOSITORY" &&
             status.status !== "IN_MAIN_REPOSITORY" &&
             status.status !== "WITH_RECEIVING_AGENT" &&
-            status.status !== "READY_TO_SEND"
+            status.status !== "READY_TO_SEND",
         );
       return {
         ...statistics,
@@ -1536,7 +1549,7 @@ export class OrdersService {
       const ordersStatisticsByStatus =
         statistics.ordersStatisticsByStatus.filter(
           (status) =>
-            status.status !== "REGISTERED" && status.status !== "READY_TO_SEND"
+            status.status !== "REGISTERED" && status.status !== "READY_TO_SEND",
         );
       return {
         ...statistics,
@@ -1548,7 +1561,7 @@ export class OrdersService {
 
     if (data.loggedInUser.role === "REPOSITORIY_EMPLOYEE") {
       const withReceingAgent = statistics.ordersStatisticsByStatus.find(
-        (s) => s.status === "WITH_RECEIVING_AGENT"
+        (s) => s.status === "WITH_RECEIVING_AGENT",
       );
       const inRepo = await this.getRepositoryOrderCount({
         loggedInUser: data.loggedInUser,
@@ -1616,15 +1629,15 @@ export class OrdersService {
       };
 
       const pReturedOrders = newStatusStatistics.find(
-        (status) => status.status === "PARTIALLY_RETURNED"
+        (status) => status.status === "PARTIALLY_RETURNED",
       );
 
       const deOrders = newStatusStatistics.find(
-        (status) => status.status === "DELIVERED"
+        (status) => status.status === "DELIVERED",
       );
 
       const replacedOrders = newStatusStatistics.find(
-        (status) => status.status === "REPLACED"
+        (status) => status.status === "REPLACED",
       );
 
       deliveredOrders.count += pReturedOrders?.count
@@ -1647,22 +1660,22 @@ export class OrdersService {
         : 0;
 
       let reg = newStatusStatistics.find(
-        (status) => status.status === "REGISTERED"
+        (status) => status.status === "REGISTERED",
       );
       let ready = newStatusStatistics.find(
-        (status) => status.status === "READY_TO_SEND"
+        (status) => status.status === "READY_TO_SEND",
       );
 
       let withR = newStatusStatistics.find(
-        (status) => status.status === "WITH_RECEIVING_AGENT"
+        (status) => status.status === "WITH_RECEIVING_AGENT",
       );
 
       let inGov = newStatusStatistics.find(
-        (status) => status.status === "IN_GOV_REPOSITORY"
+        (status) => status.status === "IN_GOV_REPOSITORY",
       );
 
       let inMain = newStatusStatistics.find(
-        (status) => status.status === "IN_MAIN_REPOSITORY"
+        (status) => status.status === "IN_MAIN_REPOSITORY",
       );
 
       let rCount = 0,
@@ -1690,7 +1703,7 @@ export class OrdersService {
           status.status !== "PARTIALLY_RETURNED" &&
           status.status !== "REPLACED" &&
           status.status !== "IN_GOV_REPOSITORY" &&
-          status.status !== "IN_MAIN_REPOSITORY"
+          status.status !== "IN_MAIN_REPOSITORY",
       );
 
       updatedStatusStatistics.unshift(deliveredOrders);
@@ -1700,7 +1713,7 @@ export class OrdersService {
         status: "WITH_RECEIVING_AGENT",
         icon:
           newStatusStatistics.find(
-            (status) => status.status === "WITH_RECEIVING_AGENT"
+            (status) => status.status === "WITH_RECEIVING_AGENT",
           )?.icon || "",
         count: dCount,
         totalCost: dtotal,
@@ -1735,8 +1748,8 @@ export class OrdersService {
       data.loggedInUser.role === "CLIENT"
         ? data.loggedInUser.id
         : data.loggedInUser.role === "CLIENT_ASSISTANT"
-        ? data.loggedInUser.clientId
-        : data.filters.clientID;
+          ? data.loggedInUser.clientId
+          : data.filters.clientID;
     const deliveryAgentID =
       data.loggedInUser.role === EmployeeRole.DELIVERY_AGENT
         ? data.loggedInUser.id
@@ -1900,7 +1913,7 @@ export class OrdersService {
           ...statistics.ordersStatisticsByStatus.filter(
             (status) =>
               status.status === "READY_TO_SEND" ||
-              status.status === "WITH_RECEIVING_AGENT"
+              status.status === "WITH_RECEIVING_AGENT",
           ),
           {
             status: "RETURNED",
@@ -1923,7 +1936,7 @@ export class OrdersService {
         },
       });
       const newStatistics = statistics.ordersStatisticsByStatus.filter(
-        (status) => employee?.inquiryStatuses.includes(status.status)
+        (status) => employee?.inquiryStatuses.includes(status.status),
       );
 
       return {
@@ -1965,7 +1978,7 @@ export class OrdersService {
       });
 
       const newStatistics = statistics.ordersStatisticsByStatus.filter(
-        (status) => employee?.orderStatus.includes(status.status)
+        (status) => employee?.orderStatus.includes(status.status),
       );
       return {
         ...statistics,
@@ -1983,7 +1996,7 @@ export class OrdersService {
             status.status !== "IN_GOV_REPOSITORY" &&
             status.status !== "IN_MAIN_REPOSITORY" &&
             status.status !== "WITH_RECEIVING_AGENT" &&
-            status.status !== "READY_TO_SEND"
+            status.status !== "READY_TO_SEND",
         );
       return {
         ...statistics,
@@ -1997,7 +2010,7 @@ export class OrdersService {
       const ordersStatisticsByStatus =
         statistics.ordersStatisticsByStatus.filter(
           (status) =>
-            status.status !== "REGISTERED" && status.status !== "READY_TO_SEND"
+            status.status !== "REGISTERED" && status.status !== "READY_TO_SEND",
         );
       return {
         ...statistics,
@@ -2009,7 +2022,7 @@ export class OrdersService {
 
     if (data.loggedInUser.role === "REPOSITORIY_EMPLOYEE") {
       const withReceingAgent = statistics.ordersStatisticsByStatus.find(
-        (s) => s.status === "WITH_RECEIVING_AGENT"
+        (s) => s.status === "WITH_RECEIVING_AGENT",
       );
       const inRepo = await this.getRepositoryOrderCount({
         loggedInUser: data.loggedInUser,

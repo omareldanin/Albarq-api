@@ -26,9 +26,9 @@ router.route("/reports").post(
       Permission.CREATE_DELIVERY_AGENT_REPORT,
       Permission.CREATE_CLIENT_REPORT,
       Permission.CREATE_GOVERNMENT_REPORT,
-    ]
+    ],
   ),
-  reportController.createReport
+  reportController.createReport,
   /*
         #swagger.tags = ['Reports Routes']
 
@@ -53,7 +53,7 @@ router.route("/reports").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  reportController.getAllReports
+  reportController.getAllReports,
   /*
         #swagger.tags = ['Reports Routes']
 
@@ -144,7 +144,7 @@ router.route("/reports/:reportID").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  reportController.getReport
+  reportController.getReport,
   /*
         #swagger.tags = ['Reports Routes']
     */
@@ -157,7 +157,7 @@ router.route("/reports/:reportID/pdf").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  reportController.getReportPDF
+  reportController.getReportPDF,
   /*
         #swagger.tags = ['Reports Routes']
     */
@@ -170,7 +170,7 @@ router.route("/reports/pdf").post(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  reportController.getReportsReportPDF
+  reportController.getReportsReportPDF,
   /*
         #swagger.tags = ['Reports Routes']
     */
@@ -183,7 +183,7 @@ router.route("/reports/:reportID").patch(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  reportController.updateReport
+  reportController.updateReport,
   /*
         #swagger.tags = ['Reports Routes']
 
@@ -204,12 +204,7 @@ router.route("/reports/:reportID").patch(
 router.route("/reports/:reportID").delete(
   isLoggedIn,
   isAutherized(
-    [
-      EmployeeRole.COMPANY_MANAGER,
-      EmployeeRole.BRANCH_MANAGER,
-      AdminRole.ADMIN,
-      AdminRole.ADMIN_ASSISTANT,
-    ],
+    [EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT],
     [
       Permission.DELETE_BRANCH_REPORT,
       Permission.DELETE_REPOSITORY_REPORT,
@@ -217,9 +212,9 @@ router.route("/reports/:reportID").delete(
       Permission.DELETE_DELIVERY_AGENT_REPORT,
       Permission.DELETE_CLIENT_REPORT,
       Permission.DELETE_GOVERNMENT_REPORT,
-    ]
+    ],
   ),
-  reportController.deleteReport
+  reportController.deleteReport,
   /*
         #swagger.tags = ['Reports Routes']
     */
@@ -234,9 +229,9 @@ router.route("/reports/:reportID/deactivate").patch(
       EmployeeRole.ACCOUNTANT,
       EmployeeRole.BRANCH_MANAGER,
     ],
-    [Permission.DELETE_DELIVERY_AGENT_REPORT]
+    [Permission.DELETE_DELIVERY_AGENT_REPORT],
   ),
-  reportController.deactivateReport
+  reportController.deactivateReport,
   /*
         #swagger.tags = ['Reports Routes']
     */
@@ -249,7 +244,7 @@ router.route("/reports/:reportID/reactivate").patch(
     AdminRole.ADMIN,
     AdminRole.ADMIN_ASSISTANT,
   ]),
-  reportController.reactivateReport
+  reportController.reactivateReport,
   /*
         #swagger.tags = ['Reports Routes']
     */
