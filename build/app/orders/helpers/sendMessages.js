@@ -38,6 +38,8 @@ async function sendOrderProcessingTemplate(rawPhone, params) {
             ],
         },
     };
+    console.log(PHONE_NUMBER_ID);
+    console.log(TOKEN);
     const res = await axios_1.default.post(url, payload, {
         headers: {
             Authorization: `Bearer ${TOKEN}`,
@@ -45,8 +47,6 @@ async function sendOrderProcessingTemplate(rawPhone, params) {
         },
         timeout: 15000,
     });
-    console.log(res.status);
-    console.log(res.statusText);
     return res.data; // يحتوي wamid
 }
 //# sourceMappingURL=sendMessages.js.map
