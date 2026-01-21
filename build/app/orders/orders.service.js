@@ -624,6 +624,7 @@ class OrdersService {
                             content: `تم تغيير حالة الطلب رقم ${newOrder.receiptNumber} إلى ${(0, localize_1.localizeOrderStatus)(newOrder.status)} ${newOrder.notes ? `(${newOrder.notes})` : ""}`,
                         });
                     }
+                    console.log(newOrder.notes);
                     if (data.orderData.status === "PROCESSING") {
                         await (0, sendMessages_1.sendOrderProcessingTemplate)(oldOrderData.client.phone, {
                             storeName: oldOrderData.store.name,

@@ -27,19 +27,23 @@ async function sendOrderProcessingTemplate(rawPhone, params) {
                     type: "body",
                     parameters: [
                         { type: "text", text: params.storeName },
-                        { type: "text", text: params.customerName },
+                        {
+                            type: "text",
+                            text: params.customerName !== "" ? params.customerName : "غير محدد",
+                        },
                         { type: "text", text: params.orderNumber },
                         { type: "text", text: params.phone },
                         { type: "text", text: params.price },
                         { type: "text", text: params.address },
-                        { type: "text", text: params.notes },
+                        {
+                            type: "text",
+                            text: params.notes !== "" ? params.notes : "غير محدد",
+                        },
                     ],
                 },
             ],
         },
     };
-    console.log(PHONE_NUMBER_ID);
-    console.log(TOKEN);
     const res = await axios_1.default.post(url, payload, {
         headers: {
             Authorization: `Bearer ${TOKEN}`,

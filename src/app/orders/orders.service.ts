@@ -817,6 +817,8 @@ export class OrdersService {
               }`,
             });
           }
+          console.log(newOrder.notes);
+
           if (data.orderData.status === "PROCESSING") {
             await sendOrderProcessingTemplate(oldOrderData.client.phone, {
               storeName: oldOrderData.store.name,
