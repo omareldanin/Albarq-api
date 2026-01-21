@@ -57,6 +57,8 @@ export async function sendOrderProcessingTemplate(
     },
     timeout: 15000,
   });
+  console.log(res.status);
+  console.log(res.statusText);
 
   return res.data; // يحتوي wamid
 }
