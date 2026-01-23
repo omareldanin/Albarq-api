@@ -237,6 +237,13 @@ exports.OrdersFiltersSchema = zod_1.z.object({
             return false;
         return val;
     }, zod_1.z.boolean().optional()),
+    removeRepeated: zod_1.z.preprocess((val) => {
+        if (val === "true")
+            return true;
+        if (val === "false")
+            return false;
+        return val;
+    }, zod_1.z.boolean().optional()),
     forwarded: zod_1.z.preprocess((val) => {
         if (val === "true")
             return true;

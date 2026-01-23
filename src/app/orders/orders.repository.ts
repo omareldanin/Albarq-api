@@ -1909,6 +1909,7 @@ export class OrdersRepository {
         where: {
           ...where,
         },
+        distinct: data.filters.removeRepeated ? ["receiptNumber"] : undefined,
         orderBy: {
           createdAt: "desc",
         },
@@ -2298,6 +2299,7 @@ export class OrdersRepository {
       pagesCount: paginatedOrders.pagesCount,
     };
   }
+
   async getOrdersByIDs(data: {ordersIDs: string[]}) {
     const orders = await prisma.order.findMany({
       where: {

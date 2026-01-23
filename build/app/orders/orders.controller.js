@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -18,6 +51,7 @@ const generateOrdersReport_1 = require("./helpers/generateOrdersReport");
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const csv_parser_1 = __importDefault(require("csv-parser"));
+const ExcelJS = __importStar(require("exceljs"));
 const XlsxPopulate = require("xlsx-populate");
 const employeesRepository = new employees_repository_1.EmployeesRepository();
 const ordersService = new orders_service_1.OrdersService();
@@ -91,6 +125,7 @@ class OrdersController {
             secondaryStatus: req.query.secondaryStatus,
             clientOrderReceiptId: req.query.clientOrderReceiptId,
             printed: req.query.printed,
+            removeRepeated: req.query.removeRepeated,
             delivered: req.query.delivered,
             orderType: req.query.orderType,
             updateBy: req.query.updated_by,
@@ -820,6 +855,101 @@ class OrdersController {
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader("Content-Disposition", "attachment; filename=generated.pdf");
         res.send(pdfBuffer);
+    });
+    getOrdersReportExcel = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const ordersData = req.body;
+        const orders = await db_1.prisma.order.findMany({
+            where: {
+                id: { in: ordersData.ordersIDs || [] },
+            },
+            select: {
+                id: true,
+                totalCost: true,
+                paidAmount: true,
+                clientNet: true,
+                receiptNumber: true,
+                weight: true,
+                recipientName: true,
+                recipientPhones: true,
+                recipientAddress: true,
+                clientNotes: true,
+                details: true,
+                status: true,
+                secondaryStatus: true,
+                createdAt: true,
+                client: {
+                    select: {
+                        branch: {
+                            select: {
+                                name: true,
+                            },
+                        },
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                phone: true,
+                            },
+                        },
+                    },
+                },
+                governorate: true,
+                location: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                store: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            },
+        });
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet("Orders");
+        // Header row
+        sheet.addRow([
+            "رقم الطلب",
+            "رقم الوصل",
+            "اسم الصفحه",
+            "اسم العميل",
+            "اسم المستلم",
+            "هاتف المستلم",
+            "عنوان المستلم",
+            "المبلغ الاجمالي",
+            "المبلغ المستلم",
+            "صافي العميل",
+            "حاله الطلب",
+            "الوزن",
+            "ملاحظات",
+            "التاريخ",
+        ]);
+        orders.forEach((order) => {
+            sheet.addRow([
+                order.id,
+                order.receiptNumber,
+                order.store.name,
+                order.client.user.name,
+                order.recipientName,
+                order.recipientPhones[0],
+                locations_repository_1.governorateArabicNames[order.governorate] + " - " + order.location.name,
+                order.totalCost,
+                order.paidAmount,
+                order.clientNet,
+                orders_responses_1.orderStatusArabicNames[order.status],
+                order.weight,
+                order.clientNotes,
+                new Date(order.createdAt).toLocaleString("ar-EG"),
+            ]);
+        });
+        // Set headers for a PDF response
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader("Content-Disposition", "attachment; filename=orders.xlsx");
+        await workbook.xlsx.write(res);
+        res.end();
     });
     getRepositoryOrdersPDF = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const ordersData = orders_dto_1.OrdersReportPDFCreateSchema.parse(req.body);

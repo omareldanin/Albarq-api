@@ -39,131 +39,7 @@ router.route("/orders").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAuther
     ...Object.values(client_1.AdminRole),
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), ordersController.getAllOrders
-/*
-      #swagger.tags = ['Orders Routes']
-
-      #swagger.parameters['page'] = {
-          in: 'query',
-          description: 'Page Number',
-          required: false
-      }
-
-      #swagger.parameters['size'] = {
-          in: 'query',
-          description: 'Page Size (Number of Items per Page) (Default: 10)',
-          required: false
-      }
-
-      #swagger.parameters['search'] = {
-          in: 'query',
-          description: 'Search Query',
-          required: false
-      }
-
-      #swagger.parameters['sort'] = {
-          in: 'query',
-          description: 'Sort Query (Default: id:asc)',
-          required: false
-      }
-
-      #swagger.parameters['start_date'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['end_date'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['delivery_date'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['governorate'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['statuses'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['delivery_type'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['delivery_agent_id'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['client_id'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['store_id'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['product_id'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['location_id'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['receipt_number'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['recipient_name'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['recipient_phone'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['recipient_address'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-
-      #swagger.parameters['notes'] = {
-          in: 'query',
-          description: '',
-          required: false
-      }
-  */
-);
+]), ordersController.getAllOrders);
 router
     .route("/orders/getAll")
     .get(isApiClient_1.isApiClient, (0, isAutherized_1.isAutherized)([
@@ -250,29 +126,24 @@ router.route("/orders/pdf").post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isA
     ...Object.values(client_1.AdminRole),
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), ordersController.getOrdersReportPDF
-/*
-      #swagger.tags = ['Orders Routes']
-  */
-);
+]), ordersController.getOrdersReportPDF);
+router
+    .route("/orders/excel")
+    .post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
+    ...Object.values(client_1.AdminRole),
+    ...Object.values(client_1.EmployeeRole),
+    ...Object.values(client_1.ClientRole),
+]), ordersController.getOrdersReportExcel);
 router.route("/repository-orders/pdf").post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     ...Object.values(client_1.AdminRole),
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), ordersController.getRepositoryOrdersPDF
-/*
-      #swagger.tags = ['Orders Routes']
-  */
-);
+]), ordersController.getRepositoryOrdersPDF);
 router.route("/orders/getByStore").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     ...Object.values(client_1.AdminRole),
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), ordersController.getReceivingAgentStores
-/*
-      #swagger.tags = ['Orders Routes']
-  */
-);
+]), ordersController.getReceivingAgentStores);
 router
     .route("/orders/pdf/getAll")
     .get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
@@ -284,11 +155,7 @@ router.route("/orders/getById/:orderID").get(isLoggedIn_1.isLoggedIn, (0, isAuth
     ...Object.values(client_1.AdminRole),
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), ordersController.getOrderById
-/*
-      #swagger.tags = ['Orders Routes']
-  */
-);
+]), ordersController.getOrderById);
 router
     .route("/orders/getOne/:orderID")
     .get(isApiClient_1.isApiClient, (0, isAutherized_1.isAutherized)([
@@ -307,56 +174,32 @@ router.route("/orders/:orderID").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1
     ...Object.values(client_1.AdminRole),
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), ordersController.getOrder
-/*
-      #swagger.tags = ['Orders Routes']
-  */
-);
+]), ordersController.getOrder);
 router.route("/orders/:orderID/timeline").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     ...Object.values(client_1.AdminRole),
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), ordersController.getOrderTimeline
-/*
-      #swagger.tags = ['Orders Routes']
-  */
-);
+]), ordersController.getOrderTimeline);
 router.route("/orders/:orderID/orderTimeline").get(isApiClient_1.isApiClient, (0, isAutherized_1.isAutherized)([
     ...Object.values(client_1.AdminRole),
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), ordersController.getOrderTimelineApiKey
-/*
-      #swagger.tags = ['Orders Routes']
-  */
-);
+]), ordersController.getOrderTimelineApiKey);
 router.route("/orders/:orderID/chat-members").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     ...Object.values(client_1.AdminRole),
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), ordersController.getOrderChatMembers
-/*
-      #swagger.tags = ['Orders Routes']
-  */
-);
+]), ordersController.getOrderChatMembers);
 router.route("/orders/:orderID/inquiry-employees").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     ...Object.values(client_1.AdminRole),
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), ordersController.getOrderInquiryEmployees
-/*
-      #swagger.tags = ['Orders Routes']
-  */
-);
+]), ordersController.getOrderInquiryEmployees);
 router.route("/orders/:orderID/chat").post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     ...Object.values(client_1.AdminRole),
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), ordersController.sendNotificationToOrderChatMembers
-/*
-      #swagger.tags = ['Orders Routes']
-  */
-);
+]), ordersController.sendNotificationToOrderChatMembers);
 router
     .route("/orders/receipts")
     .post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
@@ -423,50 +266,30 @@ router.route("/orders/addOrderToRepository/:orderID").patch(isLoggedIn_1.isLogge
     ...Object.values(client_1.AdminRole),
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), ordersController.addOrderToRepository
-/*
-      #swagger.tags = ['Orders Routes']
-  */
-);
+]), ordersController.addOrderToRepository);
 router
     .route("/orders/repository-confirm-order-by-receipt-number/:orderID")
     .patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     ...Object.values(client_1.AdminRole),
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), ordersController.addReturnedOrderToRepository
-/*
-    #swagger.tags = ['Orders Routes']
-*/
-);
+]), ordersController.addReturnedOrderToRepository);
 router.route("/orders/:orderID").delete(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
-]), ordersController.deleteOrder
-/*
-      #swagger.tags = ['Orders Routes']
-  */
-);
+]), ordersController.deleteOrder);
 router.route("/orders/:orderID/deactivate").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
     client_1.ClientRole.CLIENT,
     client_1.EmployeeRole.CLIENT_ASSISTANT,
-], [client_1.Permission.DELETE_ORDER]), ordersController.deactivateOrder
-/*
-      #swagger.tags = ['Orders Routes']
-  */
-);
+], [client_1.Permission.DELETE_ORDER]), ordersController.deactivateOrder);
 router.route("/orders/:orderID/reactivate").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
-]), ordersController.reactivateOrder
-/*
-      #swagger.tags = ['Orders Routes']
-  */
-);
+]), ordersController.reactivateOrder);
 exports.default = router;
 //# sourceMappingURL=orders.routes.js.map

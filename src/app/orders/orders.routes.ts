@@ -27,10 +27,10 @@ router
         ClientRole.CLIENT,
         EmployeeRole.CLIENT_ASSISTANT,
       ],
-      [Permission.ADD_ORDER]
+      [Permission.ADD_ORDER],
     ),
     preventDuplicateRequests,
-    ordersController.createOrder
+    ordersController.createOrder,
   );
 
 router
@@ -45,10 +45,10 @@ router
         ClientRole.CLIENT,
         EmployeeRole.CLIENT_ASSISTANT,
       ],
-      [Permission.ADD_ORDER]
+      [Permission.ADD_ORDER],
     ),
     preventDuplicateRequests,
-    ordersController.createOrder
+    ordersController.createOrder,
   );
 
 router.route("/orders").get(
@@ -58,7 +58,7 @@ router.route("/orders").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getAllOrders
+  ordersController.getAllOrders,
   /*
         #swagger.tags = ['Orders Routes']
 
@@ -193,7 +193,7 @@ router
       ...Object.values(EmployeeRole),
       ...Object.values(ClientRole),
     ]),
-    ordersController.getAllOrdersApiKey
+    ordersController.getAllOrdersApiKey,
   );
 
 router.route("/getGeneralInfo").get(ordersController.getGeneralInfo);
@@ -210,7 +210,7 @@ router.route("/orders/statistics").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getOrdersStatistics
+  ordersController.getOrdersStatistics,
 );
 
 router.route("/orders/v2/statistics").get(
@@ -225,7 +225,7 @@ router.route("/orders/v2/statistics").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getOrdersStatisticsV2
+  ordersController.getOrdersStatisticsV2,
 );
 
 router.route("/orders/clientStatistics").get(
@@ -240,7 +240,7 @@ router.route("/orders/clientStatistics").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getCLientOrdersStatistics
+  ordersController.getCLientOrdersStatistics,
 );
 
 router.route("/orders/statusStatistics").get(
@@ -255,7 +255,7 @@ router.route("/orders/statusStatistics").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getStatusOrdersStatistics
+  ordersController.getStatusOrdersStatistics,
 );
 router.route("/orders/repositoryStatusStatistics").get(
   isLoggedIn,
@@ -269,7 +269,7 @@ router.route("/orders/repositoryStatusStatistics").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getRepositorOrdersStatistics
+  ordersController.getRepositorOrdersStatistics,
 );
 
 router.route("/orders/returnedRepositoryStatusStatistics").get(
@@ -284,7 +284,7 @@ router.route("/orders/returnedRepositoryStatusStatistics").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getReturnedRepositorOrdersStatistics
+  ordersController.getReturnedRepositorOrdersStatistics,
 );
 router.route("/orders/repositoryOrders").get(
   isLoggedIn,
@@ -299,7 +299,7 @@ router.route("/orders/repositoryOrders").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getRepositoryOrders
+  ordersController.getRepositoryOrders,
 );
 
 router
@@ -313,12 +313,23 @@ router.route("/orders/pdf").post(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getOrdersReportPDF
+  ordersController.getOrdersReportPDF,
   /*
         #swagger.tags = ['Orders Routes']
     */
 );
 
+router
+  .route("/orders/excel")
+  .post(
+    isLoggedIn,
+    isAutherized([
+      ...Object.values(AdminRole),
+      ...Object.values(EmployeeRole),
+      ...Object.values(ClientRole),
+    ]),
+    ordersController.getOrdersReportExcel,
+  );
 router.route("/repository-orders/pdf").post(
   isLoggedIn,
   isAutherized([
@@ -326,7 +337,7 @@ router.route("/repository-orders/pdf").post(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getRepositoryOrdersPDF
+  ordersController.getRepositoryOrdersPDF,
   /*
         #swagger.tags = ['Orders Routes']
     */
@@ -339,7 +350,7 @@ router.route("/orders/getByStore").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getReceivingAgentStores
+  ordersController.getReceivingAgentStores,
   /*
         #swagger.tags = ['Orders Routes']
     */
@@ -354,7 +365,7 @@ router
       ...Object.values(EmployeeRole),
       ...Object.values(ClientRole),
     ]),
-    ordersController.getPdfs
+    ordersController.getPdfs,
   );
 
 router.route("/orders/getById/:orderID").get(
@@ -364,7 +375,7 @@ router.route("/orders/getById/:orderID").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getOrderById
+  ordersController.getOrderById,
   /*
         #swagger.tags = ['Orders Routes']
     */
@@ -379,7 +390,7 @@ router
       ...Object.values(EmployeeRole),
       ...Object.values(ClientRole),
     ]),
-    ordersController.getOrderByIdApiKey
+    ordersController.getOrderByIdApiKey,
   );
 
 router
@@ -391,7 +402,7 @@ router
       ...Object.values(EmployeeRole),
       ...Object.values(ClientRole),
     ]),
-    ordersController.getOrderPdf
+    ordersController.getOrderPdf,
   );
 
 router.route("/orders/:orderID").get(
@@ -401,7 +412,7 @@ router.route("/orders/:orderID").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getOrder
+  ordersController.getOrder,
   /*
         #swagger.tags = ['Orders Routes']
     */
@@ -414,7 +425,7 @@ router.route("/orders/:orderID/timeline").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getOrderTimeline
+  ordersController.getOrderTimeline,
   /*
         #swagger.tags = ['Orders Routes']
     */
@@ -427,7 +438,7 @@ router.route("/orders/:orderID/orderTimeline").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getOrderTimelineApiKey
+  ordersController.getOrderTimelineApiKey,
   /*
         #swagger.tags = ['Orders Routes']
     */
@@ -440,7 +451,7 @@ router.route("/orders/:orderID/chat-members").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getOrderChatMembers
+  ordersController.getOrderChatMembers,
   /*
         #swagger.tags = ['Orders Routes']
     */
@@ -453,7 +464,7 @@ router.route("/orders/:orderID/inquiry-employees").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getOrderInquiryEmployees
+  ordersController.getOrderInquiryEmployees,
   /*
         #swagger.tags = ['Orders Routes']
     */
@@ -466,7 +477,7 @@ router.route("/orders/:orderID/chat").post(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.sendNotificationToOrderChatMembers
+  ordersController.sendNotificationToOrderChatMembers,
   /*
         #swagger.tags = ['Orders Routes']
     */
@@ -481,7 +492,7 @@ router
       ...Object.values(EmployeeRole),
       ...Object.values(ClientRole),
     ]),
-    ordersController.createOrdersReceipts
+    ordersController.createOrdersReceipts,
   );
 
 router
@@ -493,7 +504,7 @@ router
       ...Object.values(EmployeeRole),
       ...Object.values(ClientRole),
     ]),
-    ordersController.createOrdersReceipts
+    ordersController.createOrdersReceipts,
   );
 
 router.route("/orders/:orderID").patch(
@@ -518,9 +529,9 @@ router.route("/orders/:orderID").patch(
       Permission.CHANGE_ORDER_PAID_AMOUNT,
       Permission.CHANGE_ORDER_RECEIPT_NUMBER,
       Permission.CHANGE_ORDER_RECEPIENT_NUMBER,
-    ]
+    ],
   ),
-  ordersController.updateOrder
+  ordersController.updateOrder,
 );
 
 router
@@ -547,9 +558,9 @@ router
         Permission.CHANGE_ORDER_RECEIPT_NUMBER,
         Permission.CHANGE_ORDER_RECEPIENT_NUMBER,
         Permission.SEND_ORDER,
-      ]
+      ],
     ),
-    ordersController.sendOrdersToReceivingAgent
+    ordersController.sendOrdersToReceivingAgent,
   );
 
 router
@@ -562,9 +573,9 @@ router
         ...Object.values(EmployeeRole),
         ...Object.values(ClientRole),
       ],
-      []
+      [],
     ),
-    ordersController.sendOrdersToReceivingAgentApiKey
+    ordersController.sendOrdersToReceivingAgentApiKey,
   );
 
 //  تأكيد مباشر برقم الطل في صفحة ادخال الطلبات المخزن
@@ -575,7 +586,7 @@ router.route("/orders/addOrderToRepository/:orderID").patch(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.addOrderToRepository
+  ordersController.addOrderToRepository,
   /*
         #swagger.tags = ['Orders Routes']
     */
@@ -590,7 +601,7 @@ router
       ...Object.values(EmployeeRole),
       ...Object.values(ClientRole),
     ]),
-    ordersController.addReturnedOrderToRepository
+    ordersController.addReturnedOrderToRepository,
     /*
         #swagger.tags = ['Orders Routes']
     */
@@ -602,7 +613,7 @@ router.route("/orders/:orderID").delete(
     AdminRole.ADMIN,
     AdminRole.ADMIN_ASSISTANT,
   ]),
-  ordersController.deleteOrder
+  ordersController.deleteOrder,
   /*
         #swagger.tags = ['Orders Routes']
     */
@@ -618,9 +629,9 @@ router.route("/orders/:orderID/deactivate").patch(
       ClientRole.CLIENT,
       EmployeeRole.CLIENT_ASSISTANT,
     ],
-    [Permission.DELETE_ORDER]
+    [Permission.DELETE_ORDER],
   ),
-  ordersController.deactivateOrder
+  ordersController.deactivateOrder,
   /*
         #swagger.tags = ['Orders Routes']
     */
@@ -633,7 +644,7 @@ router.route("/orders/:orderID/reactivate").patch(
     AdminRole.ADMIN,
     AdminRole.ADMIN_ASSISTANT,
   ]),
-  ordersController.reactivateOrder
+  ordersController.reactivateOrder,
   /*
         #swagger.tags = ['Orders Routes']
     */

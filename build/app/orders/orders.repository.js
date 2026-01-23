@@ -1739,6 +1739,7 @@ class OrdersRepository {
             where: {
                 ...where,
             },
+            distinct: data.filters.removeRepeated ? ["receiptNumber"] : undefined,
             orderBy: {
                 createdAt: "desc",
             },

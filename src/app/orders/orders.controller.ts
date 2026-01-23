@@ -21,7 +21,12 @@ import {
   Prisma,
   SecondaryStatus,
 } from "@prisma/client";
-import {orderReform, orderSelect, OrderStatusData} from "./orders.responses";
+import {
+  orderReform,
+  orderSelect,
+  orderStatusArabicNames,
+  OrderStatusData,
+} from "./orders.responses";
 import {AppError} from "../../lib/AppError";
 import {OrdersRepository} from "./orders.repository";
 import {generateReceipts} from "./helpers/generateReceipts";
@@ -30,6 +35,7 @@ import {generateOrdersReport} from "./helpers/generateOrdersReport";
 import fs from "fs";
 import path from "path";
 import csv from "csv-parser";
+import * as ExcelJS from "exceljs";
 
 const XlsxPopulate = require("xlsx-populate");
 
@@ -111,6 +117,7 @@ export class OrdersController {
       secondaryStatus: req.query.secondaryStatus,
       clientOrderReceiptId: req.query.clientOrderReceiptId,
       printed: req.query.printed,
+      removeRepeated: req.query.removeRepeated,
       delivered: req.query.delivered,
       orderType: req.query.orderType,
       updateBy: req.query.updated_by,
@@ -971,6 +978,110 @@ export class OrdersController {
     res.setHeader("Content-Disposition", "attachment; filename=generated.pdf");
 
     res.send(pdfBuffer);
+  });
+
+  getOrdersReportExcel = catchAsync(async (req, res) => {
+    const ordersData = req.body;
+
+    const orders = await prisma.order.findMany({
+      where: {
+        id: {in: ordersData.ordersIDs || []},
+      },
+      select: {
+        id: true,
+        totalCost: true,
+        paidAmount: true,
+        clientNet: true,
+        receiptNumber: true,
+        weight: true,
+        recipientName: true,
+        recipientPhones: true,
+        recipientAddress: true,
+        clientNotes: true,
+        details: true,
+        status: true,
+        secondaryStatus: true,
+        createdAt: true,
+        client: {
+          select: {
+            branch: {
+              select: {
+                name: true,
+              },
+            },
+            user: {
+              select: {
+                id: true,
+                name: true,
+                phone: true,
+              },
+            },
+          },
+        },
+        governorate: true,
+        location: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        store: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Orders");
+
+    // Header row
+    sheet.addRow([
+      "رقم الطلب",
+      "رقم الوصل",
+      "اسم الصفحه",
+      "اسم العميل",
+      "اسم المستلم",
+      "هاتف المستلم",
+      "عنوان المستلم",
+      "المبلغ الاجمالي",
+      "المبلغ المستلم",
+      "صافي العميل",
+      "حاله الطلب",
+      "الوزن",
+      "ملاحظات",
+      "التاريخ",
+    ]);
+
+    orders.forEach((order) => {
+      sheet.addRow([
+        order.id,
+        order.receiptNumber,
+        order.store.name,
+        order.client.user.name,
+        order.recipientName,
+        order.recipientPhones[0],
+        governorateArabicNames[order.governorate] + " - " + order.location.name,
+        order.totalCost,
+        order.paidAmount,
+        order.clientNet,
+        orderStatusArabicNames[order.status],
+        order.weight,
+        order.clientNotes,
+        new Date(order.createdAt).toLocaleString("ar-EG"),
+      ]);
+    });
+    // Set headers for a PDF response
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader("Content-Disposition", "attachment; filename=orders.xlsx");
+
+    await workbook.xlsx.write(res);
+    res.end();
   });
 
   getRepositoryOrdersPDF = catchAsync(async (req, res) => {
