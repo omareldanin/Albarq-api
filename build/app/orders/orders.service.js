@@ -624,7 +624,6 @@ class OrdersService {
                             content: `تم تغيير حالة الطلب رقم ${newOrder.receiptNumber} إلى ${(0, localize_1.localizeOrderStatus)(newOrder.status)} ${newOrder.notes ? `(${newOrder.notes})` : ""}`,
                         });
                     }
-                    console.log(newOrder.notes);
                     if (data.orderData.status === "PROCESSING") {
                         await (0, sendMessages_1.sendOrderProcessingTemplate)(oldOrderData.client.phone, {
                             storeName: oldOrderData.store.name,
@@ -639,6 +638,22 @@ class OrdersService {
                 }
                 if (newOrder.status !== "IN_GOV_REPOSITORY" &&
                     newOrder.status !== "IN_MAIN_REPOSITORY") {
+                    let message = "";
+                    if (newOrder.status === "WITH_RECEIVING_AGENT") {
+                        message = "تم استلام الطلب من العميل بواسطه مندوب الاستلام";
+                    }
+                    else if (data.orderData.status !== oldOrderData.status) {
+                        message = `تم تغيير حالة الطلب من ${(0, localize_1.localizeOrderStatus)(oldOrderData.status)} إلى ${(0, localize_1.localizeOrderStatus)(newOrder.status)} ${newOrder.status === "PROCESSING" ||
+                            newOrder.status === "POSTPONED" ||
+                            newOrder.status === "RETURNED"
+                            ? newOrder.notes
+                                ? `(${newOrder.notes})`
+                                : ""
+                            : ""}`;
+                    }
+                    else {
+                        message = `تم تغيير نوع الحاله من ${oldOrderData.notes} الي ${newOrder.notes}`;
+                    }
                     await ordersRepository.updateOrderTimeline({
                         orderID: oldOrderData.id,
                         data: {
@@ -647,15 +662,7 @@ class OrdersService {
                             old: { value: oldOrderData.status },
                             new: { value: newOrder.status },
                             by: { id: data.loggedInUser.id, name: data.loggedInUser.name },
-                            message: newOrder.status === "WITH_RECEIVING_AGENT"
-                                ? "تم استلام الطلب من العميل بواسطه مندوب الاستلام"
-                                : `تم تغيير حالة الطلب من ${(0, localize_1.localizeOrderStatus)(oldOrderData.status)} إلى ${(0, localize_1.localizeOrderStatus)(newOrder.status)} ${newOrder.status === "PROCESSING" ||
-                                    newOrder.status === "POSTPONED" ||
-                                    newOrder.status === "RETURNED"
-                                    ? newOrder.notes
-                                        ? `(${newOrder.notes})`
-                                        : ""
-                                    : ""}`,
+                            message: message,
                         },
                     });
                 }
