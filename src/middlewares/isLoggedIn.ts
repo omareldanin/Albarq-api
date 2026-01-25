@@ -3,8 +3,13 @@ import jwt from "jsonwebtoken";
 import {env} from "../config";
 import {AppError} from "../lib/AppError";
 import type {loggedInUserType} from "../types/user";
+import {prisma} from "../database/db";
 
-export const isLoggedIn = (req: Request, res: Response, next: NextFunction) => {
+export const isLoggedIn = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     let token: string;
     // IS USER LOGGED IN
@@ -32,11 +37,26 @@ export const isLoggedIn = (req: Request, res: Response, next: NextFunction) => {
       repositoryId,
     } = jwt.verify(
       token,
-      env.ACCESS_TOKEN_SECRET as string
+      env.ACCESS_TOKEN_SECRET as string,
     ) as loggedInUserType;
 
     // TODO: Check if user still exists
+    const user = await prisma.user.findUnique({
+      where: {
+        id: id,
+      },
+      select: {
+        employee: {
+          select: {
+            deleted: true,
+          },
+        },
+      },
+    });
 
+    if (!user || user.employee?.deleted) {
+      return next(new AppError("الرجاء تسجيل الدخول", 401));
+    }
     // TODO: Check if user changed password after the token was issued
 
     // req.user = { id, email, subdomain, role };
