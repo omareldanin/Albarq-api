@@ -7,7 +7,7 @@ exports.isLoggedIn = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = require("../config");
 const AppError_1 = require("../lib/AppError");
-const db_1 = require("../database/db");
+// import {prisma} from "../database/db";
 const isLoggedIn = async (req, res, next) => {
     try {
         let token;
@@ -24,21 +24,21 @@ const isLoggedIn = async (req, res, next) => {
         // IS TOKEN VALID
         const { id, name, username, role, permissions, companyID, companyName, mainCompany, clientId, branchId, mainRepository, repositoryId, } = jsonwebtoken_1.default.verify(token, config_1.env.ACCESS_TOKEN_SECRET);
         // TODO: Check if user still exists
-        const user = await db_1.prisma.user.findUnique({
-            where: {
-                id: id,
-            },
-            select: {
-                employee: {
-                    select: {
-                        deleted: true,
-                    },
-                },
-            },
-        });
-        if (!user || user.employee?.deleted) {
-            return next(new AppError_1.AppError("الرجاء تسجيل الدخول", 401));
-        }
+        // const user = await prisma.user.findUnique({
+        //   where: {
+        //     id: id,
+        //   },
+        //   select: {
+        //     employee: {
+        //       select: {
+        //         deleted: true,
+        //       },
+        //     },
+        //   },
+        // });
+        // if (!user || user.employee?.deleted) {
+        //   return next(new AppError("الرجاء تسجيل الدخول", 401));
+        // }
         // TODO: Check if user changed password after the token was issued
         // req.user = { id, email, subdomain, role };
         res.locals.user = {
