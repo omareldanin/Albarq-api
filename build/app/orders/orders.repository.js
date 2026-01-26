@@ -1439,6 +1439,7 @@ class OrdersRepository {
                     },
                 ],
             };
+        const start = Date.now();
         if (data.filters.minified === true || data.filters.forMobile === true) {
             const paginatedOrders = await db_1.prisma.order.findManyPaginated({
                 where: data.loggedInUser?.role === "RECEIVING_AGENT" &&
@@ -1748,7 +1749,9 @@ class OrdersRepository {
             page: data.filters.page,
             size: data.filters.size,
         });
+        console.log("Orders query time1:", Date.now() - start);
         const ordersReformed = paginatedOrders.data.map(orders_responses_1.orderReform);
+        console.log("Orders query time2:", Date.now() - start);
         const ordersMetaDataAggregate = await db_1.prisma.order.aggregate({
             where: where,
             _count: {
@@ -1763,22 +1766,27 @@ class OrdersRepository {
                 deliveryCost: true,
             },
         });
-        const ordersMetaDataGroupByStatus = await db_1.prisma.order.groupBy({
-            where: where,
-            by: ["status"],
-            _count: {
-                status: true,
-            },
-        });
-        const ordersMetaDataGroupByStatusReformed = Object.keys(client_1.OrderStatus).map((status) => {
-            const statusCount = ordersMetaDataGroupByStatus.find((orderStatus) => {
-                return orderStatus.status === status;
-            });
-            return {
-                status: status,
-                count: statusCount?._count?.status || 0,
-            };
-        });
+        console.log("Orders query time3:", Date.now() - start);
+        // const ordersMetaDataGroupByStatus = await prisma.order.groupBy({
+        //   where: where,
+        //   by: ["status"],
+        //   _count: {
+        //     status: true,
+        //   },
+        // });
+        // const ordersMetaDataGroupByStatusReformed = (
+        //   Object.keys(OrderStatus) as Array<keyof typeof OrderStatus>
+        // ).map((status) => {
+        //   const statusCount = ordersMetaDataGroupByStatus.find(
+        //     (orderStatus: {status: string}) => {
+        //       return orderStatus.status === status;
+        //     },
+        //   );
+        //   return {
+        //     status: status,
+        //     count: statusCount?._count?.status || 0,
+        //   };
+        // });
         const ordersMetaDataReformed = {
             count: ordersMetaDataAggregate._count.id,
             totalCost: ordersMetaDataAggregate._sum.totalCost || 0,
@@ -1787,7 +1795,7 @@ class OrdersRepository {
             deliveryAgentNet: ordersMetaDataAggregate._sum.deliveryAgentNet || 0,
             companyNet: ordersMetaDataAggregate._sum.companyNet || 0,
             deliveryCost: ordersMetaDataAggregate._sum.deliveryCost || 0,
-            countByStatus: ordersMetaDataGroupByStatusReformed,
+            // countByStatus: ordersMetaDataGroupByStatusReformed,
         };
         return {
             orders: ordersReformed,
