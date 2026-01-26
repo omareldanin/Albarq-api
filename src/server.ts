@@ -20,7 +20,7 @@ export const io = new Server(newServer, {
 
 io.on("connection", (socket) => {
   socket.emit("newConnect", {message: "you are connected"});
-  console.log("✅ User connected:", socket.id);
+  // console.log("✅ User connected:", socket.id);
 
   socket.on("joinChat", async (data) => {
     socket.join(`chat_${data.orderId}`);
@@ -35,7 +35,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log("🔥 Client disconnected:", socket.id);
+    // console.log("🔥 Client disconnected:", socket.id);
   });
 });
 

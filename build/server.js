@@ -22,7 +22,7 @@ exports.io = new socket_io_1.Server(newServer, {
 });
 exports.io.on("connection", (socket) => {
     socket.emit("newConnect", { message: "you are connected" });
-    console.log("✅ User connected:", socket.id);
+    // console.log("✅ User connected:", socket.id);
     socket.on("joinChat", async (data) => {
         socket.join(`chat_${data.orderId}`);
         socket.join(`${data.userId}`);
@@ -35,7 +35,7 @@ exports.io.on("connection", (socket) => {
         socket.leave(`chat_${orderId}`);
     });
     socket.on("disconnect", () => {
-        console.log("🔥 Client disconnected:", socket.id);
+        // console.log("🔥 Client disconnected:", socket.id);
     });
 });
 const server = newServer.listen(config_1.env.PORT, () => {
