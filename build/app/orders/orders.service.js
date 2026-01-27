@@ -550,7 +550,7 @@ class OrdersService {
         try {
             // Update status
             if ((data.orderData.status && oldOrderData.status !== newOrder.status) ||
-                data.orderData.notes !== oldOrderData.notes) {
+                (data.orderData.notes && data.orderData.notes !== oldOrderData.notes)) {
                 // send notification to client
                 if (data.loggedInUser.role !== "DELIVERY_AGENT" &&
                     data.loggedInUser.role !== "RECEIVING_AGENT" &&
