@@ -3302,126 +3302,131 @@ export class OrdersRepository {
             ],
           } satisfies Prisma.OrderWhereInput);
 
-    const ordersStatisticsByStatus = await prisma.order.groupBy({
-      by: ["status"],
-      _sum: {
-        totalCost: true,
-      },
-      _count: {
-        id: true,
-      },
-      where: {
-        ...filtersReformed,
-        OR:
-          data.loggedInUser.role === "CLIENT" ||
-          data.loggedInUser.role === "INQUIRY_EMPLOYEE" ||
-          data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT" ||
-          data.loggedInUser.role === "CLIENT_ASSISTANT"
-            ? [
-                {
-                  clientReport: {
-                    none: {
-                      secondaryType: "DELIVERED",
-                    },
-                  },
-                  status: {
-                    notIn: ["RETURNED"],
-                  },
-                },
-                {
-                  clientReport: {
-                    none: {
-                      secondaryType: "RETURNED",
-                    },
-                  },
-                  status: {
-                    in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
-                  },
-                },
-              ]
-            : data.loggedInUser.role === "DELIVERY_AGENT"
+    const [
+      ordersStatisticsByStatus,
+      ordersStatisticsByGovernorate,
+      allOrdersStatistics,
+      allOrdersStatisticsWithoutClientReport,
+      allOrdersStatisticsWithoutDeliveryReport,
+      allOrdersStatisticsWithoutCompanyReport,
+      todayOrdersStatistics,
+    ] = await prisma.$transaction([
+      prisma.order.groupBy({
+        by: ["status"],
+        _sum: {
+          totalCost: true,
+        },
+        _count: {
+          id: true,
+        },
+        where: {
+          ...filtersReformed,
+          OR:
+            data.loggedInUser.role === "CLIENT" ||
+            data.loggedInUser.role === "INQUIRY_EMPLOYEE" ||
+            data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT" ||
+            data.loggedInUser.role === "CLIENT_ASSISTANT"
               ? [
                   {
-                    deliveryAgentReport: {is: null},
+                    clientReport: {
+                      none: {
+                        secondaryType: "DELIVERED",
+                      },
+                    },
                     status: {
                       notIn: ["RETURNED"],
                     },
                   },
                   {
-                    deliveryAgentReport: {report: {deleted: true}},
-                    status: {
-                      notIn: ["RETURNED"],
+                    clientReport: {
+                      none: {
+                        secondaryType: "RETURNED",
+                      },
                     },
-                  },
-                  {
-                    secondaryStatus: "WITH_AGENT",
                     status: {
                       in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
                     },
                   },
                 ]
-              : data.loggedInUser.role === "REPOSITORIY_EMPLOYEE" ||
-                  data.loggedInUser.role === "BRANCH_MANAGER"
+              : data.loggedInUser.role === "DELIVERY_AGENT"
                 ? [
                     {
-                      branch: {
-                        id: data.loggedInUser.branchId,
+                      deliveryAgentReport: {is: null},
+                      status: {
+                        notIn: ["RETURNED"],
                       },
-                      status: {not: "WITH_RECEIVING_AGENT"},
                     },
                     {
-                      client: {
-                        branchId: data.loggedInUser?.branchId,
+                      deliveryAgentReport: {report: {deleted: true}},
+                      status: {
+                        notIn: ["RETURNED"],
                       },
-                      status: {not: "WITH_RECEIVING_AGENT"},
                     },
                     {
-                      status: "WITH_RECEIVING_AGENT",
-                      deliveryAgent: {
-                        branchId: data.loggedInUser.branchId,
+                      secondaryStatus: "WITH_AGENT",
+                      status: {
+                        in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
                       },
                     },
                   ]
-                : data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-                    data.loggedInUser?.role !== "RECEIVING_AGENT"
+                : data.loggedInUser.role === "REPOSITORIY_EMPLOYEE" ||
+                    data.loggedInUser.role === "BRANCH_MANAGER"
                   ? [
                       {
                         branch: {
-                          id: data.loggedInUser?.branchId,
+                          id: data.loggedInUser.branchId,
+                        },
+                        status: {not: "WITH_RECEIVING_AGENT"},
+                      },
+                      {
+                        client: {
+                          branchId: data.loggedInUser?.branchId,
+                        },
+                        status: {not: "WITH_RECEIVING_AGENT"},
+                      },
+                      {
+                        status: "WITH_RECEIVING_AGENT",
+                        deliveryAgent: {
+                          branchId: data.loggedInUser.branchId,
                         },
                       },
                     ]
-                  : undefined,
-      },
-    });
-
-    const ordersStatisticsByGovernorate = await prisma.order.groupBy({
-      by: ["governorate"],
-      _sum: {
-        totalCost: true,
-      },
-      _count: {
-        id: true,
-      },
-      where: {
-        ...filtersReformed,
-      },
-    });
-
-    const allOrdersStatistics = await prisma.order.aggregate({
-      _sum: {
-        totalCost: true,
-      },
-      _count: {
-        id: true,
-      },
-      where: {
-        ...filtersReformed,
-      },
-    });
-
-    const allOrdersStatisticsWithoutClientReport = await prisma.order.aggregate(
-      {
+                  : data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                      data.loggedInUser?.role !== "RECEIVING_AGENT"
+                    ? [
+                        {
+                          branch: {
+                            id: data.loggedInUser?.branchId,
+                          },
+                        },
+                      ]
+                    : undefined,
+        },
+      }),
+      prisma.order.groupBy({
+        by: ["governorate"],
+        _sum: {
+          totalCost: true,
+        },
+        _count: {
+          id: true,
+        },
+        where: {
+          ...filtersReformed,
+        },
+      }),
+      prisma.order.aggregate({
+        _sum: {
+          totalCost: true,
+        },
+        _count: {
+          id: true,
+        },
+        where: {
+          ...filtersReformed,
+        },
+      }),
+      prisma.order.aggregate({
         _sum: {
           paidAmount: true,
           deliveryCost: true,
@@ -3447,11 +3452,8 @@ export class OrdersRepository {
             in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
           },
         },
-      },
-    );
-
-    const allOrdersStatisticsWithoutDeliveryReport =
-      await prisma.order.aggregate({
+      }),
+      prisma.order.aggregate({
         _sum: {
           paidAmount: true,
           deliveryAgentNet: true,
@@ -3469,10 +3471,8 @@ export class OrdersRepository {
             in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
           },
         },
-      });
-
-    const allOrdersStatisticsWithoutCompanyReport =
-      await prisma.order.aggregate({
+      }),
+      prisma.order.aggregate({
         _sum: {
           paidAmount: true,
         },
@@ -3497,24 +3497,24 @@ export class OrdersRepository {
             in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
           },
         },
-      });
-
-    const todayOrdersStatistics = await prisma.order.aggregate({
-      _sum: {totalCost: true},
-      _count: {id: true},
-      where: {
-        ...filtersReformed,
-        deleted: false,
-        deliveryDate:
-          data.loggedInUser.role === "DELIVERY_AGENT"
-            ? {gte: new Date(Date.now() - 22 * 60 * 60 * 1000)}
-            : undefined,
-        receivedAt:
-          data.loggedInUser.role !== "DELIVERY_AGENT"
-            ? {gte: new Date(Date.now() - 22 * 60 * 60 * 1000)}
-            : undefined,
-      },
-    });
+      }),
+      prisma.order.aggregate({
+        _sum: {totalCost: true},
+        _count: {id: true},
+        where: {
+          ...filtersReformed,
+          deleted: false,
+          deliveryDate:
+            data.loggedInUser.role === "DELIVERY_AGENT"
+              ? {gte: new Date(Date.now() - 22 * 60 * 60 * 1000)}
+              : undefined,
+          receivedAt:
+            data.loggedInUser.role !== "DELIVERY_AGENT"
+              ? {gte: new Date(Date.now() - 22 * 60 * 60 * 1000)}
+              : undefined,
+        },
+      }),
+    ]);
 
     return statisticsReformed({
       ordersStatisticsByStatus,
