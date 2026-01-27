@@ -1,4 +1,5 @@
 import {Governorate, OrderStatus, type Prisma} from "@prisma/client";
+import {loggedInUserType} from "../../types/user";
 
 export const OrderStatusData = {
   REGISTERED: {
@@ -392,7 +393,7 @@ export const orderSelectApiKey = {
 export const orderReform = (
   order: Prisma.OrderGetPayload<{
     select: typeof orderSelect;
-  }> | null
+  }> | null,
 ) => {
   if (!order) {
     return null;
@@ -487,7 +488,7 @@ export const orderReform = (
 export const orderReformApiKey = (
   order: Prisma.OrderGetPayload<{
     select: typeof orderSelectApiKey;
-  }> | null
+  }> | null,
 ) => {
   if (!order) {
     return null;
@@ -515,7 +516,7 @@ export const orderReformApiKey = (
 export const mobileOrderReform = (
   order: Prisma.OrderGetPayload<{
     select: typeof orderSelect;
-  }> | null
+  }> | null,
 ) => {
   if (!order) {
     return null;
@@ -527,21 +528,23 @@ export const mobileOrderReform = (
       order.status === "IN_MAIN_REPOSITORY")
       ? "في " + order.repository?.name
       : order.secondaryStatus === "IN_REPOSITORY"
-      ? orderStatusArabicNames[order.status] +
-        " " +
-        "في " +
-        order.repository?.name
-      : order.secondaryStatus === "IN_CAR"
-      ? "مرسل إلي " + order.repository?.name
-      : order.secondaryStatus === "WITH_AGENT" &&
-        order.status !== "WITH_DELIVERY_AGENT" &&
-        order.status !== "WITH_RECEIVING_AGENT"
-      ? orderStatusArabicNames[order.status] + "-" + "مع المندوب"
-      : order.secondaryStatus === "WITH_CLIENT"
-      ? orderStatusArabicNames[order.status] + "-" + "مع العميل"
-      : order.secondaryStatus === "WITH_RECEIVING_AGENT"
-      ? orderStatusArabicNames[order.status] + "-" + "مع مندوب الاستلام"
-      : orderStatusArabicNames[order.status]
+        ? orderStatusArabicNames[order.status] +
+          " " +
+          "في " +
+          order.repository?.name
+        : order.secondaryStatus === "IN_CAR"
+          ? "مرسل إلي " + order.repository?.name
+          : order.secondaryStatus === "WITH_AGENT" &&
+              order.status !== "WITH_DELIVERY_AGENT" &&
+              order.status !== "WITH_RECEIVING_AGENT"
+            ? orderStatusArabicNames[order.status] + "-" + "مع المندوب"
+            : order.secondaryStatus === "WITH_CLIENT"
+              ? orderStatusArabicNames[order.status] + "-" + "مع العميل"
+              : order.secondaryStatus === "WITH_RECEIVING_AGENT"
+                ? orderStatusArabicNames[order.status] +
+                  "-" +
+                  "مع مندوب الاستلام"
+                : orderStatusArabicNames[order.status]
   }`;
 
   const orderReformed = {
@@ -699,7 +702,7 @@ export const statisticsReformed = (statistics: {
         const statusCount = statistics.ordersStatisticsByStatus.find(
           (orderStatus: {status: string}) => {
             return orderStatus.status === status;
-          }
+          },
         );
         return {
           status: status,
@@ -720,7 +723,7 @@ export const statisticsReformed = (statistics: {
       const governorateCount = statistics.ordersStatisticsByGovernorate.find(
         (orderStatus: {governorate: string}) => {
           return orderStatus.governorate === governorate;
-        }
+        },
       );
       return {
         governorate: governorate,
@@ -789,7 +792,7 @@ export const orderTimelineSelect = {
 export const orderTimelineReform = (
   timeline: Prisma.OrderTimelineGetPayload<{
     select: typeof orderTimelineSelect;
-  }>
+  }>,
 ) => {
   return {
     id: timeline.id,
@@ -801,3 +804,61 @@ export const orderTimelineReform = (
     by: timeline.by as string,
   };
 };
+
+export function getRoleBasedOrCondition(user: loggedInUserType) {
+  switch (user.role) {
+    case "CLIENT":
+    case "INQUIRY_EMPLOYEE":
+    case "EMPLOYEE_CLIENT_ASSISTANT":
+    case "CLIENT_ASSISTANT":
+      return [
+        {
+          clientReport: {none: {secondaryType: "DELIVERED"}},
+          status: {notIn: ["RETURNED"]},
+        },
+        {
+          clientReport: {none: {secondaryType: "RETURNED"}},
+          status: {in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"]},
+        },
+      ];
+
+    case "DELIVERY_AGENT":
+      return [
+        {
+          deliveryAgentReport: {is: null},
+          status: {notIn: ["RETURNED"]},
+        },
+        {
+          deliveryAgentReport: {report: {deleted: true}},
+          status: {notIn: ["RETURNED"]},
+        },
+        {
+          secondaryStatus: "WITH_AGENT",
+          status: {in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"]},
+        },
+      ];
+
+    case "REPOSITORIY_EMPLOYEE":
+    case "BRANCH_MANAGER":
+      return [
+        {
+          branch: {id: user.branchId},
+          status: {not: "WITH_RECEIVING_AGENT"},
+        },
+        {
+          client: {branchId: user.branchId},
+          status: {not: "WITH_RECEIVING_AGENT"},
+        },
+        {
+          status: "WITH_RECEIVING_AGENT",
+          deliveryAgent: {branchId: user.branchId},
+        },
+      ];
+
+    default:
+      if (user.role !== "COMPANY_MANAGER" && user.role !== "RECEIVING_AGENT") {
+        return [{branch: {id: user.branchId}}];
+      }
+      return undefined;
+  }
+}

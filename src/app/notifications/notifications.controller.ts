@@ -31,7 +31,7 @@ export class NotificationsController {
         userID,
         page,
         size,
-        seen
+        seen,
       );
 
     res.status(200).json({
@@ -49,6 +49,7 @@ export class NotificationsController {
     if (!notificationID) {
       throw new AppError(" no notificationID", 404);
     }
+
     const notificationData = NotificationUpdateSchema.parse(req.body);
 
     const notification = await notificationsRepository.updateNotification({

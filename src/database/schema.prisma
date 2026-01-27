@@ -430,15 +430,24 @@ model Order {
   companyReport          CompanyReport[]          @relation("CompanyReportToOrder")
   repositoryReport       RepositoryReport[]       @relation("OrderToRepositoryReport")
 
-  @@index([receiptNumber])
-  @@index([status])
-  @@index([secondaryStatus])
-  @@index([clientId])
-  @@index([deliveryAgentId])
-  @@index([governorate])
-  @@index([storeId])
-  @@index([branchId])
-  @@index([companyId])
+@@index([receiptNumber])
+@@index([status])
+@@index([secondaryStatus])
+@@index([clientId])
+@@index([deliveryAgentId])
+@@index([governorate])
+@@index([storeId])
+@@index([branchId])
+@@index([companyId])
+
+// 🚀 pagination & performance
+@@index([createdAt(sort: Desc)])
+@@index([clientId, createdAt(sort: Desc)])
+@@index([branchId, createdAt(sort: Desc)])
+@@index([companyId, createdAt(sort: Desc)])
+@@index([storeId, createdAt(sort: Desc)])
+@@index([deliveryAgentId, createdAt(sort: Desc)])
+
 }
 
 model Chat {

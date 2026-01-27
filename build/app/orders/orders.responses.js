@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.orderTimelineReform = exports.orderTimelineSelect = exports.statisticsReformed = exports.mobileOrderReform = exports.orderReformApiKey = exports.orderReform = exports.orderSelectApiKey = exports.orderSelect = exports.orderStatusArabicNames = exports.orderSecondaryStatusArabicNames = exports.OrderStatusData = void 0;
+exports.getRoleBasedOrCondition = getRoleBasedOrCondition;
 const client_1 = require("@prisma/client");
 exports.OrderStatusData = {
     REGISTERED: {
@@ -516,7 +517,9 @@ const mobileOrderReform = (order) => {
                     : order.secondaryStatus === "WITH_CLIENT"
                         ? exports.orderStatusArabicNames[order.status] + "-" + "مع العميل"
                         : order.secondaryStatus === "WITH_RECEIVING_AGENT"
-                            ? exports.orderStatusArabicNames[order.status] + "-" + "مع مندوب الاستلام"
+                            ? exports.orderStatusArabicNames[order.status] +
+                                "-" +
+                                "مع مندوب الاستلام"
                             : exports.orderStatusArabicNames[order.status]}`;
     const orderReformed = {
         ...order,
@@ -675,4 +678,58 @@ const orderTimelineReform = (timeline) => {
     };
 };
 exports.orderTimelineReform = orderTimelineReform;
+function getRoleBasedOrCondition(user) {
+    switch (user.role) {
+        case "CLIENT":
+        case "INQUIRY_EMPLOYEE":
+        case "EMPLOYEE_CLIENT_ASSISTANT":
+        case "CLIENT_ASSISTANT":
+            return [
+                {
+                    clientReport: { none: { secondaryType: "DELIVERED" } },
+                    status: { notIn: ["RETURNED"] },
+                },
+                {
+                    clientReport: { none: { secondaryType: "RETURNED" } },
+                    status: { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] },
+                },
+            ];
+        case "DELIVERY_AGENT":
+            return [
+                {
+                    deliveryAgentReport: { is: null },
+                    status: { notIn: ["RETURNED"] },
+                },
+                {
+                    deliveryAgentReport: { report: { deleted: true } },
+                    status: { notIn: ["RETURNED"] },
+                },
+                {
+                    secondaryStatus: "WITH_AGENT",
+                    status: { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] },
+                },
+            ];
+        case "REPOSITORIY_EMPLOYEE":
+        case "BRANCH_MANAGER":
+            return [
+                {
+                    branch: { id: user.branchId },
+                    status: { not: "WITH_RECEIVING_AGENT" },
+                },
+                {
+                    client: { branchId: user.branchId },
+                    status: { not: "WITH_RECEIVING_AGENT" },
+                },
+                {
+                    status: "WITH_RECEIVING_AGENT",
+                    deliveryAgent: { branchId: user.branchId },
+                },
+            ];
+        default:
+            if (user.role !== "COMPANY_MANAGER" && user.role !== "RECEIVING_AGENT") {
+                return [{ branch: { id: user.branchId } }];
+            }
+            return undefined;
+    }
+}
 //# sourceMappingURL=orders.responses.js.map
