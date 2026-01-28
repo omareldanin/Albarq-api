@@ -390,6 +390,163 @@ export const orderSelectApiKey = {
   },
 } satisfies Prisma.OrderSelect;
 
+export const minifiedOrderSelect = {
+  id: true,
+  totalCost: true,
+  paidAmount: true,
+  deliveryCost: true,
+  clientNet: true,
+  printed: true,
+  deliveryAgentNet: true,
+  companyNet: true,
+  discount: true,
+  branchNet: true,
+  receiptNumber: true,
+  quantity: true,
+  weight: true,
+  recipientName: true,
+  recipientPhones: true,
+  recipientAddress: true,
+  notes: true,
+  clientNotes: true,
+  details: true,
+  status: true,
+  secondaryStatus: true,
+  confirmed: true,
+  deliveryType: true,
+  deliveryDate: true,
+  currentLocation: true,
+  createdAt: true,
+  updatedAt: true,
+  processingStatus: true,
+  processed: true,
+  processedAt: true,
+  forwardedRepo: true,
+  forwardedBranchId: true,
+  receivedBranchId: true,
+  branchDeliveryCost: true,
+  processedBy: {
+    select: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+        },
+      },
+      role: true,
+    },
+  },
+  forwarded: true,
+  forwardedAt: true,
+  forwardedBy: {
+    select: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+        },
+      },
+    },
+  },
+  forwardedFrom: {
+    select: {
+      id: true,
+      name: true,
+      logo: true,
+      registrationText: true,
+    },
+  },
+  client: {
+    select: {
+      showNumbers: true,
+      showDeliveryNumber: true,
+      branchId: true,
+      branch: {
+        select: {
+          name: true,
+        },
+      },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+        },
+      },
+      company: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  },
+  deliveryAgent: {
+    select: {
+      deliveryCost: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+        },
+      },
+    },
+  },
+  oldDeliveryAgentId: true,
+  orderProducts: {
+    select: {
+      quantity: true,
+      product: true,
+      color: true,
+      size: true,
+    },
+  },
+  governorate: true,
+  location: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+  store: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+  clientReport: {
+    where: {
+      report: {
+        deleted: false,
+      },
+    },
+    select: {
+      id: true,
+      secondaryType: true,
+      clientId: true,
+      storeId: true,
+      report: {
+        select: {
+          url: true,
+          deleted: true,
+        },
+      },
+    },
+  },
+  deleted: true,
+  deletedAt: true,
+  forwardedToGov: true,
+  forwardedToMainRepo: true,
+  deletedBy: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+} satisfies Prisma.OrderSelect;
+
 export const orderReform = (
   order: Prisma.OrderGetPayload<{
     select: typeof orderSelect;

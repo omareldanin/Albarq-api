@@ -3,6 +3,7 @@ import {prisma} from "../../database/db";
 import type {loggedInUserType} from "../../types/user";
 import type {LocationCreateType, LocationUpdateType} from "./locations.dto";
 import {locationReform, locationSelect} from "./locations.responses";
+import {redis} from "../../lib/redis";
 
 export const governorateArabicNames = {
   AL_ANBAR: "الأنبار",
@@ -27,9 +28,31 @@ export const governorateArabicNames = {
 };
 
 export class LocationsRepository {
+  locationsCacheKey(filters: {
+    page: number;
+    size: number;
+    search?: string;
+    branchID?: number;
+    governorate?: Governorate;
+    deliveryAgentID?: number;
+    companyID?: number;
+    minified?: boolean;
+  }) {
+    return `locations:${JSON.stringify({
+      page: filters.page,
+      size: filters.size,
+      search: filters.search ?? null,
+      branchID: filters.branchID ?? null,
+      governorate: filters.governorate ?? null,
+      deliveryAgentID: filters.deliveryAgentID ?? null,
+      companyID: filters.companyID ?? null,
+      minified: filters.minified ?? false,
+    })}`;
+  }
+
   async createLocation(
     loggedInUser: loggedInUserType,
-    data: LocationCreateType
+    data: LocationCreateType,
   ) {
     const companyID = loggedInUser.companyID;
 
@@ -72,6 +95,10 @@ export class LocationsRepository {
       },
       select: locationSelect,
     });
+    const keys = await redis.keys("locations:*");
+    if (keys.length) {
+      await redis.del(keys);
+    }
     return locationReform(createdLocation);
   }
 
@@ -122,6 +149,18 @@ export class LocationsRepository {
       ],
     } satisfies Prisma.LocationWhereInput;
 
+    const cacheKey = this.locationsCacheKey(filters);
+
+    const cached = await redis.get(cacheKey);
+
+    if (cached) {
+      return JSON.parse(cached) as {
+        locations: any[];
+        pagesCount: number;
+      };
+    }
+
+    let result;
     if (filters.minified === true) {
       const paginatedLocations = await prisma.location.findManyPaginated(
         {
@@ -136,43 +175,47 @@ export class LocationsRepository {
         {
           page: 1,
           size: 10000,
-        }
+        },
       );
-      return {
+      result = {
         locations: paginatedLocations.data,
         pagesCount: paginatedLocations.pagesCount,
       };
-    }
-
-    const paginatedLocations = await prisma.location.findManyPaginated(
-      {
-        where: where,
-        orderBy: {
-          id: "desc",
-        },
-        select: {
-          ...locationSelect,
-          // This makes sure that only delivery agents that belong to the loggedin user company are returned
-          deliveryAgentsLocations: {
-            select: locationSelect.deliveryAgentsLocations.select,
-            where: {
-              company: {
-                id: filters.companyID,
+    } else {
+      const paginatedLocations = await prisma.location.findManyPaginated(
+        {
+          where: where,
+          orderBy: {
+            id: "desc",
+          },
+          select: {
+            ...locationSelect,
+            // This makes sure that only delivery agents that belong to the loggedin user company are returned
+            deliveryAgentsLocations: {
+              select: locationSelect.deliveryAgentsLocations.select,
+              where: {
+                company: {
+                  id: filters.companyID,
+                },
               },
             },
           },
         },
-      },
-      {
-        page: filters.page,
-        size: filters.size,
-      }
-    );
+        {
+          page: filters.page,
+          size: filters.size,
+        },
+      );
 
-    return {
-      locations: paginatedLocations.data.map(locationReform),
-      pagesCount: paginatedLocations.pagesCount,
-    };
+      result = {
+        locations: paginatedLocations.data.map(locationReform),
+        pagesCount: paginatedLocations.pagesCount,
+      };
+    }
+
+    await redis.set(cacheKey, JSON.stringify(result), "EX", 60 * 60 * 24 * 2);
+
+    return result;
   }
 
   async getLocation(data: {locationID: number}) {
@@ -233,6 +276,10 @@ export class LocationsRepository {
       },
       select: locationSelect,
     });
+    const keys = await redis.keys("locations:*");
+    if (keys.length) {
+      await redis.del(keys);
+    }
     return locationReform(location);
   }
 
@@ -242,6 +289,10 @@ export class LocationsRepository {
         id: data.locationID,
       },
     });
+    const keys = await redis.keys("locations:*");
+    if (keys.length) {
+      await redis.del(keys);
+    }
     return true;
   }
 

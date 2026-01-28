@@ -221,6 +221,9 @@ model Branch {
   transctions         Transaction[]
 
   @@unique([name, companyId])
+  @@index([companyId])
+  @@index([governorate])
+
 }
 
 model InquiryEmployeesBranches {

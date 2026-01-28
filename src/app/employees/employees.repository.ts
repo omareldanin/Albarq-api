@@ -7,13 +7,35 @@ import type {
   EmployeesFiltersType,
 } from "./employees.dto";
 import {employeeReform, employeeSelect} from "./employees.responses";
+import {redis} from "../../lib/redis";
 
 export class EmployeesRepository {
+  employeesCacheKey(data: {
+    filters: EmployeesFiltersType;
+    loggedInUser: loggedInUserType;
+  }) {
+    return `employees:${JSON.stringify({
+      filters: {
+        ...data.filters,
+        ordersStartDate: data.filters.ordersStartDate ?? null,
+        ordersEndDate: data.filters.ordersEndDate ?? null,
+      },
+      role: data.loggedInUser.role,
+      companyID: data.loggedInUser.companyID ?? null,
+      userID: data.loggedInUser.id ?? null, // safety
+    })}`;
+  }
+
   async createEmployee(data: {
     companyID: number;
     loggedInUser: loggedInUserType;
     employeeData: EmployeeCreateType;
   }) {
+    const keys = await redis.keys("employees:*");
+    if (keys.length) {
+      await redis.del(keys);
+    }
+
     const employee = await prisma.employee.findUnique({
       where: {
         id: data.loggedInUser.id,
@@ -104,18 +126,18 @@ export class EmployeesRepository {
               }),
             }
           : data.employeeData.storesIDs
-          ? {
-              create: data.employeeData.storesIDs.map((storeID) => {
-                return {
-                  store: {
-                    connect: {
-                      id: storeID,
+            ? {
+                create: data.employeeData.storesIDs.map((storeID) => {
+                  return {
+                    store: {
+                      connect: {
+                        id: storeID,
+                      },
                     },
-                  },
-                };
-              }),
-            }
-          : undefined,
+                  };
+                }),
+              }
+            : undefined,
         inquiryLocations: data.employeeData.inquiryLocationsIDs
           ? {
               createMany: {
@@ -124,7 +146,7 @@ export class EmployeesRepository {
                     return {
                       locationId: locationID,
                     };
-                  }
+                  },
                 ),
               },
             }
@@ -184,24 +206,35 @@ export class EmployeesRepository {
     filters: EmployeesFiltersType;
     loggedInUser: loggedInUserType;
   }) {
+    const cacheKey = this.employeesCacheKey(data);
+
+    // 1️⃣ Redis first (FAST PATH)
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return JSON.parse(cached) as {
+        employees: any[];
+        pagesCount: number;
+      };
+    }
+
+    // -----------------------------
+    // ORIGINAL LOGIC (UNCHANGED)
+    // -----------------------------
+
     let emergency = false;
     let mainEmergency = false;
 
-    if (data.filters.roles?.includes("EMERGENCY_EMPLOYEE")) {
-      emergency = true;
-    }
-    if (data.filters.roles?.includes("MAIN_EMERGENCY_EMPLOYEE")) {
+    if (data.filters.roles?.includes("EMERGENCY_EMPLOYEE")) emergency = true;
+    if (data.filters.roles?.includes("MAIN_EMERGENCY_EMPLOYEE"))
       mainEmergency = true;
-    }
-    let deliveryStartDate = new Date();
-    let deliveryEndDate = new Date();
 
-    if (data.filters.ordersStartDate) {
-      deliveryStartDate = new Date(data.filters.ordersStartDate);
-    }
-    if (data.filters.ordersEndDate) {
-      deliveryEndDate = new Date(data.filters.ordersEndDate);
-    }
+    let deliveryStartDate = data.filters.ordersStartDate
+      ? new Date(data.filters.ordersStartDate)
+      : new Date();
+
+    let deliveryEndDate = data.filters.ordersEndDate
+      ? new Date(data.filters.ordersEndDate)
+      : new Date();
 
     const where = {
       AND: [
@@ -235,9 +268,7 @@ export class EmployeesRepository {
               ? null
               : undefined,
         },
-        {
-          role: data.filters.role,
-        },
+        {role: data.filters.role},
         {
           emergency:
             data.filters.role === "INQUIRY_EMPLOYEE" ||
@@ -254,26 +285,20 @@ export class EmployeesRepository {
         },
         {
           branch: data.filters.branchID
-            ? {
-                id: data.filters.branchID,
-              }
+            ? {id: data.filters.branchID}
             : undefined,
         },
         {
-          Client: {
-            id: data.filters.clientId,
-          },
+          Client: {id: data.filters.clientId},
         },
         {
           deliveryAgentsLocations: data.filters.locationID
-            ? data.filters.roles?.find((role) => {
-                return role === "DELIVERY_AGENT" || role === "RECEIVING_AGENT";
-              })
+            ? data.filters.roles?.some(
+                (r) => r === "DELIVERY_AGENT" || r === "RECEIVING_AGENT",
+              )
               ? {
                   some: {
-                    location: {
-                      id: data.filters.locationID,
-                    },
+                    location: {id: data.filters.locationID},
                   },
                 }
               : undefined
@@ -281,23 +306,87 @@ export class EmployeesRepository {
         },
         {deleted: data.filters.deleted},
         {
-          company: {
-            id: data.filters.companyID,
-          },
+          company: {id: data.filters.companyID},
         },
       ],
     } satisfies Prisma.EmployeeWhereInput;
 
+    let result;
+
+    // -----------------------------
+    // MINIFIED
+    // -----------------------------
     if (data.filters.minified === true) {
       const employees = await prisma.employee.findManyPaginated(
         {
-          where: where,
+          where,
           select: {
             id: true,
             branchId: true,
-            user: {
+            user: {select: {name: true}},
+          },
+        },
+        {
+          page: data.filters.page,
+          size: data.filters.size,
+        },
+      );
+
+      result = {
+        employees: employees.data.map((e) => ({
+          id: e.id,
+          name: e.user.name,
+          branchId: e.branchId,
+        })),
+        pagesCount: employees.pagesCount,
+      };
+    } else {
+      // -----------------------------
+      // FULL
+      // -----------------------------
+      const employees = await prisma.employee.findManyPaginated(
+        {
+          where: {
+            OR: [
+              where,
+              emergency
+                ? {
+                    emergency: true,
+                    role: "INQUIRY_EMPLOYEE",
+                    companyId: data.loggedInUser.companyID ?? undefined,
+                  }
+                : mainEmergency
+                  ? {
+                      mainEmergency: true,
+                      role: "INQUIRY_EMPLOYEE",
+                      companyId: data.loggedInUser.companyID ?? undefined,
+                    }
+                  : {},
+            ],
+          },
+          orderBy: {id: "asc"},
+          select: {
+            ...employeeSelect,
+            _count: {
               select: {
-                name: true,
+                orders: {
+                  where: {
+                    AND: [
+                      {confirmed: true},
+                      {deleted: false},
+                      {
+                        deliveryDate: data.filters.ordersStartDate
+                          ? {gte: deliveryStartDate}
+                          : undefined,
+                      },
+                      {
+                        deliveryDate: data.filters.ordersEndDate
+                          ? {lt: deliveryEndDate}
+                          : undefined,
+                      },
+                    ],
+                  },
+                },
               },
             },
           },
@@ -305,85 +394,19 @@ export class EmployeesRepository {
         {
           page: data.filters.page,
           size: data.filters.size,
-        }
+        },
       );
-      return {
-        employees: employees.data.map((employee) => {
-          return {
-            id: employee.id,
-            name: employee.user.name,
-            branchId: employee.branchId,
-          };
-        }),
+
+      result = {
+        employees: employees.data.map(employeeReform),
         pagesCount: employees.pagesCount,
       };
     }
 
-    const employees = await prisma.employee.findManyPaginated(
-      {
-        where: {
-          OR: [
-            where,
-            emergency
-              ? {
-                  emergency: true,
-                  role: "INQUIRY_EMPLOYEE",
-                  companyId: data.loggedInUser.companyID ?? undefined,
-                }
-              : mainEmergency
-              ? {
-                  mainEmergency: true,
-                  role: "INQUIRY_EMPLOYEE",
-                  companyId: data.loggedInUser.companyID ?? undefined,
-                }
-              : {},
-          ],
-        },
-        orderBy: {
-          id: "asc",
-        },
-        select: {
-          ...employeeSelect,
-          _count: {
-            select: {
-              orders: {
-                where: {
-                  AND: [
-                    {confirmed: true},
-                    {deleted: false},
-                    {
-                      deliveryDate: data.filters.ordersStartDate
-                        ? {
-                            gte: deliveryStartDate,
-                          }
-                        : undefined,
-                    },
-                    // Filter by endDate
-                    {
-                      deliveryDate: data.filters.ordersEndDate
-                        ? {
-                            lt: deliveryEndDate,
-                          }
-                        : undefined,
-                    },
-                  ],
-                },
-              },
-              // deliveryAgentsLocations: true
-            },
-          },
-        },
-      },
-      {
-        page: data.filters.page,
-        size: data.filters.size,
-      }
-    );
+    // 3️⃣ Save to Redis (TTL = 10 minutes)
+    await redis.set(cacheKey, JSON.stringify(result), "EX", 60 * 60 * 24 * 2);
 
-    return {
-      employees: employees.data.map(employeeReform),
-      pagesCount: employees.pagesCount,
-    };
+    return result;
   }
 
   async getInquiryEmployeeStuff(data: {employeeID: number}) {
@@ -500,6 +523,11 @@ export class EmployeesRepository {
     // companyID: number;
     employeeData: EmployeeUpdateType;
   }) {
+    const keys = await redis.keys("employees:*");
+    if (keys.length) {
+      await redis.del(keys);
+    }
+
     const employee = await prisma.employee.update({
       where: {
         id: data.employeeID,
@@ -577,21 +605,21 @@ export class EmployeesRepository {
               }),
             }
           : data.employeeData.storesIDs
-          ? {
-              deleteMany: {
-                inquiryEmployeeId: data.employeeID,
-              },
-              create: data.employeeData.storesIDs.map((storeID) => {
-                return {
-                  store: {
-                    connect: {
-                      id: storeID,
+            ? {
+                deleteMany: {
+                  inquiryEmployeeId: data.employeeID,
+                },
+                create: data.employeeData.storesIDs.map((storeID) => {
+                  return {
+                    store: {
+                      connect: {
+                        id: storeID,
+                      },
                     },
-                  },
-                };
-              }),
-            }
-          : undefined,
+                  };
+                }),
+              }
+            : undefined,
         inquiryBranches: data.employeeData.inquiryBranchesIDs
           ? {
               deleteMany: {
@@ -642,7 +670,7 @@ export class EmployeesRepository {
                     return {
                       locationId: locationID,
                     };
-                  }
+                  },
                 ),
               },
             }
@@ -657,7 +685,7 @@ export class EmployeesRepository {
     });
     console.log(
       "inquiryDeliveryAgentsIDs",
-      data.employeeData.inquiryDeliveryAgentsIDs
+      data.employeeData.inquiryDeliveryAgentsIDs,
     );
 
     if (data.employeeData.inquiryDeliveryAgentsIDs?.length) {
@@ -672,6 +700,11 @@ export class EmployeesRepository {
   }
 
   async deleteEmployee(data: {employeeID: number}) {
+    const keys = await redis.keys("employees:*");
+    if (keys.length) {
+      await redis.del(keys);
+    }
+
     await prisma.$transaction([
       prisma.employee.delete({
         where: {
@@ -688,6 +721,10 @@ export class EmployeesRepository {
   }
 
   async deactivateEmployee(data: {employeeID: number; deletedByID: number}) {
+    const keys = await redis.keys("employees:*");
+    if (keys.length) {
+      await redis.del(keys);
+    }
     const deletedEmployee = await prisma.employee.update({
       where: {
         id: data.employeeID,
@@ -706,6 +743,10 @@ export class EmployeesRepository {
   }
 
   async reactivateEmployee(data: {employeeID: number}) {
+    const keys = await redis.keys("employees:*");
+    if (keys.length) {
+      await redis.del(keys);
+    }
     const deletedEmployee = await prisma.employee.update({
       where: {
         id: data.employeeID,

@@ -3,8 +3,29 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ClientsRepository = void 0;
 const db_1 = require("../../database/db");
 const clients_responses_1 = require("./clients.responses");
+const redis_1 = require("../../lib/redis");
 class ClientsRepository {
+    clientsCacheKey(filters) {
+        return `clients:${JSON.stringify({
+            page: filters.page,
+            size: filters.size,
+            deleted: filters.deleted ?? null,
+            companyID: filters.companyID ?? null,
+            storeID: filters.storeID ?? null,
+            branchID: filters.branchID ?? null,
+            governorate: filters.governorate ?? null,
+            phone: filters.phone ?? null,
+            name: filters.name ?? null,
+            minified: filters.minified ?? false,
+            role: filters.loggedInUser?.role ?? null,
+            userID: filters.loggedInUser?.id ?? null, // VERY IMPORTANT
+        })}`;
+    }
     async createClient(companyID, data) {
+        const keys = await redis_1.redis.keys("clients:*");
+        if (keys.length) {
+            await redis_1.redis.del(keys);
+        }
         const createdUser = await db_1.prisma.user.create({
             data: {
                 name: data.name,
@@ -62,17 +83,19 @@ class ClientsRepository {
         return (0, clients_responses_1.clientReform)(createdClient);
     }
     async getAllClientsPaginated(filters) {
+        const cacheKey = this.clientsCacheKey(filters);
+        // 1️⃣ FAST PATH – Redis
+        const cached = await redis_1.redis.get(cacheKey);
+        if (cached) {
+            return JSON.parse(cached);
+        }
         let clientIDs = [];
         if (filters.loggedInUser?.role === "CLIENT_ASSISTANT") {
             const stores = await db_1.prisma.employee.findMany({
-                where: {
-                    id: filters.loggedInUser.id,
-                },
+                where: { id: filters.loggedInUser.id },
                 select: {
                     managedStores: {
-                        select: {
-                            clientId: true,
-                        },
+                        select: { clientId: true },
                     },
                 },
             });
@@ -89,7 +112,6 @@ class ClientsRepository {
                 { branch: filters.branchID ? { id: filters.branchID } : undefined },
                 { user: { phone: filters.phone } },
                 { user: { name: { contains: filters.name } } },
-                // TODO
                 {
                     stores: filters.storeID ? { some: { id: filters.storeID } } : undefined,
                 },
@@ -105,45 +127,45 @@ class ClientsRepository {
                 },
             ],
         };
+        let result;
         if (filters.minified === true) {
             const paginatedClients = await db_1.prisma.client.findManyPaginated({
-                where: where,
+                where,
                 select: {
                     id: true,
                     user: {
-                        select: {
-                            name: true,
-                        },
+                        select: { name: true },
                     },
                 },
             }, {
                 page: 1,
                 size: 10000,
             });
-            return {
-                clients: paginatedClients.data.map((client) => {
-                    return {
-                        id: client.id,
-                        name: client.user.name,
-                    };
-                }),
+            result = {
+                clients: paginatedClients.data.map((c) => ({
+                    id: c.id,
+                    name: c.user.name,
+                })),
                 pagesCount: paginatedClients.pagesCount,
             };
         }
-        const paginatedClients = await db_1.prisma.client.findManyPaginated({
-            orderBy: {
-                id: "desc",
-            },
-            where: where,
-            select: clients_responses_1.clientSelect,
-        }, {
-            page: filters.page,
-            size: filters.size,
-        });
-        return {
-            clients: paginatedClients.data.map(clients_responses_1.clientReform),
-            pagesCount: paginatedClients.pagesCount,
-        };
+        else {
+            const paginatedClients = await db_1.prisma.client.findManyPaginated({
+                orderBy: { id: "desc" },
+                where,
+                select: clients_responses_1.clientSelect,
+            }, {
+                page: filters.page,
+                size: filters.size,
+            });
+            result = {
+                clients: paginatedClients.data.map(clients_responses_1.clientReform),
+                pagesCount: paginatedClients.pagesCount,
+            };
+        }
+        // 3️⃣ Save to Redis (TTL = 10 minutes)
+        await redis_1.redis.set(cacheKey, JSON.stringify(result), "EX", 60 * 60 * 24 * 2);
+        return result;
     }
     async getClient(data) {
         const client = await db_1.prisma.client.findUnique({
@@ -155,6 +177,10 @@ class ClientsRepository {
         return (0, clients_responses_1.clientReform)(client);
     }
     async updateClient(data) {
+        const keys = await redis_1.redis.keys("clients:*");
+        if (keys.length) {
+            await redis_1.redis.del(keys);
+        }
         const client = await db_1.prisma.client.update({
             where: {
                 id: data.clientID,
@@ -196,6 +222,10 @@ class ClientsRepository {
         return (0, clients_responses_1.clientReform)(client);
     }
     async deleteClient(data) {
+        const keys = await redis_1.redis.keys("clients:*");
+        if (keys.length) {
+            await redis_1.redis.del(keys);
+        }
         await db_1.prisma.$transaction([
             db_1.prisma.client.delete({
                 where: {
@@ -211,6 +241,10 @@ class ClientsRepository {
         return true;
     }
     async deactivateClient(data) {
+        const keys = await redis_1.redis.keys("clients:*");
+        if (keys.length) {
+            await redis_1.redis.del(keys);
+        }
         const deletedClient = await db_1.prisma.client.update({
             where: {
                 id: data.clientID,
@@ -228,6 +262,10 @@ class ClientsRepository {
         return deletedClient;
     }
     async reactivateClient(data) {
+        const keys = await redis_1.redis.keys("clients:*");
+        if (keys.length) {
+            await redis_1.redis.del(keys);
+        }
         const deletedClient = await db_1.prisma.client.update({
             where: {
                 id: data.clientID,

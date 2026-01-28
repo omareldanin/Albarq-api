@@ -2,8 +2,35 @@ import type {Prisma} from "@prisma/client";
 import {prisma} from "../../database/db";
 import type {StoreCreateType, StoreUpdateType} from "./stores.dto";
 import {storeSelect, storeSelectReform} from "./stores.responses";
+import {redis} from "../../lib/redis";
 
 export class StoresRepository {
+  clientStoresCacheKey(filters: {
+    page?: number;
+    size?: number;
+    deleted?: string;
+    clientID?: number;
+    clientAssistantID?: number;
+    companyID?: number;
+    minified?: boolean;
+    branchID?: number;
+    name?: string;
+    inquiryStoresIDs?: number[];
+  }) {
+    return `client-stores:${JSON.stringify({
+      deleted: filters.deleted ?? null,
+      clientID: filters.clientID ?? null,
+      companyID: filters.companyID ?? null,
+      name: filters.name ?? null,
+      size: filters.size ?? null,
+      page: filters.page ?? null,
+      minified: filters.minified ?? null,
+      branchID: filters.branchID ?? null,
+      clientAssistantID: filters.clientAssistantID ?? null,
+      inquiryStoresIDs: filters.inquiryStoresIDs ?? null,
+    })}`;
+  }
+
   async createStore(companyID: number, data: StoreCreateType) {
     const createdStore = await prisma.store.create({
       data: {
@@ -30,6 +57,11 @@ export class StoresRepository {
       },
       select: storeSelect,
     });
+    const keys = await redis.keys("client-stores:*");
+    if (keys.length) {
+      await redis.del(keys);
+    }
+
     return storeSelectReform(createdStore);
   }
 
@@ -45,6 +77,17 @@ export class StoresRepository {
     name?: string;
     inquiryStoresIDs?: number[];
   }) {
+    const cacheKey = this.clientStoresCacheKey(filters);
+
+    // 1️⃣ Try Redis first
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return JSON.parse(cached) as {
+        stores: any[];
+        pagesCount: number;
+      };
+    }
+
     const where = {
       AND: [
         {
@@ -95,7 +138,7 @@ export class StoresRepository {
         {
           page: 1,
           size: 10000,
-        }
+        },
       );
       return {
         stores: paginatedStores.data,
@@ -114,13 +157,17 @@ export class StoresRepository {
       {
         page: filters.page,
         size: filters.size,
-      }
+      },
     );
 
-    return {
+    const result = {
       stores: paginatedStores.data.map(storeSelectReform),
       pagesCount: paginatedStores.pagesCount,
     };
+
+    await redis.set(cacheKey, JSON.stringify(result), "EX", 60 * 60 * 24 * 2);
+
+    return result;
   }
 
   async getAllClientStoresPaginated(filters: {
@@ -129,6 +176,17 @@ export class StoresRepository {
     companyID?: number;
     name?: string;
   }) {
+    const cacheKey = this.clientStoresCacheKey(filters);
+
+    // 1️⃣ Try Redis first
+    const cached = await redis.get(cacheKey);
+
+    if (cached) {
+      return JSON.parse(cached) as {
+        stores: any[];
+      };
+    }
+
     const where = {
       AND: [
         {deleted: filters.deleted === "true"},
@@ -149,7 +207,7 @@ export class StoresRepository {
 
     const paginatedStores = await prisma.store.findManyPaginated(
       {
-        where: where,
+        where,
         select: {
           id: true,
           name: true,
@@ -158,13 +216,20 @@ export class StoresRepository {
       {
         page: 1,
         size: 10000,
-      }
+      },
     );
-    return {
+
+    const result = {
       stores: paginatedStores.data,
       pagesCount: paginatedStores.pagesCount,
     };
+
+    // 4️⃣ Save to Redis (TTL = 10 minutes)
+    await redis.set(cacheKey, JSON.stringify(result), "EX", 60 * 60 * 24 * 2);
+
+    return result;
   }
+
   async getStore(data: {storeID: number}) {
     const store = await prisma.store.findUnique({
       where: {
@@ -186,6 +251,11 @@ export class StoresRepository {
   }
 
   async updateStore(data: {storeID: number; storeData: StoreUpdateType}) {
+    const keys = await redis.keys("client-stores:*");
+    if (keys.length) {
+      await redis.del(keys);
+    }
+
     const store = await prisma.store.update({
       where: {
         id: data.storeID,
@@ -215,6 +285,11 @@ export class StoresRepository {
   }
 
   async deleteStore(data: {storeID: number}) {
+    const keys = await redis.keys("client-stores:*");
+    if (keys.length) {
+      await redis.del(keys);
+    }
+
     const deletedStore = await prisma.store.delete({
       where: {
         id: data.storeID,
@@ -224,6 +299,11 @@ export class StoresRepository {
   }
 
   async deactivateStore(data: {storeID: number; deletedByID: number}) {
+    const keys = await redis.keys("client-stores:*");
+    if (keys.length) {
+      await redis.del(keys);
+    }
+
     const deletedStore = await prisma.store.update({
       where: {
         id: data.storeID,
@@ -242,6 +322,11 @@ export class StoresRepository {
   }
 
   async reactivateStore(data: {storeID: number}) {
+    const keys = await redis.keys("client-stores:*");
+    if (keys.length) {
+      await redis.del(keys);
+    }
+
     const deletedStore = await prisma.store.update({
       where: {
         id: data.storeID,

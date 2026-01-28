@@ -1574,157 +1574,9 @@ class OrdersRepository {
                 page: data.filters.page,
                 size: data.filters.size,
             });
-            const ordersReformed = paginatedOrders.data.map(orders_responses_1.orderReform);
-            const mobileOrdersReformed = paginatedOrders.data.map(orders_responses_1.mobileOrderReform);
-            // const ordersMetaDataAggregate = await prisma.order.aggregate({
-            //   where:
-            //     data.loggedInUser?.role === "RECEIVING_AGENT" &&
-            //     data.filters.status === "RETURNED"
-            //       ? {
-            //           AND: [
-            //             {
-            //               status: {
-            //                 in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
-            //               },
-            //             },
-            //             {
-            //               clientReport: {
-            //                 some: {
-            //                   receivingAgentId: data.loggedInUser.id,
-            //                   report: {
-            //                     deleted: false,
-            //                   },
-            //                 },
-            //               },
-            //             },
-            //             {
-            //               client: {
-            //                 id: data.filters.clientID,
-            //               },
-            //             },
-            //           ],
-            //         }
-            //       : {
-            //           ...where,
-            //           OR:
-            //             (data.loggedInUser?.role === "CLIENT" ||
-            //               data.loggedInUser?.role === "INQUIRY_EMPLOYEE" ||
-            //               data.loggedInUser?.role === "EMPLOYEE_CLIENT_ASSISTANT" ||
-            //               data.loggedInUser?.role === "CLIENT_ASSISTANT") &&
-            //             !data.filters.receiptNumber &&
-            //             !data.filters.search
-            //               ? [
-            //                   {
-            //                     clientReport: {
-            //                       none: {
-            //                         secondaryType: "DELIVERED",
-            //                       },
-            //                     },
-            //                     status: {
-            //                       notIn: ["RETURNED"],
-            //                     },
-            //                   },
-            //                   {
-            //                     clientReport: {
-            //                       none: {
-            //                         secondaryType: "RETURNED",
-            //                       },
-            //                     },
-            //                     status: {
-            //                       in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
-            //                     },
-            //                   },
-            //                 ]
-            //               : data.loggedInUser?.role === "DELIVERY_AGENT"
-            //                 ? [
-            //                     {
-            //                       deliveryAgentReport: {is: null},
-            //                       status: {
-            //                         notIn: ["RETURNED"],
-            //                       },
-            //                     },
-            //                     {
-            //                       deliveryAgentReport: {report: {deleted: true}},
-            //                       status: {
-            //                         notIn: ["RETURNED"],
-            //                       },
-            //                     },
-            //                     {
-            //                       secondaryStatus: "WITH_AGENT",
-            //                       status: {
-            //                         in: [
-            //                           "RETURNED",
-            //                           "REPLACED",
-            //                           "PARTIALLY_RETURNED",
-            //                         ],
-            //                       },
-            //                     },
-            //                   ]
-            //                 : data.loggedInUser?.role === "REPOSITORIY_EMPLOYEE" ||
-            //                     data.loggedInUser?.role === "BRANCH_MANAGER"
-            //                   ? [
-            //                       {
-            //                         branch: {
-            //                           id: data.loggedInUser.branchId,
-            //                         },
-            //                         status: {not: "WITH_RECEIVING_AGENT"},
-            //                       },
-            //                       {
-            //                         client: {
-            //                           branchId: data.loggedInUser?.branchId,
-            //                         },
-            //                         status: {not: "WITH_RECEIVING_AGENT"},
-            //                       },
-            //                       {
-            //                         status: "WITH_RECEIVING_AGENT",
-            //                         deliveryAgent: {
-            //                           branchId: data.loggedInUser.branchId,
-            //                         },
-            //                       },
-            //                     ]
-            //                   : data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-            //                       data.loggedInUser?.role !== "RECEIVING_AGENT"
-            //                     ? [
-            //                         {
-            //                           branch: {
-            //                             id: data.loggedInUser?.branchId,
-            //                           },
-            //                         },
-            //                       ]
-            //                     : undefined,
-            //         },
-            //   _count: {
-            //     id: true,
-            //   },
-            //   _sum: {
-            //     totalCost: true,
-            //     paidAmount: true,
-            //     clientNet: true,
-            //     deliveryAgentNet: true,
-            //     companyNet: true,
-            //     deliveryCost: true,
-            //   },
-            // });
-            // const ordersMetaDataGroupByStatus = await prisma.order.groupBy({
-            //   where: where,
-            //   by: ["status"],
-            //   _count: {
-            //     status: true,
-            //   },
-            // });
-            // const ordersMetaDataGroupByStatusReformed = (
-            //   Object.keys(OrderStatus) as Array<keyof typeof OrderStatus>
-            // ).map((status) => {
-            //   const statusCount = ordersMetaDataGroupByStatus.find(
-            //     (orderStatus: {status: string}) => {
-            //       return orderStatus.status === status;
-            //     },
-            //   );
-            //   return {
-            //     status: status,
-            //     count: statusCount?._count?.status || 0,
-            //   };
-            // });
+            const ordersReformed = data.filters.forMobile
+                ? paginatedOrders.data.map(orders_responses_1.mobileOrderReform)
+                : paginatedOrders.data.map(orders_responses_1.orderReform);
             const ordersMetaDataReformed = {
                 count: paginatedOrders.dataCount,
                 totalCost: 0,
@@ -1736,7 +1588,7 @@ class OrdersRepository {
                 // countByStatus: ordersMetaDataGroupByStatusReformed,
             };
             return {
-                orders: data.filters.forMobile ? mobileOrdersReformed : ordersReformed,
+                orders: ordersReformed,
                 ordersMetaData: ordersMetaDataReformed,
                 pagesCount: paginatedOrders.pagesCount,
             };
@@ -1771,26 +1623,6 @@ class OrdersRepository {
             }),
         ]);
         const ordersReformed = paginatedOrders.data.map(orders_responses_1.orderReform);
-        // const ordersMetaDataGroupByStatus = await prisma.order.groupBy({
-        //   where: where,
-        //   by: ["status"],
-        //   _count: {
-        //     status: true,
-        //   },
-        // });
-        // const ordersMetaDataGroupByStatusReformed = (
-        //   Object.keys(OrderStatus) as Array<keyof typeof OrderStatus>
-        // ).map((status) => {
-        //   const statusCount = ordersMetaDataGroupByStatus.find(
-        //     (orderStatus: {status: string}) => {
-        //       return orderStatus.status === status;
-        //     },
-        //   );
-        //   return {
-        //     status: status,
-        //     count: statusCount?._count?.status || 0,
-        //   };
-        // });
         const ordersMetaDataReformed = {
             count: ordersMetaDataAggregate._count.id,
             totalCost: ordersMetaDataAggregate._sum.totalCost || 0,
@@ -1799,7 +1631,6 @@ class OrdersRepository {
             deliveryAgentNet: ordersMetaDataAggregate._sum.deliveryAgentNet || 0,
             companyNet: ordersMetaDataAggregate._sum.companyNet || 0,
             deliveryCost: ordersMetaDataAggregate._sum.deliveryCost || 0,
-            // countByStatus: ordersMetaDataGroupByStatusReformed,
         };
         return {
             orders: ordersReformed,

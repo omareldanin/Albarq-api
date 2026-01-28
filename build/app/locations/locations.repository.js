@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.LocationsRepository = exports.governorateArabicNames = void 0;
 const db_1 = require("../../database/db");
 const locations_responses_1 = require("./locations.responses");
+const redis_1 = require("../../lib/redis");
 exports.governorateArabicNames = {
     AL_ANBAR: "الأنبار",
     BABIL: "بابل",
@@ -25,6 +26,18 @@ exports.governorateArabicNames = {
     BABIL_COMPANIES: "شركات بابل",
 };
 class LocationsRepository {
+    locationsCacheKey(filters) {
+        return `locations:${JSON.stringify({
+            page: filters.page,
+            size: filters.size,
+            search: filters.search ?? null,
+            branchID: filters.branchID ?? null,
+            governorate: filters.governorate ?? null,
+            deliveryAgentID: filters.deliveryAgentID ?? null,
+            companyID: filters.companyID ?? null,
+            minified: filters.minified ?? false,
+        })}`;
+    }
     async createLocation(loggedInUser, data) {
         const companyID = loggedInUser.companyID;
         const createdLocation = await db_1.prisma.location.create({
@@ -66,6 +79,10 @@ class LocationsRepository {
             },
             select: locations_responses_1.locationSelect,
         });
+        const keys = await redis_1.redis.keys("locations:*");
+        if (keys.length) {
+            await redis_1.redis.del(keys);
+        }
         return (0, locations_responses_1.locationReform)(createdLocation);
     }
     async getAllLocationsPaginated(filters) {
@@ -104,6 +121,12 @@ class LocationsRepository {
                 },
             ],
         };
+        const cacheKey = this.locationsCacheKey(filters);
+        const cached = await redis_1.redis.get(cacheKey);
+        if (cached) {
+            return JSON.parse(cached);
+        }
+        let result;
         if (filters.minified === true) {
             const paginatedLocations = await db_1.prisma.location.findManyPaginated({
                 where: where,
@@ -117,36 +140,40 @@ class LocationsRepository {
                 page: 1,
                 size: 10000,
             });
-            return {
+            result = {
                 locations: paginatedLocations.data,
                 pagesCount: paginatedLocations.pagesCount,
             };
         }
-        const paginatedLocations = await db_1.prisma.location.findManyPaginated({
-            where: where,
-            orderBy: {
-                id: "desc",
-            },
-            select: {
-                ...locations_responses_1.locationSelect,
-                // This makes sure that only delivery agents that belong to the loggedin user company are returned
-                deliveryAgentsLocations: {
-                    select: locations_responses_1.locationSelect.deliveryAgentsLocations.select,
-                    where: {
-                        company: {
-                            id: filters.companyID,
+        else {
+            const paginatedLocations = await db_1.prisma.location.findManyPaginated({
+                where: where,
+                orderBy: {
+                    id: "desc",
+                },
+                select: {
+                    ...locations_responses_1.locationSelect,
+                    // This makes sure that only delivery agents that belong to the loggedin user company are returned
+                    deliveryAgentsLocations: {
+                        select: locations_responses_1.locationSelect.deliveryAgentsLocations.select,
+                        where: {
+                            company: {
+                                id: filters.companyID,
+                            },
                         },
                     },
                 },
-            },
-        }, {
-            page: filters.page,
-            size: filters.size,
-        });
-        return {
-            locations: paginatedLocations.data.map(locations_responses_1.locationReform),
-            pagesCount: paginatedLocations.pagesCount,
-        };
+            }, {
+                page: filters.page,
+                size: filters.size,
+            });
+            result = {
+                locations: paginatedLocations.data.map(locations_responses_1.locationReform),
+                pagesCount: paginatedLocations.pagesCount,
+            };
+        }
+        await redis_1.redis.set(cacheKey, JSON.stringify(result), "EX", 60 * 60 * 24 * 2);
+        return result;
     }
     async getLocation(data) {
         const location = await db_1.prisma.location.findUnique({
@@ -201,6 +228,10 @@ class LocationsRepository {
             },
             select: locations_responses_1.locationSelect,
         });
+        const keys = await redis_1.redis.keys("locations:*");
+        if (keys.length) {
+            await redis_1.redis.del(keys);
+        }
         return (0, locations_responses_1.locationReform)(location);
     }
     async deleteLocation(data) {
@@ -209,6 +240,10 @@ class LocationsRepository {
                 id: data.locationID,
             },
         });
+        const keys = await redis_1.redis.keys("locations:*");
+        if (keys.length) {
+            await redis_1.redis.del(keys);
+        }
         return true;
     }
     async publicGetAllLocations(governorate) {
