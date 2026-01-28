@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.orderTimelineReform = exports.orderTimelineSelect = exports.statisticsReformed = exports.mobileOrderReform = exports.orderReformApiKey = exports.orderReform = exports.minifiedOrderSelect = exports.orderSelectApiKey = exports.orderSelect = exports.orderStatusArabicNames = exports.orderSecondaryStatusArabicNames = exports.OrderStatusData = void 0;
+exports.orderTimelineReform = exports.orderTimelineSelect = exports.statisticsReformed = exports.minifiedOrderReform = exports.mobileOrderReform = exports.orderReformApiKey = exports.orderReform = exports.minifiedOrderSelect = exports.orderSelectApiKey = exports.orderSelect = exports.orderStatusArabicNames = exports.orderSecondaryStatusArabicNames = exports.OrderStatusData = void 0;
 exports.getRoleBasedOrCondition = getRoleBasedOrCondition;
 const client_1 = require("@prisma/client");
 exports.OrderStatusData = {
@@ -391,15 +391,8 @@ exports.minifiedOrderSelect = {
     totalCost: true,
     paidAmount: true,
     deliveryCost: true,
-    clientNet: true,
     printed: true,
-    deliveryAgentNet: true,
-    companyNet: true,
-    discount: true,
-    branchNet: true,
     receiptNumber: true,
-    quantity: true,
-    weight: true,
     recipientName: true,
     recipientPhones: true,
     recipientAddress: true,
@@ -409,51 +402,8 @@ exports.minifiedOrderSelect = {
     status: true,
     secondaryStatus: true,
     confirmed: true,
-    deliveryType: true,
-    deliveryDate: true,
-    currentLocation: true,
     createdAt: true,
-    updatedAt: true,
     processingStatus: true,
-    processed: true,
-    processedAt: true,
-    forwardedRepo: true,
-    forwardedBranchId: true,
-    receivedBranchId: true,
-    branchDeliveryCost: true,
-    processedBy: {
-        select: {
-            user: {
-                select: {
-                    id: true,
-                    name: true,
-                    phone: true,
-                },
-            },
-            role: true,
-        },
-    },
-    forwarded: true,
-    forwardedAt: true,
-    forwardedBy: {
-        select: {
-            user: {
-                select: {
-                    id: true,
-                    name: true,
-                    phone: true,
-                },
-            },
-        },
-    },
-    forwardedFrom: {
-        select: {
-            id: true,
-            name: true,
-            logo: true,
-            registrationText: true,
-        },
-    },
     client: {
         select: {
             showNumbers: true,
@@ -490,15 +440,6 @@ exports.minifiedOrderSelect = {
             },
         },
     },
-    oldDeliveryAgentId: true,
-    orderProducts: {
-        select: {
-            quantity: true,
-            product: true,
-            color: true,
-            size: true,
-        },
-    },
     governorate: true,
     location: {
         select: {
@@ -506,36 +447,13 @@ exports.minifiedOrderSelect = {
             name: true,
         },
     },
-    store: {
+    repository: {
         select: {
             id: true,
             name: true,
         },
     },
-    clientReport: {
-        where: {
-            report: {
-                deleted: false,
-            },
-        },
-        select: {
-            id: true,
-            secondaryType: true,
-            clientId: true,
-            storeId: true,
-            report: {
-                select: {
-                    url: true,
-                    deleted: true,
-                },
-            },
-        },
-    },
-    deleted: true,
-    deletedAt: true,
-    forwardedToGov: true,
-    forwardedToMainRepo: true,
-    deletedBy: {
+    store: {
         select: {
             id: true,
             name: true,
@@ -729,6 +647,55 @@ const mobileOrderReform = (order) => {
     return orderReformed;
 };
 exports.mobileOrderReform = mobileOrderReform;
+const minifiedOrderReform = (order) => {
+    if (!order) {
+        return null;
+    }
+    let formedStatus = `${order.secondaryStatus === "IN_REPOSITORY" &&
+        (order.status === "IN_GOV_REPOSITORY" ||
+            order.status === "IN_MAIN_REPOSITORY")
+        ? "في " + order.repository?.name
+        : order.secondaryStatus === "IN_REPOSITORY"
+            ? exports.orderStatusArabicNames[order.status] +
+                " " +
+                "في " +
+                order.repository?.name
+            : order.secondaryStatus === "IN_CAR"
+                ? "مرسل إلي " + order.repository?.name
+                : order.secondaryStatus === "WITH_AGENT" &&
+                    order.status !== "WITH_DELIVERY_AGENT" &&
+                    order.status !== "WITH_RECEIVING_AGENT"
+                    ? exports.orderStatusArabicNames[order.status] + "-" + "مع المندوب"
+                    : order.secondaryStatus === "WITH_CLIENT"
+                        ? exports.orderStatusArabicNames[order.status] + "-" + "مع العميل"
+                        : order.secondaryStatus === "WITH_RECEIVING_AGENT"
+                            ? exports.orderStatusArabicNames[order.status] +
+                                "-" +
+                                "مع مندوب الاستلام"
+                            : exports.orderStatusArabicNames[order.status]}`;
+    const orderReformed = {
+        ...order,
+        formedStatus,
+        // TODO
+        client: {
+            id: order.client.user.id,
+            name: order.client.user.name,
+            phone: order.client.user.phone,
+            company: order.client.company.name,
+            showNumbers: order.client.showNumbers,
+            showDeliveryNumber: order.client.showDeliveryNumber,
+        },
+        deliveryAgent: order.deliveryAgent && {
+            id: order.deliveryAgent.user.id,
+            name: order.deliveryAgent.user.name,
+            phone: order.deliveryAgent.user.phone,
+            deliveryCost: order.deliveryAgent.deliveryCost,
+        },
+        companyReport: null,
+    };
+    return orderReformed;
+};
+exports.minifiedOrderReform = minifiedOrderReform;
 /* --------------------------------------------------------------- */
 const statisticsReformed = (statistics) => {
     const sortingOrder = [

@@ -18,7 +18,9 @@ import type {
   OrdersStatisticsFiltersType,
 } from "./orders.dto";
 import {
-  mobileOrderReform,
+  minifiedOrderReform,
+  minifiedOrderSelect,
+  // mobileOrderReform,
   orderReform,
   orderReformApiKey,
   orderSelect,
@@ -1719,7 +1721,7 @@ export class OrdersRepository {
                               ]
                             : undefined,
                 },
-          select: orderSelect,
+          select: data.filters.forMobile ? minifiedOrderSelect : orderSelect,
           orderBy: {
             createdAt: "desc",
           },
@@ -1730,9 +1732,7 @@ export class OrdersRepository {
         },
       );
 
-      const ordersReformed = data.filters.forMobile
-        ? paginatedOrders.data.map(mobileOrderReform)
-        : paginatedOrders.data.map(orderReform);
+      const ordersReformed = paginatedOrders.data.map(minifiedOrderReform);
 
       const ordersMetaDataReformed = {
         count: paginatedOrders.dataCount,

@@ -1566,7 +1566,7 @@ class OrdersRepository {
                                         ]
                                         : undefined,
                     },
-                select: orders_responses_1.orderSelect,
+                select: data.filters.forMobile ? orders_responses_1.minifiedOrderSelect : orders_responses_1.orderSelect,
                 orderBy: {
                     createdAt: "desc",
                 },
@@ -1574,9 +1574,7 @@ class OrdersRepository {
                 page: data.filters.page,
                 size: data.filters.size,
             });
-            const ordersReformed = data.filters.forMobile
-                ? paginatedOrders.data.map(orders_responses_1.mobileOrderReform)
-                : paginatedOrders.data.map(orders_responses_1.orderReform);
+            const ordersReformed = paginatedOrders.data.map(orders_responses_1.minifiedOrderReform);
             const ordersMetaDataReformed = {
                 count: paginatedOrders.dataCount,
                 totalCost: 0,
