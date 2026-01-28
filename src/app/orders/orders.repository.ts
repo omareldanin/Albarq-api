@@ -36,6 +36,16 @@ const messageController = new MessagesController();
 
 let counter = 0;
 
+type UpdatedOrderCosts = {
+  id: string;
+  deliveryCost?: number;
+  clientNet?: number;
+  branchNet?: number;
+  branchDeliveryCost?: number;
+  deliveryAgentNet?: number;
+  companyNet?: number;
+};
+
 export class OrdersRepository {
   generateRandomId() {
     const now = new Date(
@@ -2301,18 +2311,8 @@ export class OrdersRepository {
 
       // Update Baghdad orders costs
       for (const order of baghdadOrders) {
-        // const weight = order.weight || 0;
         const deliveryCost =
           data.costs.baghdadDeliveryCost || order.deliveryCost;
-        // let weightedDeliveryCost =
-        //   deliveryCost +
-        //   weight * order.company?.additionalPriceForEveryKilogram;
-
-        // weightedDeliveryCost += order.company
-        //   ?.additionalPriceForEvery500000IraqiDinar
-        //   ? order.company?.additionalPriceForEvery500000IraqiDinar *
-        //     Math.ceil(order.paidAmount / 500000)
-        //   : 0;
 
         const clientNet = (order.paidAmount || 0) - deliveryCost;
 
@@ -2356,18 +2356,8 @@ export class OrdersRepository {
 
       // Update governorates orders costs
       for (const order of governoratesOrders) {
-        // const weight = order.weight || 0;
         const deliveryCost =
           data.costs.governoratesDeliveryCost || order.deliveryCost;
-        // let weightedDeliveryCost =
-        //   deliveryCost +
-        //   weight * order.company?.additionalPriceForEveryKilogram;
-
-        // weightedDeliveryCost += order.company
-        //   ?.additionalPriceForEvery500000IraqiDinar
-        //   ? order.company?.additionalPriceForEvery500000IraqiDinar *
-        //     Math.ceil(order.paidAmount / 500000)
-        //   : 0;
 
         const clientNet = (order.paidAmount || 0) - deliveryCost;
         await prisma.order.update({
@@ -2541,6 +2531,188 @@ export class OrdersRepository {
         });
       }
     }
+  }
+
+  async updateOrdersCosts2(data: {
+    ordersIDs: string[];
+    clientId?: number;
+    costs: {
+      baghdadDeliveryCost?: number;
+      governoratesDeliveryCost?: number;
+      deliveryAgentDeliveryCost?: number;
+      reportType?: ReportType;
+    };
+  }): Promise<UpdatedOrderCosts[]> {
+    const updatedOrders: UpdatedOrderCosts[] = [];
+
+    await prisma.$transaction(async (tx) => {
+      /* ===============================
+       CLIENT REPORT
+    =============================== */
+      if (data.costs.reportType === ReportType.CLIENT) {
+        const orders = await tx.order.findMany({
+          where: {id: {in: data.ordersIDs}},
+          select: {
+            id: true,
+            paidAmount: true,
+            deliveryCost: true,
+            governorate: true,
+          },
+        });
+
+        await Promise.all(
+          orders.map((order) => {
+            const deliveryCost =
+              order.governorate === Governorate.BAGHDAD
+                ? (data.costs.baghdadDeliveryCost ?? order.deliveryCost)
+                : (data.costs.governoratesDeliveryCost ?? order.deliveryCost);
+
+            const clientNet = (order.paidAmount || 0) - deliveryCost;
+
+            updatedOrders.push({
+              id: order.id,
+              deliveryCost,
+              clientNet,
+            });
+
+            return tx.order.update({
+              where: {id: order.id},
+              data: {deliveryCost, clientNet},
+            });
+          }),
+        );
+      }
+
+      /* ===============================
+       BRANCH REPORT
+    =============================== */
+      if (data.costs.reportType === ReportType.BRANCH) {
+        if (
+          data.costs.baghdadDeliveryCost ||
+          data.costs.governoratesDeliveryCost
+        ) {
+          const orders = await tx.order.findMany({
+            where: {id: {in: data.ordersIDs}},
+            select: {
+              id: true,
+              paidAmount: true,
+              governorate: true,
+            },
+          });
+
+          await Promise.all(
+            orders.map((order) => {
+              const cost =
+                order.governorate === Governorate.BAGHDAD
+                  ? data.costs.baghdadDeliveryCost
+                  : data.costs.governoratesDeliveryCost;
+
+              if (!cost) return null;
+
+              const branchNet = order.paidAmount - cost;
+
+              updatedOrders.push({
+                id: order.id,
+                branchNet,
+              });
+
+              return tx.order.update({
+                where: {id: order.id},
+                data: {branchNet},
+              });
+            }),
+          );
+        }
+
+        if (
+          !data.costs.baghdadDeliveryCost &&
+          !data.costs.governoratesDeliveryCost
+        ) {
+          const orders = await tx.order.findMany({
+            where: {id: {in: data.ordersIDs}},
+            select: {
+              id: true,
+              paidAmount: true,
+              governorate: true,
+              client: {
+                select: {
+                  governoratesDeliveryCosts: true,
+                },
+              },
+            },
+          });
+
+          await Promise.all(
+            orders.map((order) => {
+              const costs = order.client.governoratesDeliveryCosts as {
+                governorate: Governorate;
+                cost: number;
+              }[];
+
+              const deliveryCost =
+                costs?.find((c) => c.governorate === order.governorate)?.cost ??
+                0;
+
+              const branchNet = order.paidAmount - deliveryCost;
+
+              updatedOrders.push({
+                id: order.id,
+                branchNet,
+                branchDeliveryCost: deliveryCost,
+              });
+
+              return tx.order.update({
+                where: {id: order.id},
+                data: {
+                  branchNet,
+                  branchDeliveryCost: deliveryCost,
+                },
+              });
+            }),
+          );
+        }
+      }
+
+      /* ===============================
+       DELIVERY AGENT REPORT
+    =============================== */
+      if (data.costs.deliveryAgentDeliveryCost) {
+        const orders = await tx.order.findMany({
+          where: {id: {in: data.ordersIDs}},
+          select: {
+            id: true,
+            paidAmount: true,
+            weight: true,
+          },
+        });
+
+        await Promise.all(
+          orders.map((order) => {
+            const weight = order.weight || 0;
+            const deliveryAgentNet =
+              data.costs.deliveryAgentDeliveryCost! + weight * 250;
+
+            const companyNet = (order.paidAmount || 0) - deliveryAgentNet;
+
+            updatedOrders.push({
+              id: order.id,
+              deliveryAgentNet,
+              companyNet,
+            });
+
+            return tx.order.update({
+              where: {id: order.id},
+              data: {
+                deliveryAgentNet,
+                companyNet,
+              },
+            });
+          }),
+        );
+      }
+    });
+
+    return updatedOrders;
   }
 
   async updateOrder(data: {

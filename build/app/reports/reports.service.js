@@ -8,7 +8,7 @@ const client_1 = require("@prisma/client");
 const AppError_1 = require("../../lib/AppError");
 // import { OrderTimelineType } from "../orders/orders.dto";
 const localize_1 = require("../../lib/localize");
-const clients_repository_1 = require("../clients/clients.repository");
+// import {ClientsRepository} from "../clients/clients.repository";
 const employees_repository_1 = require("../employees/employees.repository");
 const sendNotification_1 = require("../notifications/helpers/sendNotification");
 const orders_repository_1 = require("../orders/orders.repository");
@@ -20,8 +20,34 @@ const axios_1 = __importDefault(require("axios"));
 const reportsRepository = new reports_repository_1.ReportsRepository();
 const ordersRepository = new orders_repository_1.OrdersRepository();
 const employeesRepository = new employees_repository_1.EmployeesRepository();
-const clientsRepository = new clients_repository_1.ClientsRepository();
 class ReportsService {
+    applyOrderCostUpdates(orders, updates) {
+        const map = new Map(updates.map((u) => [u.id, u]));
+        for (const order of orders) {
+            const u = map.get(order.id);
+            if (!u)
+                continue;
+            if (u.deliveryCost !== undefined) {
+                order.deliveryCost = u.deliveryCost;
+            }
+            if (u.clientNet !== undefined) {
+                order.clientNet = u.clientNet;
+            }
+            if (u.branchNet !== undefined) {
+                order.branchNet = u.branchNet;
+            }
+            if (u.branchDeliveryCost !== undefined) {
+                order.branchDeliveryCost = u.branchDeliveryCost;
+            }
+            if (u.deliveryAgentNet !== undefined) {
+                order.deliveryAgentNet = u.deliveryAgentNet;
+            }
+            if (u.companyNet !== undefined) {
+                order.companyNet = u.companyNet;
+            }
+        }
+        return orders; // optional, mutated in place
+    }
     async createReport(data) {
         let orders;
         let ordersIDs = [];
@@ -30,11 +56,7 @@ class ReportsService {
                 filters: { ...data.ordersFilters, size: 5000 },
                 loggedInUser: data.loggedInUser,
             })).orders;
-            for (const order of orders) {
-                if (order) {
-                    ordersIDs.push(order.id);
-                }
-            }
+            ordersIDs = orders.map((o) => o.id);
         }
         else {
             orders = await ordersRepository.getOrdersByIDs({
@@ -42,7 +64,6 @@ class ReportsService {
             });
             ordersIDs = data.reportData.ordersIDs;
         }
-        //  orders = await ordersRepository.getOrdersByIDs(data.reportData);
         if (!orders || orders.length === 0) {
             throw new AppError_1.AppError("لا يوجد طلبات لعمل الكشف", 400);
         }
@@ -111,21 +132,11 @@ class ReportsService {
                 }
             }
         }
-        const company = await db_1.prisma.company.findUnique({
-            where: {
-                id: data.loggedInUser.companyID || 0,
-            },
-            select: {
-                baghdadPrice: true,
-                governoratePrice: true,
-                deliveryAgentFee: true,
-            },
-        });
         // Change orders costs reportData contains new costs
         if (data.reportData.type === client_1.ReportType.CLIENT ||
             data.reportData.type === client_1.ReportType.BRANCH ||
             data.reportData.type === client_1.ReportType.GOVERNORATE) {
-            await ordersRepository.updateOrdersCosts({
+            const updatedOrders = await ordersRepository.updateOrdersCosts2({
                 ordersIDs,
                 costs: {
                     baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
@@ -133,25 +144,24 @@ class ReportsService {
                     reportType: data.reportData.type,
                 },
             });
-            orders = await ordersRepository.getOrdersByIDs({ ordersIDs });
+            orders = this.applyOrderCostUpdates(orders, updatedOrders);
         }
         if (data.reportData.type === client_1.ReportType.COMPANY) {
-            await ordersRepository.updateOrdersCosts({
+            const updatedOrders = await ordersRepository.updateOrdersCosts2({
                 ordersIDs,
                 costs: {
-                    baghdadDeliveryCost: data.reportData.baghdadDeliveryCost || company?.baghdadPrice,
-                    governoratesDeliveryCost: data.reportData.governoratesDeliveryCost ||
-                        company?.governoratePrice,
+                    baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
+                    governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
+                    reportType: data.reportData.type,
                 },
             });
-            orders = await ordersRepository.getOrdersByIDs({ ordersIDs });
+            orders = this.applyOrderCostUpdates(orders, updatedOrders);
         }
         if (data.reportData.type === client_1.ReportType.DELIVERY_AGENT) {
-            await ordersRepository.updateOrdersCosts({
+            await ordersRepository.updateOrdersCosts2({
                 ordersIDs,
                 costs: {
-                    deliveryAgentDeliveryCost: data.reportData.deliveryAgentDeliveryCost ||
-                        company?.deliveryAgentFee,
+                    deliveryAgentDeliveryCost: data.reportData.deliveryAgentDeliveryCost,
                 },
             });
             orders = await ordersRepository.getOrdersByIDs({ ordersIDs });
@@ -198,9 +208,7 @@ class ReportsService {
         // Get client id from store id if report type is client
         let clientID;
         if (data.reportData.type === client_1.ReportType.CLIENT) {
-            clientID = await clientsRepository.getClientIDByStoreID({
-                storeID: data.reportData.storeID,
-            });
+            clientID = orders[0]?.client.id;
         }
         const report = await reportsRepository.createReport({
             loggedInUser: data.loggedInUser,
@@ -240,27 +248,30 @@ class ReportsService {
             });
         }
         // update orders timeline
+        const timelinePromises = [];
         for (const order of orders) {
-            if (!order) {
+            if (!order)
                 continue;
-            }
-            if (reportData?.type === "CLIENT" &&
-                reportData.clientReport?.branch?.id === order?.branch?.id) {
+            const isClientReport = reportData?.type === "CLIENT";
+            const sameBranch = reportData?.clientReport?.branch?.id === order.branch?.id;
+            const isBaghdad = order.governorate === "BAGHDAD";
+            const clientNet = order.clientNet || 0;
+            // ⚠️ keep SAME logic (including double increment)
+            if (isClientReport && sameBranch) {
                 insideOrdersCount += 1;
             }
-            total += order?.clientNet || 0;
-            if (reportData?.type === "CLIENT" &&
-                reportData.clientReport?.branch?.id === order?.branch?.id) {
+            total += clientNet;
+            if (isClientReport && sameBranch) {
                 insideOrdersCount += 1;
-                insideTotal += order?.clientNet || 0;
+                insideTotal += clientNet;
             }
-            if (reportData?.type === "CLIENT" && order?.governorate === "BAGHDAD") {
-                baghdadTotal += order?.clientNet;
+            if (isClientReport && isBaghdad) {
+                baghdadTotal += clientNet;
             }
-            if (reportData?.type === "CLIENT" && order?.governorate !== "BAGHDAD") {
-                otherTotal += order?.clientNet || 0;
+            if (isClientReport && !isBaghdad) {
+                otherTotal += clientNet;
             }
-            await ordersRepository.updateOrderTimeline({
+            timelinePromises.push(ordersRepository.updateOrderTimeline({
                 orderID: order.id,
                 data: {
                     type: "REPORT_CREATE",
@@ -276,8 +287,9 @@ class ReportsService {
                     },
                     message: `تم انشاء كشف ${(0, localize_1.localizeReportType)(reportData?.type)} برقم ${reportData?.id}`,
                 },
-            });
+            }));
         }
+        await Promise.all(timelinePromises);
         reportData.insideOrdersCount = insideOrdersCount;
         reportData.total = total;
         reportData.insideTotal = insideTotal;
