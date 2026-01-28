@@ -30,7 +30,7 @@ export class NotificationsController {
       await notificationsRepository.getAllNotificationsPaginated(
         userID,
         page,
-        size,
+        15,
         seen,
       );
 

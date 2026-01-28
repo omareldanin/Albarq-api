@@ -962,10 +962,10 @@ export class MessagesController {
 
   getUserChatStatics = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
-    const {size, page, status, unRead} = req.query;
+    const {page, status, unRead} = req.query;
     const chats = await this.getUserChats(
       loggedInUser,
-      size ? +size : 20,
+      15,
       page ? +page : 1,
       typeof status === "string" ? status : undefined,
       unRead + "",

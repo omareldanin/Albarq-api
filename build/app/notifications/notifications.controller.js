@@ -23,7 +23,7 @@ class NotificationsController {
             +req.query.page > 0) {
             page = +req.query.page;
         }
-        const { notifications, pagesCount, unSeenCount } = await notificationsRepository.getAllNotificationsPaginated(userID, page, size, seen);
+        const { notifications, pagesCount, unSeenCount } = await notificationsRepository.getAllNotificationsPaginated(userID, page, 15, seen);
         res.status(200).json({
             status: "success",
             unSeenCount,

@@ -861,8 +861,8 @@ class MessagesController {
     });
     getUserChatStatics = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const loggedInUser = res.locals.user;
-        const { size, page, status, unRead } = req.query;
-        const chats = await this.getUserChats(loggedInUser, size ? +size : 20, page ? +page : 1, typeof status === "string" ? status : undefined, unRead + "");
+        const { page, status, unRead } = req.query;
+        const chats = await this.getUserChats(loggedInUser, 15, page ? +page : 1, typeof status === "string" ? status : undefined, unRead + "");
         res.status(201).json({ ...chats });
     });
     getUserChatMessages = (0, catchAsync_1.catchAsync)(async (req, res) => {
