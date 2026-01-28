@@ -3132,7 +3132,6 @@ export class OrdersRepository {
       allOrdersStatistics,
       allOrdersStatisticsWithoutClientReport,
       allOrdersStatisticsWithoutDeliveryReport,
-      allOrdersStatisticsWithoutCompanyReport,
       todayOrdersStatistics,
     ] = await prisma.$transaction([
       prisma.order.groupBy({
@@ -3297,32 +3296,6 @@ export class OrdersRepository {
         },
       }),
       prisma.order.aggregate({
-        _sum: {
-          paidAmount: true,
-        },
-        _count: {
-          id: true,
-        },
-        where: {
-          ...filtersReformed,
-          OR: [
-            {
-              companyReport: {
-                none: {
-                  secondaryType: "DELIVERED",
-                },
-              },
-              status: {
-                in: ["DELIVERED", "REPLACED", "PARTIALLY_RETURNED"],
-              },
-            },
-          ],
-          status: {
-            in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
-          },
-        },
-      }),
-      prisma.order.aggregate({
         _sum: {totalCost: true},
         _count: {id: true},
         where: {
@@ -3347,9 +3320,6 @@ export class OrdersRepository {
       allOrdersStatisticsWithoutClientReport,
       todayOrdersStatistics,
       allOrdersStatisticsWithoutDeliveryReport,
-      allOrdersStatisticsWithoutBranchReport:
-        allOrdersStatisticsWithoutCompanyReport,
-      allOrdersStatisticsWithoutCompanyReport,
     });
   }
 

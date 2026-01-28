@@ -27,6 +27,7 @@ import type {
 import {ReportsRepository} from "./reports.repository";
 import {type reportReform} from "./reports.responses";
 import {prisma} from "../../database/db";
+import axios from "axios";
 
 const reportsRepository = new ReportsRepository();
 const ordersRepository = new OrdersRepository();
@@ -71,10 +72,10 @@ export class ReportsService {
     if (data.reportData.type === ReportType.CLIENT) {
       for (const order of orders) {
         const returnedReport = order?.clientReport.find(
-          (r) => r.secondaryType === "RETURNED"
+          (r) => r.secondaryType === "RETURNED",
         );
         const deliveredReport = order?.clientReport.find(
-          (r) => r.secondaryType === "DELIVERED"
+          (r) => r.secondaryType === "DELIVERED",
         );
 
         if (
@@ -84,7 +85,7 @@ export class ReportsService {
         ) {
           throw new AppError(
             `الطلب ${order?.receiptNumber} يوجد في كشف عملاء واصل اخر رقمه ${deliveredReport.id}`,
-            400
+            400,
           );
         }
         if (
@@ -94,17 +95,17 @@ export class ReportsService {
         ) {
           throw new AppError(
             `الطلب ${order?.receiptNumber} يوجد في كشف عملاء راجع اخر رقمه ${returnedReport.id}`,
-            400
+            400,
           );
         }
       }
     } else if (data.reportData.type === ReportType.REPOSITORY) {
       for (const order of orders) {
         const returnedReport = order?.repositoryReport.find(
-          (r) => r.secondaryType === "RETURNED"
+          (r) => r.secondaryType === "RETURNED",
         );
         const deliveredReport = order?.clientReport.find(
-          (r) => r.secondaryType === "DELIVERED"
+          (r) => r.secondaryType === "DELIVERED",
         );
 
         if (
@@ -114,7 +115,7 @@ export class ReportsService {
         ) {
           throw new AppError(
             `الطلب ${order?.receiptNumber} يوجد في كشف مخازن واصل اخر رقمه ${deliveredReport.id}`,
-            400
+            400,
           );
         }
         if (
@@ -124,7 +125,7 @@ export class ReportsService {
         ) {
           throw new AppError(
             `الطلب ${order?.receiptNumber} يوجد في كشف مخازن راجع اخر رقمه ${returnedReport.id}`,
-            400
+            400,
           );
         }
       }
@@ -136,7 +137,7 @@ export class ReportsService {
         ) {
           throw new AppError(
             `الطلب ${order.receiptNumber} يوجد في كشف محافظة اخر رقمه ${order.governorateReport.id}`,
-            400
+            400,
           );
         }
       }
@@ -148,17 +149,17 @@ export class ReportsService {
         ) {
           throw new AppError(
             `الطلب ${order.receiptNumber} يوجد في كشف مندوبين اخر رقمه ${order.deliveryAgentReport.id}`,
-            400
+            400,
           );
         }
       }
     } else if (data.reportData.type === ReportType.COMPANY) {
       for (const order of orders) {
         const returnedReport = order?.companyReport.find(
-          (r) => r.secondaryType === "RETURNED"
+          (r) => r.secondaryType === "RETURNED",
         );
         const deliveredReport = order?.companyReport.find(
-          (r) => r.secondaryType === "DELIVERED"
+          (r) => r.secondaryType === "DELIVERED",
         );
 
         if (
@@ -168,7 +169,7 @@ export class ReportsService {
         ) {
           throw new AppError(
             `الطلب ${order?.receiptNumber} يوجد في كشف شركة واصل اخر رقمه ${deliveredReport.id}`,
-            400
+            400,
           );
         }
         if (
@@ -178,7 +179,7 @@ export class ReportsService {
         ) {
           throw new AppError(
             `الطلب ${order?.receiptNumber} يوجد في كشف شركة راجع اخر رقمه ${returnedReport.id}`,
-            400
+            400,
           );
         }
       }
@@ -500,6 +501,15 @@ export class ReportsService {
     return report;
   }
 
+  async fetchPdfFromUrl(url: string): Promise<Buffer> {
+    const response = await axios.get(url, {
+      responseType: "arraybuffer",
+      timeout: 15000,
+    });
+
+    return Buffer.from(response.data);
+  }
+
   async getReportPDF(data: {
     params: {reportID: number};
     loggedInUser?: loggedInUserType;
@@ -515,6 +525,13 @@ export class ReportsService {
       throw new AppError("الكشف المطلوب موجود بسلة المحذوفات", 404);
     }
 
+    if (reportData.url) {
+      try {
+        return await this.fetchPdfFromUrl(reportData.url);
+      } catch (err) {
+        console.warn("Failed to fetch PDF, regenerating:", reportData.url);
+      }
+    }
     // ===== Permission check =====
     const user = data.loggedInUser;
     if (user && user.role !== "COMPANY_MANAGER" && !user.mainRepository) {
@@ -570,12 +587,12 @@ export class ReportsService {
         acc[id].push(t);
         return acc;
       },
-      {}
+      {},
     );
 
     // Sort each timeline list descending by date (fastest access)
     Object.values(timelineMap).forEach((list) =>
-      list.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      list.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
     );
 
     // ========= Pre-calculate reusable variables ==========
@@ -743,7 +760,7 @@ export class ReportsService {
       const pdf = await generateReportsReport(
         data.reportsData.type,
         reportsData,
-        reports
+        reports,
       );
       return pdf;
     }
@@ -791,16 +808,16 @@ export class ReportsService {
       report?.type === ReportType.CLIENT
         ? report.clientReport?.clientReportOrders
         : report?.type === ReportType.REPOSITORY
-        ? report?.repositoryReport?.repositoryReportOrders
-        : report?.type === ReportType.BRANCH
-        ? report?.branchReport?.branchReportOrders
-        : report?.type === ReportType.GOVERNORATE
-        ? report?.governorateReport?.governorateReportOrders
-        : report?.type === ReportType.DELIVERY_AGENT
-        ? report?.deliveryAgentReport?.deliveryAgentReportOrders
-        : report?.type === ReportType.COMPANY
-        ? report?.companyReport?.companyReportOrders
-        : [];
+          ? report?.repositoryReport?.repositoryReportOrders
+          : report?.type === ReportType.BRANCH
+            ? report?.branchReport?.branchReportOrders
+            : report?.type === ReportType.GOVERNORATE
+              ? report?.governorateReport?.governorateReportOrders
+              : report?.type === ReportType.DELIVERY_AGENT
+                ? report?.deliveryAgentReport?.deliveryAgentReportOrders
+                : report?.type === ReportType.COMPANY
+                  ? report?.companyReport?.companyReportOrders
+                  : [];
 
     if (orders) {
       for (const order of orders) {
@@ -819,7 +836,7 @@ export class ReportsService {
               name: data.loggedInUser.name,
             },
             message: `تم حذف كشف ${localizeReportType(
-              report?.type as ReportType
+              report?.type as ReportType,
             )} برقم ${data.params.reportID}`,
           },
         });

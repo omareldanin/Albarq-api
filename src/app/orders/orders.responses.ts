@@ -809,22 +809,6 @@ export const statisticsReformed = (statistics: {
       deliveryAgentNet: number | null;
     };
   };
-  allOrdersStatisticsWithoutBranchReport: {
-    _count: {
-      id: number;
-    };
-    _sum: {
-      paidAmount: number | null;
-    };
-  };
-  allOrdersStatisticsWithoutCompanyReport: {
-    _count: {
-      id: number;
-    };
-    _sum: {
-      paidAmount: number | null;
-    };
-  };
   todayOrdersStatistics: {
     _count: {
       id: number;

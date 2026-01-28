@@ -7,7 +7,12 @@ import type {
   ReportUpdateType,
   ReportsFiltersType,
 } from "./reports.dto";
-import {reportReform, reportSelect} from "./reports.responses";
+import {
+  AllreportReform,
+  AllreportSelect,
+  reportReform,
+  reportSelect,
+} from "./reports.responses";
 
 export class ReportsRepository {
   async createReport(data: {
@@ -361,7 +366,7 @@ export class ReportsRepository {
         {
           page: data.filters.page,
           size: data.filters.size,
-        }
+        },
       );
       return {
         reports: {
@@ -378,16 +383,16 @@ export class ReportsRepository {
           [data.filters.sort.split(":")[0]]:
             data.filters.sort.split(":")[1] === "desc" ? "desc" : "asc",
         },
-        select: reportSelect,
+        select: AllreportSelect,
       },
       {
         page: data.filters.page,
         size: data.filters.size,
-      }
+      },
     );
 
     const reportsReformed = paginatedReports.data.map((report) =>
-      reportReform(report)
+      AllreportReform(report),
     );
 
     const reportsMetaData = await prisma.report.aggregate({

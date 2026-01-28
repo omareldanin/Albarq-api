@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReportsService = void 0;
 const client_1 = require("@prisma/client");
@@ -13,6 +16,7 @@ const generateReport_1 = require("./helpers/generateReport");
 const generateReportsReport_1 = require("./helpers/generateReportsReport");
 const reports_repository_1 = require("./reports.repository");
 const db_1 = require("../../database/db");
+const axios_1 = __importDefault(require("axios"));
 const reportsRepository = new reports_repository_1.ReportsRepository();
 const ordersRepository = new orders_repository_1.OrdersRepository();
 const employeesRepository = new employees_repository_1.EmployeesRepository();
@@ -381,6 +385,13 @@ class ReportsService {
         }
         return report;
     }
+    async fetchPdfFromUrl(url) {
+        const response = await axios_1.default.get(url, {
+            responseType: "arraybuffer",
+            timeout: 15000,
+        });
+        return Buffer.from(response.data);
+    }
     async getReportPDF(data) {
         const reportData = await reportsRepository.getReport({
             reportID: data.params.reportID,
@@ -390,6 +401,14 @@ class ReportsService {
         }
         if (reportData?.deleted) {
             throw new AppError_1.AppError("الكشف المطلوب موجود بسلة المحذوفات", 404);
+        }
+        if (reportData.url) {
+            try {
+                return await this.fetchPdfFromUrl(reportData.url);
+            }
+            catch (err) {
+                console.warn("Failed to fetch PDF, regenerating:", reportData.url);
+            }
         }
         // ===== Permission check =====
         const user = data.loggedInUser;

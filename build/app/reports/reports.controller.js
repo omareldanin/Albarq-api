@@ -196,7 +196,6 @@ class ReportController {
         res.setHeader("Cache-Control", "no-cache");
         res.setHeader("Accept-Ranges", "none"); // prevents chunking on some setups
         res.removeHeader("ETag"); // VERY IMPORTANT
-        console.log("PDF size:", pdfBuffer.length);
         res.end(pdfBuffer); // fastest
     });
     updateReport = (0, catchAsync_1.catchAsync)(async (req, res) => {

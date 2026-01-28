@@ -346,12 +346,12 @@ class ReportsRepository {
             orderBy: {
                 [data.filters.sort.split(":")[0]]: data.filters.sort.split(":")[1] === "desc" ? "desc" : "asc",
             },
-            select: reports_responses_1.reportSelect,
+            select: reports_responses_1.AllreportSelect,
         }, {
             page: data.filters.page,
             size: data.filters.size,
         });
-        const reportsReformed = paginatedReports.data.map((report) => (0, reports_responses_1.reportReform)(report));
+        const reportsReformed = paginatedReports.data.map((report) => (0, reports_responses_1.AllreportReform)(report));
         const reportsMetaData = await db_1.prisma.report.aggregate({
             where: {
                 ...where,

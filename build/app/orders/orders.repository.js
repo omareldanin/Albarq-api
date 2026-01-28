@@ -2843,7 +2843,7 @@ class OrdersRepository {
                     },
                 ],
             };
-        const [ordersStatisticsByStatus, ordersStatisticsByGovernorate, allOrdersStatistics, allOrdersStatisticsWithoutClientReport, allOrdersStatisticsWithoutDeliveryReport, allOrdersStatisticsWithoutCompanyReport, todayOrdersStatistics,] = await db_1.prisma.$transaction([
+        const [ordersStatisticsByStatus, ordersStatisticsByGovernorate, allOrdersStatistics, allOrdersStatisticsWithoutClientReport, allOrdersStatisticsWithoutDeliveryReport, todayOrdersStatistics,] = await db_1.prisma.$transaction([
             db_1.prisma.order.groupBy({
                 by: ["status"],
                 _sum: {
@@ -3005,32 +3005,6 @@ class OrdersRepository {
                 },
             }),
             db_1.prisma.order.aggregate({
-                _sum: {
-                    paidAmount: true,
-                },
-                _count: {
-                    id: true,
-                },
-                where: {
-                    ...filtersReformed,
-                    OR: [
-                        {
-                            companyReport: {
-                                none: {
-                                    secondaryType: "DELIVERED",
-                                },
-                            },
-                            status: {
-                                in: ["DELIVERED", "REPLACED", "PARTIALLY_RETURNED"],
-                            },
-                        },
-                    ],
-                    status: {
-                        in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
-                    },
-                },
-            }),
-            db_1.prisma.order.aggregate({
                 _sum: { totalCost: true },
                 _count: { id: true },
                 where: {
@@ -3052,8 +3026,6 @@ class OrdersRepository {
             allOrdersStatisticsWithoutClientReport,
             todayOrdersStatistics,
             allOrdersStatisticsWithoutDeliveryReport,
-            allOrdersStatisticsWithoutBranchReport: allOrdersStatisticsWithoutCompanyReport,
-            allOrdersStatisticsWithoutCompanyReport,
         });
     }
     async getOrderTimeline(data) {
