@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrdersRepository = void 0;
 const client_1 = require("@prisma/client");
@@ -7,6 +10,8 @@ const AppError_1 = require("../../lib/AppError");
 const orders_responses_1 = require("./orders.responses");
 const server_1 = require("../../server");
 const messages_controller_1 = require("../messages/messages.controller");
+const crypto_1 = __importDefault(require("crypto"));
+const redis_1 = require("../../lib/redis");
 const messageController = new messages_controller_1.MessagesController();
 let counter = 0;
 class OrdersRepository {
@@ -22,6 +27,12 @@ class OrdersRepository {
         const ctr = String(counter).padStart(2, "0");
         // Final ID → same length as before
         return `${datePart}${ts}${ctr}`;
+    }
+    hashFilters(filters) {
+        return crypto_1.default
+            .createHash("sha1")
+            .update(JSON.stringify(filters))
+            .digest("hex");
     }
     async generateUniqueOrderId() {
         while (true) {
@@ -2731,6 +2742,11 @@ class OrdersRepository {
         return deletedOrder;
     }
     async getOrdersStatistics(data) {
+        const cacheKey = `orders:stats:u:${data.loggedInUser.id}:r:${data.loggedInUser.role}:f:${this.hashFilters(data.filters)}`;
+        const cached = await redis_1.redis.get(cacheKey);
+        if (cached) {
+            return JSON.parse(cached);
+        }
         const filtersReformed = data.loggedInUser.role === "INQUIRY_EMPLOYEE"
             ? {
                 AND: [
@@ -3129,14 +3145,16 @@ class OrdersRepository {
                 },
             }),
         ]);
-        return (0, orders_responses_1.statisticsReformed)({
+        const result = (0, orders_responses_1.statisticsReformed)({
             ordersStatisticsByStatus,
             ordersStatisticsByGovernorate,
             allOrdersStatistics,
-            allOrdersStatisticsWithoutClientReport,
             todayOrdersStatistics,
             allOrdersStatisticsWithoutDeliveryReport,
+            allOrdersStatisticsWithoutClientReport,
         });
+        await redis_1.redis.set(cacheKey, JSON.stringify(result), "EX", 30);
+        return result;
     }
     async getOrderTimeline(data) {
         const orderTimeline = await db_1.prisma.orderTimeline.findMany({

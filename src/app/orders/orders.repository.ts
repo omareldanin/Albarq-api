@@ -31,6 +31,8 @@ import {
 } from "./orders.responses";
 import {io} from "../../server";
 import {MessagesController} from "../messages/messages.controller";
+import crypto from "crypto";
+import {redis} from "../../lib/redis";
 
 const messageController = new MessagesController();
 
@@ -66,6 +68,13 @@ export class OrdersRepository {
 
     // Final ID → same length as before
     return `${datePart}${ts}${ctr}`;
+  }
+
+  hashFilters(filters: OrdersStatisticsFiltersType) {
+    return crypto
+      .createHash("sha1")
+      .update(JSON.stringify(filters))
+      .digest("hex");
   }
 
   async generateUniqueOrderId() {
@@ -3068,6 +3077,87 @@ export class OrdersRepository {
     filters: OrdersStatisticsFiltersType;
     loggedInUser: loggedInUserType;
   }) {
+    const cacheKey = `orders:stats:u:${data.loggedInUser.id}:r:${data.loggedInUser.role}:f:${this.hashFilters(data.filters)}`;
+
+    const cached = await redis.get(cacheKey);
+
+    if (cached) {
+      return JSON.parse(cached) as {
+        ordersStatisticsByStatus: {
+          status:
+            | "REGISTERED"
+            | "READY_TO_SEND"
+            | "WITH_DELIVERY_AGENT"
+            | "DELIVERED"
+            | "REPLACED"
+            | "PARTIALLY_RETURNED"
+            | "RETURNED"
+            | "POSTPONED"
+            | "CHANGE_ADDRESS"
+            | "RESEND"
+            | "WITH_RECEIVING_AGENT"
+            | "PROCESSING"
+            | "IN_MAIN_REPOSITORY"
+            | "IN_GOV_REPOSITORY";
+          totalCost: number;
+          count: number;
+          name: string;
+          icon: string;
+          inside: boolean;
+        }[];
+        ordersStatisticsByGovernorate: {
+          governorate:
+            | "AL_ANBAR"
+            | "BABIL"
+            | "BABIL_COMPANIES"
+            | "BAGHDAD"
+            | "BASRA"
+            | "DHI_QAR"
+            | "AL_QADISIYYAH"
+            | "DIYALA"
+            | "DUHOK"
+            | "ERBIL"
+            | "KARBALA"
+            | "KIRKUK"
+            | "MAYSAN"
+            | "MUTHANNA"
+            | "NAJAF"
+            | "NINAWA"
+            | "SALAH_AL_DIN"
+            | "SULAYMANIYAH"
+            | "WASIT";
+          totalCost: number;
+          count: number;
+        }[];
+        allOrdersStatistics: {
+          totalCost: number;
+          count: number;
+        };
+        allOrdersStatisticsWithoutClientReport: {
+          totalCost: number;
+          deliveryCost: number;
+          count: number;
+        };
+        allOrdersStatisticsWithoutDeliveryReport: {
+          totalCost: number;
+          deliveryCost: number;
+          count: number;
+        };
+        allOrdersStatisticsWithoutBranchReport: {
+          totalCost: number;
+          count: number;
+        };
+        allOrdersStatisticsWithoutCompanyReport: {
+          totalCost: number;
+          count: number;
+        };
+        todayOrdersStatistics: {
+          totalCost: number;
+          count: number;
+        };
+      };
+    }
+
     const filtersReformed =
       data.loggedInUser.role === "INQUIRY_EMPLOYEE"
         ? {
@@ -3484,14 +3574,18 @@ export class OrdersRepository {
       }),
     ]);
 
-    return statisticsReformed({
+    const result = statisticsReformed({
       ordersStatisticsByStatus,
       ordersStatisticsByGovernorate,
       allOrdersStatistics,
-      allOrdersStatisticsWithoutClientReport,
       todayOrdersStatistics,
       allOrdersStatisticsWithoutDeliveryReport,
+      allOrdersStatisticsWithoutClientReport,
     });
+
+    await redis.set(cacheKey, JSON.stringify(result), "EX", 30);
+
+    return result;
   }
 
   async getOrderTimeline(data: {
