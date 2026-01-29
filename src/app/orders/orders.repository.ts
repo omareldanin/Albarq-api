@@ -3583,7 +3583,7 @@ export class OrdersRepository {
       allOrdersStatisticsWithoutClientReport,
     });
 
-    await redis.set(cacheKey, JSON.stringify(result), "EX", 30);
+    await redis.set(cacheKey, JSON.stringify(result), "EX", 45);
 
     return result;
   }
