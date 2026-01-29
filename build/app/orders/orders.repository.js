@@ -2953,7 +2953,7 @@ class OrdersRepository {
                     },
                 ],
             };
-        const [ordersStatisticsByStatus, ordersStatisticsByGovernorate, allOrdersStatistics, allOrdersStatisticsWithoutClientReport, allOrdersStatisticsWithoutDeliveryReport, todayOrdersStatistics,] = await db_1.prisma.$transaction([
+        const [ordersStatisticsByStatus, ordersStatisticsByGovernorate, allOrdersStatistics, allOrdersStatisticsWithoutClientReport, allOrdersStatisticsWithoutDeliveryReport, todayOrdersStatistics,] = await Promise.all([
             db_1.prisma.order.groupBy({
                 by: ["status"],
                 _sum: {

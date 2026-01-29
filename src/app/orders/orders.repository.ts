@@ -3304,7 +3304,7 @@ export class OrdersRepository {
       allOrdersStatisticsWithoutClientReport,
       allOrdersStatisticsWithoutDeliveryReport,
       todayOrdersStatistics,
-    ] = await prisma.$transaction([
+    ] = await Promise.all([
       prisma.order.groupBy({
         by: ["status"],
         _sum: {
