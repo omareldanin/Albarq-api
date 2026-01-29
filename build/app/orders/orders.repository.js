@@ -286,7 +286,6 @@ class OrdersRepository {
         return (0, orders_responses_1.orderReform)(createdOrder);
     }
     async getAllOrdersPaginated(data) {
-        console.log(data.filters);
         let startDate = new Date();
         let endDate = new Date();
         if (data.filters.startDate) {
@@ -1597,7 +1596,6 @@ class OrdersRepository {
                 where: {
                     ...where,
                 },
-                distinct: data.filters.removeRepeated ? ["receiptNumber"] : undefined,
                 orderBy: {
                     createdAt: "desc",
                 },
