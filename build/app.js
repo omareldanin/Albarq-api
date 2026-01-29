@@ -9,12 +9,15 @@ const compression_1 = __importDefault(require("compression"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
-const morgan_body_1 = __importDefault(require("morgan-body"));
+// import morganBody from "morgan-body";
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const AppError_1 = require("./lib/AppError");
-const logger_1 = require("./lib/logger");
+// import {Logger} from "./lib/logger";
 const globalErrorHandler_1 = __importDefault(require("./middlewares/globalErrorHandler"));
-const morgan_1 = require("./middlewares/morgan");
+// import {
+//   morganMiddleware,
+//   morganMiddlewareImmediate,
+// } from "./middlewares/morgan";
 const routes_1 = __importDefault(require("./routes"));
 const swagger_output_json_1 = __importDefault(require("./swagger/swagger-output.json"));
 const app = (0, express_1.default)();
@@ -28,19 +31,19 @@ app.use("/api-docs-dark-theme", swagger_ui_express_1.default.serve, swagger_ui_e
 app.use(body_parser_1.default.json()); // Parse incoming request bodies in a middleware before your handlers, available under the req.body property.
 app.use(body_parser_1.default.urlencoded({ extended: true })); // Parse incoming request bodies in a middleware before your handlers, available under the req.body property.
 app.use((0, cookie_parser_1.default)()); // Parse Cookie header and populate req.cookies with an object keyed by the cookie names.
-app.use(morgan_1.morganMiddlewareImmediate);
-(0, morgan_body_1.default)(app, {
-    stream: {
-        // @ts-expect-error Fix later
-        write: (message) => logger_1.Logger.info(message.replace(/\n$/, "")),
-    },
-    maxBodyLength: 200,
-    immediateReqLog: true,
-    // theme: "lightened",
-    noColors: true,
-    prettify: false,
-});
-app.use(morgan_1.morganMiddleware);
+// app.use(morganMiddlewareImmediate);
+// morganBody(app, {
+//   stream: {
+//     // @ts-expect-error Fix later
+//     write: (message) => Logger.info(message.replace(/\n$/, "")),
+//   },
+//   maxBodyLength: 200,
+//   immediateReqLog: true,
+//   // theme: "lightened",
+//   noColors: true,
+//   prettify: false,
+// });
+// app.use(morganMiddleware);
 app.use((0, compression_1.default)({
     filter: (req, res) => {
         const contentType = res.getHeader("Content-Type");

@@ -4,15 +4,15 @@ import compression from "compression";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
-import morganBody from "morgan-body";
+// import morganBody from "morgan-body";
 import swaggerUi from "swagger-ui-express";
 import {AppError} from "./lib/AppError";
-import {Logger} from "./lib/logger";
+// import {Logger} from "./lib/logger";
 import globalErrorHandler from "./middlewares/globalErrorHandler";
-import {
-  morganMiddleware,
-  morganMiddlewareImmediate,
-} from "./middlewares/morgan";
+// import {
+//   morganMiddleware,
+//   morganMiddlewareImmediate,
+// } from "./middlewares/morgan";
 import apiRouter from "./routes";
 import swaggerDocument from "./swagger/swagger-output.json";
 
@@ -30,25 +30,26 @@ const swaggerOptionsV1 = {
 app.use(
   "/api-docs-dark-theme",
   swaggerUi.serve,
-  swaggerUi.setup(swaggerDocument, swaggerOptionsV1)
+  swaggerUi.setup(swaggerDocument, swaggerOptionsV1),
 );
 
 app.use(bodyParser.json()); // Parse incoming request bodies in a middleware before your handlers, available under the req.body property.
 app.use(bodyParser.urlencoded({extended: true})); // Parse incoming request bodies in a middleware before your handlers, available under the req.body property.
 app.use(cookieParser()); // Parse Cookie header and populate req.cookies with an object keyed by the cookie names.
-app.use(morganMiddlewareImmediate);
-morganBody(app, {
-  stream: {
-    // @ts-expect-error Fix later
-    write: (message) => Logger.info(message.replace(/\n$/, "")),
-  },
-  maxBodyLength: 200,
-  immediateReqLog: true,
-  // theme: "lightened",
-  noColors: true,
-  prettify: false,
-});
-app.use(morganMiddleware);
+// app.use(morganMiddlewareImmediate);
+// morganBody(app, {
+//   stream: {
+//     // @ts-expect-error Fix later
+//     write: (message) => Logger.info(message.replace(/\n$/, "")),
+//   },
+//   maxBodyLength: 200,
+//   immediateReqLog: true,
+//   // theme: "lightened",
+//   noColors: true,
+//   prettify: false,
+// });
+
+// app.use(morganMiddleware);
 app.use(
   compression({
     filter: (req, res) => {
@@ -62,7 +63,7 @@ app.use(
       return compression.filter(req, res);
     },
     threshold: 0,
-  })
+  }),
 );
 
 app.use("/static", express.static("static"));
@@ -70,7 +71,7 @@ app.use(
   "/logs",
   // isLoggedIn,
   // isAutherized([Role.ADMIN]),
-  express.static("logs")
+  express.static("logs"),
 );
 
 // Routes
