@@ -250,19 +250,12 @@ export class OrdersService {
       !data.filters.orderType &&
       !data.loggedInUser.mainRepository
     ) {
-      const branch = await branchesRepository.getBranchManagerBranch({
-        branchManagerID: data.loggedInUser.id,
-      });
-
-      if (!branch) {
+      if (!data.loggedInUser.branchId) {
         throw new AppError("انت غير مرتبط بفرع", 500);
       }
       // TODO: Every branch should have a governorate
-      if (!branch.governorate) {
-        throw new AppError("الفرع الذي تعمل به غير مرتبط بمحافظة", 500);
-      }
       // governorate = data.filters.orderType ? undefined : branch.governorate;
-      branchID = branch.id;
+      branchID = data.loggedInUser.branchId;
     }
 
     // show orders/statistics without client reports to the client unless he searches for them

@@ -380,6 +380,8 @@ export class OrdersRepository {
     filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
     loggedInUser: loggedInUserType | undefined;
   }) {
+    console.log(data.filters);
+
     let startDate = new Date();
     let endDate = new Date();
 
