@@ -2553,172 +2553,187 @@ export class OrdersRepository {
   }): Promise<UpdatedOrderCosts[]> {
     const updatedOrders: UpdatedOrderCosts[] = [];
 
-    await prisma.$transaction(async (tx) => {
-      /* ===============================
+    /* ===============================
        CLIENT REPORT
     =============================== */
-      if (data.costs.reportType === ReportType.CLIENT) {
-        const orders = await tx.order.findMany({
-          where: {id: {in: data.ordersIDs}},
-          select: {
-            id: true,
-            paidAmount: true,
-            deliveryCost: true,
-            governorate: true,
-          },
+    if (data.costs.reportType === ReportType.CLIENT) {
+      const orders = await prisma.order.findMany({
+        where: {id: {in: data.ordersIDs}},
+        select: {
+          id: true,
+          paidAmount: true,
+          deliveryCost: true,
+          governorate: true,
+        },
+      });
+
+      for (const order of orders) {
+        const deliveryCost =
+          order.governorate === Governorate.BAGHDAD
+            ? (data.costs.baghdadDeliveryCost ?? order.deliveryCost)
+            : (data.costs.governoratesDeliveryCost ?? order.deliveryCost);
+
+        const clientNet = (order.paidAmount || 0) - deliveryCost;
+
+        updatedOrders.push({
+          id: order.id,
+          deliveryCost,
+          clientNet,
         });
-
-        await Promise.all(
-          orders.map((order) => {
-            const deliveryCost =
-              order.governorate === Governorate.BAGHDAD
-                ? (data.costs.baghdadDeliveryCost ?? order.deliveryCost)
-                : (data.costs.governoratesDeliveryCost ?? order.deliveryCost);
-
-            const clientNet = (order.paidAmount || 0) - deliveryCost;
-
-            updatedOrders.push({
-              id: order.id,
-              deliveryCost,
-              clientNet,
-            });
-
-            return tx.order.update({
-              where: {id: order.id},
-              data: {deliveryCost, clientNet},
-            });
-          }),
-        );
       }
 
-      /* ===============================
+      await prisma.$executeRaw`
+  UPDATE "Order"
+  SET
+    "deliveryCost" =
+      CASE
+        WHEN "governorate" = 'BAGHDAD'
+          THEN ${data.costs.baghdadDeliveryCost}
+        ELSE ${data.costs.governoratesDeliveryCost}
+      END,
+    "clientNet" =
+      "paidAmount" -
+      CASE
+        WHEN "governorate" = 'BAGHDAD'
+          THEN ${data.costs.baghdadDeliveryCost}
+        ELSE ${data.costs.governoratesDeliveryCost}
+      END
+  WHERE id = ANY(${data.ordersIDs});
+`;
+    }
+
+    /* ===============================
        BRANCH REPORT
     =============================== */
-      if (data.costs.reportType === ReportType.BRANCH) {
-        if (
-          data.costs.baghdadDeliveryCost ||
-          data.costs.governoratesDeliveryCost
-        ) {
-          const orders = await tx.order.findMany({
-            where: {id: {in: data.ordersIDs}},
-            select: {
-              id: true,
-              paidAmount: true,
-              governorate: true,
-            },
-          });
 
-          await Promise.all(
-            orders.map((order) => {
-              const cost =
-                order.governorate === Governorate.BAGHDAD
-                  ? data.costs.baghdadDeliveryCost
-                  : data.costs.governoratesDeliveryCost;
+    if (
+      data.costs.reportType === ReportType.BRANCH &&
+      (data.costs.baghdadDeliveryCost || data.costs.governoratesDeliveryCost)
+    ) {
+      const orders = await prisma.order.findMany({
+        where: {id: {in: data.ordersIDs}},
+        select: {
+          id: true,
+          paidAmount: true,
+          governorate: true,
+        },
+      });
 
-              if (!cost) return null;
+      // build response
+      for (const order of orders) {
+        const cost =
+          order.governorate === Governorate.BAGHDAD
+            ? data.costs.baghdadDeliveryCost
+            : data.costs.governoratesDeliveryCost;
 
-              const branchNet = order.paidAmount - cost;
+        if (!cost) continue;
 
-              updatedOrders.push({
-                id: order.id,
-                branchNet,
-              });
-
-              return tx.order.update({
-                where: {id: order.id},
-                data: {branchNet},
-              });
-            }),
-          );
-        }
-
-        if (
-          !data.costs.baghdadDeliveryCost &&
-          !data.costs.governoratesDeliveryCost
-        ) {
-          const orders = await tx.order.findMany({
-            where: {id: {in: data.ordersIDs}},
-            select: {
-              id: true,
-              paidAmount: true,
-              governorate: true,
-              client: {
-                select: {
-                  governoratesDeliveryCosts: true,
-                },
-              },
-            },
-          });
-
-          await Promise.all(
-            orders.map((order) => {
-              const costs = order.client.governoratesDeliveryCosts as {
-                governorate: Governorate;
-                cost: number;
-              }[];
-
-              const deliveryCost =
-                costs?.find((c) => c.governorate === order.governorate)?.cost ??
-                0;
-
-              const branchNet = order.paidAmount - deliveryCost;
-
-              updatedOrders.push({
-                id: order.id,
-                branchNet,
-                branchDeliveryCost: deliveryCost,
-              });
-
-              return tx.order.update({
-                where: {id: order.id},
-                data: {
-                  branchNet,
-                  branchDeliveryCost: deliveryCost,
-                },
-              });
-            }),
-          );
-        }
+        updatedOrders.push({
+          id: order.id,
+          branchNet: order.paidAmount - cost,
+        });
       }
 
-      /* ===============================
-       DELIVERY AGENT REPORT
-    =============================== */
-      if (data.costs.deliveryAgentDeliveryCost) {
-        const orders = await tx.order.findMany({
+      // single DB update
+      await prisma.$executeRaw`
+    UPDATE "Order"
+    SET
+      "branchNet" =
+        "paidAmount" -
+        CASE
+          WHEN "governorate" = 'BAGHDAD'
+            THEN ${data.costs.baghdadDeliveryCost}
+          ELSE ${data.costs.governoratesDeliveryCost}
+        END
+    WHERE id = ANY(${data.ordersIDs});
+  `;
+    }
+
+    if (data.costs.reportType === ReportType.BRANCH) {
+      if (
+        !data.costs.baghdadDeliveryCost &&
+        !data.costs.governoratesDeliveryCost
+      ) {
+        const orders = await prisma.order.findMany({
           where: {id: {in: data.ordersIDs}},
           select: {
             id: true,
             paidAmount: true,
-            weight: true,
+            governorate: true,
+            client: {
+              select: {
+                governoratesDeliveryCosts: true,
+              },
+            },
           },
         });
+        const costs = orders[0].client.governoratesDeliveryCosts as {
+          governorate: Governorate;
+          cost: number;
+        }[];
 
-        await Promise.all(
-          orders.map((order) => {
-            const weight = order.weight || 0;
-            const deliveryAgentNet =
-              data.costs.deliveryAgentDeliveryCost! + weight * 250;
+        const baghdadDeliveryCost =
+          costs?.find((c) => c.governorate === "BAGHDAD")?.cost ?? 0;
 
-            const companyNet = (order.paidAmount || 0) - deliveryAgentNet;
+        const govDeliveryCost =
+          costs?.find((c) => c.governorate !== "BAGHDAD")?.cost ?? 0;
 
-            updatedOrders.push({
-              id: order.id,
-              deliveryAgentNet,
-              companyNet,
-            });
-
-            return tx.order.update({
-              where: {id: order.id},
-              data: {
-                deliveryAgentNet,
-                companyNet,
-              },
-            });
-          }),
-        );
+        await prisma.$executeRaw`
+    UPDATE "Order"
+    SET
+      "branchNet" =
+        "paidAmount" -
+        CASE
+          WHEN "governorate" = 'BAGHDAD'
+            THEN ${baghdadDeliveryCost}
+          ELSE ${govDeliveryCost}
+        END
+    WHERE id = ANY(${data.ordersIDs});
+  `;
       }
-    });
+    }
+
+    /* ===============================
+       DELIVERY AGENT REPORT
+    =============================== */
+    if (data.costs.deliveryAgentDeliveryCost) {
+      const orders = await prisma.order.findMany({
+        where: {id: {in: data.ordersIDs}},
+        select: {
+          id: true,
+          paidAmount: true,
+          weight: true,
+        },
+      });
+
+      // build response
+      for (const order of orders) {
+        const deliveryAgentNet =
+          data.costs.deliveryAgentDeliveryCost + (order.weight || 0) * 250;
+
+        const companyNet = (order.paidAmount || 0) - deliveryAgentNet;
+
+        updatedOrders.push({
+          id: order.id,
+          deliveryAgentNet,
+          companyNet,
+        });
+      }
+
+      // single DB update
+      await prisma.$executeRaw`
+    UPDATE "Order"
+    SET
+      "deliveryAgentNet" =
+        ${data.costs.deliveryAgentDeliveryCost}
+        + COALESCE("weight", 0) * 250,
+      "companyNet" =
+        "paidAmount" -
+        (${data.costs.deliveryAgentDeliveryCost}
+         + COALESCE("weight", 0) * 250)
+    WHERE id = ANY(${data.ordersIDs});
+  `;
+    }
 
     return updatedOrders;
   }
