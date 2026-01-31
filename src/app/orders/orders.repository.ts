@@ -2660,38 +2660,13 @@ export class OrdersRepository {
         //     },
         //   },
         // });
-        const client = await prisma.client.findUnique({
-          where: {
-            id: data.orders[0]?.client.id,
-          },
-          select: {
-            governoratesDeliveryCosts: true,
-          },
-        });
-
-        const costs = client?.governoratesDeliveryCosts as {
-          governorate: Governorate;
-          cost: number;
-        }[];
-
-        const baghdadDeliveryCost =
-          costs?.find((c) => c.governorate === "BAGHDAD")?.cost ?? 0;
-
-        const govDeliveryCost =
-          costs?.find((c) => c.governorate !== "BAGHDAD")?.cost ?? 0;
 
         await prisma.$executeRaw`
-    UPDATE "Order"
-    SET
-      "branchNet" =
-        "paidAmount" -
-        CASE
-          WHEN "governorate" = 'BAGHDAD'
-            THEN ${baghdadDeliveryCost}
-          ELSE ${govDeliveryCost}
-        END
-    WHERE id = ANY(${data.ordersIDs});
-  `;
+  UPDATE "Order"
+  SET
+    "branchNet" = "paidAmount" - "deliveryCost"
+  WHERE id = ANY(${data.ordersIDs});
+`;
       }
     }
 

@@ -13,7 +13,7 @@ const hb: typeof handlebars = asyncHelpers(handlebars);
 export const generateHTML = async (template: string, data: object) => {
   try {
     hb.registerHelper("date", (date) =>
-      new Date(date).toLocaleDateString("en-GB")
+      new Date(date).toLocaleDateString("en-GB"),
     );
     hb.registerHelper("mapPhones", (phones) => {
       if (!phones) return "";
@@ -23,7 +23,7 @@ export const generateHTML = async (template: string, data: object) => {
     hb.registerHelper("inc", (value) => Number.parseInt(value) + 1);
     hb.registerHelper(
       "add",
-      (v1, v2) => (Number.parseInt(v1) || 0) + (Number.parseInt(v2) || 0)
+      (v1, v2) => (Number.parseInt(v1) || 0) + (Number.parseInt(v2) || 0),
     );
     hb.registerHelper("currency", (value) => {
       return Number(value || 0).toLocaleString("en-GB");
@@ -43,21 +43,20 @@ export const generateHTML = async (template: string, data: object) => {
       "isBaghdad",
       (
         governorate,
-        branchDeliveryCost,
         baghdadDeliveryCost,
-        governoratesDeliveryCost
+        governoratesDeliveryCost,
+        deliveryCost,
       ) => {
         if (
           (!baghdadDeliveryCost && !governoratesDeliveryCost) ||
           (+baghdadDeliveryCost === 0 && +governoratesDeliveryCost === 0)
         ) {
-          return Number(branchDeliveryCost || 0).toLocaleString("en-GB");
-        }
-        if (governorate === Governorate.BAGHDAD) {
+          return Number(deliveryCost || 0).toLocaleString("en-GB");
+        } else if (governorate === Governorate.BAGHDAD) {
           return Number(baghdadDeliveryCost || 0).toLocaleString("en-GB");
         }
         return Number(governoratesDeliveryCost || 0).toLocaleString("en-GB");
-      }
+      },
     );
     hb.registerHelper("colorizeRow2", (secondaryReportType, status) => {
       if (secondaryReportType === SecondaryReportType.RETURNED) {
@@ -118,7 +117,7 @@ export const generateHTML = async (template: string, data: object) => {
       return generateQRCode(
         JSON.stringify({
           id: data.receiptNumber,
-        })
+        }),
       );
     });
     hb.registerHelper("BarCode", (id) => {
