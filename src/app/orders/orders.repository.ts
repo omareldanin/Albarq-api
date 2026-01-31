@@ -2558,16 +2558,6 @@ export class OrdersRepository {
        CLIENT REPORT
     =============================== */
     if (data.costs.reportType === ReportType.CLIENT) {
-      // const orders = await prisma.order.findMany({
-      //   where: {id: {in: data.ordersIDs}},
-      //   select: {
-      //     id: true,
-      //     paidAmount: true,
-      //     deliveryCost: true,
-      //     governorate: true,
-      //   },
-      // });
-
       for (const order of data.orders) {
         const deliveryCost =
           order?.governorate === Governorate.BAGHDAD
@@ -2589,16 +2579,18 @@ export class OrdersRepository {
     "deliveryCost" =
       CASE
         WHEN "governorate" = 'BAGHDAD'
-          THEN ${data.costs.baghdadDeliveryCost}
-        ELSE ${data.costs.governoratesDeliveryCost}
+          THEN COALESCE(${data.costs.baghdadDeliveryCost}, "deliveryCost")::double precision
+        ELSE COALESCE(${data.costs.governoratesDeliveryCost}, "deliveryCost")::double precision
       END,
     "clientNet" =
       "paidAmount" -
-      CASE
-        WHEN "governorate" = 'BAGHDAD'
-          THEN ${data.costs.baghdadDeliveryCost}
-        ELSE ${data.costs.governoratesDeliveryCost}
-      END
+      (
+        CASE
+          WHEN "governorate" = 'BAGHDAD'
+            THEN COALESCE(${data.costs.baghdadDeliveryCost}, "deliveryCost")::double precision
+          ELSE COALESCE(${data.costs.governoratesDeliveryCost}, "deliveryCost")::double precision
+        END
+      )
   WHERE id = ANY(${data.ordersIDs});
 `;
     }
