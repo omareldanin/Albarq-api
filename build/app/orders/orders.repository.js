@@ -2296,22 +2296,22 @@ class OrdersRepository {
            CLIENT REPORT
         =============================== */
         if (data.costs.reportType === client_1.ReportType.CLIENT) {
-            const orders = await db_1.prisma.order.findMany({
-                where: { id: { in: data.ordersIDs } },
-                select: {
-                    id: true,
-                    paidAmount: true,
-                    deliveryCost: true,
-                    governorate: true,
-                },
-            });
-            for (const order of orders) {
-                const deliveryCost = order.governorate === client_1.Governorate.BAGHDAD
+            // const orders = await prisma.order.findMany({
+            //   where: {id: {in: data.ordersIDs}},
+            //   select: {
+            //     id: true,
+            //     paidAmount: true,
+            //     deliveryCost: true,
+            //     governorate: true,
+            //   },
+            // });
+            for (const order of data.orders) {
+                const deliveryCost = order?.governorate === client_1.Governorate.BAGHDAD
                     ? (data.costs.baghdadDeliveryCost ?? order.deliveryCost)
-                    : (data.costs.governoratesDeliveryCost ?? order.deliveryCost);
-                const clientNet = (order.paidAmount || 0) - deliveryCost;
+                    : (data.costs.governoratesDeliveryCost ?? order?.deliveryCost);
+                const clientNet = (order?.paidAmount || 0) - deliveryCost;
                 updatedOrders.push({
-                    id: order.id,
+                    id: order?.id,
                     deliveryCost,
                     clientNet,
                 });
@@ -2340,24 +2340,24 @@ class OrdersRepository {
         =============================== */
         if (data.costs.reportType === client_1.ReportType.BRANCH &&
             (data.costs.baghdadDeliveryCost || data.costs.governoratesDeliveryCost)) {
-            const orders = await db_1.prisma.order.findMany({
-                where: { id: { in: data.ordersIDs } },
-                select: {
-                    id: true,
-                    paidAmount: true,
-                    governorate: true,
-                },
-            });
+            // const orders = await prisma.order.findMany({
+            //   where: {id: {in: data.ordersIDs}},
+            //   select: {
+            //     id: true,
+            //     paidAmount: true,
+            //     governorate: true,
+            //   },
+            // });
             // build response
-            for (const order of orders) {
-                const cost = order.governorate === client_1.Governorate.BAGHDAD
+            for (const order of data.orders) {
+                const cost = order?.governorate === client_1.Governorate.BAGHDAD
                     ? data.costs.baghdadDeliveryCost
                     : data.costs.governoratesDeliveryCost;
                 if (!cost)
                     continue;
                 updatedOrders.push({
-                    id: order.id,
-                    branchNet: order.paidAmount - cost,
+                    id: order?.id,
+                    branchNet: order?.paidAmount - cost,
                 });
             }
             // single DB update
@@ -2377,20 +2377,28 @@ class OrdersRepository {
         if (data.costs.reportType === client_1.ReportType.BRANCH) {
             if (!data.costs.baghdadDeliveryCost &&
                 !data.costs.governoratesDeliveryCost) {
-                const orders = await db_1.prisma.order.findMany({
-                    where: { id: { in: data.ordersIDs } },
+                // const orders = await prisma.order.findMany({
+                //   where: {id: {in: data.ordersIDs}},
+                //   select: {
+                //     id: true,
+                //     paidAmount: true,
+                //     governorate: true,
+                //     client: {
+                //       select: {
+                //         governoratesDeliveryCosts: true,
+                //       },
+                //     },
+                //   },
+                // });
+                const client = await db_1.prisma.client.findUnique({
+                    where: {
+                        id: data.orders[0]?.client.id,
+                    },
                     select: {
-                        id: true,
-                        paidAmount: true,
-                        governorate: true,
-                        client: {
-                            select: {
-                                governoratesDeliveryCosts: true,
-                            },
-                        },
+                        governoratesDeliveryCosts: true,
                     },
                 });
-                const costs = orders[0].client.governoratesDeliveryCosts;
+                const costs = client?.governoratesDeliveryCosts;
                 const baghdadDeliveryCost = costs?.find((c) => c.governorate === "BAGHDAD")?.cost ?? 0;
                 const govDeliveryCost = costs?.find((c) => c.governorate !== "BAGHDAD")?.cost ?? 0;
                 await db_1.prisma.$executeRaw `

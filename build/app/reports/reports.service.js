@@ -138,6 +138,7 @@ class ReportsService {
             data.reportData.type === client_1.ReportType.GOVERNORATE) {
             const updatedOrders = await ordersRepository.updateOrdersCosts2({
                 ordersIDs,
+                orders,
                 costs: {
                     baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
                     governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
@@ -146,20 +147,22 @@ class ReportsService {
             });
             orders = this.applyOrderCostUpdates(orders, updatedOrders);
         }
-        if (data.reportData.type === client_1.ReportType.COMPANY) {
-            const updatedOrders = await ordersRepository.updateOrdersCosts2({
-                ordersIDs,
-                costs: {
-                    baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
-                    governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
-                    reportType: data.reportData.type,
-                },
-            });
-            orders = this.applyOrderCostUpdates(orders, updatedOrders);
-        }
+        // if (data.reportData.type === ReportType.COMPANY) {
+        //   const updatedOrders = await ordersRepository.updateOrdersCosts2({
+        //     ordersIDs,
+        //     orders,
+        //     costs: {
+        //       baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
+        //       governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
+        //       reportType: data.reportData.type,
+        //     },
+        //   });
+        //   orders = this.applyOrderCostUpdates(orders, updatedOrders);
+        // }
         if (data.reportData.type === client_1.ReportType.DELIVERY_AGENT) {
             await ordersRepository.updateOrdersCosts2({
                 ordersIDs,
+                orders,
                 costs: {
                     deliveryAgentDeliveryCost: data.reportData.deliveryAgentDeliveryCost,
                 },

@@ -2543,6 +2543,7 @@ export class OrdersRepository {
 
   async updateOrdersCosts2(data: {
     ordersIDs: string[];
+    orders: ReturnType<typeof orderReform>[];
     clientId?: number;
     costs: {
       baghdadDeliveryCost?: number;
@@ -2557,26 +2558,26 @@ export class OrdersRepository {
        CLIENT REPORT
     =============================== */
     if (data.costs.reportType === ReportType.CLIENT) {
-      const orders = await prisma.order.findMany({
-        where: {id: {in: data.ordersIDs}},
-        select: {
-          id: true,
-          paidAmount: true,
-          deliveryCost: true,
-          governorate: true,
-        },
-      });
+      // const orders = await prisma.order.findMany({
+      //   where: {id: {in: data.ordersIDs}},
+      //   select: {
+      //     id: true,
+      //     paidAmount: true,
+      //     deliveryCost: true,
+      //     governorate: true,
+      //   },
+      // });
 
-      for (const order of orders) {
+      for (const order of data.orders) {
         const deliveryCost =
-          order.governorate === Governorate.BAGHDAD
+          order?.governorate === Governorate.BAGHDAD
             ? (data.costs.baghdadDeliveryCost ?? order.deliveryCost)
-            : (data.costs.governoratesDeliveryCost ?? order.deliveryCost);
+            : (data.costs.governoratesDeliveryCost ?? order?.deliveryCost);
 
-        const clientNet = (order.paidAmount || 0) - deliveryCost;
+        const clientNet = (order?.paidAmount || 0) - deliveryCost!!;
 
         updatedOrders.push({
-          id: order.id,
+          id: order?.id!!,
           deliveryCost,
           clientNet,
         });
@@ -2610,27 +2611,27 @@ export class OrdersRepository {
       data.costs.reportType === ReportType.BRANCH &&
       (data.costs.baghdadDeliveryCost || data.costs.governoratesDeliveryCost)
     ) {
-      const orders = await prisma.order.findMany({
-        where: {id: {in: data.ordersIDs}},
-        select: {
-          id: true,
-          paidAmount: true,
-          governorate: true,
-        },
-      });
+      // const orders = await prisma.order.findMany({
+      //   where: {id: {in: data.ordersIDs}},
+      //   select: {
+      //     id: true,
+      //     paidAmount: true,
+      //     governorate: true,
+      //   },
+      // });
 
       // build response
-      for (const order of orders) {
+      for (const order of data.orders) {
         const cost =
-          order.governorate === Governorate.BAGHDAD
+          order?.governorate === Governorate.BAGHDAD
             ? data.costs.baghdadDeliveryCost
             : data.costs.governoratesDeliveryCost;
 
         if (!cost) continue;
 
         updatedOrders.push({
-          id: order.id,
-          branchNet: order.paidAmount - cost,
+          id: order?.id!!,
+          branchNet: order?.paidAmount!! - cost,
         });
       }
 
@@ -2654,20 +2655,29 @@ export class OrdersRepository {
         !data.costs.baghdadDeliveryCost &&
         !data.costs.governoratesDeliveryCost
       ) {
-        const orders = await prisma.order.findMany({
-          where: {id: {in: data.ordersIDs}},
+        // const orders = await prisma.order.findMany({
+        //   where: {id: {in: data.ordersIDs}},
+        //   select: {
+        //     id: true,
+        //     paidAmount: true,
+        //     governorate: true,
+        //     client: {
+        //       select: {
+        //         governoratesDeliveryCosts: true,
+        //       },
+        //     },
+        //   },
+        // });
+        const client = await prisma.client.findUnique({
+          where: {
+            id: data.orders[0]?.client.id,
+          },
           select: {
-            id: true,
-            paidAmount: true,
-            governorate: true,
-            client: {
-              select: {
-                governoratesDeliveryCosts: true,
-              },
-            },
+            governoratesDeliveryCosts: true,
           },
         });
-        const costs = orders[0].client.governoratesDeliveryCosts as {
+
+        const costs = client?.governoratesDeliveryCosts as {
           governorate: Governorate;
           cost: number;
         }[];
