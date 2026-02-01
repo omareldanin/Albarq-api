@@ -3161,7 +3161,7 @@ class OrdersRepository {
             allOrdersStatisticsWithoutDeliveryReport,
             allOrdersStatisticsWithoutClientReport,
         });
-        await redis_1.redis.set(cacheKey, JSON.stringify(result), "EX", 45);
+        await redis_1.redis.set(cacheKey, JSON.stringify(result), "EX", 120);
         return result;
     }
     async getOrderTimeline(data) {

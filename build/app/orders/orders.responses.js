@@ -93,7 +93,6 @@ exports.orderSelect = {
     printed: true,
     deliveryAgentNet: true,
     companyNet: true,
-    discount: true,
     branchNet: true,
     receiptNumber: true,
     quantity: true,
@@ -109,49 +108,13 @@ exports.orderSelect = {
     confirmed: true,
     deliveryType: true,
     deliveryDate: true,
-    currentLocation: true,
     createdAt: true,
     updatedAt: true,
     processingStatus: true,
-    processed: true,
-    processedAt: true,
     forwardedRepo: true,
     forwardedBranchId: true,
     receivedBranchId: true,
     branchDeliveryCost: true,
-    processedBy: {
-        select: {
-            user: {
-                select: {
-                    id: true,
-                    name: true,
-                    phone: true,
-                },
-            },
-            role: true,
-        },
-    },
-    forwarded: true,
-    forwardedAt: true,
-    forwardedBy: {
-        select: {
-            user: {
-                select: {
-                    id: true,
-                    name: true,
-                    phone: true,
-                },
-            },
-        },
-    },
-    forwardedFrom: {
-        select: {
-            id: true,
-            name: true,
-            logo: true,
-            registrationText: true,
-        },
-    },
     client: {
         select: {
             showNumbers: true,
@@ -189,14 +152,6 @@ exports.orderSelect = {
         },
     },
     oldDeliveryAgentId: true,
-    orderProducts: {
-        select: {
-            quantity: true,
-            product: true,
-            color: true,
-            size: true,
-        },
-    },
     governorate: true,
     location: {
         select: {
@@ -493,11 +448,6 @@ const orderReform = (order) => {
             phone: order.deliveryAgent.user.phone,
             deliveryCost: order.deliveryAgent.deliveryCost,
         },
-        processedBy: {
-            ...order.processedBy?.user,
-            role: order.processedBy?.role,
-        },
-        forwardedBy: order.forwardedBy?.user,
         deleted: order.deleted,
         deletedBy: order.deleted && order.deletedBy,
         deletedAt: order.deletedAt?.toISOString(),
@@ -613,11 +563,6 @@ const mobileOrderReform = (order) => {
             phone: order.deliveryAgent.user.phone,
             deliveryCost: order.deliveryAgent.deliveryCost,
         },
-        processedBy: {
-            ...order.processedBy?.user,
-            role: order.processedBy?.role,
-        },
-        forwardedBy: order.forwardedBy?.user,
         deleted: order.deleted,
         deletedBy: order.deleted && order.deletedBy,
         deletedAt: order.deletedAt?.toISOString(),
