@@ -34,8 +34,8 @@ model User {
   tickets          Ticket[]
   ticketResponses  TicketResponse[]
   loginHistory     UsersLoginHistory[]
-  seenMsgs  MessageSeen[]
-  transactions                            Transaction[]
+  seenMsgs         MessageSeen[]
+  transactions     Transaction[]
 
   @@index([name])
   @@index([phone])
@@ -95,7 +95,7 @@ model Employee {
   reports                 Report[]
   managedStores           Store[]
   tickets                 Ticket[]
-  transactions                            Transaction[]
+  transactions            Transaction[]
 
   @@index([companyId])
   @@index([role])
@@ -117,7 +117,7 @@ model Client {
   id                        Int                     @id
   role                      ClientRole              @default(CLIENT)
   token                     String                  @default("")
-  apiKeyHash                String?                 
+  apiKeyHash                String?
   governoratesDeliveryCosts Json                    @default("[]")
   deletedById               Int?
   createdById               Int
@@ -205,8 +205,8 @@ model Branch {
   companyId           Int
   createdAt           DateTime                   @default(now())
   updatedAt           DateTime                   @updatedAt
-  branchCLient        Float                       @default(1000)
-  branchOrder         Float                       @default(1000)
+  branchCLient        Float                      @default(1000)
+  branchOrder         Float                      @default(1000)
   automaticUpdate     AutomaticUpdate[]
   company             Company                    @relation(fields: [companyId], references: [id])
   branchReports       BranchReport[]
@@ -223,7 +223,6 @@ model Branch {
   @@unique([name, companyId])
   @@index([companyId])
   @@index([governorate])
-
 }
 
 model InquiryEmployeesBranches {
@@ -425,32 +424,30 @@ model Order {
   timeline               OrderTimeline[]
   ordersInquiryEmployees OrdersInquiryEmployees[]
   tickets                Ticket[]
-  pdfId                Int?
-  savedPdf            SavedPdf?                @relation(fields: [pdfId], references: [id])
+  pdfId                  Int?
+  savedPdf               SavedPdf?                @relation(fields: [pdfId], references: [id])
 
-  branchReport           BranchReport[]           @relation("BranchReportToOrder")
-  clientReport           ClientReport[]           @relation("ClientReportToOrder")
-  companyReport          CompanyReport[]          @relation("CompanyReportToOrder")
-  repositoryReport       RepositoryReport[]       @relation("OrderToRepositoryReport")
+  branchReport     BranchReport[]     @relation("BranchReportToOrder")
+  clientReport     ClientReport[]     @relation("ClientReportToOrder")
+  companyReport    CompanyReport[]    @relation("CompanyReportToOrder")
+  repositoryReport RepositoryReport[] @relation("OrderToRepositoryReport")
 
-@@index([receiptNumber])
-@@index([status])
-@@index([secondaryStatus])
-@@index([clientId])
-@@index([deliveryAgentId])
-@@index([governorate])
-@@index([storeId])
-@@index([branchId])
-@@index([companyId])
-
-// 🚀 pagination & performance
-@@index([createdAt(sort: Desc)])
-@@index([clientId, createdAt(sort: Desc)])
-@@index([branchId, createdAt(sort: Desc)])
-@@index([companyId, createdAt(sort: Desc)])
-@@index([storeId, createdAt(sort: Desc)])
-@@index([deliveryAgentId, createdAt(sort: Desc)])
-
+  @@index([receiptNumber])
+  @@index([status])
+  @@index([secondaryStatus])
+  @@index([clientId])
+  @@index([deliveryAgentId])
+  @@index([governorate])
+  @@index([storeId])
+  @@index([branchId])
+  @@index([companyId])
+  // 🚀 pagination & performance
+  @@index([createdAt(sort: Desc)])
+  @@index([clientId, createdAt(sort: Desc)])
+  @@index([branchId, createdAt(sort: Desc)])
+  @@index([companyId, createdAt(sort: Desc)])
+  @@index([storeId, createdAt(sort: Desc)])
+  @@index([deliveryAgentId, createdAt(sort: Desc)])
 }
 
 model Chat {
@@ -464,23 +461,27 @@ model Chat {
 }
 
 model Message {
-  id                    Int          @id @default(autoincrement())
+  id                    Int           @id @default(autoincrement())
   content               String
-  seenByClient          Boolean      @default(false)
-  seenByDelivery        Boolean      @default(false)
-  seenByCallCenter      Boolean      @default(false)
-  seenByBranchManager   Boolean      @default(false)
-  seenByCompanyManager  Boolean      @default(false)
-  createdAt             DateTime     @default(now())
-  updatedAt             DateTime     @updatedAt
+  seenByClient          Boolean       @default(false)
+  seenByDelivery        Boolean       @default(false)
+  seenByCallCenter      Boolean       @default(false)
+  seenByBranchManager   Boolean       @default(false)
+  seenByCompanyManager  Boolean       @default(false)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
   createdById           Int?
   chatId                Int?
   image                 String?
   sendFor               MessageType?
-  seenByClientAssistant Boolean      @default(false)
-  Chat                  Chat?        @relation(fields: [chatId], references: [id])
-  createdBy             User?        @relation(fields: [createdById], references: [id])
+  seenByClientAssistant Boolean       @default(false)
+  Chat                  Chat?         @relation(fields: [chatId], references: [id])
+  createdBy             User?         @relation(fields: [createdById], references: [id])
   seenBy                MessageSeen[]
+
+  @@index([chatId, createdAt(sort: Desc)], name: "idx_message_chat_created")
+  @@index([chatId, createdById], name: "idx_message_chat_creator")
+  @@index([createdById], name: "idx_message_createdBy")
 }
 
 model MessageSeen {
@@ -489,12 +490,13 @@ model MessageSeen {
   userId    Int
   seenAt    DateTime @default(now())
 
-  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([messageId, userId])
+  @@index([userId], name: "idx_seenBy_user")
+  @@index([messageId], name: "idx_seenBy_message")
 }
-
 
 model CustomerOutput {
   id                 Int         @id @default(autoincrement())
@@ -514,7 +516,7 @@ model CustomerOutput {
 model ClientOrderReceipt {
   id            Int      @id @default(autoincrement())
   receiptNumber String   @default("")
-  notes         String?   @default("")
+  notes         String?  @default("")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   branchId      Int
@@ -609,7 +611,7 @@ model Report {
   createdAt               DateTime             @default(now())
   updatedAt               DateTime             @updatedAt
   branchNet               Float                @default(0)
-  url                     String?                
+  url                     String?
   branchReport            BranchReport?
   clientReport            ClientReport?
   companyReport           CompanyReport?
@@ -624,13 +626,14 @@ model Report {
   @@index([employeeId])
   @@index([companyId])
 }
+
 model SavedPdf {
-  id                      Int                  @id @default(autoincrement())
-  ordersCount             Int                  @default(0)
-  createdAt               DateTime             @default(now())
-  orders                  Order[]
-  clientId                Int?
-  client                  Client?                @relation(fields: [clientId], references: [id])
+  id          Int      @id @default(autoincrement())
+  ordersCount Int      @default(0)
+  createdAt   DateTime @default(now())
+  orders      Order[]
+  clientId    Int?
+  client      Client?  @relation(fields: [clientId], references: [id])
 }
 
 model CompanyReport {
@@ -869,18 +872,18 @@ model ClosedStatus {
 }
 
 model Transaction {
-  id                      Int      @id @default(autoincrement())
-  paidAmount              Float    @default(0)
-  type                    TransactionType
-  for                     String
-  employeeId              Int?
-  createdById             Int?
-  branchId                Int?
-  createdBy               User?                 @relation(fields: [createdById], references: [id])
-  employee                Employee?             @relation(fields: [employeeId], references: [id])
-  companyId               Int
-  company                 Company               @relation(fields: [companyId], references: [id])
-  branch                  Branch?                @relation(fields: [branchId], references: [id])
+  id          Int             @id @default(autoincrement())
+  paidAmount  Float           @default(0)
+  type        TransactionType
+  for         String
+  employeeId  Int?
+  createdById Int?
+  branchId    Int?
+  createdBy   User?           @relation(fields: [createdById], references: [id])
+  employee    Employee?       @relation(fields: [employeeId], references: [id])
+  companyId   Int
+  company     Company         @relation(fields: [companyId], references: [id])
+  branch      Branch?         @relation(fields: [branchId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -910,7 +913,7 @@ enum AdminRole {
 
 enum TransactionType {
   DEPOSIT
-  WITHDRAW  
+  WITHDRAW
 }
 
 enum EmployeeRole {

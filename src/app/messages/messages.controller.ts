@@ -731,6 +731,7 @@ export class MessagesController {
         lastMessage: e.messages[0],
       };
     });
+
     return {
       totalUnSeened,
       pageCounts: chats.pagesCount,
