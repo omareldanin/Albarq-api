@@ -9,7 +9,7 @@ import {
 import {z} from "zod";
 
 export const EmployeeCreateSchema = z.object({
-  username: z.string().min(11),
+  username: z.string().min(7),
   name: z.string().min(3),
   clientAssistantRole: z.string().optional(),
   password: z.string().min(6),
@@ -25,20 +25,26 @@ export const EmployeeCreateSchema = z.object({
   branchID: z.coerce.number().optional(),
   role: z.nativeEnum(EmployeeRole),
   permissions: z
-    .preprocess((data) => {
-      if (typeof data === "string") {
-        return JSON.parse(data);
-      }
-      return data;
-    }, z.array(z.nativeEnum(Permission)))
+    .preprocess(
+      (data) => {
+        if (typeof data === "string") {
+          return JSON.parse(data);
+        }
+        return data;
+      },
+      z.array(z.nativeEnum(Permission)),
+    )
     .optional(),
   orderStatus: z
-    .preprocess((data) => {
-      if (typeof data === "string") {
-        return JSON.parse(data);
-      }
-      return data;
-    }, z.array(z.nativeEnum(OrderStatus)))
+    .preprocess(
+      (data) => {
+        if (typeof data === "string") {
+          return JSON.parse(data);
+        }
+        return data;
+      },
+      z.array(z.nativeEnum(OrderStatus)),
+    )
     .optional(),
   fcm: z.string().optional(),
   avatar: z.string().optional(),
@@ -84,16 +90,22 @@ export const EmployeeCreateSchema = z.object({
     }, z.array(z.coerce.number()).optional())
     .optional(),
   inquiryGovernorates: z
-    .preprocess((val) => {
-      if (typeof val === "string") return JSON.parse(val);
-      return val;
-    }, z.array(z.nativeEnum(Governorate)).optional())
+    .preprocess(
+      (val) => {
+        if (typeof val === "string") return JSON.parse(val);
+        return val;
+      },
+      z.array(z.nativeEnum(Governorate)).optional(),
+    )
     .optional(),
   inquiryStatuses: z
-    .preprocess((val) => {
-      if (typeof val === "string") return JSON.parse(val);
-      return val;
-    }, z.array(z.nativeEnum(OrderStatus)).optional())
+    .preprocess(
+      (val) => {
+        if (typeof val === "string") return JSON.parse(val);
+        return val;
+      },
+      z.array(z.nativeEnum(OrderStatus)).optional(),
+    )
     .optional(),
 });
 
@@ -122,18 +134,24 @@ export const EmployeesFiltersSchema = z
     size: z.coerce.number().optional().default(10),
     ordersStartDate: z.coerce.date().optional(),
     ordersEndDate: z.coerce.date().optional(),
-    roles: z.preprocess((val) => {
-      if (typeof val === "string") {
-        return val.split(",");
-      }
-      return val;
-    }, z.array(z.nativeEnum(EmployeeRole)).optional()),
-    permissions: z.preprocess((val) => {
-      if (typeof val === "string") {
-        return val.split(",");
-      }
-      return val;
-    }, z.array(z.nativeEnum(Permission)).optional()),
+    roles: z.preprocess(
+      (val) => {
+        if (typeof val === "string") {
+          return val.split(",");
+        }
+        return val;
+      },
+      z.array(z.nativeEnum(EmployeeRole)).optional(),
+    ),
+    permissions: z.preprocess(
+      (val) => {
+        if (typeof val === "string") {
+          return val.split(",");
+        }
+        return val;
+      },
+      z.array(z.nativeEnum(Permission)).optional(),
+    ),
     role: z.nativeEnum(EmployeeRole).optional(),
     name: z.string().optional(),
     phone: z.string().optional(),

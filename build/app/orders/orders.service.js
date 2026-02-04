@@ -407,7 +407,8 @@ class OrdersService {
         }
         if (!data.loggedInUser.permissions?.includes("CHANGE_ORDER_STATUS") &&
             data.orderData.status &&
-            data.loggedInUser.role !== "DELIVERY_AGENT") {
+            data.loggedInUser.role !== "DELIVERY_AGENT" &&
+            data.loggedInUser.role !== "REPOSITORIY_EMPLOYEE") {
             throw new AppError_1.AppError("ليس لديك صلاحية تعديل حاله طلب", 403);
         }
         let oldOrderData = await ordersRepository.getOrderById({

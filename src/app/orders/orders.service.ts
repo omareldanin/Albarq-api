@@ -516,7 +516,8 @@ export class OrdersService {
     if (
       !data.loggedInUser.permissions?.includes("CHANGE_ORDER_STATUS") &&
       data.orderData.status &&
-      data.loggedInUser.role !== "DELIVERY_AGENT"
+      data.loggedInUser.role !== "DELIVERY_AGENT" &&
+      data.loggedInUser.role !== "REPOSITORIY_EMPLOYEE"
     ) {
       throw new AppError("ليس لديك صلاحية تعديل حاله طلب", 403);
     }

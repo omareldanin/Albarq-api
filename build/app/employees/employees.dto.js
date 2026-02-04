@@ -6,7 +6,7 @@ const zod_openapi_1 = require("@anatine/zod-openapi");
 const client_1 = require("@prisma/client");
 const zod_1 = require("zod");
 exports.EmployeeCreateSchema = zod_1.z.object({
-    username: zod_1.z.string().min(11),
+    username: zod_1.z.string().min(7),
     name: zod_1.z.string().min(3),
     clientAssistantRole: zod_1.z.string().optional(),
     password: zod_1.z.string().min(6),
