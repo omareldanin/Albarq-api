@@ -311,6 +311,7 @@ class ReportsService {
         }
         // Only show reports of the same branch as the employee
         let branch;
+        let repository;
         if ((data.filters.type === client_1.ReportType.CLIENT ||
             data.filters.type === client_1.ReportType.REPOSITORY ||
             data.filters.type === client_1.ReportType.DELIVERY_AGENT) &&
@@ -325,6 +326,7 @@ class ReportsService {
             if (!employee?.repository?.mainRepository) {
                 branch = employee?.branch?.id;
             }
+            repository = employee?.repository?.id;
             if (employee?.repository?.type === "RETURN") {
                 data.filters.secondaryType = "RETURNED";
             }
@@ -387,6 +389,7 @@ class ReportsService {
                 clientID,
                 deliveryAgentID,
                 size,
+                repositoryID: repository,
             },
         });
         return { page, pagesCount, reports, reportsMetaData };
@@ -417,7 +420,7 @@ class ReportsService {
         if (reportData?.deleted) {
             throw new AppError_1.AppError("الكشف المطلوب موجود بسلة المحذوفات", 404);
         }
-        if (reportData.url) {
+        if (reportData.url && reportData.type !== "REPOSITORY") {
             try {
                 return await this.fetchPdfFromUrl(reportData.url);
             }

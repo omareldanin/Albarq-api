@@ -513,6 +513,14 @@ export class OrdersService {
       throw new AppError("ليس لديك صلاحية تعديل المبلغ المدفوع", 403);
     }
 
+    if (
+      !data.loggedInUser.permissions?.includes("CHANGE_ORDER_STATUS") &&
+      data.orderData.status &&
+      data.loggedInUser.role !== "DELIVERY_AGENT"
+    ) {
+      throw new AppError("ليس لديك صلاحية تعديل حاله طلب", 403);
+    }
+
     let oldOrderData = await ordersRepository.getOrderById({
       orderID: data.params.orderID,
     });
@@ -652,19 +660,19 @@ export class OrdersService {
       throw new AppError("لا يمكنك تغيير حاله طلبيه مغلقه", 500);
     }
 
-    if (
-      data.orderData.status === "WITH_DELIVERY_AGENT" &&
-      oldOrderData.client.branchId !== data.loggedInUser.branchId &&
-      oldOrderData.receivedBranchId !== data.loggedInUser.branchId
-    ) {
-      data.orderData.receivedBranchId = data.loggedInUser.branchId;
-      data.orderData.branchID = data.loggedInUser.branchId;
-    } else if (
-      data.orderData.status === "WITH_DELIVERY_AGENT" &&
-      oldOrderData.branch?.id !== data.loggedInUser.branchId
-    ) {
-      data.orderData.branchID = data.loggedInUser.branchId;
-    }
+    // if (
+    //   data.orderData.status === "WITH_DELIVERY_AGENT" &&
+    //   oldOrderData.client.branchId !== data.loggedInUser.branchId &&
+    //   oldOrderData.receivedBranchId !== data.loggedInUser.branchId
+    // ) {
+    //   data.orderData.receivedBranchId = data.loggedInUser.branchId;
+    //   data.orderData.branchID = data.loggedInUser.branchId;
+    // } else if (
+    //   data.orderData.status === "WITH_DELIVERY_AGENT" &&
+    //   oldOrderData.branch?.id !== data.loggedInUser.branchId
+    // ) {
+    //   data.orderData.branchID = data.loggedInUser.branchId;
+    // }
 
     if (data.orderData.branchID) {
       if (oldOrderData.client.branchId !== data.orderData.branchID) {

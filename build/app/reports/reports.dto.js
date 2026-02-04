@@ -100,7 +100,11 @@ exports.ReportCreateOrdersFiltersSchema = zod_1.z
                 return val.split(",");
             }
             return val;
-        }, zod_1.z.array(zod_1.z.enum([client_1.OrderStatus.DELIVERED, client_1.OrderStatus.PARTIALLY_RETURNED, client_1.OrderStatus.REPLACED]))),
+        }, zod_1.z.array(zod_1.z.enum([
+            client_1.OrderStatus.DELIVERED,
+            client_1.OrderStatus.PARTIALLY_RETURNED,
+            client_1.OrderStatus.REPLACED,
+        ]))),
         deliveryAgentID: zod_1.z.coerce.number(),
         deliveryAgentReport: zod_1.z.string().optional(), // Should be mandatory if ordersIDs is "*"
     })),
@@ -114,7 +118,11 @@ exports.ReportCreateOrdersFiltersSchema = zod_1.z
                 return val.split(",");
             }
             return val;
-        }, zod_1.z.array(zod_1.z.enum([client_1.OrderStatus.DELIVERED, client_1.OrderStatus.PARTIALLY_RETURNED, client_1.OrderStatus.REPLACED]))),
+        }, zod_1.z.array(zod_1.z.enum([
+            client_1.OrderStatus.DELIVERED,
+            client_1.OrderStatus.PARTIALLY_RETURNED,
+            client_1.OrderStatus.REPLACED,
+        ]))),
         governorate: zod_1.z.nativeEnum(client_1.Governorate),
         governorateReport: zod_1.z.string().optional(), // Should be mandatory if ordersIDs is "*"
     })),
@@ -128,7 +136,11 @@ exports.ReportCreateOrdersFiltersSchema = zod_1.z
                 return val.split(",");
             }
             return val;
-        }, zod_1.z.array(zod_1.z.enum([client_1.OrderStatus.DELIVERED, client_1.OrderStatus.PARTIALLY_RETURNED, client_1.OrderStatus.REPLACED]))),
+        }, zod_1.z.array(zod_1.z.enum([
+            client_1.OrderStatus.DELIVERED,
+            client_1.OrderStatus.PARTIALLY_RETURNED,
+            client_1.OrderStatus.REPLACED,
+        ]))),
         branchID: zod_1.z.coerce.number(),
         branchReport: zod_1.z.string().optional(), // Should be mandatory if ordersIDs is "*"
     })),
@@ -162,7 +174,11 @@ exports.ReportCreateOrdersFiltersSchema = zod_1.z
                 return val.split(",");
             }
             return val;
-        }, zod_1.z.array(zod_1.z.enum([client_1.OrderStatus.RETURNED, client_1.OrderStatus.PARTIALLY_RETURNED, client_1.OrderStatus.REPLACED]))),
+        }, zod_1.z.array(zod_1.z.enum([
+            client_1.OrderStatus.RETURNED,
+            client_1.OrderStatus.PARTIALLY_RETURNED,
+            client_1.OrderStatus.REPLACED,
+        ]))),
         repositoryID: zod_1.z.coerce.number(),
         repositoryReport: zod_1.z.string().optional(), // Should be mandatory if ordersIDs is "*"
     })),
@@ -214,6 +230,8 @@ exports.ReportsFiltersSchema = zod_1.z.object({
     }, zod_1.z.array(zod_1.z.nativeEnum(client_1.ReportType)).optional()),
     storeID: zod_1.z.coerce.number().optional(),
     repositoryID: zod_1.z.coerce.number().optional(),
+    exported_repository_id: zod_1.z.coerce.number().optional(),
+    target_repository_id: zod_1.z.coerce.number().optional(),
     branchID: zod_1.z.coerce.number().optional(),
     deliveryAgentID: zod_1.z.coerce.number().optional(),
     companyID: zod_1.z.coerce.number().optional(),

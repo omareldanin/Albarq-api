@@ -248,7 +248,7 @@ class ReportsRepository {
                 },
                 {
                     clientReport: {
-                        secondaryType: data.filters.secondaryType
+                        secondaryType: data.filters.secondaryType && data.filters.type === "CLIENT"
                             ? data.filters.secondaryType
                             : undefined,
                     },
@@ -259,16 +259,20 @@ class ReportsRepository {
                     },
                 },
                 {
-                    repositoryReport: {
-                        repositoryId: data.filters.repositoryID,
-                    },
-                },
-                {
-                    repositoryReport: {
-                        secondaryType: data.filters.type === "REPOSITORY"
-                            ? data.filters.secondaryType
-                            : undefined,
-                    },
+                    repositoryReport: data.filters.type === "REPOSITORY"
+                        ? {
+                            secondaryType: data.filters.secondaryType,
+                            orders: {
+                                some: {},
+                            },
+                            repositoryId: data.filters.exported_repository_id,
+                            targetRepositoryId: data.filters.target_repository_id,
+                            OR: [
+                                { repositoryId: data.filters.repositoryID },
+                                { targetRepositoryId: data.filters.repositoryID },
+                            ],
+                        }
+                        : undefined,
                 },
                 {
                     branchReport: {

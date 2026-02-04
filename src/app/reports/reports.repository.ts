@@ -1,4 +1,4 @@
-import {ReportType} from "@prisma/client";
+import {Prisma, ReportType} from "@prisma/client";
 import {prisma} from "../../database/db";
 import {AppError} from "../../lib/AppError";
 import type {loggedInUserType} from "../../types/user";
@@ -197,6 +197,7 @@ export class ReportsRepository {
       // endDate.setUTCDate(endDate.getUTCDate() + 1);
       endDate.setHours(23, 59, 29);
     }
+
     const where = {
       AND: [
         {
@@ -276,9 +277,10 @@ export class ReportsRepository {
         },
         {
           clientReport: {
-            secondaryType: data.filters.secondaryType
-              ? data.filters.secondaryType
-              : undefined,
+            secondaryType:
+              data.filters.secondaryType && data.filters.type === "CLIENT"
+                ? data.filters.secondaryType
+                : undefined,
           },
         },
         {
@@ -287,17 +289,21 @@ export class ReportsRepository {
           },
         },
         {
-          repositoryReport: {
-            repositoryId: data.filters.repositoryID,
-          },
-        },
-        {
-          repositoryReport: {
-            secondaryType:
-              data.filters.type === "REPOSITORY"
-                ? data.filters.secondaryType
-                : undefined,
-          },
+          repositoryReport:
+            data.filters.type === "REPOSITORY"
+              ? {
+                  secondaryType: data.filters.secondaryType,
+                  orders: {
+                    some: {},
+                  },
+                  repositoryId: data.filters.exported_repository_id,
+                  targetRepositoryId: data.filters.target_repository_id,
+                  OR: [
+                    {repositoryId: data.filters.repositoryID},
+                    {targetRepositoryId: data.filters.repositoryID},
+                  ],
+                }
+              : undefined,
         },
         {
           branchReport: {
@@ -353,7 +359,7 @@ export class ReportsRepository {
           },
         },
       ],
-    };
+    } satisfies Prisma.ReportWhereInput;
 
     if (data.filters.minified === true) {
       const paginatedReports = await prisma.report.findManyPaginated(

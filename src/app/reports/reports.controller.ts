@@ -85,6 +85,8 @@ export class ReportController {
       deleted: req.query.deleted,
       minified: req.query.minified,
       secondaryType: req.query.secondaryReportType,
+      exported_repository_id: req.query.exported_repository_id,
+      target_repository_id: req.query.target_repository_id,
     });
 
     if (

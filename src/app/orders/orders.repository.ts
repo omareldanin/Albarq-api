@@ -1104,17 +1104,6 @@ export class OrdersRepository {
                       : data.filters.storeID,
                 },
               },
-              {
-                orderProducts: data.filters.productID
-                  ? {
-                      some: {
-                        product: {
-                          id: data.filters.productID,
-                        },
-                      },
-                    }
-                  : undefined,
-              },
               // Filter by locationID
               {
                 location: {
@@ -1462,6 +1451,7 @@ export class OrdersRepository {
                   data.filters.secondaryStatus === "IN_REPOSITORY"
                     ? {
                         mainRepository: false,
+                        branchId: data.filters.branchID,
                       }
                     : data.filters.secondaryStatus === "IN_CAR"
                       ? {

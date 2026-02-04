@@ -102,12 +102,12 @@ export const ReportCreateOrdersFiltersSchema = z
                 OrderStatus.REPLACED,
                 // For company return report
                 OrderStatus.RETURNED,
-              ])
-            )
+              ]),
+            ),
           ),
           companyID: z.coerce.number(),
           companyReport: z.string().optional(), // Should be mandatory if ordersIDs is "*"
-        })
+        }),
       ),
 
     z
@@ -116,15 +116,24 @@ export const ReportCreateOrdersFiltersSchema = z
       })
       .merge(
         OrdersFiltersSchema.extend({
-          statuses: z.preprocess((val) => {
-            if (typeof val === "string") {
-              return val.split(",");
-            }
-            return val;
-          }, z.array(z.enum([OrderStatus.DELIVERED, OrderStatus.PARTIALLY_RETURNED, OrderStatus.REPLACED]))),
+          statuses: z.preprocess(
+            (val) => {
+              if (typeof val === "string") {
+                return val.split(",");
+              }
+              return val;
+            },
+            z.array(
+              z.enum([
+                OrderStatus.DELIVERED,
+                OrderStatus.PARTIALLY_RETURNED,
+                OrderStatus.REPLACED,
+              ]),
+            ),
+          ),
           deliveryAgentID: z.coerce.number(),
           deliveryAgentReport: z.string().optional(), // Should be mandatory if ordersIDs is "*"
-        })
+        }),
       ),
     z
       .object({
@@ -132,15 +141,24 @@ export const ReportCreateOrdersFiltersSchema = z
       })
       .merge(
         OrdersFiltersSchema.extend({
-          statuses: z.preprocess((val) => {
-            if (typeof val === "string") {
-              return val.split(",");
-            }
-            return val;
-          }, z.array(z.enum([OrderStatus.DELIVERED, OrderStatus.PARTIALLY_RETURNED, OrderStatus.REPLACED]))),
+          statuses: z.preprocess(
+            (val) => {
+              if (typeof val === "string") {
+                return val.split(",");
+              }
+              return val;
+            },
+            z.array(
+              z.enum([
+                OrderStatus.DELIVERED,
+                OrderStatus.PARTIALLY_RETURNED,
+                OrderStatus.REPLACED,
+              ]),
+            ),
+          ),
           governorate: z.nativeEnum(Governorate),
           governorateReport: z.string().optional(), // Should be mandatory if ordersIDs is "*"
-        })
+        }),
       ),
     z
       .object({
@@ -148,15 +166,24 @@ export const ReportCreateOrdersFiltersSchema = z
       })
       .merge(
         OrdersFiltersSchema.extend({
-          statuses: z.preprocess((val) => {
-            if (typeof val === "string") {
-              return val.split(",");
-            }
-            return val;
-          }, z.array(z.enum([OrderStatus.DELIVERED, OrderStatus.PARTIALLY_RETURNED, OrderStatus.REPLACED]))),
+          statuses: z.preprocess(
+            (val) => {
+              if (typeof val === "string") {
+                return val.split(",");
+              }
+              return val;
+            },
+            z.array(
+              z.enum([
+                OrderStatus.DELIVERED,
+                OrderStatus.PARTIALLY_RETURNED,
+                OrderStatus.REPLACED,
+              ]),
+            ),
+          ),
           branchID: z.coerce.number(),
           branchReport: z.string().optional(), // Should be mandatory if ordersIDs is "*"
-        })
+        }),
       ),
     z
       .object({
@@ -178,12 +205,12 @@ export const ReportCreateOrdersFiltersSchema = z
                 OrderStatus.REPLACED,
                 // For company return report
                 OrderStatus.RETURNED,
-              ])
-            )
+              ]),
+            ),
           ),
           storeID: z.coerce.number(),
           clientReport: z.string().optional(), // Should be mandatory if ordersIDs is "*"
-        })
+        }),
       ),
     z
       .object({
@@ -191,15 +218,24 @@ export const ReportCreateOrdersFiltersSchema = z
       })
       .merge(
         OrdersFiltersSchema.extend({
-          statuses: z.preprocess((val) => {
-            if (typeof val === "string") {
-              return val.split(",");
-            }
-            return val;
-          }, z.array(z.enum([OrderStatus.RETURNED, OrderStatus.PARTIALLY_RETURNED, OrderStatus.REPLACED]))),
+          statuses: z.preprocess(
+            (val) => {
+              if (typeof val === "string") {
+                return val.split(",");
+              }
+              return val;
+            },
+            z.array(
+              z.enum([
+                OrderStatus.RETURNED,
+                OrderStatus.PARTIALLY_RETURNED,
+                OrderStatus.REPLACED,
+              ]),
+            ),
+          ),
           repositoryID: z.coerce.number(),
           repositoryReport: z.string().optional(), // Should be mandatory if ordersIDs is "*"
-        })
+        }),
       ),
   ])
   .and(
@@ -215,7 +251,7 @@ export const ReportCreateOrdersFiltersSchema = z
         return val;
       }, z.boolean().optional()),
       orderType: z.string().optional(),
-    })
+    }),
   );
 
 export type ReportCreateOrdersFiltersType = z.infer<
@@ -251,14 +287,19 @@ export const ReportsFiltersSchema = z.object({
   status: z.nativeEnum(ReportStatus).optional(),
   type: z.nativeEnum(ReportType).optional(),
   secondaryType: z.nativeEnum(SecondaryReportType).optional(),
-  types: z.preprocess((val) => {
-    if (typeof val === "string") {
-      return val.split(",");
-    }
-    return val;
-  }, z.array(z.nativeEnum(ReportType)).optional()),
+  types: z.preprocess(
+    (val) => {
+      if (typeof val === "string") {
+        return val.split(",");
+      }
+      return val;
+    },
+    z.array(z.nativeEnum(ReportType)).optional(),
+  ),
   storeID: z.coerce.number().optional(),
   repositoryID: z.coerce.number().optional(),
+  exported_repository_id: z.coerce.number().optional(),
+  target_repository_id: z.coerce.number().optional(),
   branchID: z.coerce.number().optional(),
   deliveryAgentID: z.coerce.number().optional(),
   companyID: z.coerce.number().optional(),
