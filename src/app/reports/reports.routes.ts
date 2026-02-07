@@ -227,7 +227,6 @@ router.route("/reports/:reportID/deactivate").patch(
       EmployeeRole.COMPANY_MANAGER,
       EmployeeRole.REPOSITORIY_EMPLOYEE,
       EmployeeRole.ACCOUNTANT,
-      EmployeeRole.BRANCH_MANAGER,
     ],
     [Permission.DELETE_DELIVERY_AGENT_REPORT],
   ),

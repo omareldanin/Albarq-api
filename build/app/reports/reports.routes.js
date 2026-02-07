@@ -59,7 +59,6 @@ router.route("/reports/:reportID/deactivate").patch(isLoggedIn_1.isLoggedIn, (0,
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.EmployeeRole.REPOSITORIY_EMPLOYEE,
     client_1.EmployeeRole.ACCOUNTANT,
-    client_1.EmployeeRole.BRANCH_MANAGER,
 ], [client_1.Permission.DELETE_DELIVERY_AGENT_REPORT]), reportController.deactivateReport);
 router.route("/reports/:reportID/reactivate").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
