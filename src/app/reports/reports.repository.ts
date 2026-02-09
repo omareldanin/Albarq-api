@@ -572,9 +572,7 @@ export class ReportsRepository {
       (report?.type === "CLIENT" &&
         report.clientReport?.secondaryType === "RETURNED") ||
       (report?.type === "REPOSITORY" &&
-        report.repositoryReport?.secondaryType === "RETURNED") ||
-      (report?.type === "COMPANY" &&
-        report.companyReport?.secondaryType === "RETURNED")
+        report.repositoryReport?.secondaryType === "RETURNED")
     ) {
       if (report?.type === "REPOSITORY") {
         await prisma.order.updateMany({
@@ -606,26 +604,16 @@ export class ReportsRepository {
           },
         });
       }
-      if (report?.type === "COMPANY" && report.confirmed === false) {
-        await prisma.order.updateMany({
-          where: {
-            companyReport: {
-              some: {
-                id: data.reportID,
-              },
-            },
-          },
-          data: {
-            repositoryId: report.companyReport?.repository?.id,
-            secondaryStatus: "IN_REPOSITORY",
-          },
-        });
-      }
     }
 
-    const deletedReport = await prisma.report.delete({
+    const deletedReport = await prisma.report.update({
       where: {
         id: data.reportID,
+      },
+      data: {
+        deleted: true,
+        deletedById: data.deletedByID,
+        deletedAt: new Date(),
       },
       select: reportSelect,
     });

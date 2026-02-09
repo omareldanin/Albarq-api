@@ -185,6 +185,11 @@ exports.orderSelect = {
         },
     },
     repositoryReport: {
+        where: {
+            report: {
+                deleted: false,
+            },
+        },
         select: {
             id: true,
             secondaryType: true,
@@ -198,6 +203,11 @@ exports.orderSelect = {
         },
     },
     branchReport: {
+        where: {
+            report: {
+                deleted: false,
+            },
+        },
         select: {
             id: true,
             branchId: true,
@@ -211,6 +221,11 @@ exports.orderSelect = {
         },
     },
     deliveryAgentReport: {
+        where: {
+            report: {
+                deleted: false,
+            },
+        },
         select: {
             id: true,
             deliveryAgentId: true,
@@ -223,6 +238,11 @@ exports.orderSelect = {
         },
     },
     governorateReport: {
+        where: {
+            report: {
+                deleted: false,
+            },
+        },
         select: {
             id: true,
             governorate: true,
@@ -235,6 +255,11 @@ exports.orderSelect = {
         },
     },
     companyReport: {
+        where: {
+            report: {
+                deleted: false,
+            },
+        },
         select: {
             id: true,
             secondaryType: true,

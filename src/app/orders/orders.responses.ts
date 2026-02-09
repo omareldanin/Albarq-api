@@ -187,6 +187,11 @@ export const orderSelect = {
   },
 
   repositoryReport: {
+    where: {
+      report: {
+        deleted: false,
+      },
+    },
     select: {
       id: true,
       secondaryType: true,
@@ -200,6 +205,11 @@ export const orderSelect = {
     },
   },
   branchReport: {
+    where: {
+      report: {
+        deleted: false,
+      },
+    },
     select: {
       id: true,
       branchId: true,
@@ -213,6 +223,11 @@ export const orderSelect = {
     },
   },
   deliveryAgentReport: {
+    where: {
+      report: {
+        deleted: false,
+      },
+    },
     select: {
       id: true,
       deliveryAgentId: true,
@@ -225,6 +240,11 @@ export const orderSelect = {
     },
   },
   governorateReport: {
+    where: {
+      report: {
+        deleted: false,
+      },
+    },
     select: {
       id: true,
       governorate: true,
@@ -237,6 +257,11 @@ export const orderSelect = {
     },
   },
   companyReport: {
+    where: {
+      report: {
+        deleted: false,
+      },
+    },
     select: {
       id: true,
       secondaryType: true,

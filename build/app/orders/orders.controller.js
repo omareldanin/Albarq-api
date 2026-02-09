@@ -234,55 +234,60 @@ class OrdersController {
                 },
             });
         }
+        const pageNumber = page ? +page : 1;
+        const pageSize = size ? +size : 10;
+        const resolvedRepositoryId = getOutComing && to_repository_id
+            ? Number(to_repository_id)
+            : getOutComing
+                ? undefined
+                : repository_id
+                    ? Number(repository_id)
+                    : secondaryStatus === "IN_CAR"
+                        ? undefined
+                        : status === "RETURNED"
+                            ? returnRepo?.id
+                            : exportRepo?.id;
+        const resolvedForwardedRepo = getOutComing
+            ? returnRepo?.id
+            : getIncoming && to_repository_id
+                ? Number(to_repository_id)
+                : getIncoming
+                    ? undefined
+                    : secondaryStatus === "IN_CAR"
+                        ? exportRepo?.id
+                        : undefined;
+        const resolvedBranchId = secondaryStatus === "IN_REPOSITORY"
+            ? undefined
+            : !getIncoming && branchId
+                ? +branchId
+                : undefined;
+        const resolvedClient = secondaryStatus === "IN_REPOSITORY" && branchId
+            ? { branchId: +branchId }
+            : undefined;
+        const resolvedStatus = status === "RETURNED"
+            ? { in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"] }
+            : status;
         const results = await db_1.prisma.order.findManyPaginated({
             where: {
                 deleted: false,
-                repositoryId: getOutComing && to_repository_id
-                    ? Number(to_repository_id)
-                    : getOutComing
-                        ? undefined
-                        : repository_id
-                            ? Number(repository_id)
-                            : secondaryStatus === "IN_CAR"
-                                ? undefined
-                                : status === "RETURNED"
-                                    ? returnRepo?.id
-                                    : exportRepo?.id,
+                repositoryId: resolvedRepositoryId,
+                forwardedRepo: resolvedForwardedRepo,
                 secondaryStatus: secondaryStatus,
-                status: status === "RETURNED"
-                    ? { in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"] }
-                    : status,
+                status: resolvedStatus,
                 storeId: store_id ? Number(store_id) : undefined,
                 clientId: client_id ? Number(client_id) : undefined,
-                client: secondaryStatus === "IN_REPOSITORY" && branchId
-                    ? {
-                        branchId: +branchId,
-                    }
-                    : undefined,
+                client: resolvedClient,
                 governorate: governorate ? governorate : undefined,
                 forwardedBranchId: getIncoming && branchId ? +branchId : undefined,
-                branchId: secondaryStatus === "IN_REPOSITORY"
-                    ? undefined
-                    : !getIncoming && branchId
-                        ? +branchId
-                        : undefined,
-                forwardedRepo: getOutComing
-                    ? returnRepo?.id
-                    : getIncoming && to_repository_id
-                        ? Number(to_repository_id)
-                        : getIncoming
-                            ? undefined
-                            : secondaryStatus === "IN_CAR"
-                                ? exportRepo?.id
-                                : undefined,
+                branchId: resolvedBranchId,
             },
             orderBy: {
                 updatedAt: "desc",
             },
             select: orders_responses_1.orderSelect,
         }, {
-            page: page ? +page : 1,
-            size: size ? +size : 10,
+            page: pageNumber,
+            size: pageSize,
         });
         const newData = results.data.map((order) => (0, orders_responses_1.orderReform)(order));
         res.status(200).json({
@@ -668,17 +673,6 @@ class OrdersController {
             });
         }
         else {
-            // let oldOrder = await ordersRepository.getOrderByReceiptNumber({
-            //   orderReceiptNumber: params.orderReceiptNumber,
-            // });
-            // if (!oldOrder) {
-            //   oldOrder = await ordersRepository.getOrder({
-            //     orderID: params.orderReceiptNumber,
-            //   });
-            //   if (!oldOrder) {
-            //     throw new AppError("الطلب غير موجود", 404);
-            //   }
-            // }
             let oldOrder = checkOrders[0];
             if (!orderData.repositoryID) {
                 orderData.repositoryID = returnsRepo?.id;
@@ -1663,25 +1657,55 @@ class OrdersController {
                         in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
                     },
                     OR: [
+                        // 🟢 Normal orders → require DELIVERED report
                         {
-                            clientReport: {
-                                none: {
-                                    secondaryType: "DELIVERED",
-                                },
-                            },
                             status: {
                                 notIn: ["RETURNED"],
                             },
-                        },
-                        {
-                            clientReport: {
-                                none: {
-                                    secondaryType: "RETURNED",
+                            OR: [
+                                {
+                                    clientReport: {
+                                        none: {
+                                            secondaryType: "DELIVERED",
+                                        },
+                                    },
                                 },
-                            },
+                                {
+                                    clientReport: {
+                                        some: {
+                                            secondaryType: "DELIVERED",
+                                            report: {
+                                                deleted: true,
+                                            },
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                        // 🔴 Returned / replaced orders → require RETURNED report
+                        {
                             status: {
                                 in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
                             },
+                            OR: [
+                                {
+                                    clientReport: {
+                                        none: {
+                                            secondaryType: "RETURNED",
+                                        },
+                                    },
+                                },
+                                {
+                                    clientReport: {
+                                        some: {
+                                            secondaryType: "RETURNED",
+                                            report: {
+                                                deleted: true,
+                                            },
+                                        },
+                                    },
+                                },
+                            ],
                         },
                     ],
                 },

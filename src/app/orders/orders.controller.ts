@@ -261,53 +261,63 @@ export class OrdersController {
         },
       });
     }
+    const pageNumber = page ? +page : 1;
+    const pageSize = size ? +size : 10;
+
+    const resolvedRepositoryId =
+      getOutComing && to_repository_id
+        ? Number(to_repository_id)
+        : getOutComing
+          ? undefined
+          : repository_id
+            ? Number(repository_id)
+            : secondaryStatus === "IN_CAR"
+              ? undefined
+              : status === "RETURNED"
+                ? returnRepo?.id
+                : exportRepo?.id;
+
+    const resolvedForwardedRepo = getOutComing
+      ? returnRepo?.id
+      : getIncoming && to_repository_id
+        ? Number(to_repository_id)
+        : getIncoming
+          ? undefined
+          : secondaryStatus === "IN_CAR"
+            ? exportRepo?.id
+            : undefined;
+
+    const resolvedBranchId =
+      secondaryStatus === "IN_REPOSITORY"
+        ? undefined
+        : !getIncoming && branchId
+          ? +branchId
+          : undefined;
+
+    const resolvedClient =
+      secondaryStatus === "IN_REPOSITORY" && branchId
+        ? {branchId: +branchId}
+        : undefined;
+
+    const resolvedStatus =
+      status === "RETURNED"
+        ? {in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"]}
+        : (status as OrderStatus);
 
     const results = await prisma.order.findManyPaginated(
       {
         where: {
           deleted: false,
-          repositoryId:
-            getOutComing && to_repository_id
-              ? Number(to_repository_id)
-              : getOutComing
-                ? undefined
-                : repository_id
-                  ? Number(repository_id)
-                  : secondaryStatus === "IN_CAR"
-                    ? undefined
-                    : status === "RETURNED"
-                      ? returnRepo?.id
-                      : exportRepo?.id,
+          repositoryId: resolvedRepositoryId,
+          forwardedRepo: resolvedForwardedRepo,
           secondaryStatus: secondaryStatus as SecondaryStatus,
-          status:
-            status === "RETURNED"
-              ? {in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"]}
-              : (status as OrderStatus),
+          status: resolvedStatus as OrderStatus,
           storeId: store_id ? Number(store_id) : undefined,
           clientId: client_id ? Number(client_id) : undefined,
-          client:
-            secondaryStatus === "IN_REPOSITORY" && branchId
-              ? {
-                  branchId: +branchId,
-                }
-              : undefined,
+          client: resolvedClient,
           governorate: governorate ? (governorate as Governorate) : undefined,
           forwardedBranchId: getIncoming && branchId ? +branchId : undefined,
-          branchId:
-            secondaryStatus === "IN_REPOSITORY"
-              ? undefined
-              : !getIncoming && branchId
-                ? +branchId
-                : undefined,
-          forwardedRepo: getOutComing
-            ? returnRepo?.id
-            : getIncoming && to_repository_id
-              ? Number(to_repository_id)
-              : getIncoming
-                ? undefined
-                : secondaryStatus === "IN_CAR"
-                  ? exportRepo?.id
-                  : undefined,
+          branchId: resolvedBranchId,
         },
         orderBy: {
           updatedAt: "desc",
@@ -315,8 +325,8 @@ export class OrdersController {
         select: orderSelect,
       },
       {
-        page: page ? +page : 1,
-        size: size ? +size : 10,
+        page: pageNumber,
+        size: pageSize,
       },
     );
 
@@ -750,18 +760,6 @@ export class OrdersController {
         data: checkOrders.map((order) => orderReform(order)),
       });
     } else {
-      // let oldOrder = await ordersRepository.getOrderByReceiptNumber({
-      //   orderReceiptNumber: params.orderReceiptNumber,
-      // });
-
-      // if (!oldOrder) {
-      //   oldOrder = await ordersRepository.getOrder({
-      //     orderID: params.orderReceiptNumber,
-      //   });
-      //   if (!oldOrder) {
-      //     throw new AppError("الطلب غير موجود", 404);
-      //   }
-      // }
       let oldOrder = checkOrders[0];
 
       if (!orderData.repositoryID) {
@@ -782,6 +780,7 @@ export class OrdersController {
       ) {
         throw new AppError("هذا الطلب موجود في مخزن!", 400);
       }
+
       const returnedReport = oldOrder.repositoryReport.find(
         (r) => r.secondaryType === "RETURNED",
       );
@@ -1911,25 +1910,55 @@ export class OrdersController {
             in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
           },
           OR: [
+            // 🟢 Normal orders → require DELIVERED report
             {
-              clientReport: {
-                none: {
-                  secondaryType: "DELIVERED",
-                },
-              },
               status: {
                 notIn: ["RETURNED"],
               },
-            },
-            {
-              clientReport: {
-                none: {
-                  secondaryType: "RETURNED",
+              OR: [
+                {
+                  clientReport: {
+                    none: {
+                      secondaryType: "DELIVERED",
+                    },
+                  },
                 },
-              },
+                {
+                  clientReport: {
+                    some: {
+                      secondaryType: "DELIVERED",
+                      report: {
+                        deleted: true,
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+            // 🔴 Returned / replaced orders → require RETURNED report
+            {
               status: {
                 in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
               },
+              OR: [
+                {
+                  clientReport: {
+                    none: {
+                      secondaryType: "RETURNED",
+                    },
+                  },
+                },
+                {
+                  clientReport: {
+                    some: {
+                      secondaryType: "RETURNED",
+                      report: {
+                        deleted: true,
+                      },
+                    },
+                  },
+                },
+              ],
             },
           ],
         },
