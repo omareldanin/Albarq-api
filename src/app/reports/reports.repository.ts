@@ -278,10 +278,7 @@ export class ReportsRepository {
         },
         {
           clientReport: {
-            secondaryType:
-              data.filters.secondaryType && data.filters.type === "CLIENT"
-                ? data.filters.secondaryType
-                : undefined,
+            secondaryType: data.filters.secondaryType,
           },
         },
         {
