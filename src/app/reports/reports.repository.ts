@@ -197,7 +197,6 @@ export class ReportsRepository {
       // endDate.setUTCDate(endDate.getUTCDate() + 1);
       endDate.setHours(23, 59, 29);
     }
-    console.log(data.filters);
 
     const where = {
       AND: [
