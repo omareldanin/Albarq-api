@@ -712,10 +712,6 @@ const statisticsReformed = (statistics) => {
                 count: governorateCount?._count.id || 0,
             };
         }),
-        allOrdersStatistics: {
-            totalCost: statistics.allOrdersStatistics._sum.totalCost || 0,
-            count: statistics.allOrdersStatistics._count.id,
-        },
         allOrdersStatisticsWithoutClientReport: {
             totalCost: (statistics.allOrdersStatisticsWithoutClientReport._sum?.paidAmount ??
                 0) -

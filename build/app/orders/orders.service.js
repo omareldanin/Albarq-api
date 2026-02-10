@@ -1170,6 +1170,10 @@ class OrdersService {
             });
             return {
                 ...statistics,
+                allOrdersStatistics: {
+                    totalCost: 0,
+                    count: 0,
+                },
                 ordersStatisticsByStatus: [
                     ...statistics.ordersStatisticsByStatus.filter((status) => status.status === "READY_TO_SEND" ||
                         status.status === "WITH_RECEIVING_AGENT"),
@@ -1195,6 +1199,10 @@ class OrdersService {
             const newStatistics = statistics.ordersStatisticsByStatus.filter((status) => employee?.inquiryStatuses.includes(status.status));
             return {
                 ...statistics,
+                allOrdersStatistics: {
+                    totalCost: 0,
+                    count: 0,
+                },
                 ordersStatisticsByStatus: employee?.inquiryStatuses?.length
                     ? newStatistics
                     : [],
@@ -1224,6 +1232,10 @@ class OrdersService {
                 status.status !== "READY_TO_SEND");
             return {
                 ...statistics,
+                allOrdersStatistics: {
+                    totalCost: 0,
+                    count: 0,
+                },
                 ordersStatisticsByStatus: ordersStatisticsByStatus,
                 allOrdersStatisticsWithoutClientReport: statistics.allOrdersStatisticsWithoutDeliveryReport,
             };
@@ -1233,6 +1245,10 @@ class OrdersService {
             return {
                 ...statistics,
                 ordersStatisticsByStatus: ordersStatisticsByStatus,
+                allOrdersStatistics: {
+                    totalCost: 0,
+                    count: 0,
+                },
                 allOrdersStatisticsWithoutClientReport: statistics.allOrdersStatisticsWithoutDeliveryReport,
             };
         }
@@ -1361,9 +1377,19 @@ class OrdersService {
             return {
                 ...statistics,
                 ordersStatisticsByStatus: updatedStatusStatistics,
+                allOrdersStatistics: {
+                    totalCost: 0,
+                    count: 0,
+                },
             };
         }
-        return statistics;
+        return {
+            ...statistics,
+            allOrdersStatistics: {
+                totalCost: 0,
+                count: 0,
+            },
+        };
     };
     getOrdersStatisticV2 = async (data) => {
         const clientID = data.loggedInUser.role === "CLIENT"

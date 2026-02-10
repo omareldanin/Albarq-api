@@ -728,15 +728,6 @@ export const statisticsReformed = (statistics: {
     };
   })[];
 
-  allOrdersStatistics: {
-    _count: {
-      id: number;
-    };
-    _sum: {
-      totalCost: number | null;
-    };
-  };
-
   allOrdersStatisticsWithoutClientReport: {
     _count: {
       id: number;
@@ -818,11 +809,6 @@ export const statisticsReformed = (statistics: {
         count: governorateCount?._count.id || 0,
       };
     }),
-
-    allOrdersStatistics: {
-      totalCost: statistics.allOrdersStatistics._sum.totalCost || 0,
-      count: statistics.allOrdersStatistics._count.id,
-    },
 
     allOrdersStatisticsWithoutClientReport: {
       totalCost:

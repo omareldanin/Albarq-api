@@ -42,7 +42,7 @@ export class ClientsController {
     // hash the password
     const hashedPassword = bcrypt.hashSync(
       password + (env.PASSWORD_SALT as string),
-      12
+      12,
     );
 
     const createdClient = await clientsRepository.createClient(companyID, {
@@ -112,7 +112,8 @@ export class ClientsController {
     if (
       loggedInUser.role !== EmployeeRole.COMPANY_MANAGER &&
       loggedInUser.role !== AdminRole.ADMIN &&
-      loggedInUser.role !== AdminRole.ADMIN_ASSISTANT
+      loggedInUser.role !== AdminRole.ADMIN_ASSISTANT &&
+      !loggedInUser.mainRepository
     ) {
       const employee = await employeesRepository.getEmployee({
         employeeID: loggedInUser.id,
@@ -217,7 +218,7 @@ export class ClientsController {
     // hash the password
     const hashedPassword = bcrypt.hashSync(
       password + (env.PASSWORD_SALT as string),
-      12
+      12,
     );
 
     const updatedClient = await clientsRepository.updateClient({

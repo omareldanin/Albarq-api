@@ -24,11 +24,11 @@ router.route("/stores").post(
       ClientRole.CLIENT,
       EmployeeRole.CLIENT_ASSISTANT,
     ],
-    [Permission.ADD_STORE]
+    [Permission.ADD_STORE],
   ),
   upload.single("logo"),
   // upload.none(),
-  storesController.createStore
+  storesController.createStore,
   /*
         #swagger.tags = ['Stores Routes']
 
@@ -62,7 +62,7 @@ router.route("/stores").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  storesController.getAllStores
+  storesController.getAllStores,
 );
 
 router.route("/client/stores").get(
@@ -81,7 +81,7 @@ router.route("/client/stores").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  storesController.getAllClientStores
+  storesController.getAllClientStores,
 );
 
 router.route("/stores/:storeID").get(
@@ -96,7 +96,7 @@ router.route("/stores/:storeID").get(
     ClientRole.CLIENT,
     EmployeeRole.CLIENT_ASSISTANT,
   ]),
-  storesController.getStore
+  storesController.getStore,
   /*
         #swagger.tags = ['Stores Routes']
     */
@@ -116,7 +116,7 @@ router.route("/stores/:storeID").patch(
   ]),
   upload.single("logo"),
   // upload.none(),
-  storesController.updateStore
+  storesController.updateStore,
   /*
         #swagger.tags = ['Stores Routes']
 
@@ -141,7 +141,7 @@ router.route("/stores/:storeID").delete(
     AdminRole.ADMIN_ASSISTANT,
     EmployeeRole.COMPANY_MANAGER,
   ]),
-  storesController.deleteStore
+  storesController.deleteStore,
   /*
         #swagger.tags = ['Stores Routes']
     */
@@ -159,7 +159,7 @@ router.route("/stores/:storeID/deactivate").patch(
     ClientRole.CLIENT,
     EmployeeRole.CLIENT_ASSISTANT,
   ]),
-  storesController.deactivateStore
+  storesController.deactivateStore,
   /*
         #swagger.tags = ['Stores Routes']
     */
@@ -167,12 +167,11 @@ router.route("/stores/:storeID/deactivate").patch(
 
 router.route("/stores/:storeID/reactivate").patch(
   isLoggedIn,
-  isAutherized([
-    AdminRole.ADMIN,
-    AdminRole.ADMIN_ASSISTANT,
-    EmployeeRole.COMPANY_MANAGER,
-  ]),
-  storesController.reactivateStore
+  isAutherized(
+    [AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT, EmployeeRole.COMPANY_MANAGER],
+    [Permission.REACTIVE_STORE],
+  ),
+  storesController.reactivateStore,
   /*
         #swagger.tags = ['Stores Routes']
     */

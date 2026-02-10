@@ -23,11 +23,11 @@ router.route("/clients").post(
       EmployeeRole.DATA_ENTRY,
       EmployeeRole.BRANCH_MANAGER,
     ],
-    [Permission.ADD_CLIENT]
+    [Permission.ADD_CLIENT],
   ),
   upload.single("avatar"),
   // upload.none(),
-  clientsController.createClient
+  clientsController.createClient,
 );
 
 router
@@ -40,7 +40,7 @@ router
       AdminRole.ADMIN_ASSISTANT,
     ]),
     upload.none(),
-    clientsController.generateApikey
+    clientsController.generateApikey,
   );
 
 router.route("/clients").get(
@@ -56,7 +56,7 @@ router.route("/clients").get(
     //TODO: Remove later
     ...Object.values(EmployeeRole),
   ]),
-  clientsController.getAllClients
+  clientsController.getAllClients,
   /*
         #swagger.tags = ['Clients Routes']
 
@@ -86,7 +86,7 @@ router.route("/clients/:clientID").get(
     ClientRole.CLIENT,
     EmployeeRole.CLIENT_ASSISTANT,
   ]),
-  clientsController.getClient
+  clientsController.getClient,
   /*
         #swagger.tags = ['Clients Routes']
     */
@@ -105,7 +105,7 @@ router.route("/clients/:clientID").patch(
   ]),
   upload.single("avatar"),
   // upload.none(),
-  clientsController.updateClient
+  clientsController.updateClient,
   /*
         #swagger.tags = ['Clients Routes']
 
@@ -130,7 +130,7 @@ router.route("/clients/:clientID").delete(
     AdminRole.ADMIN_ASSISTANT,
     EmployeeRole.COMPANY_MANAGER,
   ]),
-  clientsController.deleteClient
+  clientsController.deleteClient,
   /*
         #swagger.tags = ['Clients Routes']
     */
@@ -146,7 +146,7 @@ router.route("/clients/:clientID/deactivate").patch(
     EmployeeRole.DATA_ENTRY,
     EmployeeRole.BRANCH_MANAGER,
   ]),
-  clientsController.deactivateClient
+  clientsController.deactivateClient,
   /*
         #swagger.tags = ['Clients Routes']
     */
@@ -154,12 +154,11 @@ router.route("/clients/:clientID/deactivate").patch(
 
 router.route("/clients/:clientID/reactivate").patch(
   isLoggedIn,
-  isAutherized([
-    AdminRole.ADMIN,
-    AdminRole.ADMIN_ASSISTANT,
-    EmployeeRole.COMPANY_MANAGER,
-  ]),
-  clientsController.reactivateClient
+  isAutherized(
+    [AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT, EmployeeRole.COMPANY_MANAGER],
+    [Permission.REACTIVE_STORE],
+  ),
+  clientsController.reactivateClient,
   /*
         #swagger.tags = ['Clients Routes']
     */

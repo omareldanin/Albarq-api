@@ -24,23 +24,7 @@ router.route("/employees").post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAu
     { name: "residencyCard", maxCount: 1 },
 ]), 
 // upload.none(),
-employeesController.createEmployee
-/*
-      #swagger.tags = ['Employees Routes']
-
-      #swagger.requestBody = {
-          required: true,
-          content: {
-              "application/json": {
-                  schema: { $ref: "#/components/schemas/EmployeeCreateSchema" },
-                  examples: {
-                      EmployeeCreateExample: { $ref: "#/components/examples/EmployeeCreateExample" }
-                  }
-              }
-          }
-      }
-  */
-);
+employeesController.createEmployee);
 router.route("/employees").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.AdminRole.ADMIN,
@@ -48,29 +32,7 @@ router.route("/employees").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAut
     //TODO: Remove later
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), employeesController.getAllEmployees
-/*
-      #swagger.tags = ['Employees Routes']
-
-      #swagger.parameters['page'] = {
-          in: 'query',
-          description: 'Page Number',
-          required: false
-      }
-
-      #swagger.parameters['size'] = {
-          in: 'query',
-          description: 'Page Size (Number of Items per Page) (Default: 10)',
-          required: false
-      }
-
-      #swagger.parameters['roles'] = {
-          in: 'query',
-          description: 'Employee EmployeeRoles (Comma Separated)',
-          required: false
-      }
-  */
-);
+]), employeesController.getAllEmployees);
 router.route("/employees/:employeeID").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.AdminRole.ADMIN,
@@ -78,11 +40,7 @@ router.route("/employees/:employeeID").get(isLoggedIn_1.isLoggedIn, (0, isAuther
     // TODO: Remove later
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), employeesController.getEmployee
-/*
-      #swagger.tags = ['Employees Routes']
-  */
-);
+]), employeesController.getEmployee);
 router.route("/employees/:employeeID").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.AdminRole.ADMIN,
@@ -100,55 +58,23 @@ upload_1.upload.fields([
     { name: "residencyCard", maxCount: 1 },
 ]), 
 // upload.none(),
-employeesController.updateEmployee
-/*
-      #swagger.tags = ['Employees Routes']
-
-      #swagger.requestBody = {
-          required: true,
-          content: {
-              "application/json": {
-                  schema: { $ref: "#/components/schemas/EmployeeUpdateSchema" },
-                  examples: {
-                      EmployeeUpdateExample: { $ref: "#/components/examples/EmployeeUpdateExample" }
-                  }
-              }
-          }
-      }
-  */
-);
+employeesController.updateEmployee);
 router.route("/employees/:employeeID").delete(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
     client_1.EmployeeRole.CLIENT,
     client_1.EmployeeRole.CLIENT_ASSISTANT,
-]), employeesController.deleteEmployee
-/*
-      #swagger.tags = ['Employees Routes']
-  */
-);
+]), employeesController.deleteEmployee);
 router.route("/employees/:employeeID/deactivate").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
     client_1.EmployeeRole.CLIENT,
     client_1.EmployeeRole.CLIENT_ASSISTANT,
-]), employeesController.deactivateEmployee
-/*
-      #swagger.tags = ['Employees Routes']
-  */
-);
+]), employeesController.deactivateEmployee);
 router.route("/employees/:employeeID/reactivate").patch(isLoggedIn_1.isLoggedIn, 
 //TODO: Maybe add All Employee Roles for profile update
-(0, isAutherized_1.isAutherized)([
-    client_1.EmployeeRole.COMPANY_MANAGER,
-    client_1.AdminRole.ADMIN,
-    client_1.AdminRole.ADMIN_ASSISTANT,
-]), employeesController.reactivateEmployee
-/*
-      #swagger.tags = ['Employees Routes']
-  */
-);
+(0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.AdminRole.ADMIN, client_1.AdminRole.ADMIN_ASSISTANT], [client_1.Permission.REACTIVE_EMPLOYEE]), employeesController.reactivateEmployee);
 exports.default = router;
 //# sourceMappingURL=employees.routes.js.map

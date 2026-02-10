@@ -73,7 +73,6 @@ export class CustomerOutputController {
           id: true,
         },
       });
-      console.log(checkIfExist?.id);
 
       if (checkIfExist) {
         throw new AppError("هذا الطلب موجود بالفعل!", 404);
@@ -113,7 +112,7 @@ export class CustomerOutputController {
       });
 
       const returnsRepo = userRepository?.branch?.repositories.find(
-        (repo) => repo.type === "RETURN"
+        (repo) => repo.type === "RETURN",
       );
 
       if (!returnsRepo) {
@@ -186,6 +185,18 @@ export class CustomerOutputController {
         });
       }
 
+      // if (type === "client") {
+      //   await prisma.order.update({
+      //     where: {
+      //       id: order.id,
+      //     },
+      //     data: {
+      //       secondaryStatus: null,
+      //       repositoryId: null,
+      //       forwardedRepo: returnsRepo.id,
+      //     },
+      //   });
+      // }
       await prisma.customerOutput.create({
         data: {
           orderId: order.id,
@@ -230,7 +241,7 @@ export class CustomerOutputController {
     });
 
     const returnsRepo = userRepository?.branch?.repositories.find(
-      (repo) => repo.type === "RETURN"
+      (repo) => repo.type === "RETURN",
     );
 
     if (!returnsRepo) {
@@ -245,8 +256,8 @@ export class CustomerOutputController {
             type === "client"
               ? {storeId: storeId ? +storeId : undefined}
               : type === "company"
-              ? {companyId: companyId ? +companyId : undefined}
-              : {targetRepositoryId: repository ? +repository : undefined},
+                ? {companyId: companyId ? +companyId : undefined}
+                : {targetRepositoryId: repository ? +repository : undefined},
           ],
         },
         orderBy: {
@@ -262,7 +273,7 @@ export class CustomerOutputController {
       {
         page: page ? +page : 1,
         size: size ? +size : 10,
-      }
+      },
     );
 
     const newData = results.data.map((order) => orderReform(order.order));
@@ -314,7 +325,7 @@ export class CustomerOutputController {
     });
 
     const returnsRepo = userRepository?.branch?.repositories.find(
-      (repo) => repo.type === "RETURN"
+      (repo) => repo.type === "RETURN",
     );
 
     const store = await prisma.store.findUnique({
@@ -340,8 +351,8 @@ export class CustomerOutputController {
             type === "client"
               ? {clientId: store ? +store.clientId : null}
               : type === "company"
-              ? {companyId: companyId ? +companyId : null}
-              : {targetRepositoryId: repositoryId},
+                ? {companyId: companyId ? +companyId : null}
+                : {targetRepositoryId: repositoryId},
           ],
         },
         select: {
@@ -354,7 +365,7 @@ export class CustomerOutputController {
       {
         page: 1,
         size: 5000,
-      }
+      },
     );
 
     const orders = results.data.map((order) => orderReform(order.order));
@@ -405,8 +416,8 @@ export class CustomerOutputController {
           type === "client"
             ? "CLIENT"
             : type === "company"
-            ? "COMPANY"
-            : "REPOSITORY",
+              ? "COMPANY"
+              : "REPOSITORY",
         secondaryType: "RETURNED",
         clientID: store?.clientId,
         companyID: companyId,
@@ -488,8 +499,8 @@ export class CustomerOutputController {
           type === "client"
             ? {clientId: store ? +store.clientId : null}
             : type === "company"
-            ? {companyId: companyId ? +companyId : null}
-            : {targetRepositoryId: repositoryId},
+              ? {companyId: companyId ? +companyId : null}
+              : {targetRepositoryId: repositoryId},
         ],
       },
     });
@@ -522,7 +533,7 @@ export class CustomerOutputController {
             name: loggedInUser.name,
           },
           message: `تم انشاء كشف راجع ${localizeReportType(
-            reportData?.type
+            reportData?.type,
           )} برقم ${reportData?.id}`,
         },
       });
@@ -533,10 +544,10 @@ export class CustomerOutputController {
       type === "client"
         ? "CLIENT"
         : type === "company"
-        ? "COMPANY"
-        : "REPOSITORY",
+          ? "COMPANY"
+          : "REPOSITORY",
       reportData,
-      orders
+      orders,
     );
 
     const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);

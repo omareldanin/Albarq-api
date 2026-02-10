@@ -127,7 +127,8 @@ class ClientsController {
             : undefined;
         if (loggedInUser.role !== client_1.EmployeeRole.COMPANY_MANAGER &&
             loggedInUser.role !== client_1.AdminRole.ADMIN &&
-            loggedInUser.role !== client_1.AdminRole.ADMIN_ASSISTANT) {
+            loggedInUser.role !== client_1.AdminRole.ADMIN_ASSISTANT &&
+            !loggedInUser.mainRepository) {
             const employee = await employeesRepository.getEmployee({
                 employeeID: loggedInUser.id,
             });

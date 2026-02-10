@@ -257,6 +257,7 @@ router.route("/orders/statusStatistics").get(
   ]),
   ordersController.getStatusOrdersStatistics,
 );
+
 router.route("/orders/repositoryStatusStatistics").get(
   isLoggedIn,
   isAutherized([
@@ -639,11 +640,10 @@ router.route("/orders/:orderID/deactivate").patch(
 
 router.route("/orders/:orderID/reactivate").patch(
   isLoggedIn,
-  isAutherized([
-    EmployeeRole.COMPANY_MANAGER,
-    AdminRole.ADMIN,
-    AdminRole.ADMIN_ASSISTANT,
-  ]),
+  isAutherized(
+    [EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT],
+    [Permission.REACTIVE_ORDERS],
+  ),
   ordersController.reactivateOrder,
   /*
         #swagger.tags = ['Orders Routes']

@@ -66,7 +66,6 @@ class CustomerOutputController {
                     id: true,
                 },
             });
-            console.log(checkIfExist?.id);
             if (checkIfExist) {
                 throw new AppError_1.AppError("هذا الطلب موجود بالفعل!", 404);
             }
@@ -163,6 +162,18 @@ class CustomerOutputController {
                     },
                 });
             }
+            // if (type === "client") {
+            //   await prisma.order.update({
+            //     where: {
+            //       id: order.id,
+            //     },
+            //     data: {
+            //       secondaryStatus: null,
+            //       repositoryId: null,
+            //       forwardedRepo: returnsRepo.id,
+            //     },
+            //   });
+            // }
             await db_1.prisma.customerOutput.create({
                 data: {
                     orderId: order.id,

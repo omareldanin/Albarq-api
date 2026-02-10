@@ -21,23 +21,7 @@ router.route("/stores").post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAuthe
     client_1.EmployeeRole.CLIENT_ASSISTANT,
 ], [client_1.Permission.ADD_STORE]), upload_1.upload.single("logo"), 
 // upload.none(),
-storesController.createStore
-/*
-      #swagger.tags = ['Stores Routes']
-
-      #swagger.requestBody = {
-          required: true,
-          content: {
-              "application/json": {
-                  "schema": { $ref: "#/components/schemas/StoreCreateSchema" },
-                  "examples": {
-                      "StoreCreateExample": { $ref: "#/components/examples/StoreCreateExample" }
-                  }
-              }
-          }
-      }
-  */
-);
+storesController.createStore);
 router.route("/stores").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.AdminRole.ADMIN,
@@ -75,11 +59,7 @@ router.route("/stores/:storeID").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1
     client_1.EmployeeRole.BRANCH_MANAGER,
     client_1.ClientRole.CLIENT,
     client_1.EmployeeRole.CLIENT_ASSISTANT,
-]), storesController.getStore
-/*
-      #swagger.tags = ['Stores Routes']
-  */
-);
+]), storesController.getStore);
 router.route("/stores/:storeID").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
@@ -91,32 +71,12 @@ router.route("/stores/:storeID").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized
     client_1.EmployeeRole.CLIENT_ASSISTANT,
 ]), upload_1.upload.single("logo"), 
 // upload.none(),
-storesController.updateStore
-/*
-      #swagger.tags = ['Stores Routes']
-
-      #swagger.requestBody = {
-          required: true,
-          content: {
-              "application/json": {
-                  "schema": { $ref: "#/components/schemas/StoreUpdateSchema" },
-                  "examples": {
-                      "StoreUpdateExample": { $ref: "#/components/examples/StoreUpdateExample" }
-                  }
-              }
-          }
-      }
-  */
-);
+storesController.updateStore);
 router.route("/stores/:storeID").delete(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
     client_1.EmployeeRole.COMPANY_MANAGER,
-]), storesController.deleteStore
-/*
-      #swagger.tags = ['Stores Routes']
-  */
-);
+]), storesController.deleteStore);
 router.route("/stores/:storeID/deactivate").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
@@ -126,19 +86,7 @@ router.route("/stores/:storeID/deactivate").patch(isLoggedIn_1.isLoggedIn, (0, i
     client_1.EmployeeRole.BRANCH_MANAGER,
     client_1.ClientRole.CLIENT,
     client_1.EmployeeRole.CLIENT_ASSISTANT,
-]), storesController.deactivateStore
-/*
-      #swagger.tags = ['Stores Routes']
-  */
-);
-router.route("/stores/:storeID/reactivate").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
-    client_1.AdminRole.ADMIN,
-    client_1.AdminRole.ADMIN_ASSISTANT,
-    client_1.EmployeeRole.COMPANY_MANAGER,
-]), storesController.reactivateStore
-/*
-      #swagger.tags = ['Stores Routes']
-  */
-);
+]), storesController.deactivateStore);
+router.route("/stores/:storeID/reactivate").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.AdminRole.ADMIN, client_1.AdminRole.ADMIN_ASSISTANT, client_1.EmployeeRole.COMPANY_MANAGER], [client_1.Permission.REACTIVE_STORE]), storesController.reactivateStore);
 exports.default = router;
 //# sourceMappingURL=stores.routes.js.map

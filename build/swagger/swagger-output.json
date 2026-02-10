@@ -5154,7 +5154,12 @@
                                 "SEND_ORDER",
                                 "ADD_ORDERS_TO_REPOSITORY",
                                 "SEND_ORDER_TO_REPOSITORY",
-                                "ASSIGN_ORDERS_TO_AGENT"
+                                "ASSIGN_ORDERS_TO_AGENT",
+                                "REACTIVE_ORDERS",
+                                "REACTIVE_REPORT",
+                                "REACTIVE_STORE",
+                                "REACTIVE_CLIENT",
+                                "REACTIVE_EMPLOYEE"
                             ]
                         }
                     },
@@ -5567,7 +5572,12 @@
                                 "SEND_ORDER",
                                 "ADD_ORDERS_TO_REPOSITORY",
                                 "SEND_ORDER_TO_REPOSITORY",
-                                "ASSIGN_ORDERS_TO_AGENT"
+                                "ASSIGN_ORDERS_TO_AGENT",
+                                "REACTIVE_ORDERS",
+                                "REACTIVE_REPORT",
+                                "REACTIVE_STORE",
+                                "REACTIVE_CLIENT",
+                                "REACTIVE_EMPLOYEE"
                             ]
                         }
                     },

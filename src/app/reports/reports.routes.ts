@@ -227,11 +227,10 @@ router.route("/reports/:reportID/deactivate").patch(
 
 router.route("/reports/:reportID/reactivate").patch(
   isLoggedIn,
-  isAutherized([
-    EmployeeRole.COMPANY_MANAGER,
-    AdminRole.ADMIN,
-    AdminRole.ADMIN_ASSISTANT,
-  ]),
+  isAutherized(
+    [EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT],
+    [Permission.REACTIVE_REPORT],
+  ),
   reportController.reactivateReport,
   /*
         #swagger.tags = ['Reports Routes']

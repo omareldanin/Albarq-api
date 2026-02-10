@@ -49,10 +49,6 @@ router.route("/reports/:reportID").patch(isLoggedIn_1.isLoggedIn, (0, isAutheriz
 ]), reportController.updateReport);
 router.route("/reports/:reportID").delete(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.AdminRole.ADMIN, client_1.AdminRole.ADMIN_ASSISTANT], [client_1.Permission.DELETE_DELIVERY_AGENT_REPORT]), reportController.deleteReport);
 router.route("/reports/:reportID/deactivate").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.EmployeeRole.REPOSITORIY_EMPLOYEE], [client_1.Permission.DELETE_DELIVERY_AGENT_REPORT]), reportController.deactivateReport);
-router.route("/reports/:reportID/reactivate").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
-    client_1.EmployeeRole.COMPANY_MANAGER,
-    client_1.AdminRole.ADMIN,
-    client_1.AdminRole.ADMIN_ASSISTANT,
-]), reportController.reactivateReport);
+router.route("/reports/:reportID/reactivate").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.AdminRole.ADMIN, client_1.AdminRole.ADMIN_ASSISTANT], [client_1.Permission.REACTIVE_REPORT]), reportController.reactivateReport);
 exports.default = router;
 //# sourceMappingURL=reports.routes.js.map

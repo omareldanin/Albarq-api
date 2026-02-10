@@ -3408,7 +3408,6 @@ export class OrdersRepository {
     const [
       ordersStatisticsByStatus,
       ordersStatisticsByGovernorate,
-      allOrdersStatistics,
       allOrdersStatisticsWithoutClientReport,
       allOrdersStatisticsWithoutDeliveryReport,
       todayOrdersStatistics,
@@ -3552,17 +3551,6 @@ export class OrdersRepository {
       }),
       prisma.order.aggregate({
         _sum: {
-          totalCost: true,
-        },
-        _count: {
-          id: true,
-        },
-        where: {
-          ...filtersReformed,
-        },
-      }),
-      prisma.order.aggregate({
-        _sum: {
           paidAmount: true,
           deliveryCost: true,
         },
@@ -3642,7 +3630,6 @@ export class OrdersRepository {
     const result = statisticsReformed({
       ordersStatisticsByStatus,
       ordersStatisticsByGovernorate,
-      allOrdersStatistics,
       todayOrdersStatistics,
       allOrdersStatisticsWithoutDeliveryReport,
       allOrdersStatisticsWithoutClientReport,

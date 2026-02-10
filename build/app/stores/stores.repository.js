@@ -96,6 +96,7 @@ class StoresRepository {
                 select: {
                     id: true,
                     name: true,
+                    clientId: true,
                     client: {
                         select: {
                             branchId: true,

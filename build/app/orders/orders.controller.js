@@ -709,6 +709,13 @@ class OrdersController {
                     targetRepositoryId: returnedReport?.id,
                 },
             });
+            // await prisma.customerOutput.deleteMany({
+            //   where: {
+            //     orderId: oldOrder.id,
+            //     clientId: oldOrder.client.user.id,
+            //     storeId: oldOrder.store.id,
+            //   },
+            // });
             const order = await ordersService.updateOrder({
                 params: {
                     orderID: oldOrder.id,

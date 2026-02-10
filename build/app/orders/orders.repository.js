@@ -3002,7 +3002,7 @@ class OrdersRepository {
                     },
                 ],
             };
-        const [ordersStatisticsByStatus, ordersStatisticsByGovernorate, allOrdersStatistics, allOrdersStatisticsWithoutClientReport, allOrdersStatisticsWithoutDeliveryReport, todayOrdersStatistics,] = await Promise.all([
+        const [ordersStatisticsByStatus, ordersStatisticsByGovernorate, allOrdersStatisticsWithoutClientReport, allOrdersStatisticsWithoutDeliveryReport, todayOrdersStatistics,] = await Promise.all([
             db_1.prisma.order.groupBy({
                 by: ["status"],
                 _sum: {
@@ -3140,17 +3140,6 @@ class OrdersRepository {
             }),
             db_1.prisma.order.aggregate({
                 _sum: {
-                    totalCost: true,
-                },
-                _count: {
-                    id: true,
-                },
-                where: {
-                    ...filtersReformed,
-                },
-            }),
-            db_1.prisma.order.aggregate({
-                _sum: {
                     paidAmount: true,
                     deliveryCost: true,
                 },
@@ -3227,7 +3216,6 @@ class OrdersRepository {
         const result = (0, orders_responses_1.statisticsReformed)({
             ordersStatisticsByStatus,
             ordersStatisticsByGovernorate,
-            allOrdersStatistics,
             todayOrdersStatistics,
             allOrdersStatisticsWithoutDeliveryReport,
             allOrdersStatisticsWithoutClientReport,

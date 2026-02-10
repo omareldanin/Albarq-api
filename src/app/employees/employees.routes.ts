@@ -1,18 +1,13 @@
-import { Router } from "express";
+import {Router} from "express";
 
 // import { upload } from "../../middlewares/upload.middleware";
-import {
-  AdminRole,
-  ClientRole,
-  EmployeeRole,
-  Permission,
-} from "@prisma/client";
-import { isAutherized } from "../../middlewares/isAutherized";
+import {AdminRole, ClientRole, EmployeeRole, Permission} from "@prisma/client";
+import {isAutherized} from "../../middlewares/isAutherized";
 // import { EmployeeRole } from "@prisma/client";
 // import { isAutherized } from "../../middlewares/isAutherized.middleware";
-import { isLoggedIn } from "../../middlewares/isLoggedIn";
-import { upload } from "../../middlewares/upload";
-import { EmployeesController } from "./employees.controller";
+import {isLoggedIn} from "../../middlewares/isLoggedIn";
+import {upload} from "../../middlewares/upload";
+import {EmployeesController} from "./employees.controller";
 
 const router = Router();
 const employeesController = new EmployeesController();
@@ -28,15 +23,15 @@ router.route("/employees").post(
       EmployeeRole.CLIENT,
       EmployeeRole.CLIENT_ASSISTANT,
     ],
-    [Permission.ADD_DELIVERY_AGENT, Permission.MANAGE_EMPLOYEES]
+    [Permission.ADD_DELIVERY_AGENT, Permission.MANAGE_EMPLOYEES],
   ),
   upload.fields([
-    { name: "avatar", maxCount: 1 },
-    { name: "idCard", maxCount: 1 },
-    { name: "residencyCard", maxCount: 1 },
+    {name: "avatar", maxCount: 1},
+    {name: "idCard", maxCount: 1},
+    {name: "residencyCard", maxCount: 1},
   ]),
   // upload.none(),
-  employeesController.createEmployee
+  employeesController.createEmployee,
   /*
         #swagger.tags = ['Employees Routes']
 
@@ -64,7 +59,7 @@ router.route("/employees").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  employeesController.getAllEmployees
+  employeesController.getAllEmployees,
   /*
         #swagger.tags = ['Employees Routes']
 
@@ -98,7 +93,7 @@ router.route("/employees/:employeeID").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  employeesController.getEmployee
+  employeesController.getEmployee,
   /*
         #swagger.tags = ['Employees Routes']
     */
@@ -118,12 +113,12 @@ router.route("/employees/:employeeID").patch(
   // upload.single("idCard"),
   // upload.single("residencyCard"),
   upload.fields([
-    { name: "avatar", maxCount: 1 },
-    { name: "idCard", maxCount: 1 },
-    { name: "residencyCard", maxCount: 1 },
+    {name: "avatar", maxCount: 1},
+    {name: "idCard", maxCount: 1},
+    {name: "residencyCard", maxCount: 1},
   ]),
   // upload.none(),
-  employeesController.updateEmployee
+  employeesController.updateEmployee,
   /*
         #swagger.tags = ['Employees Routes']
 
@@ -150,7 +145,7 @@ router.route("/employees/:employeeID").delete(
     EmployeeRole.CLIENT,
     EmployeeRole.CLIENT_ASSISTANT,
   ]),
-  employeesController.deleteEmployee
+  employeesController.deleteEmployee,
   /*
         #swagger.tags = ['Employees Routes']
     */
@@ -165,7 +160,7 @@ router.route("/employees/:employeeID/deactivate").patch(
     EmployeeRole.CLIENT,
     EmployeeRole.CLIENT_ASSISTANT,
   ]),
-  employeesController.deactivateEmployee
+  employeesController.deactivateEmployee,
   /*
         #swagger.tags = ['Employees Routes']
     */
@@ -174,12 +169,11 @@ router.route("/employees/:employeeID/deactivate").patch(
 router.route("/employees/:employeeID/reactivate").patch(
   isLoggedIn,
   //TODO: Maybe add All Employee Roles for profile update
-  isAutherized([
-    EmployeeRole.COMPANY_MANAGER,
-    AdminRole.ADMIN,
-    AdminRole.ADMIN_ASSISTANT,
-  ]),
-  employeesController.reactivateEmployee
+  isAutherized(
+    [EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT],
+    [Permission.REACTIVE_EMPLOYEE],
+  ),
+  employeesController.reactivateEmployee,
   /*
         #swagger.tags = ['Employees Routes']
     */

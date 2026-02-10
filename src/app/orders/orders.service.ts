@@ -1478,6 +1478,10 @@ export class OrdersService {
       });
       return {
         ...statistics,
+        allOrdersStatistics: {
+          totalCost: 0,
+          count: 0,
+        },
         ordersStatisticsByStatus: [
           ...statistics.ordersStatisticsByStatus.filter(
             (status) =>
@@ -1510,6 +1514,10 @@ export class OrdersService {
 
       return {
         ...statistics,
+        allOrdersStatistics: {
+          totalCost: 0,
+          count: 0,
+        },
         ordersStatisticsByStatus: employee?.inquiryStatuses?.length
           ? newStatistics
           : [],
@@ -1550,6 +1558,10 @@ export class OrdersService {
         );
       return {
         ...statistics,
+        allOrdersStatistics: {
+          totalCost: 0,
+          count: 0,
+        },
         ordersStatisticsByStatus: ordersStatisticsByStatus,
         allOrdersStatisticsWithoutClientReport:
           statistics.allOrdersStatisticsWithoutDeliveryReport,
@@ -1565,6 +1577,10 @@ export class OrdersService {
       return {
         ...statistics,
         ordersStatisticsByStatus: ordersStatisticsByStatus,
+        allOrdersStatistics: {
+          totalCost: 0,
+          count: 0,
+        },
         allOrdersStatisticsWithoutClientReport:
           statistics.allOrdersStatisticsWithoutDeliveryReport,
       };
@@ -1745,10 +1761,20 @@ export class OrdersService {
       return {
         ...statistics,
         ordersStatisticsByStatus: updatedStatusStatistics,
+        allOrdersStatistics: {
+          totalCost: 0,
+          count: 0,
+        },
       };
     }
 
-    return statistics;
+    return {
+      ...statistics,
+      allOrdersStatistics: {
+        totalCost: 0,
+        count: 0,
+      },
+    };
   };
 
   getOrdersStatisticV2 = async (data: {

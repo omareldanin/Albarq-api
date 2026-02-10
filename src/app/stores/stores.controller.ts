@@ -75,6 +75,24 @@ export class StoresController {
       });
       inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
     }
+    if (loggedInUser.role === "INQUIRY_EMPLOYEE") {
+      const employee = await prisma.employee.findUnique({
+        where: {
+          id: loggedInUser.id,
+        },
+        select: {
+          mainEmergency: true,
+        },
+      });
+      if (employee?.mainEmergency) {
+        res.status(200).json({
+          status: "success",
+          page: 0,
+          pagesCount: 0,
+          data: [],
+        });
+      }
+    }
     // Show only stores of the same branch as the logged in user
     let branchID: number | undefined = req.query.branch_id
       ? +req.query.branch_id
