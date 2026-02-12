@@ -1257,7 +1257,7 @@ export class OrdersRepository {
                                   branchId: data.filters.branchID,
                                   type: data.filters.orderType,
                                   report: {
-                                    deleted: true,
+                                    deleted: false,
                                   },
                                 },
                               },
