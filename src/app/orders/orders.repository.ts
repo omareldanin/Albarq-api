@@ -3399,6 +3399,9 @@ export class OrdersRepository {
                         },
                       },
                     },
+                    status: {
+                      not: "RETURNED",
+                    },
                   },
                   {
                     clientReport: {
