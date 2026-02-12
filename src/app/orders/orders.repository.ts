@@ -1628,13 +1628,12 @@ export class OrdersRepository {
                               none: {
                                 secondaryType: "DELIVERED",
                                 report: {
-                                  deleted: true,
+                                  deleted: false,
                                 },
                               },
                             },
-
                             status: {
-                              notIn: ["RETURNED"],
+                              not: "RETURNED",
                             },
                           },
                           {
@@ -1642,11 +1641,10 @@ export class OrdersRepository {
                               none: {
                                 secondaryType: "RETURNED",
                                 report: {
-                                  deleted: true,
+                                  deleted: false,
                                 },
                               },
                             },
-
                             status: {
                               in: [
                                 "RETURNED",
