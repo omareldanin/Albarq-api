@@ -1465,12 +1465,12 @@ class OrdersRepository {
                                         none: {
                                             secondaryType: "DELIVERED",
                                             report: {
-                                                deleted: true,
+                                                deleted: false,
                                             },
                                         },
                                     },
                                     status: {
-                                        notIn: ["RETURNED"],
+                                        not: "RETURNED",
                                     },
                                 },
                                 {
@@ -1478,7 +1478,7 @@ class OrdersRepository {
                                         none: {
                                             secondaryType: "RETURNED",
                                             report: {
-                                                deleted: true,
+                                                deleted: false,
                                             },
                                         },
                                     },
