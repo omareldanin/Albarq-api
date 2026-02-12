@@ -1190,14 +1190,8 @@ export class OrdersRepository {
                                   secondaryType: data.filters.delivered
                                     ? "DELIVERED"
                                     : undefined,
-                                },
-                              },
-                            },
-                            {
-                              clientReport: {
-                                some: {
                                   report: {
-                                    deleted: true,
+                                    deleted: false,
                                   },
                                 },
                               },
@@ -1227,12 +1221,7 @@ export class OrdersRepository {
                         ? [
                             {
                               repositoryReport: {
-                                none: {},
-                              },
-                            },
-                            {
-                              repositoryReport: {
-                                some: {
+                                none: {
                                   report: {
                                     deleted: true,
                                   },
@@ -1267,12 +1256,6 @@ export class OrdersRepository {
                                 none: {
                                   branchId: data.filters.branchID,
                                   type: data.filters.orderType,
-                                },
-                              },
-                            },
-                            {
-                              branchReport: {
-                                some: {
                                   report: {
                                     deleted: true,
                                   },
@@ -1641,49 +1624,28 @@ export class OrdersRepository {
                     !data.filters.search
                       ? [
                           {
-                            OR: [
-                              {
-                                clientReport: {
-                                  none: {
-                                    secondaryType: "DELIVERED",
-                                  },
+                            clientReport: {
+                              none: {
+                                secondaryType: "DELIVERED",
+                                report: {
+                                  deleted: true,
                                 },
                               },
-                              {
-                                clientReport: {
-                                  some: {
-                                    secondaryType: "DELIVERED",
-                                    report: {
-                                      deleted: true,
-                                    },
-                                  },
-                                },
-                              },
-                            ],
+                            },
+
                             status: {
                               notIn: ["RETURNED"],
                             },
                           },
                           {
-                            OR: [
-                              {
-                                clientReport: {
-                                  none: {
-                                    secondaryType: "RETURNED",
-                                  },
+                            clientReport: {
+                              none: {
+                                secondaryType: "RETURNED",
+                                report: {
+                                  deleted: true,
                                 },
                               },
-                              {
-                                clientReport: {
-                                  some: {
-                                    secondaryType: "RETURNED",
-                                    report: {
-                                      deleted: true,
-                                    },
-                                  },
-                                },
-                              },
-                            ],
+                            },
 
                             status: {
                               in: [
@@ -3429,46 +3391,24 @@ export class OrdersRepository {
             data.loggedInUser.role === "CLIENT_ASSISTANT"
               ? [
                   {
-                    OR: [
-                      {
-                        clientReport: {
-                          none: {
-                            secondaryType: "DELIVERED",
-                          },
+                    clientReport: {
+                      none: {
+                        secondaryType: "DELIVERED",
+                        report: {
+                          deleted: false,
                         },
                       },
-                      {
-                        clientReport: {
-                          some: {
-                            secondaryType: "DELIVERED",
-                            report: {
-                              deleted: true,
-                            },
-                          },
-                        },
-                      },
-                    ],
+                    },
                   },
                   {
-                    OR: [
-                      {
-                        clientReport: {
-                          none: {
-                            secondaryType: "RETURNED",
-                          },
+                    clientReport: {
+                      none: {
+                        secondaryType: "RETURNED",
+                        report: {
+                          deleted: false,
                         },
                       },
-                      {
-                        clientReport: {
-                          some: {
-                            secondaryType: "RETURNED",
-                            report: {
-                              deleted: true,
-                            },
-                          },
-                        },
-                      },
-                    ],
+                    },
                     status: {
                       in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
                     },
@@ -3561,25 +3501,14 @@ export class OrdersRepository {
           ...filtersReformed,
           OR: [
             {
-              OR: [
-                {
-                  clientReport: {
-                    none: {
-                      secondaryType: "DELIVERED",
-                    },
+              clientReport: {
+                none: {
+                  secondaryType: "DELIVERED",
+                  report: {
+                    deleted: false,
                   },
                 },
-                {
-                  clientReport: {
-                    some: {
-                      secondaryType: "DELIVERED",
-                      report: {
-                        deleted: true,
-                      },
-                    },
-                  },
-                },
-              ],
+              },
               status: {
                 in: ["DELIVERED", "REPLACED", "PARTIALLY_RETURNED"],
               },

@@ -1496,24 +1496,14 @@ class OrdersController {
                         companyId: loggedInUser.companyID,
                     },
                     {
-                        OR: [
-                            {
-                                clientReport: {
-                                    none: {
-                                        secondaryType: "DELIVERED",
-                                    },
+                        clientReport: {
+                            none: {
+                                secondaryType: "DELIVERED",
+                                report: {
+                                    deleted: false,
                                 },
                             },
-                            {
-                                clientReport: {
-                                    some: {
-                                        report: {
-                                            deleted: true,
-                                        },
-                                    },
-                                },
-                            },
-                        ],
+                        },
                     },
                 ],
             },
@@ -1669,50 +1659,28 @@ class OrdersController {
                             status: {
                                 notIn: ["RETURNED"],
                             },
-                            OR: [
-                                {
-                                    clientReport: {
-                                        none: {
-                                            secondaryType: "DELIVERED",
-                                        },
+                            clientReport: {
+                                none: {
+                                    secondaryType: "DELIVERED",
+                                    report: {
+                                        deleted: false,
                                     },
                                 },
-                                {
-                                    clientReport: {
-                                        some: {
-                                            secondaryType: "DELIVERED",
-                                            report: {
-                                                deleted: true,
-                                            },
-                                        },
-                                    },
-                                },
-                            ],
+                            },
                         },
                         // 🔴 Returned / replaced orders → require RETURNED report
                         {
                             status: {
                                 in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
                             },
-                            OR: [
-                                {
-                                    clientReport: {
-                                        none: {
-                                            secondaryType: "RETURNED",
-                                        },
+                            clientReport: {
+                                none: {
+                                    secondaryType: "RETURNED",
+                                    report: {
+                                        deleted: false,
                                     },
                                 },
-                                {
-                                    clientReport: {
-                                        some: {
-                                            secondaryType: "RETURNED",
-                                            report: {
-                                                deleted: true,
-                                            },
-                                        },
-                                    },
-                                },
-                            ],
+                            },
                         },
                     ],
                 },
