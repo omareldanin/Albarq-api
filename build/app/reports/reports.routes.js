@@ -37,6 +37,11 @@ router.route("/reports/:reportID/pdf").get(isLoggedIn_1.isLoggedIn, (0, isAuther
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
 ]), reportController.getReportPDF);
+router.route("/reports/clients/:reportID/pdf").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
+    ...Object.values(client_1.AdminRole),
+    ...Object.values(client_1.EmployeeRole),
+    ...Object.values(client_1.ClientRole),
+]), reportController.getReportClientsPDF);
 router.route("/reports/pdf").post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     ...Object.values(client_1.AdminRole),
     ...Object.values(client_1.EmployeeRole),

@@ -28,6 +28,7 @@ import {ReportsRepository} from "./reports.repository";
 import {type reportReform} from "./reports.responses";
 import {prisma} from "../../database/db";
 import axios from "axios";
+import {generateBranchClientsReport} from "./helpers/generateBranchClientsReport";
 
 const reportsRepository = new ReportsRepository();
 const ordersRepository = new OrdersRepository();
@@ -564,13 +565,6 @@ export class ReportsService {
       throw new AppError("الكشف المطلوب موجود بسلة المحذوفات", 404);
     }
 
-    if (reportData.url && reportData.type !== "REPOSITORY") {
-      try {
-        return await this.fetchPdfFromUrl(reportData.url);
-      } catch (err) {
-        console.warn("Failed to fetch PDF, regenerating:", reportData.url);
-      }
-    }
     // ===== Permission check =====
     const user = data.loggedInUser;
     if (user && user.role !== "COMPANY_MANAGER" && !user.mainRepository) {
@@ -587,6 +581,13 @@ export class ReportsService {
       }
     }
 
+    if (reportData.url && reportData.type !== "REPOSITORY") {
+      try {
+        return await this.fetchPdfFromUrl(reportData.url);
+      } catch (err) {
+        console.warn("Failed to fetch PDF, regenerating:", reportData.url);
+      }
+    }
     // ========= Extract orders ==========
     // TODO: fix this
     // @ts-expect-error Fix later
@@ -729,6 +730,85 @@ export class ReportsService {
 
     // ========= Generate PDF ==========
     const pdf = await generateReport(reportData.type, reportData, ordersData);
+
+    return pdf;
+  }
+
+  async getReportClientsPDF(data: {
+    params: {reportID: number};
+    loggedInUser?: loggedInUserType;
+  }) {
+    const reportData = await reportsRepository.getReport({
+      reportID: data.params.reportID,
+    });
+
+    if (!reportData) {
+      throw new AppError("الكشف المطلوب غير موجود", 404);
+    }
+    if (reportData?.deleted) {
+      throw new AppError("الكشف المطلوب موجود بسلة المحذوفات", 404);
+    }
+
+    const orders =
+      reportData.repositoryReport?.repositoryReportOrders ??
+      reportData.branchReport?.branchReportOrders ??
+      reportData.clientReport?.clientReportOrders ??
+      reportData.deliveryAgentReport?.deliveryAgentReportOrders ??
+      reportData.governorateReport?.governorateReportOrders ??
+      reportData.companyReport?.companyReportOrders ??
+      [];
+
+    if (orders.length === 0) {
+      throw new AppError("لا يوجد طلبات", 404);
+    }
+
+    const ordersIDs = orders.map((o) => o.id);
+
+    const ordersClients = await prisma.order.groupBy({
+      by: ["clientId"],
+      _count: {
+        id: true,
+      },
+      _sum: {
+        clientNet: true,
+      },
+      where: {
+        id: {in: ordersIDs},
+        // branchReport: {
+        //   some: {
+        //     id: data.params.reportID,
+        //   },
+        // },
+      },
+    });
+
+    const clientsIds = ordersClients.map((o) => o.clientId);
+
+    const clients = await prisma.client.findMany({
+      where: {
+        id: {in: clientsIds},
+      },
+      select: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    const clientsWithTotal = ordersClients.map((o) => {
+      const client = clients.find((c) => c.user.id === o.clientId);
+
+      return {
+        name: client?.user.name,
+        clientNet: o._sum.clientNet,
+        count: o._count.id,
+      };
+    });
+    // ========= Generate PDF ==========
+    const pdf = await generateBranchClientsReport(reportData, clientsWithTotal);
 
     return pdf;
   }

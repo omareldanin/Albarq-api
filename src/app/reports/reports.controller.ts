@@ -185,11 +185,27 @@ export class ReportController {
     // Set headers for a PDF response
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "attachment; filename=generated.pdf");
-    console.log("PDF size:", pdfBuffer.length);
 
     res.send(pdfBuffer);
   });
 
+  getReportClientsPDF = catchAsync(async (req, res) => {
+    const params = {reportID: +req.params.reportID};
+    const loggedInUser: loggedInUserType = res.locals.user;
+
+    const pdf = await reportsService.getReportClientsPDF({
+      params: params,
+      loggedInUser,
+    });
+
+    // Ensure PDF data is received as a Buffer or convert it
+    const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
+    // Set headers for a PDF response
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=generated.pdf");
+
+    res.send(pdfBuffer);
+  });
   getReportsReportPDF = catchAsync(async (req, res) => {
     const reportsData = ReportsReportPDFCreateSchema.parse(req.body);
 

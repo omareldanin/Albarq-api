@@ -3896,6 +3896,36 @@
         }
       }
     },
+    "/api/v1/reports/clients/{reportID}/pdf": {
+      "get": {
+        "tags": [
+          "Reports Routes"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "reportID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/v1/reports/pdf": {
       "post": {
         "tags": [

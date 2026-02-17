@@ -17,6 +17,7 @@ const generateReportsReport_1 = require("./helpers/generateReportsReport");
 const reports_repository_1 = require("./reports.repository");
 const db_1 = require("../../database/db");
 const axios_1 = __importDefault(require("axios"));
+const generateBranchClientsReport_1 = require("./helpers/generateBranchClientsReport");
 const reportsRepository = new reports_repository_1.ReportsRepository();
 const ordersRepository = new orders_repository_1.OrdersRepository();
 const employeesRepository = new employees_repository_1.EmployeesRepository();
@@ -420,14 +421,6 @@ class ReportsService {
         if (reportData?.deleted) {
             throw new AppError_1.AppError("الكشف المطلوب موجود بسلة المحذوفات", 404);
         }
-        if (reportData.url && reportData.type !== "REPOSITORY") {
-            try {
-                return await this.fetchPdfFromUrl(reportData.url);
-            }
-            catch (err) {
-                console.warn("Failed to fetch PDF, regenerating:", reportData.url);
-            }
-        }
         // ===== Permission check =====
         const user = data.loggedInUser;
         if (user && user.role !== "COMPANY_MANAGER" && !user.mainRepository) {
@@ -438,6 +431,14 @@ class ReportsService {
                 (type === "BRANCH" &&
                     reportData.branchReport?.branch.id !== user.branchId)) {
                 throw new AppError_1.AppError("غير مصرح لك بالاطلاع علي هذا الكشف", 400);
+            }
+        }
+        if (reportData.url && reportData.type !== "REPOSITORY") {
+            try {
+                return await this.fetchPdfFromUrl(reportData.url);
+            }
+            catch (err) {
+                console.warn("Failed to fetch PDF, regenerating:", reportData.url);
             }
         }
         // ========= Extract orders ==========
@@ -555,6 +556,70 @@ class ReportsService {
         reportData.otherTotal = otherTotal;
         // ========= Generate PDF ==========
         const pdf = await (0, generateReport_1.generateReport)(reportData.type, reportData, ordersData);
+        return pdf;
+    }
+    async getReportClientsPDF(data) {
+        const reportData = await reportsRepository.getReport({
+            reportID: data.params.reportID,
+        });
+        if (!reportData) {
+            throw new AppError_1.AppError("الكشف المطلوب غير موجود", 404);
+        }
+        if (reportData?.deleted) {
+            throw new AppError_1.AppError("الكشف المطلوب موجود بسلة المحذوفات", 404);
+        }
+        const orders = reportData.repositoryReport?.repositoryReportOrders ??
+            reportData.branchReport?.branchReportOrders ??
+            reportData.clientReport?.clientReportOrders ??
+            reportData.deliveryAgentReport?.deliveryAgentReportOrders ??
+            reportData.governorateReport?.governorateReportOrders ??
+            reportData.companyReport?.companyReportOrders ??
+            [];
+        if (orders.length === 0) {
+            throw new AppError_1.AppError("لا يوجد طلبات", 404);
+        }
+        const ordersIDs = orders.map((o) => o.id);
+        const ordersClients = await db_1.prisma.order.groupBy({
+            by: ["clientId"],
+            _count: {
+                id: true,
+            },
+            _sum: {
+                clientNet: true,
+            },
+            where: {
+                id: { in: ordersIDs },
+                // branchReport: {
+                //   some: {
+                //     id: data.params.reportID,
+                //   },
+                // },
+            },
+        });
+        const clientsIds = ordersClients.map((o) => o.clientId);
+        const clients = await db_1.prisma.client.findMany({
+            where: {
+                id: { in: clientsIds },
+            },
+            select: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            },
+        });
+        const clientsWithTotal = ordersClients.map((o) => {
+            const client = clients.find((c) => c.user.id === o.clientId);
+            return {
+                name: client?.user.name,
+                clientNet: o._sum.clientNet,
+                count: o._count.id,
+            };
+        });
+        // ========= Generate PDF ==========
+        const pdf = await (0, generateBranchClientsReport_1.generateBranchClientsReport)(reportData, clientsWithTotal);
         return pdf;
     }
     async getReportsReportPDF(data) {
