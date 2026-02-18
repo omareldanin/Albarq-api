@@ -870,22 +870,31 @@ export class OrdersRepository {
                     : undefined,
               },
               {
-                forwardedBranchId:
-                  data.filters.orderType === "forwarded" &&
-                  data.filters.inquiryBranchesIDs
-                    ? {in: data.filters.inquiryBranchesIDs}
-                    : data.filters.orderType === "forwarded"
-                      ? {not: null}
+                OR: [
+                  {
+                    branchId: data.filters.inquiryBranchesIDs
+                      ? {in: data.filters.inquiryBranchesIDs}
                       : undefined,
-              },
-              {
-                receivedBranchId:
-                  data.filters.orderType === "receiving" &&
-                  data.filters.inquiryBranchesIDs
-                    ? {in: data.filters.inquiryBranchesIDs}
-                    : data.filters.orderType === "receiving"
-                      ? {not: null}
-                      : undefined,
+                  },
+                  {
+                    forwardedBranchId:
+                      data.filters.orderType === "forwarded" &&
+                      data.filters.inquiryBranchesIDs
+                        ? {in: data.filters.inquiryBranchesIDs}
+                        : data.filters.orderType === "forwarded"
+                          ? {not: null}
+                          : undefined,
+                  },
+                  {
+                    receivedBranchId:
+                      data.filters.orderType === "receiving" &&
+                      data.filters.inquiryBranchesIDs
+                        ? {in: data.filters.inquiryBranchesIDs}
+                        : data.filters.orderType === "receiving"
+                          ? {not: null}
+                          : undefined,
+                  },
+                ],
               },
             ],
           } satisfies Prisma.OrderWhereInput)
