@@ -2818,20 +2818,29 @@ class OrdersRepository {
                             : undefined,
                     },
                     {
-                        forwardedBranchId: data.filters.orderType === "forwarded" &&
-                            data.filters.inquiryBranchesIDs
-                            ? { in: data.filters.inquiryBranchesIDs }
-                            : data.filters.orderType === "forwarded"
-                                ? { not: null }
-                                : undefined,
-                    },
-                    {
-                        receivedBranchId: data.filters.orderType === "receiving" &&
-                            data.filters.inquiryBranchesIDs
-                            ? { in: data.filters.inquiryBranchesIDs }
-                            : data.filters.orderType === "receiving"
-                                ? { not: null }
-                                : undefined,
+                        OR: [
+                            {
+                                branchId: data.filters.inquiryBranchesIDs
+                                    ? { in: data.filters.inquiryBranchesIDs }
+                                    : undefined,
+                            },
+                            {
+                                forwardedBranchId: data.filters.orderType === "forwarded" &&
+                                    data.filters.inquiryBranchesIDs
+                                    ? { in: data.filters.inquiryBranchesIDs }
+                                    : data.filters.orderType === "forwarded"
+                                        ? { not: null }
+                                        : undefined,
+                            },
+                            {
+                                receivedBranchId: data.filters.orderType === "receiving" &&
+                                    data.filters.inquiryBranchesIDs
+                                    ? { in: data.filters.inquiryBranchesIDs }
+                                    : data.filters.orderType === "receiving"
+                                        ? { not: null }
+                                        : undefined,
+                            },
+                        ],
                     },
                 ],
             }
