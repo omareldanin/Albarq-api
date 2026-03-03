@@ -706,6 +706,11 @@ export class EmployeesRepository {
     }
 
     await prisma.$transaction([
+      prisma.usersLoginHistory.deleteMany({
+        where: {
+          userId: data.employeeID,
+        },
+      }),
       prisma.employee.delete({
         where: {
           id: data.employeeID,

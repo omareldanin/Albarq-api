@@ -632,6 +632,11 @@ class EmployeesRepository {
             await redis_1.redis.del(keys);
         }
         await db_1.prisma.$transaction([
+            db_1.prisma.usersLoginHistory.deleteMany({
+                where: {
+                    userId: data.employeeID,
+                },
+            }),
             db_1.prisma.employee.delete({
                 where: {
                     id: data.employeeID,
