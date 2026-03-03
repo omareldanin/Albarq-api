@@ -7,9 +7,7 @@ const isLoggedIn_1 = require("../../middlewares/isLoggedIn");
 const router = (0, express_1.Router)();
 const authController = new auth_controller_1.AuthController();
 router.route("/auth/signin").post(authController.signin);
-router.route("/auth/validate-token").post((req, res) => {
-    console.log("validate-token");
-    console.log(req.headers.authorization);
+router.route("/auth/validate-token").post((_req, res) => {
     res.status(200).json({
         status: "valid",
     });

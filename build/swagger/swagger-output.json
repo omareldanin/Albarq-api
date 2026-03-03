@@ -25,15 +25,6 @@
         "/api/v1/auth/validate-token": {
             "post": {
                 "description": "",
-                "parameters": [
-                    {
-                        "name": "authorization",
-                        "in": "header",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK"
