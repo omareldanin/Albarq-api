@@ -426,7 +426,7 @@ class ReportsService {
         if (user && user.role !== "COMPANY_MANAGER" && !user.mainRepository) {
             const isSameBranch = reportData.createdByBrachId === user.branchId;
             const type = reportData.type;
-            if ((type === "CLIENT" && !isSameBranch) ||
+            if ((type === "CLIENT" && reportData.clientReport?.client.id !== user.id) ||
                 (type === "DELIVERY_AGENT" && !isSameBranch) ||
                 (type === "BRANCH" &&
                     reportData.branchReport?.branch.id !== user.branchId)) {
