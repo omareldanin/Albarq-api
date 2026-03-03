@@ -10,7 +10,7 @@ const authController = new AuthController();
 
 router.route("/auth/signin").post(authController.signin);
 
-router.route("/auth/validate-token").post((_req, res) => {
+router.route("/auth/validate-token").post(isLoggedIn, (_req, res) => {
   res.status(200).json({
     status: "valid",
   });
