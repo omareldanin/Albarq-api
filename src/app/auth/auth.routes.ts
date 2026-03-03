@@ -10,14 +10,14 @@ const authController = new AuthController();
 
 router.route("/auth/signin").post(authController.signin);
 
-router.route("/auth/validate-token").post(isLoggedIn, (_req, res) => {
+router.route("/auth/validate-token").post((_req, res) => {
   res.status(200).json({
     status: "valid",
   });
 });
 
 router.route("/auth/refresh-token").post(
-  authController.refreshToken
+  authController.refreshToken,
   /*
         #swagger.tags = ['Auth Routes']
     */
@@ -25,7 +25,7 @@ router.route("/auth/refresh-token").post(
 
 router.route("/auth/signout").post(
   isLoggedIn,
-  authController.signout
+  authController.signout,
   /*
         #swagger.tags = ['Auth Routes']
     */
@@ -34,7 +34,7 @@ router.route("/auth/signout").post(
 router.route("/auth/signout/:userID").post(
   isLoggedIn,
   isAutherized(["ADMIN", "ADMIN_ASSISTANT", "COMPANY_MANAGER"]),
-  authController.signoutUser
+  authController.signoutUser,
   /*
         #swagger.tags = ['Auth Routes']
     */
