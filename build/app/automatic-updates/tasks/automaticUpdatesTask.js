@@ -87,11 +87,17 @@ const automaticUpdatesTask = async () => {
                     let clientNet = undefined;
                     const updateHour = automaticUpdate.updateAt === 24 ? 0 : automaticUpdate.updateAt; // handle midnight
                     const currentHour = currentDate.getHours();
+                    const currentMinutes = currentDate.getMinutes();
                     if (automaticUpdate.checkAfter &&
                         hoursDifference < automaticUpdate.checkAfter) {
                         continue;
                     }
-                    else if (currentHour < updateHour) {
+                    else if (automaticUpdate.updateAt === 24 &&
+                        (currentHour < 23 || (currentHour === 23 && currentMinutes < 59))) {
+                        continue;
+                    }
+                    else if (automaticUpdate.updateAt !== 24 &&
+                        currentHour < updateHour) {
                         continue;
                     }
                     if (order?.status !== automaticUpdate.newOrderStatus &&

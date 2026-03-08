@@ -1482,36 +1482,39 @@ export class OrdersRepository {
                       : undefined,
                 },
               },
-
-              // {
-              //   forwardedBranchId:
-              //     data.filters.orderType === "forwarded"
-              //       ? data.filters.branchID
-              //       : undefined,
-              // },
-              // {
-              //   receivedBranchId:
-              //     data.filters.orderType === "received"
-              //       ? data.filters.branchID
-              //       : undefined,
-              // },
               {
                 OR: [
                   {
-                    AND: [
-                      {
-                        forwardedBranchId:
-                          data.filters.orderType === "forwarded"
-                            ? data.filters.branchID
-                            : undefined,
-                      },
-                      {
-                        receivedBranchId:
-                          data.filters.orderType === "received"
-                            ? data.filters.branchID
-                            : undefined,
-                      },
-                    ],
+                    AND:
+                      data.filters.orderType === "forwarded"
+                        ? [
+                            {
+                              client: {
+                                branchId: data.filters.branchID,
+                              },
+                            },
+                            {
+                              branchId: {not: data.filters.branchID},
+                            },
+                          ]
+                        : data.filters.orderType === "received"
+                          ? [
+                              // {
+                              //   receivedBranchId:
+                              //     data.filters.orderType === "received"
+                              //       ? data.filters.branchID
+                              //       : undefined,
+                              // },
+                              {
+                                client: {
+                                  branchId: {not: data.filters.branchID},
+                                },
+                              },
+                              {
+                                branchId: data.filters.branchID,
+                              },
+                            ]
+                          : [],
                   },
                   data.filters.orderType === "forwarded" ||
                   data.filters.orderType === "received"
@@ -1533,62 +1536,166 @@ export class OrdersRepository {
                         ],
                       }
                     : {},
-                  // {
-                  //   branch: {
-                  //     governorate: "BAGHDAD",
-                  //     id: data.filters.branchID,
-                  //   },
-                  // },
                 ],
               },
               {
-                forwardedBranchId:
+                AND:
                   data.filters.orderType === "forwardedAll" &&
                   (data.loggedInUser?.role === "COMPANY_MANAGER" ||
                     data.loggedInUser?.mainRepository) &&
                   data.filters.branchID
-                    ? data.filters.branchID
+                    ? [
+                        {
+                          client: {
+                            branchId: data.filters.branchID,
+                          },
+                        },
+                        {
+                          branchId: {not: data.filters.branchID},
+                        },
+                      ]
                     : data.filters.orderType === "forwardedAll" &&
                         (data.loggedInUser?.role === "COMPANY_MANAGER" ||
                           data.loggedInUser?.mainRepository)
-                      ? {
-                          not: null,
-                        }
+                      ? [
+                          {
+                            client: {
+                              branchId: {not: data.loggedInUser.branchId},
+                            },
+                          },
+                        ]
                       : data.filters.orderType === "forwardedAll"
-                        ? data.loggedInUser?.branchId
+                        ? [
+                            {
+                              client: {
+                                branchId: data.loggedInUser?.branchId,
+                              },
+                            },
+                            {
+                              branchId: {not: data.loggedInUser?.branchId},
+                            },
+                          ]
                         : data.filters.orderType === "receivedAll" &&
                             data.filters.branchID &&
                             data.loggedInUser?.role !== "COMPANY_MANAGER" &&
                             !data.loggedInUser?.mainCompany
-                          ? data.filters.branchID
+                          ? [
+                              {
+                                client: {
+                                  branchId: data.filters.branchID,
+                                },
+                              },
+                              {
+                                branchId: {not: data.filters.branchID},
+                              },
+                            ]
                           : data.filters.orderType === "inside"
-                            ? {equals: null}
-                            : undefined,
+                            ? [
+                                {
+                                  client: {
+                                    branchId: data.loggedInUser?.branchId,
+                                  },
+                                },
+                                {
+                                  branchId: data.loggedInUser?.branchId,
+                                },
+                              ]
+                            : [],
               },
               {
-                receivedBranchId:
+                AND:
                   data.filters.orderType === "receivedAll" &&
                   (data.loggedInUser?.role === "COMPANY_MANAGER" ||
                     data.loggedInUser?.mainRepository) &&
                   data.filters.branchID
-                    ? data.filters.branchID
+                    ? [
+                        {
+                          branchId: data.filters.branchID,
+                        },
+                        {
+                          client: {
+                            branchId: {not: data.filters.branchID},
+                          },
+                        },
+                      ]
                     : data.filters.orderType === "receivedAll" &&
                         (data.loggedInUser?.role === "COMPANY_MANAGER" ||
                           data.loggedInUser?.mainRepository)
-                      ? {
-                          not: null,
-                        }
+                      ? [
+                          {
+                            branchId: {not: data.loggedInUser.branchId},
+                          },
+                        ]
                       : data.filters.orderType === "forwardedAll" &&
                           data.filters.branchID &&
                           data.loggedInUser?.role !== "COMPANY_MANAGER" &&
                           !data.loggedInUser?.mainCompany
-                        ? data.filters.branchID
+                        ? [
+                            {
+                              branchId: data.filters.branchID,
+                            },
+                            {
+                              client: {
+                                branchId: {not: data.filters.branchID},
+                              },
+                            },
+                          ]
                         : data.filters.orderType === "receivedAll"
-                          ? data.loggedInUser?.branchId
-                          : data.filters.orderType === "inside"
-                            ? {equals: null}
-                            : undefined,
+                          ? [
+                              {
+                                branchId: data.loggedInUser?.branchId,
+                              },
+                            ]
+                          : [],
               },
+              // {
+              //   forwardedBranchId:
+              //     data.filters.orderType === "forwardedAll" &&
+              //     (data.loggedInUser?.role === "COMPANY_MANAGER" ||
+              //       data.loggedInUser?.mainRepository) &&
+              //     data.filters.branchID
+              //       ? data.filters.branchID
+              //       : data.filters.orderType === "forwardedAll" &&
+              //           (data.loggedInUser?.role === "COMPANY_MANAGER" ||
+              //             data.loggedInUser?.mainRepository)
+              //         ? {
+              //             not: null,
+              //           }
+              //         : data.filters.orderType === "forwardedAll"
+              //           ? data.loggedInUser?.branchId
+              //           : data.filters.orderType === "receivedAll" &&
+              //               data.filters.branchID &&
+              //               data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+              //               !data.loggedInUser?.mainCompany
+              //             ? data.filters.branchID
+              //             : data.filters.orderType === "inside"
+              //               ? {equals: null}
+              //               : undefined,
+              // },
+              // {
+              //   receivedBranchId:
+              //     data.filters.orderType === "receivedAll" &&
+              //     (data.loggedInUser?.role === "COMPANY_MANAGER" ||
+              //       data.loggedInUser?.mainRepository) &&
+              //     data.filters.branchID
+              //       ? data.filters.branchID
+              //       : data.filters.orderType === "receivedAll" &&
+              //           (data.loggedInUser?.role === "COMPANY_MANAGER" ||
+              //             data.loggedInUser?.mainRepository)
+              //         ? {
+              //             not: null,
+              //           }
+              //         : data.filters.orderType === "forwardedAll" &&
+              //             data.filters.branchID &&
+              //             data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+              //             !data.loggedInUser?.mainCompany
+              //           ? data.filters.branchID
+              //           : data.filters.orderType === "receivedAll"
+              //             ? data.loggedInUser?.branchId
+              //             : data.filters.orderType === "inside"
+              //               ? {equals: null}
+              //               : undefined,
+              // },
             ],
           } satisfies Prisma.OrderWhereInput);
 

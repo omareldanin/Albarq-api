@@ -93,12 +93,22 @@ export const automaticUpdatesTask = async () => {
           const updateHour =
             automaticUpdate.updateAt === 24 ? 0 : automaticUpdate.updateAt!!; // handle midnight
           const currentHour = currentDate.getHours();
+          const currentMinutes = currentDate.getMinutes();
+
           if (
             automaticUpdate.checkAfter &&
             hoursDifference < automaticUpdate.checkAfter
           ) {
             continue;
-          } else if (currentHour < updateHour) {
+          } else if (
+            automaticUpdate.updateAt === 24 &&
+            (currentHour < 23 || (currentHour === 23 && currentMinutes < 59))
+          ) {
+            continue;
+          } else if (
+            automaticUpdate.updateAt !== 24 &&
+            currentHour < updateHour
+          ) {
             continue;
           }
 
@@ -147,7 +157,7 @@ export const automaticUpdatesTask = async () => {
                 name: "التحديث التلقائي",
               },
               message: `تم تغيير حالة الطلب من ${localizeOrderStatus(
-                order.status
+                order.status,
               )} إلى ${localizeOrderStatus(automaticUpdate.newOrderStatus)}`,
             },
           });
@@ -171,7 +181,7 @@ export const automaticUpdatesTask = async () => {
             }));
 
           Logger.info(
-            `Automatic update for order with ID: ${order.id} has been completed.`
+            `Automatic update for order with ID: ${order.id} has been completed.`,
           );
         }
       }
