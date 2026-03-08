@@ -17,23 +17,7 @@ router.route("/transactions").post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.i
     client_1.EmployeeRole.BRANCH_MANAGER,
     client_1.EmployeeRole.ACCOUNTANT,
     client_1.AdminRole.ADMIN,
-]), upload_1.upload.none(), transactionsController.createTransaction
-/*
-    #swagger.tags = ['Transactions Routes']
-
-    #swagger.requestBody = {
-        required: true,
-        content: {
-            "application/json": {
-                schema: { $ref: "#/components/schemas/TransactionCreateSchema" },
-                examples: {
-                    TransactionCreateExample: { $ref: "#/components/examples/TransactionCreateExample" }
-                }
-            }
-        }
-    }
-*/
-);
+]), upload_1.upload.none(), transactionsController.createTransaction);
 /**
  * @route GET /transactions
  * @desc Get all transactions (paginated)
@@ -48,6 +32,16 @@ router
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
 ]), transactionsController.getAllTransactions);
+router
+    .route("/transactions/statistics")
+    .get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
+    client_1.EmployeeRole.COMPANY_MANAGER,
+    client_1.EmployeeRole.ACCOUNTANT,
+    client_1.AdminRole.ADMIN,
+    client_1.AdminRole.ADMIN_ASSISTANT,
+    ...Object.values(client_1.EmployeeRole),
+    ...Object.values(client_1.ClientRole),
+]), transactionsController.getAllStatistics);
 router
     .route("/receivingAgent-clients")
     .get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
@@ -76,11 +70,7 @@ router.route("/transactions/:transactionId").get(isLoggedIn_1.isLoggedIn, (0, is
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
-]), transactionsController.getTransaction
-/*
-    #swagger.tags = ['Transactions Routes']
-*/
-);
+]), transactionsController.getTransaction);
 /**
  * @route PATCH /transactions/:transactionId
  * @desc Update a transaction by ID
@@ -90,23 +80,7 @@ router.route("/transactions/:transactionId").patch(isLoggedIn_1.isLoggedIn, (0, 
     client_1.EmployeeRole.ACCOUNTANT,
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
-]), transactionsController.updateTransaction
-/*
-    #swagger.tags = ['Transactions Routes']
-
-    #swagger.requestBody = {
-        required: true,
-        content: {
-            "application/json": {
-                schema: { $ref: "#/components/schemas/TransactionUpdateSchema" },
-                examples: {
-                    TransactionUpdateExample: { $ref: "#/components/examples/TransactionUpdateExample" }
-                }
-            }
-        }
-    }
-*/
-);
+]), transactionsController.updateTransaction);
 /**
  * @route DELETE /transactions/:transactionId
  * @desc Delete a transaction
@@ -116,10 +90,6 @@ router.route("/transactions/:transactionId").delete(isLoggedIn_1.isLoggedIn, (0,
     client_1.EmployeeRole.ACCOUNTANT,
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
-]), transactionsController.deleteTransaction
-/*
-    #swagger.tags = ['Transactions Routes']
-*/
-);
+]), transactionsController.deleteTransaction);
 exports.default = router;
 //# sourceMappingURL=transactions.routes.js.map

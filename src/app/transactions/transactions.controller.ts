@@ -20,7 +20,7 @@ export class TransactionsController {
     const createdTransaction = await transactionsRepository.createTransaction(
       companyId,
       loggedInUser.branchId,
-      transactionData
+      transactionData,
     );
 
     res.status(200).json({
@@ -39,7 +39,7 @@ export class TransactionsController {
     const result = await transactionsRepository.getCompanyNetGroupedByCreatedBy(
       companyId,
       page,
-      size
+      size,
     );
 
     res.status(200).json({
@@ -70,10 +70,49 @@ export class TransactionsController {
       page = +req.query.page;
     }
 
-    const {
-      transactions,
+    const {transactions, pagesCount, count} =
+      await transactionsRepository.getAllTransactionsPaginated({
+        page,
+        size,
+        companyId,
+        deliveryAgentId: deliveryAgentId ? +deliveryAgentId : undefined,
+        clientId: clientId ? +clientId : undefined,
+        branchId: loggedInUser.branchId,
+        type: type?.toString(),
+        start_date: start_date?.toString(),
+        end_date: end_date?.toString(),
+        loggedInUser,
+      });
+
+    res.status(200).json({
+      status: "success",
+      page,
       pagesCount,
+      data: transactions,
       count,
+    });
+  });
+
+  getAllStatistics = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    const {type, deliveryAgentId, clientId, start_date, end_date} = req.query;
+
+    const companyId = loggedInUser.companyID!!;
+
+    let size = req.query.size ? +req.query.size : 10;
+    if (size > 500) size = 10;
+
+    let page = 1;
+    if (
+      req.query.page &&
+      !Number.isNaN(+req.query.page) &&
+      +req.query.page > 0
+    ) {
+      page = +req.query.page;
+    }
+
+    const {
       totalDepoist,
       totalWithdraw,
       receivedFromAgents,
@@ -82,7 +121,7 @@ export class TransactionsController {
       paidToClients,
       agentProfit,
       branchProfit,
-    } = await transactionsRepository.getAllTransactionsPaginated({
+    } = await transactionsRepository.getStatistics({
       page,
       size,
       companyId,
@@ -97,10 +136,6 @@ export class TransactionsController {
 
     res.status(200).json({
       status: "success",
-      page,
-      pagesCount,
-      data: transactions,
-      count,
       totalDepoist,
       totalWithdraw,
       total: totalDepoist - totalWithdraw,
@@ -365,7 +400,7 @@ export class TransactionsController {
         const count = ordersCount.find((c) => c.clientId === client.id)?._count
           .id;
         const count2 = deliveredOrdersCount.find(
-          (c) => c.clientId === client.id
+          (c) => c.clientId === client.id,
         )?._count.id;
 
         const profit = insideOrders.find((c) => c.clientId === client.id);
@@ -377,7 +412,7 @@ export class TransactionsController {
 
         forwardedReports.forEach((report) => {
           const clientOrders = report.orders.filter(
-            (o) => o.clientId === client.id
+            (o) => o.clientId === client.id,
           );
           clientOrders.forEach((order) => {
             if (order.governorate === "BAGHDAD") {
@@ -394,7 +429,7 @@ export class TransactionsController {
 
         receivedReports.forEach((report) => {
           const clientOrders = report.orders.filter(
-            (o) => o.clientId === client.id
+            (o) => o.clientId === client.id,
           );
           clientOrders.forEach((order) => {
             if (order.client.branchId === mainBranch?.id && isMainRepository) {

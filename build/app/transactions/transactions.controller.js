@@ -47,7 +47,7 @@ class TransactionsController {
             +req.query.page > 0) {
             page = +req.query.page;
         }
-        const { transactions, pagesCount, count, totalDepoist, totalWithdraw, receivedFromAgents, notReceived, forClients, paidToClients, agentProfit, branchProfit, } = await transactionsRepository.getAllTransactionsPaginated({
+        const { transactions, pagesCount, count } = await transactionsRepository.getAllTransactionsPaginated({
             page,
             size,
             companyId,
@@ -65,6 +65,35 @@ class TransactionsController {
             pagesCount,
             data: transactions,
             count,
+        });
+    });
+    getAllStatistics = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const loggedInUser = res.locals.user;
+        const { type, deliveryAgentId, clientId, start_date, end_date } = req.query;
+        const companyId = loggedInUser.companyID;
+        let size = req.query.size ? +req.query.size : 10;
+        if (size > 500)
+            size = 10;
+        let page = 1;
+        if (req.query.page &&
+            !Number.isNaN(+req.query.page) &&
+            +req.query.page > 0) {
+            page = +req.query.page;
+        }
+        const { totalDepoist, totalWithdraw, receivedFromAgents, notReceived, forClients, paidToClients, agentProfit, branchProfit, } = await transactionsRepository.getStatistics({
+            page,
+            size,
+            companyId,
+            deliveryAgentId: deliveryAgentId ? +deliveryAgentId : undefined,
+            clientId: clientId ? +clientId : undefined,
+            branchId: loggedInUser.branchId,
+            type: type?.toString(),
+            start_date: start_date?.toString(),
+            end_date: end_date?.toString(),
+            loggedInUser,
+        });
+        res.status(200).json({
+            status: "success",
             totalDepoist,
             totalWithdraw,
             total: totalDepoist - totalWithdraw,

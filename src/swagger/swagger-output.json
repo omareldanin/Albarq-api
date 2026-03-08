@@ -4827,9 +4827,6 @@
     },
     "/api/v1/transactions": {
       "post": {
-        "tags": [
-          "Transactions Routes"
-        ],
         "description": "",
         "parameters": [
           {
@@ -4844,23 +4841,27 @@
           "default": {
             "description": ""
           }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TransactionCreateSchema"
-              },
-              "examples": {
-                "TransactionCreateExample": {
-                  "$ref": "#/components/examples/TransactionCreateExample"
-                }
-              }
-            }
-          }
         }
       },
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/transactions/statistics": {
       "get": {
         "description": "",
         "parameters": [

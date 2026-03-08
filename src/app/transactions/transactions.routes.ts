@@ -22,22 +22,7 @@ router.route("/transactions").post(
   ]),
   upload.none(),
 
-  transactionsController.createTransaction
-  /*
-      #swagger.tags = ['Transactions Routes']
-
-      #swagger.requestBody = {
-          required: true,
-          content: {
-              "application/json": {
-                  schema: { $ref: "#/components/schemas/TransactionCreateSchema" },
-                  examples: {
-                      TransactionCreateExample: { $ref: "#/components/examples/TransactionCreateExample" }
-                  }
-              }
-          }
-      }
-  */
+  transactionsController.createTransaction,
 );
 
 /**
@@ -56,7 +41,22 @@ router
       ...Object.values(EmployeeRole),
       ...Object.values(ClientRole),
     ]),
-    transactionsController.getAllTransactions
+    transactionsController.getAllTransactions,
+  );
+
+router
+  .route("/transactions/statistics")
+  .get(
+    isLoggedIn,
+    isAutherized([
+      EmployeeRole.COMPANY_MANAGER,
+      EmployeeRole.ACCOUNTANT,
+      AdminRole.ADMIN,
+      AdminRole.ADMIN_ASSISTANT,
+      ...Object.values(EmployeeRole),
+      ...Object.values(ClientRole),
+    ]),
+    transactionsController.getAllStatistics,
   );
 
 router
@@ -71,7 +71,7 @@ router
       ...Object.values(EmployeeRole),
       ...Object.values(ClientRole),
     ]),
-    transactionsController.getReceivingAgent
+    transactionsController.getReceivingAgent,
   );
 
 router
@@ -86,7 +86,7 @@ router
       ...Object.values(EmployeeRole),
       ...Object.values(ClientRole),
     ]),
-    transactionsController.getEmployeesWallet
+    transactionsController.getEmployeesWallet,
   );
 /**
  * @route GET /transactions/:transactionId
@@ -99,7 +99,7 @@ router.route("/transactions/:transactionId").get(
     AdminRole.ADMIN,
     AdminRole.ADMIN_ASSISTANT,
   ]),
-  transactionsController.getTransaction
+  transactionsController.getTransaction,
   /*
       #swagger.tags = ['Transactions Routes']
   */
@@ -117,7 +117,7 @@ router.route("/transactions/:transactionId").patch(
     AdminRole.ADMIN,
     AdminRole.ADMIN_ASSISTANT,
   ]),
-  transactionsController.updateTransaction
+  transactionsController.updateTransaction,
   /*
       #swagger.tags = ['Transactions Routes']
 
@@ -147,7 +147,7 @@ router.route("/transactions/:transactionId").delete(
     AdminRole.ADMIN,
     AdminRole.ADMIN_ASSISTANT,
   ]),
-  transactionsController.deleteTransaction
+  transactionsController.deleteTransaction,
   /*
       #swagger.tags = ['Transactions Routes']
   */
