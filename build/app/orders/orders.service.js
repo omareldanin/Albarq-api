@@ -15,8 +15,6 @@ const generateReceipts_1 = require("./helpers/generateReceipts");
 const orders_repository_1 = require("./orders.repository");
 const orders_responses_1 = require("./orders.responses");
 const db_1 = require("../../database/db");
-const sendMessages_1 = require("./helpers/sendMessages");
-const locations_repository_1 = require("../locations/locations.repository");
 const ordersRepository = new orders_repository_1.OrdersRepository();
 const employeesRepository = new employees_repository_1.EmployeesRepository();
 const clientsRepository = new clients_repository_1.ClientsRepository();
@@ -629,17 +627,17 @@ class OrdersService {
                             content: `تم تغيير حالة الطلب رقم ${newOrder.receiptNumber} إلى ${(0, localize_1.localizeOrderStatus)(newOrder.status)} ${newOrder.notes ? `(${newOrder.notes})` : ""}`,
                         });
                     }
-                    if (data.orderData.status === "PROCESSING") {
-                        await (0, sendMessages_1.sendOrderProcessingTemplate)(oldOrderData.client.phone, {
-                            storeName: oldOrderData.store.name,
-                            customerName: oldOrderData.recipientName,
-                            orderNumber: oldOrderData.receiptNumber,
-                            phone: oldOrderData.recipientPhones[0],
-                            price: oldOrderData.totalCost.toLocaleString(),
-                            address: `${locations_repository_1.governorateArabicNames[newOrder.governorate]} - ${newOrder.location.name} - ${newOrder.recipientAddress}`,
-                            notes: newOrder.notes,
-                        });
-                    }
+                    // if (data.orderData.status === "PROCESSING") {
+                    //   await sendOrderProcessingTemplate(oldOrderData.client.phone, {
+                    //     storeName: oldOrderData.store.name,
+                    //     customerName: oldOrderData.recipientName,
+                    //     orderNumber: oldOrderData.receiptNumber,
+                    //     phone: oldOrderData.recipientPhones[0],
+                    //     price: oldOrderData.totalCost.toLocaleString(),
+                    //     address: `${governorateArabicNames[newOrder.governorate]} - ${newOrder.location.name} - ${newOrder.recipientAddress}`,
+                    //     notes: newOrder.notes,
+                    //   });
+                    // }
                 }
                 if (newOrder.status !== "IN_GOV_REPOSITORY" &&
                     newOrder.status !== "IN_MAIN_REPOSITORY") {

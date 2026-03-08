@@ -34,8 +34,6 @@ import type {
 import {OrdersRepository} from "./orders.repository";
 import {orderReform, orderSelect, OrderStatusData} from "./orders.responses";
 import {prisma} from "../../database/db";
-import {sendOrderProcessingTemplate} from "./helpers/sendMessages";
-import {governorateArabicNames} from "../locations/locations.repository";
 
 const ordersRepository = new OrdersRepository();
 const employeesRepository = new EmployeesRepository();
@@ -822,17 +820,17 @@ export class OrdersService {
             });
           }
 
-          if (data.orderData.status === "PROCESSING") {
-            await sendOrderProcessingTemplate(oldOrderData.client.phone, {
-              storeName: oldOrderData.store.name,
-              customerName: oldOrderData.recipientName,
-              orderNumber: oldOrderData.receiptNumber,
-              phone: oldOrderData.recipientPhones[0],
-              price: oldOrderData.totalCost.toLocaleString(),
-              address: `${governorateArabicNames[newOrder.governorate]} - ${newOrder.location.name} - ${newOrder.recipientAddress}`,
-              notes: newOrder.notes,
-            });
-          }
+          // if (data.orderData.status === "PROCESSING") {
+          //   await sendOrderProcessingTemplate(oldOrderData.client.phone, {
+          //     storeName: oldOrderData.store.name,
+          //     customerName: oldOrderData.recipientName,
+          //     orderNumber: oldOrderData.receiptNumber,
+          //     phone: oldOrderData.recipientPhones[0],
+          //     price: oldOrderData.totalCost.toLocaleString(),
+          //     address: `${governorateArabicNames[newOrder.governorate]} - ${newOrder.location.name} - ${newOrder.recipientAddress}`,
+          //     notes: newOrder.notes,
+          //   });
+          // }
         }
 
         if (
