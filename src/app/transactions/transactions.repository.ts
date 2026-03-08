@@ -52,19 +52,19 @@ export class TransactionsRepository {
       filters.loggedInUser?.mainRepository ||
       filters.loggedInUser?.role === "COMPANY_MANAGER";
 
-    const mainBranch = await prisma.branch.findFirst({
-      where: {
-        companyId: filters.companyId,
-        repositories: {
-          some: {
-            mainRepository: true,
-          },
-        },
-      },
-      select: {
-        id: true,
-      },
-    });
+    // const mainBranch = await prisma.branch.findFirst({
+    //   where: {
+    //     companyId: filters.companyId,
+    //     repositories: {
+    //       some: {
+    //         mainRepository: true,
+    //       },
+    //     },
+    //   },
+    //   select: {
+    //     id: true,
+    //   },
+    // });
 
     if (filters.start_date) {
       startDate = new Date(filters.start_date);
@@ -82,8 +82,8 @@ export class TransactionsRepository {
       notReceived,
       forClients,
       paidToClients,
-      forwardedReports,
-      receivedReports,
+      // forwardedReports,
+      // receivedReports,
       toBranch,
       fromBranch,
       insideOrders,
@@ -262,90 +262,90 @@ export class TransactionsRepository {
           ],
         },
       }),
-      prisma.branchReport.findMany({
-        where: {
-          branchId: isMainRepository ? undefined : filters.branchId,
-          report: {
-            companyId: filters.companyId,
-            deleted: false,
-          },
-          type: "forwarded",
-        },
-        include: {
-          orders: {
-            where: {
-              AND: [
-                {deleted: false},
-                {deliveryAgentId: filters.deliveryAgentId},
-                {clientId: filters.clientId},
-                {
-                  createdAt: filters.start_date
-                    ? {
-                        gt: startDate,
-                      }
-                    : undefined,
-                },
-                {
-                  createdAt: filters.end_date
-                    ? {
-                        lt: endDate,
-                      }
-                    : undefined,
-                },
-              ],
-            },
-            select: {
-              governorate: true,
-              deliveryCost: true,
-            },
-          },
-        },
-      }),
-      prisma.branchReport.findMany({
-        where: {
-          branchId: isMainRepository ? undefined : filters.branchId,
-          report: {
-            companyId: filters.companyId,
-            deleted: false,
-          },
-          type: "received",
-        },
-        include: {
-          orders: {
-            where: {
-              AND: [
-                {deleted: false},
-                {deliveryAgentId: filters.deliveryAgentId},
-                {clientId: filters.clientId},
-                {
-                  createdAt: filters.start_date
-                    ? {
-                        gt: startDate,
-                      }
-                    : undefined,
-                },
-                {
-                  createdAt: filters.end_date
-                    ? {
-                        lt: endDate,
-                      }
-                    : undefined,
-                },
-              ],
-            },
-            select: {
-              governorate: true,
-              deliveryAgentNet: true,
-              client: {
-                select: {
-                  branchId: true,
-                },
-              },
-              deliveryCost: true,
-            },
-          },
-        },
-      }),
+      // prisma.branchReport.findMany({
+      //   where: {
+      //     branchId: isMainRepository ? undefined : filters.branchId,
+      //     report: {
+      //       companyId: filters.companyId,
+      //       deleted: false,
+      //     },
+      //     type: "forwarded",
+      //   },
+      //   include: {
+      //     orders: {
+      //       where: {
+      //         AND: [
+      //           {deleted: false},
+      //           {deliveryAgentId: filters.deliveryAgentId},
+      //           {clientId: filters.clientId},
+      //           {
+      //             createdAt: filters.start_date
+      //               ? {
+      //                   gt: startDate,
+      //                 }
+      //               : undefined,
+      //           },
+      //           {
+      //             createdAt: filters.end_date
+      //               ? {
+      //                   lt: endDate,
+      //                 }
+      //               : undefined,
+      //           },
+      //         ],
+      //       },
+      //       select: {
+      //         governorate: true,
+      //         deliveryCost: true,
+      //       },
+      //     },
+      //   },
+      // }),
+      // prisma.branchReport.findMany({
+      //   where: {
+      //     branchId: isMainRepository ? undefined : filters.branchId,
+      //     report: {
+      //       companyId: filters.companyId,
+      //       deleted: false,
+      //     },
+      //     type: "received",
+      //   },
+      //   include: {
+      //     orders: {
+      //       where: {
+      //         AND: [
+      //           {deleted: false},
+      //           {deliveryAgentId: filters.deliveryAgentId},
+      //           {clientId: filters.clientId},
+      //           {
+      //             createdAt: filters.start_date
+      //               ? {
+      //                   gt: startDate,
+      //                 }
+      //               : undefined,
+      //           },
+      //           {
+      //             createdAt: filters.end_date
+      //               ? {
+      //                   lt: endDate,
+      //                 }
+      //               : undefined,
+      //           },
+      //         ],
+      //       },
+      //       select: {
+      //         governorate: true,
+      //         deliveryAgentNet: true,
+      //         client: {
+      //           select: {
+      //             branchId: true,
+      //           },
+      //         },
+      //         deliveryCost: true,
+      //       },
+      //     },
+      //   },
+      // }),
       prisma.report.aggregate({
         _sum: {
           branchNet: true,
@@ -439,82 +439,82 @@ export class TransactionsRepository {
     totalWithdraw += toBranch._sum.branchNet || 0;
     totalWithdraw += paidToClients._sum.clientNet || 0;
 
-    if (filters.type !== "inside") {
-      if (filters.type === "forwardedAll") {
-        forwardedReports.forEach((report) => {
-          report.orders.forEach((order) => {
-            if (order.governorate === "BAGHDAD") {
-              branchProfit += isMainRepository
-                ? report.baghdadDeliveryCost
-                : order.deliveryCost - report.baghdadDeliveryCost;
-            } else {
-              branchProfit += isMainRepository
-                ? report.governoratesDeliveryCost
-                : order.deliveryCost - report.governoratesDeliveryCost;
-            }
-          });
-        });
-      } else if (filters.type === "receivedAll") {
-        receivedReports.forEach((report) => {
-          report.orders.forEach((order) => {
-            if (order.client.branchId === mainBranch?.id && isMainRepository) {
-              if (order.governorate === "BAGHDAD") {
-                branchProfit += order.deliveryCost - report.baghdadDeliveryCost;
-              } else {
-                branchProfit +=
-                  order.deliveryCost - report.governoratesDeliveryCost;
-              }
-            } else {
-              if (order.governorate === "BAGHDAD") {
-                branchProfit += isMainRepository
-                  ? -report.baghdadDeliveryCost
-                  : report.baghdadDeliveryCost - order.deliveryAgentNet;
-              } else {
-                branchProfit += isMainRepository
-                  ? -report.governoratesDeliveryCost
-                  : report.governoratesDeliveryCost - order.deliveryAgentNet;
-              }
-            }
-          });
-        });
-      } else {
-        forwardedReports.forEach((report) => {
-          report.orders.forEach((order) => {
-            if (order.governorate === "BAGHDAD") {
-              branchProfit += isMainRepository
-                ? report.baghdadDeliveryCost
-                : order.deliveryCost - report.baghdadDeliveryCost;
-            } else {
-              branchProfit += isMainRepository
-                ? report.governoratesDeliveryCost
-                : order.deliveryCost - report.governoratesDeliveryCost;
-            }
-          });
-        });
-        receivedReports.forEach((report) => {
-          report.orders.forEach((order) => {
-            if (order.client.branchId === mainBranch?.id && isMainRepository) {
-              if (order.governorate === "BAGHDAD") {
-                branchProfit += order.deliveryCost - report.baghdadDeliveryCost;
-              } else {
-                branchProfit +=
-                  order.deliveryCost - report.governoratesDeliveryCost;
-              }
-            } else {
-              if (order.governorate === "BAGHDAD") {
-                branchProfit += isMainRepository
-                  ? -report.baghdadDeliveryCost
-                  : report.baghdadDeliveryCost - order.deliveryAgentNet;
-              } else {
-                branchProfit += isMainRepository
-                  ? -report.governoratesDeliveryCost
-                  : report.governoratesDeliveryCost - order.deliveryAgentNet;
-              }
-            }
-          });
-        });
-      }
-    }
+    // if (filters.type !== "inside") {
+    //   if (filters.type === "forwardedAll") {
+    //     forwardedReports.forEach((report) => {
+    //       report.orders.forEach((order) => {
+    //         if (order.governorate === "BAGHDAD") {
+    //           branchProfit += isMainRepository
+    //             ? report.baghdadDeliveryCost
+    //             : order.deliveryCost - report.baghdadDeliveryCost;
+    //         } else {
+    //           branchProfit += isMainRepository
+    //             ? report.governoratesDeliveryCost
+    //             : order.deliveryCost - report.governoratesDeliveryCost;
+    //         }
+    //       });
+    //     });
+    //   } else if (filters.type === "receivedAll") {
+    //     receivedReports.forEach((report) => {
+    //       report.orders.forEach((order) => {
+    //         if (order.client.branchId === mainBranch?.id && isMainRepository) {
+    //           if (order.governorate === "BAGHDAD") {
+    //             branchProfit += order.deliveryCost - report.baghdadDeliveryCost;
+    //           } else {
+    //             branchProfit +=
+    //               order.deliveryCost - report.governoratesDeliveryCost;
+    //           }
+    //         } else {
+    //           if (order.governorate === "BAGHDAD") {
+    //             branchProfit += isMainRepository
+    //               ? -report.baghdadDeliveryCost
+    //               : report.baghdadDeliveryCost - order.deliveryAgentNet;
+    //           } else {
+    //             branchProfit += isMainRepository
+    //               ? -report.governoratesDeliveryCost
+    //               : report.governoratesDeliveryCost - order.deliveryAgentNet;
+    //           }
+    //         }
+    //       });
+    //     });
+    //   } else {
+    //     forwardedReports.forEach((report) => {
+    //       report.orders.forEach((order) => {
+    //         if (order.governorate === "BAGHDAD") {
+    //           branchProfit += isMainRepository
+    //             ? report.baghdadDeliveryCost
+    //             : order.deliveryCost - report.baghdadDeliveryCost;
+    //         } else {
+    //           branchProfit += isMainRepository
+    //             ? report.governoratesDeliveryCost
+    //             : order.deliveryCost - report.governoratesDeliveryCost;
+    //         }
+    //       });
+    //     });
+    //     receivedReports.forEach((report) => {
+    //       report.orders.forEach((order) => {
+    //         if (order.client.branchId === mainBranch?.id && isMainRepository) {
+    //           if (order.governorate === "BAGHDAD") {
+    //             branchProfit += order.deliveryCost - report.baghdadDeliveryCost;
+    //           } else {
+    //             branchProfit +=
+    //               order.deliveryCost - report.governoratesDeliveryCost;
+    //           }
+    //         } else {
+    //           if (order.governorate === "BAGHDAD") {
+    //             branchProfit += isMainRepository
+    //               ? -report.baghdadDeliveryCost
+    //               : report.baghdadDeliveryCost - order.deliveryAgentNet;
+    //           } else {
+    //             branchProfit += isMainRepository
+    //               ? -report.governoratesDeliveryCost
+    //               : report.governoratesDeliveryCost - order.deliveryAgentNet;
+    //           }
+    //         }
+    //       });
+    //     });
+    //   }
+    // }
 
     if (filters.type === "inside" || !filters.type) {
       branchProfit += insideOrders._sum.companyNet || 0;
