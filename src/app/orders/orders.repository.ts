@@ -1256,24 +1256,19 @@ export class OrdersRepository {
                         },
                       }
                     : {},
-                  {
-                    OR:
-                      data.filters.branchReport === "false"
-                        ? [
-                            {
-                              branchReport: {
-                                none: {
-                                  branchId: data.filters.branchID,
-                                  type: data.filters.orderType,
-                                  report: {
-                                    deleted: false,
-                                  },
-                                },
-                              },
+                  data.filters.branchReport === "false"
+                    ? {
+                        branchReport: {
+                          none: {
+                            // branchId: data.filters.branchID,
+                            type: data.filters.orderType,
+                            report: {
+                              deleted: false,
                             },
-                          ]
-                        : undefined,
-                  },
+                          },
+                        },
+                      }
+                    : {},
                 ],
               },
               // Filter by deliveryAgentReport
