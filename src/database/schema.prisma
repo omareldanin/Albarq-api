@@ -220,6 +220,10 @@ model Branch {
   repositories        Repository[]
   transctions         Transaction[]
 
+  parentBranchId Int?
+  parentBranch   Branch?  @relation("BranchHierarchy", fields: [parentBranchId], references: [id])
+  childBranches  Branch[] @relation("BranchHierarchy")
+
   @@unique([name, companyId])
   @@index([companyId])
   @@index([governorate])

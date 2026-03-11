@@ -8,12 +8,17 @@ const branchesRepository = new BranchesRepository();
 
 export class BranchesController {
   createBranch = catchAsync(async (req, res) => {
-    const branchData = BranchCreateSchema.parse(req.body);
-    const companyID = +res.locals.user.companyID;
+    let branchData = BranchCreateSchema.parse(req.body);
+
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    if (!loggedInUser.mainRepository) {
+      branchData.parentBranchId = loggedInUser.branchId;
+    }
 
     const createdBranch = await branchesRepository.createBranch(
-      companyID,
-      branchData
+      loggedInUser.companyID!!,
+      branchData,
     );
 
     res.status(200).json({
@@ -29,6 +34,7 @@ export class BranchesController {
     let companyID: number | undefined;
     let branchID: number | undefined;
     let getAll: boolean | undefined;
+    // let getChilds: boolean | undefined;
 
     if (Object.keys(AdminRole).includes(loggedInUser.role)) {
       companyID = req.query.company_id ? +req.query.company_id : undefined;

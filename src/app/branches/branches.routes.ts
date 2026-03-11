@@ -1,20 +1,20 @@
-import { Router } from "express";
+import {Router} from "express";
 
 // import { Role } from "@prisma/client";
 // import { isAutherized } from "../../middlewares/isAutherized.middleware";
-import { AdminRole, ClientRole, EmployeeRole } from "@prisma/client";
-import { isAutherized } from "../../middlewares/isAutherized";
-import { isLoggedIn } from "../../middlewares/isLoggedIn";
-import { BranchesController } from "./branches.controller";
+import {AdminRole, ClientRole, EmployeeRole} from "@prisma/client";
+import {isAutherized} from "../../middlewares/isAutherized";
+import {isLoggedIn} from "../../middlewares/isLoggedIn";
+import {BranchesController} from "./branches.controller";
 
 const router = Router();
 const branchesController = new BranchesController();
 
 router.route("/branches").post(
-    isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER]),
-    branchesController.createBranch
-    /*
+  isLoggedIn,
+  isAutherized([EmployeeRole.COMPANY_MANAGER, EmployeeRole.BRANCH_MANAGER]),
+  branchesController.createBranch,
+  /*
         #swagger.tags = ['Branches Routes']
 
         #swagger.requestBody = {
@@ -32,17 +32,17 @@ router.route("/branches").post(
 );
 
 router.route("/branches").get(
-    isLoggedIn,
-    isAutherized([
-        EmployeeRole.COMPANY_MANAGER,
-        AdminRole.ADMIN,
-        AdminRole.ADMIN_ASSISTANT,
-        //TODO: Remove later
-        ...Object.values(EmployeeRole),
-        ...Object.values(ClientRole)
-    ]),
-    branchesController.getAllBranches
-    /*
+  isLoggedIn,
+  isAutherized([
+    EmployeeRole.COMPANY_MANAGER,
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+    //TODO: Remove later
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  branchesController.getAllBranches,
+  /*
         #swagger.tags = ['Branches Routes']
 
         #swagger.parameters['page'] = {
@@ -60,19 +60,27 @@ router.route("/branches").get(
 );
 
 router.route("/branches/:branchID").get(
-    isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
-    branchesController.getBranch
-    /*
+  isLoggedIn,
+  isAutherized([
+    EmployeeRole.COMPANY_MANAGER,
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+  ]),
+  branchesController.getBranch,
+  /*
         #swagger.tags = ['Branches Routes']
     */
 );
 
 router.route("/branches/:branchID").patch(
-    isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
-    branchesController.updateBranch
-    /*
+  isLoggedIn,
+  isAutherized([
+    EmployeeRole.COMPANY_MANAGER,
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+  ]),
+  branchesController.updateBranch,
+  /*
         #swagger.tags = ['Branches Routes']
 
         #swagger.requestBody = {
@@ -90,10 +98,14 @@ router.route("/branches/:branchID").patch(
 );
 
 router.route("/branches/:branchID").delete(
-    isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
-    branchesController.deleteBranch
-    /*
+  isLoggedIn,
+  isAutherized([
+    EmployeeRole.COMPANY_MANAGER,
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+  ]),
+  branchesController.deleteBranch,
+  /*
         #swagger.tags = ['Branches Routes']
     */
 );

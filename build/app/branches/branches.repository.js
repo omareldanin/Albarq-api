@@ -26,6 +26,13 @@ class BranchesRepository {
             data: {
                 name: data.name,
                 governorate: data.governorate,
+                parentBranch: data.parentBranchId
+                    ? {
+                        connect: {
+                            id: data.parentBranchId,
+                        },
+                    }
+                    : undefined,
                 company: {
                     connect: {
                         id: companyID,
@@ -39,30 +46,55 @@ class BranchesRepository {
     async getAllBranchesPaginated(filters) {
         const cacheKey = this.branchesCacheKey(filters);
         // 1️⃣ Redis first (FAST PATH)
-        const cached = await redis_1.redis.get(cacheKey);
-        if (cached) {
-            return JSON.parse(cached);
-        }
+        // const cached = await redis.get(cacheKey);
+        // if (cached) {
+        //   return JSON.parse(cached) as {
+        //     branches: any[];
+        //     pagesCount: number;
+        //   };
+        // }
         // -----------------------------
         // ORIGINAL LOGIC (unchanged)
         // -----------------------------
         const where = {
-            id: filters.getAll
-                ? undefined
-                : filters.branchID
-                    ? filters.branchID
-                    : undefined,
-            company: {
-                id: filters.companyID,
-            },
-            governorate: filters.governorate,
-            locations: filters.locationID
-                ? {
-                    some: {
-                        id: filters.locationID,
-                    },
-                }
-                : undefined,
+            OR: [
+                {
+                    AND: [
+                        {
+                            id: filters.getAll
+                                ? undefined
+                                : filters.branchID
+                                    ? filters.branchID
+                                    : undefined,
+                        },
+                        {
+                            company: {
+                                id: filters.companyID,
+                            },
+                        },
+                        { governorate: filters.governorate },
+                        {
+                            locations: filters.locationID
+                                ? {
+                                    some: {
+                                        id: filters.locationID,
+                                    },
+                                }
+                                : undefined,
+                        },
+                    ],
+                },
+                // {
+                //   id: filters.getAll
+                //     ? undefined
+                //     : filters.branchID
+                //       ? filters.branchID
+                //       : undefined,
+                // },
+                {
+                    parentBranchId: filters.branchID ? filters.branchID : undefined,
+                },
+            ],
         };
         let result;
         // -----------------------------
@@ -74,6 +106,9 @@ class BranchesRepository {
                 select: {
                     id: true,
                     name: true,
+                },
+                orderBy: {
+                    id: "desc",
                 },
             }, {
                 page: 1,
@@ -103,8 +138,8 @@ class BranchesRepository {
                 pagesCount: paginatedBranches.pagesCount,
             };
         }
-        // 3️⃣ Save to Redis (TTL = 1 day)
-        const ONE_DAY = 60 * 60 * 24;
+        // 3️⃣ Save to Redis (TTL = 2 day)
+        const ONE_DAY = 60 * 60 * 48;
         await redis_1.redis.set(cacheKey, JSON.stringify(result), "EX", ONE_DAY);
         return result;
     }
@@ -129,6 +164,13 @@ class BranchesRepository {
             data: {
                 name: data.branchData.name,
                 governorate: data.branchData.governorate,
+                parentBranch: data.branchData.parentBranchId
+                    ? {
+                        connect: {
+                            id: data.branchData.parentBranchId,
+                        },
+                    }
+                    : undefined,
             },
             select: branches_responses_1.branchSelect,
         });

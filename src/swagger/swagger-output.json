@@ -6231,6 +6231,11 @@
             ],
             "minLength": 3
           },
+          "parentBranchId": {
+            "type": [
+              "number"
+            ]
+          },
           "governorate": {
             "type": [
               "string"
@@ -6273,6 +6278,11 @@
               "string"
             ],
             "minLength": 3
+          },
+          "parentBranchId": {
+            "type": [
+              "number"
+            ]
           },
           "governorate": {
             "type": [

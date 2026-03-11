@@ -4,6 +4,12 @@ export const branchSelect = {
   id: true,
   name: true,
   governorate: true,
+  parentBranch: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
   company: {
     select: {
       id: true,

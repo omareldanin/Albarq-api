@@ -1,4 +1,4 @@
-import type {Governorate} from "@prisma/client";
+import type {Governorate, Prisma} from "@prisma/client";
 import {prisma} from "../../database/db";
 import type {BranchCreateType, BranchUpdateType} from "./branches.dto";
 import {branchSelect} from "./branches.responses";
@@ -37,6 +37,13 @@ export class BranchesRepository {
       data: {
         name: data.name,
         governorate: data.governorate,
+        parentBranch: data.parentBranchId
+          ? {
+              connect: {
+                id: data.parentBranchId,
+              },
+            }
+          : undefined,
         company: {
           connect: {
             id: companyID,
@@ -61,35 +68,57 @@ export class BranchesRepository {
     const cacheKey = this.branchesCacheKey(filters);
 
     // 1️⃣ Redis first (FAST PATH)
-    const cached = await redis.get(cacheKey);
-    if (cached) {
-      return JSON.parse(cached) as {
-        branches: any[];
-        pagesCount: number;
-      };
-    }
+    // const cached = await redis.get(cacheKey);
+    // if (cached) {
+    //   return JSON.parse(cached) as {
+    //     branches: any[];
+    //     pagesCount: number;
+    //   };
+    // }
 
     // -----------------------------
     // ORIGINAL LOGIC (unchanged)
     // -----------------------------
     const where = {
-      id: filters.getAll
-        ? undefined
-        : filters.branchID
-          ? filters.branchID
-          : undefined,
-      company: {
-        id: filters.companyID,
-      },
-      governorate: filters.governorate,
-      locations: filters.locationID
-        ? {
-            some: {
-              id: filters.locationID,
+      OR: [
+        {
+          AND: [
+            {
+              id: filters.getAll
+                ? undefined
+                : filters.branchID
+                  ? filters.branchID
+                  : undefined,
             },
-          }
-        : undefined,
-    };
+            {
+              company: {
+                id: filters.companyID,
+              },
+            },
+            {governorate: filters.governorate},
+            {
+              locations: filters.locationID
+                ? {
+                    some: {
+                      id: filters.locationID,
+                    },
+                  }
+                : undefined,
+            },
+          ],
+        },
+        // {
+        //   id: filters.getAll
+        //     ? undefined
+        //     : filters.branchID
+        //       ? filters.branchID
+        //       : undefined,
+        // },
+        {
+          parentBranchId: filters.branchID ? filters.branchID : undefined,
+        },
+      ],
+    } satisfies Prisma.BranchWhereInput;
 
     let result;
 
@@ -103,6 +132,9 @@ export class BranchesRepository {
           select: {
             id: true,
             name: true,
+          },
+          orderBy: {
+            id: "desc",
           },
         },
         {
@@ -139,8 +171,8 @@ export class BranchesRepository {
       };
     }
 
-    // 3️⃣ Save to Redis (TTL = 1 day)
-    const ONE_DAY = 60 * 60 * 24;
+    // 3️⃣ Save to Redis (TTL = 2 day)
+    const ONE_DAY = 60 * 60 * 48;
 
     await redis.set(cacheKey, JSON.stringify(result), "EX", ONE_DAY);
 
@@ -170,6 +202,13 @@ export class BranchesRepository {
       data: {
         name: data.branchData.name,
         governorate: data.branchData.governorate,
+        parentBranch: data.branchData.parentBranchId
+          ? {
+              connect: {
+                id: data.branchData.parentBranchId,
+              },
+            }
+          : undefined,
       },
       select: branchSelect,
     });

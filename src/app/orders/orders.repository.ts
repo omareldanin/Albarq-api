@@ -3692,7 +3692,16 @@ export class OrdersRepository {
 
     await redis.set(cacheKey, JSON.stringify(result), "EX", 120);
 
-    return result;
+    return {
+      ...result,
+      todayOrdersStatistics:
+        data.filters.orderType && data.loggedInUser.role === "BRANCH_MANAGER"
+          ? {
+              totalCost: 0,
+              count: 0,
+            }
+          : result.todayOrdersStatistics,
+    };
   }
 
   async getOrderTimeline(data: {
