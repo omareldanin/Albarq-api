@@ -4,6 +4,7 @@ exports.BranchesRepository = void 0;
 const db_1 = require("../../database/db");
 const branches_responses_1 = require("./branches.responses");
 const redis_1 = require("../../lib/redis");
+const AppError_1 = require("../../lib/AppError");
 class BranchesRepository {
     branchesCacheKey(filters) {
         return `branches:${JSON.stringify({
@@ -157,6 +158,16 @@ class BranchesRepository {
         if (keys.length) {
             await redis_1.redis.del(keys);
         }
+        const oldBranch = await db_1.prisma.branch.findUnique({
+            where: {
+                id: data.branchID,
+            },
+        });
+        if (data.loggedInUser.role !== "COMPANY_MANAGER") {
+            if (oldBranch?.parentBranchId !== data.loggedInUser.branchId) {
+                throw new AppError_1.AppError("ليس مصرح لك التعديل علي هذا الفرع", 500);
+            }
+        }
         const branch = await db_1.prisma.branch.update({
             where: {
                 id: data.branchID,
@@ -180,6 +191,16 @@ class BranchesRepository {
         const keys = await redis_1.redis.keys("branches:*");
         if (keys.length) {
             await redis_1.redis.del(keys);
+        }
+        const oldBranch = await db_1.prisma.branch.findUnique({
+            where: {
+                id: data.branchID,
+            },
+        });
+        if (data.loggedInUser.role !== "COMPANY_MANAGER") {
+            if (oldBranch?.parentBranchId !== data.loggedInUser.branchId) {
+                throw new AppError_1.AppError("ليس مصرح لك حذف هذا الفرع", 500);
+            }
         }
         await db_1.prisma.branch.delete({
             where: {

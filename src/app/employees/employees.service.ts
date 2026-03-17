@@ -58,7 +58,7 @@ export class EmployeesService {
 
     const hashedPassword = bcrypt.hashSync(
       data.employeeData.password + (env.PASSWORD_SALT as string),
-      12
+      12,
     );
 
     if (data.employeeData.repositoryID) {
@@ -106,7 +106,13 @@ export class EmployeesService {
         branchManagerID: data.loggedInUser.id,
       });
       branchID = branch?.id;
-      roles = data.filters.roles || ["DELIVERY_AGENT", "RECEIVING_AGENT"];
+      roles = data.filters.roles || [
+        "DELIVERY_AGENT",
+        "RECEIVING_AGENT",
+        "REPOSITORIY_EMPLOYEE",
+        "ACCOUNTANT",
+        "DATA_ENTRY",
+      ];
     } else {
       branchID = data.filters.branchID;
     }
@@ -190,7 +196,7 @@ export class EmployeesService {
     if (data.employeeData.password) {
       const hashedPassword = bcrypt.hashSync(
         data.employeeData.password + (env.PASSWORD_SALT as string),
-        12
+        12,
       );
       data.employeeData.password = hashedPassword;
     }

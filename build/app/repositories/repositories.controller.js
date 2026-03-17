@@ -46,6 +46,12 @@ class RepositoriesController {
         const minified = req.query.minified
             ? req.query.minified === "true"
             : undefined;
+        const forBranch = req.query.forBranch
+            ? req.query.forBranch === "true"
+            : undefined;
+        const getChildBranchs = req.query.getChildBranchs
+            ? req.query.getChildBranchs === "true"
+            : undefined;
         // Branch manager can only see repositories of his branch
         let branchID = req.query.branchId ? +req.query.branchId : undefined;
         let mainRepository;
@@ -68,7 +74,8 @@ class RepositoriesController {
         }
         if (loggedInUser.role === "BRANCH_MANAGER" &&
             !loggedInUser.mainRepository &&
-            !branchID) {
+            !branchID &&
+            !forBranch) {
             mainRepository = true;
         }
         let size = req.query.size ? +req.query.size : 10;
@@ -85,11 +92,12 @@ class RepositoriesController {
             page: page,
             size: size,
             companyID: companyID,
-            branchID: branchID,
+            branchID: forBranch || getChildBranchs ? loggedInUser.branchId : branchID,
             minified: minified,
             mainRepository,
             type: type,
             inquiryBranchesIDs,
+            getChildBranchs,
         });
         res.status(200).json({
             status: "success",

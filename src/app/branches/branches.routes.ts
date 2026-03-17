@@ -72,30 +72,18 @@ router.route("/branches/:branchID").get(
     */
 );
 
-router.route("/branches/:branchID").patch(
-  isLoggedIn,
-  isAutherized([
-    EmployeeRole.COMPANY_MANAGER,
-    AdminRole.ADMIN,
-    AdminRole.ADMIN_ASSISTANT,
-  ]),
-  branchesController.updateBranch,
-  /*
-        #swagger.tags = ['Branches Routes']
-
-        #swagger.requestBody = {
-            required: true,
-            content: {
-                "application/json": {
-                    schema: { $ref: "#/components/schemas/BranchUpdateSchema" },
-                    examples: {
-                        BranchUpdateExample: { $ref: "#/components/examples/BranchUpdateExample" }
-                    }
-                }
-            }
-        }
-    */
-);
+router
+  .route("/branches/:branchID")
+  .patch(
+    isLoggedIn,
+    isAutherized([
+      EmployeeRole.COMPANY_MANAGER,
+      AdminRole.ADMIN,
+      AdminRole.ADMIN_ASSISTANT,
+      EmployeeRole.BRANCH_MANAGER,
+    ]),
+    branchesController.updateBranch,
+  );
 
 router.route("/branches/:branchID").delete(
   isLoggedIn,
@@ -103,6 +91,7 @@ router.route("/branches/:branchID").delete(
     EmployeeRole.COMPANY_MANAGER,
     AdminRole.ADMIN,
     AdminRole.ADMIN_ASSISTANT,
+    EmployeeRole.BRANCH_MANAGER,
   ]),
   branchesController.deleteBranch,
   /*

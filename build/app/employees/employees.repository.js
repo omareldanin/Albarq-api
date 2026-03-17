@@ -244,11 +244,6 @@ class EmployeesRepository {
                         : undefined,
                 },
                 {
-                    branch: data.filters.branchID
-                        ? { id: data.filters.branchID }
-                        : undefined,
-                },
-                {
                     Client: { id: data.filters.clientId },
                 },
                 {
@@ -265,6 +260,20 @@ class EmployeesRepository {
                 { deleted: data.filters.deleted },
                 {
                     company: { id: data.filters.companyID },
+                },
+                {
+                    OR: [
+                        {
+                            branch: data.filters.branchID
+                                ? { id: data.filters.branchID }
+                                : undefined,
+                        },
+                        {
+                            branch: data.filters.branchID
+                                ? { parentBranchId: data.filters.branchID }
+                                : undefined,
+                        },
+                    ],
                 },
             ],
         };

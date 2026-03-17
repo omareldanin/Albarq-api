@@ -27,18 +27,53 @@ class RepositoriesRepository {
     }
     async getAllRepositoriesPaginated(filters) {
         const where = {
-            branch: filters.inquiryBranchesIDs?.length
-                ? {
-                    id: { in: filters.inquiryBranchesIDs },
-                }
-                : filters.branchID
-                    ? { id: filters.branchID }
-                    : undefined,
-            company: {
-                id: filters.companyID,
-            },
-            mainRepository: filters.mainRepository,
-            type: filters.type ? filters.type : undefined,
+            OR: [
+                {
+                    AND: [
+                        {
+                            company: {
+                                id: filters.companyID,
+                            },
+                        },
+                        {
+                            OR: [
+                                {
+                                    branch: filters.inquiryBranchesIDs?.length
+                                        ? {
+                                            id: { in: filters.inquiryBranchesIDs },
+                                        }
+                                        : filters.branchID && !filters.getChildBranchs
+                                            ? { id: filters.branchID }
+                                            : undefined,
+                                },
+                                {
+                                    branch: filters.branchID && !filters.getChildBranchs
+                                        ? {
+                                            parentBranchId: filters.branchID,
+                                        }
+                                        : undefined,
+                                },
+                            ],
+                        },
+                        {
+                            mainRepository: filters.mainRepository,
+                        },
+                        {
+                            type: filters.type ? filters.type : undefined,
+                        },
+                    ],
+                },
+                filters.getChildBranchs && filters.type
+                    ? {
+                        type: filters.type ? filters.type : undefined,
+                        branch: filters.branchID
+                            ? {
+                                parentBranchId: filters.branchID,
+                            }
+                            : undefined,
+                    }
+                    : {},
+            ],
         };
         if (filters.minified === true) {
             const paginatedRepositories = await db_1.prisma.repository.findManyPaginated({

@@ -89,9 +89,11 @@ class BranchesController {
     updateBranch = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const branchID = +req.params.branchID;
         const branchData = branches_dto_1.BranchUpdateSchema.parse(req.body);
+        const loggedInUser = res.locals.user;
         const branch = await branchesRepository.updateBranch({
             branchID: branchID,
             branchData: branchData,
+            loggedInUser,
         });
         res.status(200).json({
             status: "success",
@@ -100,8 +102,10 @@ class BranchesController {
     });
     deleteBranch = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const branchID = +req.params.branchID;
+        const loggedInUser = res.locals.user;
         await branchesRepository.deleteBranch({
             branchID: branchID,
+            loggedInUser,
         });
         res.status(200).json({
             status: "success",

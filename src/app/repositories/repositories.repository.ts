@@ -35,23 +35,61 @@ export class RepositoriesRepository {
     companyID?: number;
     branchID?: number;
     minified?: boolean;
+    forBranch?: boolean;
+    getChildBranchs?: boolean;
     mainRepository?: boolean;
     type: string;
     inquiryBranchesIDs: number[] | undefined;
   }) {
     const where = {
-      branch: filters.inquiryBranchesIDs?.length
-        ? {
-            id: {in: filters.inquiryBranchesIDs},
-          }
-        : filters.branchID
-        ? {id: filters.branchID}
-        : undefined,
-      company: {
-        id: filters.companyID,
-      },
-      mainRepository: filters.mainRepository,
-      type: filters.type ? (filters.type as RepositoryType) : undefined,
+      OR: [
+        {
+          AND: [
+            {
+              company: {
+                id: filters.companyID,
+              },
+            },
+            {
+              OR: [
+                {
+                  branch: filters.inquiryBranchesIDs?.length
+                    ? {
+                        id: {in: filters.inquiryBranchesIDs},
+                      }
+                    : filters.branchID && !filters.getChildBranchs
+                      ? {id: filters.branchID}
+                      : undefined,
+                },
+                {
+                  branch:
+                    filters.branchID && !filters.getChildBranchs
+                      ? {
+                          parentBranchId: filters.branchID,
+                        }
+                      : undefined,
+                },
+              ],
+            },
+            {
+              mainRepository: filters.mainRepository,
+            },
+            {
+              type: filters.type ? (filters.type as RepositoryType) : undefined,
+            },
+          ],
+        },
+        filters.getChildBranchs && filters.type
+          ? {
+              type: filters.type ? (filters.type as RepositoryType) : undefined,
+              branch: filters.branchID
+                ? {
+                    parentBranchId: filters.branchID,
+                  }
+                : undefined,
+            }
+          : {},
+      ],
     } satisfies Prisma.RepositoryWhereInput;
 
     if (filters.minified === true) {
@@ -69,7 +107,7 @@ export class RepositoriesRepository {
         {
           page: filters.page,
           size: filters.size,
-        }
+        },
       );
       return {
         repositories: paginatedRepositories.data,
@@ -88,7 +126,7 @@ export class RepositoriesRepository {
       {
         page: filters.page,
         size: filters.size,
-      }
+      },
     );
 
     return {

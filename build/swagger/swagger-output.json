@@ -869,9 +869,6 @@
                 }
             },
             "patch": {
-                "tags": [
-                    "Branches Routes"
-                ],
                 "description": "",
                 "parameters": [
                     {
@@ -893,21 +890,6 @@
                 "responses": {
                     "default": {
                         "description": ""
-                    }
-                },
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/BranchUpdateSchema"
-                            },
-                            "examples": {
-                                "BranchUpdateExample": {
-                                    "$ref": "#/components/examples/BranchUpdateExample"
-                                }
-                            }
-                        }
                     }
                 }
             },

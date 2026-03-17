@@ -283,11 +283,7 @@ export class EmployeesRepository {
               ? false
               : undefined,
         },
-        {
-          branch: data.filters.branchID
-            ? {id: data.filters.branchID}
-            : undefined,
-        },
+
         {
           Client: {id: data.filters.clientId},
         },
@@ -307,6 +303,20 @@ export class EmployeesRepository {
         {deleted: data.filters.deleted},
         {
           company: {id: data.filters.companyID},
+        },
+        {
+          OR: [
+            {
+              branch: data.filters.branchID
+                ? {id: data.filters.branchID}
+                : undefined,
+            },
+            {
+              branch: data.filters.branchID
+                ? {parentBranchId: data.filters.branchID}
+                : undefined,
+            },
+          ],
         },
       ],
     } satisfies Prisma.EmployeeWhereInput;

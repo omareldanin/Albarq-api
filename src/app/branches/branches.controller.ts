@@ -117,9 +117,12 @@ export class BranchesController {
 
     const branchData = BranchUpdateSchema.parse(req.body);
 
+    const loggedInUser = res.locals.user as loggedInUserType;
+
     const branch = await branchesRepository.updateBranch({
       branchID: branchID,
       branchData: branchData,
+      loggedInUser,
     });
 
     res.status(200).json({
@@ -130,9 +133,11 @@ export class BranchesController {
 
   deleteBranch = catchAsync(async (req, res) => {
     const branchID = +req.params.branchID;
+    const loggedInUser = res.locals.user as loggedInUserType;
 
     await branchesRepository.deleteBranch({
       branchID: branchID,
+      loggedInUser,
     });
 
     res.status(200).json({

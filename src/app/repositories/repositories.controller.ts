@@ -31,12 +31,12 @@ export class RepositoriesController {
         repositoryData.type === "EXPORT"
           ? "لقد تم انشاء مخزن صادر لهذا الفرع مسبقا"
           : "لقد تم انشاء مخزن راجع لهذا الفرع مسبقا",
-        404
+        404,
       );
     }
     const createdRepository = await repositoriesRepository.createRepository(
       companyID,
-      repositoryData
+      repositoryData,
     );
 
     res.status(200).json({
@@ -61,6 +61,13 @@ export class RepositoriesController {
       ? req.query.minified === "true"
       : undefined;
 
+    const forBranch = req.query.forBranch
+      ? req.query.forBranch === "true"
+      : undefined;
+
+    const getChildBranchs = req.query.getChildBranchs
+      ? req.query.getChildBranchs === "true"
+      : undefined;
     // Branch manager can only see repositories of his branch
     let branchID = req.query.branchId ? +req.query.branchId : undefined;
     let mainRepository: boolean | undefined;
@@ -82,10 +89,12 @@ export class RepositoriesController {
         mainRepository = true;
       }
     }
+
     if (
       loggedInUser.role === "BRANCH_MANAGER" &&
       !loggedInUser.mainRepository &&
-      !branchID
+      !branchID &&
+      !forBranch
     ) {
       mainRepository = true;
     }
@@ -109,11 +118,13 @@ export class RepositoriesController {
         page: page,
         size: size,
         companyID: companyID,
-        branchID: branchID,
+        branchID:
+          forBranch || getChildBranchs ? loggedInUser.branchId : branchID,
         minified: minified,
         mainRepository,
         type: type as RepositoryType,
         inquiryBranchesIDs,
+        getChildBranchs,
       });
 
     res.status(200).json({

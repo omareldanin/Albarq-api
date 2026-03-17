@@ -112,7 +112,13 @@ class EmployeesService {
                 branchManagerID: data.loggedInUser.id,
             });
             branchID = branch?.id;
-            roles = data.filters.roles || ["DELIVERY_AGENT", "RECEIVING_AGENT"];
+            roles = data.filters.roles || [
+                "DELIVERY_AGENT",
+                "RECEIVING_AGENT",
+                "REPOSITORIY_EMPLOYEE",
+                "ACCOUNTANT",
+                "DATA_ENTRY",
+            ];
         }
         else {
             branchID = data.filters.branchID;
