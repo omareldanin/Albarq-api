@@ -3664,6 +3664,7 @@ export class OrdersRepository {
     });
 
     await redis.set(cacheKey, JSON.stringify(result), "EX", 120);
+    console.log(data.filters);
 
     return {
       ...result,
