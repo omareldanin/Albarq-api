@@ -3236,7 +3236,6 @@ class OrdersRepository {
             allOrdersStatisticsWithoutClientReport,
         });
         await redis_1.redis.set(cacheKey, JSON.stringify(result), "EX", 120);
-        console.log(data.filters);
         return {
             ...result,
             todayOrdersStatistics: !data.filters.orderType && data.loggedInUser.role === "BRANCH_MANAGER"
