@@ -3668,7 +3668,7 @@ export class OrdersRepository {
     return {
       ...result,
       todayOrdersStatistics:
-        data.filters.orderType && data.loggedInUser.role === "BRANCH_MANAGER"
+        !data.filters.orderType && data.loggedInUser.role === "BRANCH_MANAGER"
           ? {
               totalCost: 0,
               count: 0,
