@@ -195,6 +195,16 @@ class OrdersService {
                 },
             },
         });
+        const checkOrders = await db_1.prisma.order.findMany({
+            where: {
+                receiptNumber: data.receiptNumber,
+                storeId: data.storeId,
+                status: "READY_TO_SEND",
+            },
+        });
+        if (checkOrders.length > 0) {
+            throw new AppError_1.AppError("تم اضافة الطلب مسبقا", 404);
+        }
         if (!client) {
             throw new AppError_1.AppError("خطأ في ايجاد العميل", 404);
         }
