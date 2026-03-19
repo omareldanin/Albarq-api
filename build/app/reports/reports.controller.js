@@ -36,6 +36,7 @@ class ReportController {
             confirmed: req.query.confirmed,
             delivered: req.query.delivered,
             orderType: req.query.orderType,
+            forChilds: req.query.forChilds,
         });
         const pdf = await reportsService.createReport({
             loggedInUser,

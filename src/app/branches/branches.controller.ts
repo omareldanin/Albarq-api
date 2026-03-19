@@ -34,7 +34,11 @@ export class BranchesController {
     let companyID: number | undefined;
     let branchID: number | undefined;
     let getAll: boolean | undefined;
+    let getChilds: boolean | undefined;
     // let getChilds: boolean | undefined;
+    const myBranchs = req.query.myBranchs
+      ? req.query.myBranchs === "true"
+      : undefined;
 
     if (Object.keys(AdminRole).includes(loggedInUser.role)) {
       companyID = req.query.company_id ? +req.query.company_id : undefined;
@@ -44,11 +48,20 @@ export class BranchesController {
     if (req.query.getAll === "true") {
       getAll = true;
     }
+
     if (
       loggedInUser.role !== "COMPANY_MANAGER" &&
       !loggedInUser.mainRepository
     ) {
       branchID = loggedInUser.branchId;
+    }
+
+    if (
+      loggedInUser.role !== "COMPANY_MANAGER" &&
+      !loggedInUser.mainRepository &&
+      myBranchs
+    ) {
+      getChilds = true;
     }
 
     const minified = req.query.minified
@@ -88,6 +101,7 @@ export class BranchesController {
         locationID: locationID,
         minified: minified,
         getAll,
+        getChilds,
       });
 
     // Response

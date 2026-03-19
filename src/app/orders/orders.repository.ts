@@ -385,6 +385,83 @@ export class OrdersRepository {
     return orderReform(createdOrder);
   }
 
+  async createPaperOrder(data: {
+    companyID: number;
+    clientID: number;
+    loggedInUser: loggedInUserType;
+    orderData: {
+      receiptNumber: string;
+      governorate?: Governorate;
+      branchID?: number;
+      locationID: number;
+      storeID: number;
+    };
+  }) {
+    let randomId = await this.generateUniqueOrderId();
+
+    const createdOrder = await prisma.order.create({
+      data: {
+        id: randomId,
+        totalCost: 0,
+        deliveryCost: 0,
+        quantity: 0,
+        weight: 0,
+        recipientName: "افتراضي",
+        recipientPhones: [],
+        receiptNumber: data.orderData.receiptNumber,
+        recipientAddress: "",
+        clientNotes: "",
+        details: "",
+        deliveryType: "NORMAL",
+        printed: true,
+        governorate: data.orderData.governorate || "BAGHDAD",
+        branch: data.orderData.branchID
+          ? {
+              connect: {
+                id: data.orderData.branchID,
+              },
+            }
+          : undefined,
+        location: {
+          connect: {
+            id: data.orderData.locationID,
+          },
+        },
+        store: {
+          connect: {
+            id: data.orderData.storeID,
+          },
+        },
+        company: {
+          connect: {
+            id: data.companyID,
+          },
+        },
+        client: {
+          connect: {
+            id: data.clientID,
+          },
+        },
+        confirmed: false,
+        receivedAt: undefined,
+        status: "READY_TO_SEND",
+        secondaryStatus: "WITH_CLIENT",
+        deliveryAgent: undefined,
+        orderProducts: undefined,
+      },
+      select: orderSelect,
+    });
+
+    await prisma.chat.create({
+      data: {
+        orderId: createdOrder.id,
+        numberOfMessages: 0,
+      },
+    });
+
+    return orderReform(createdOrder);
+  }
+
   async getAllOrdersPaginated(data: {
     filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
     loggedInUser: loggedInUserType | undefined;
@@ -1261,6 +1338,9 @@ export class OrdersRepository {
                         branchReport: {
                           none: {
                             // branchId: data.filters.branchID,
+                            forChildBranches: data.filters.forChilds
+                              ? true
+                              : false,
                             type: data.filters.orderType,
                             report: {
                               deleted: false,
@@ -1494,12 +1574,6 @@ export class OrdersRepository {
                           ]
                         : data.filters.orderType === "received"
                           ? [
-                              // {
-                              //   receivedBranchId:
-                              //     data.filters.orderType === "received"
-                              //       ? data.filters.branchID
-                              //       : undefined,
-                              // },
                               {
                                 client: {
                                   branchId: {not: data.filters.branchID},
@@ -1521,7 +1595,6 @@ export class OrdersRepository {
                               governorate: "BAGHDAD",
                             },
                           },
-
                           {
                             receivedBranchId: null,
                           },
@@ -1643,54 +1716,6 @@ export class OrdersRepository {
                             ]
                           : [],
               },
-              // {
-              //   forwardedBranchId:
-              //     data.filters.orderType === "forwardedAll" &&
-              //     (data.loggedInUser?.role === "COMPANY_MANAGER" ||
-              //       data.loggedInUser?.mainRepository) &&
-              //     data.filters.branchID
-              //       ? data.filters.branchID
-              //       : data.filters.orderType === "forwardedAll" &&
-              //           (data.loggedInUser?.role === "COMPANY_MANAGER" ||
-              //             data.loggedInUser?.mainRepository)
-              //         ? {
-              //             not: null,
-              //           }
-              //         : data.filters.orderType === "forwardedAll"
-              //           ? data.loggedInUser?.branchId
-              //           : data.filters.orderType === "receivedAll" &&
-              //               data.filters.branchID &&
-              //               data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-              //               !data.loggedInUser?.mainCompany
-              //             ? data.filters.branchID
-              //             : data.filters.orderType === "inside"
-              //               ? {equals: null}
-              //               : undefined,
-              // },
-              // {
-              //   receivedBranchId:
-              //     data.filters.orderType === "receivedAll" &&
-              //     (data.loggedInUser?.role === "COMPANY_MANAGER" ||
-              //       data.loggedInUser?.mainRepository) &&
-              //     data.filters.branchID
-              //       ? data.filters.branchID
-              //       : data.filters.orderType === "receivedAll" &&
-              //           (data.loggedInUser?.role === "COMPANY_MANAGER" ||
-              //             data.loggedInUser?.mainRepository)
-              //         ? {
-              //             not: null,
-              //           }
-              //         : data.filters.orderType === "forwardedAll" &&
-              //             data.filters.branchID &&
-              //             data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-              //             !data.loggedInUser?.mainCompany
-              //           ? data.filters.branchID
-              //           : data.filters.orderType === "receivedAll"
-              //             ? data.loggedInUser?.branchId
-              //             : data.filters.orderType === "inside"
-              //               ? {equals: null}
-              //               : undefined,
-              // },
             ],
           } satisfies Prisma.OrderWhereInput);
 
@@ -2812,38 +2837,14 @@ export class OrdersRepository {
     return updatedOrders;
   }
 
-  async updateOrder(data: {
-    orderID: string;
-    orderData: OrderUpdateType;
-    loggedInUser: loggedInUserType;
-  }) {
-    const orderData = await prisma.order.findUnique({
-      where: {
-        id: data.orderID,
-      },
-      select: {
-        deliveryCost: true,
-        oldDeliveryCost: true,
-        clientNet: true,
-        companyNet: true,
-        deliveryAgentNet: true,
-        clientId: true,
-        paidAmount: true,
-        weight: true,
-        receivedAt: true,
-        deliveryAgent: {
-          select: {
-            deliveryCost: true,
-          },
-        },
-        company: {
-          select: {
-            id: true,
-          },
-        },
-      },
-    });
-
+  async updateOrder(
+    data: {
+      orderID: string;
+      orderData: OrderUpdateType;
+      loggedInUser: loggedInUserType;
+    },
+    orderData: any,
+  ) {
     // Calculate order costs
     let deliveryAgentCost = orderData?.deliveryAgentNet;
     let companyNet = orderData?.companyNet;
@@ -2858,39 +2859,39 @@ export class OrdersRepository {
 
     if (data.orderData.governorate) {
       newDeliveryCost = await this.getDeliverCost(
-        orderData?.clientId!!,
+        orderData?.client.id!!,
         data.orderData.governorate,
       );
     }
 
-    if (weight) {
-      const companyAdditionalPrices = await prisma.company.findUnique({
-        where: {
-          id: orderData?.company?.id,
-        },
-        select: {
-          additionalPriceForEveryKilogram: true,
-        },
-      });
+    // if (weight) {
+    //   const companyAdditionalPrices = await prisma.company.findUnique({
+    //     where: {
+    //       id: orderData?.company?.id,
+    //     },
+    //     select: {
+    //       additionalPriceForEveryKilogram: true,
+    //     },
+    //   });
 
-      const oldWeight = orderData?.weight as number;
+    //   const oldWeight = orderData?.weight as number;
 
-      if (weight > oldWeight) {
-        newDeliveryCost = (orderData?.deliveryCost || 0) as number;
-        newDeliveryCost +=
-          companyAdditionalPrices?.additionalPriceForEveryKilogram
-            ? (weight - oldWeight) *
-              companyAdditionalPrices.additionalPriceForEveryKilogram
-            : 0;
-      } else if (weight < oldWeight) {
-        newDeliveryCost = (orderData?.deliveryCost || 0) as number;
-        newDeliveryCost -=
-          companyAdditionalPrices?.additionalPriceForEveryKilogram
-            ? (oldWeight - weight) *
-              companyAdditionalPrices.additionalPriceForEveryKilogram
-            : 0;
-      }
-    }
+    //   if (weight > oldWeight) {
+    //     newDeliveryCost = (orderData?.deliveryCost || 0) as number;
+    //     newDeliveryCost +=
+    //       companyAdditionalPrices?.additionalPriceForEveryKilogram
+    //         ? (weight - oldWeight) *
+    //           companyAdditionalPrices.additionalPriceForEveryKilogram
+    //         : 0;
+    //   } else if (weight < oldWeight) {
+    //     newDeliveryCost = (orderData?.deliveryCost || 0) as number;
+    //     newDeliveryCost -=
+    //       companyAdditionalPrices?.additionalPriceForEveryKilogram
+    //         ? (oldWeight - weight) *
+    //           companyAdditionalPrices.additionalPriceForEveryKilogram
+    //         : 0;
+    //   }
+    // }
 
     if (data.orderData.paidAmount) {
       // calculate client net
@@ -2898,29 +2899,6 @@ export class OrdersRepository {
         ? newDeliveryCost
         : ((orderData?.deliveryCost || 0) as number);
       clientNet = data.orderData.paidAmount - deliveryCost;
-
-      // calculate company net
-      if (data.orderData.deliveryAgentID) {
-        const orderDeliveryAgent = await prisma.employee.findUnique({
-          where: {
-            id: data.orderData.deliveryAgentID,
-          },
-          select: {
-            deliveryCost: true,
-          },
-        });
-        deliveryAgentCost = orderDeliveryAgent?.deliveryCost
-          ? Number(orderDeliveryAgent?.deliveryCost)
-          : 0;
-        deliveryAgentCost += weight * 250;
-        companyNet = data.orderData.paidAmount - deliveryAgentCost;
-      } else if (orderData?.deliveryAgent) {
-        deliveryAgentCost = orderData?.deliveryAgent?.deliveryCost
-          ? Number(orderData?.deliveryAgent?.deliveryCost)
-          : 0;
-        deliveryAgentCost += weight * 250;
-        companyNet = data.orderData.paidAmount - deliveryAgentCost;
-      }
     } else {
       const deliveryCost = newDeliveryCost
         ? newDeliveryCost

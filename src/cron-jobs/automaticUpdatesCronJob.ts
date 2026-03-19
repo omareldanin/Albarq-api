@@ -4,8 +4,6 @@ import {Logger} from "../lib/logger";
 
 export const automaticUpdatesCronJob = cron.schedule(
   "*/10 * * * *",
-  // every minute
-  // "* * * * *",
   async () => {
     Logger.info("Running automatic updates");
     await automaticUpdatesTask();

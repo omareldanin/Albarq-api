@@ -85,13 +85,6 @@ class BranchesRepository {
                         },
                     ],
                 },
-                // {
-                //   id: filters.getAll
-                //     ? undefined
-                //     : filters.branchID
-                //       ? filters.branchID
-                //       : undefined,
-                // },
                 {
                     parentBranchId: filters.branchID ? filters.branchID : undefined,
                 },
@@ -103,7 +96,11 @@ class BranchesRepository {
         // -----------------------------
         if (filters.minified === true) {
             const paginatedBranches = await db_1.prisma.branch.findManyPaginated({
-                where,
+                where: filters.getChilds
+                    ? {
+                        parentBranchId: filters.branchID,
+                    }
+                    : where,
                 select: {
                     id: true,
                     name: true,

@@ -171,6 +171,47 @@ class OrdersService {
         }
         return createdOrder;
     };
+    createPaperOrder = async (data) => {
+        const client = await db_1.prisma.client.findUnique({
+            where: {
+                id: data.loggedInUser.id,
+            },
+            select: {
+                id: true,
+                branch: {
+                    select: {
+                        id: true,
+                        governorate: true,
+                        locations: {
+                            take: 1,
+                            orderBy: {
+                                id: "asc",
+                            },
+                            select: {
+                                id: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        if (!client) {
+            throw new AppError_1.AppError("خطأ في ايجاد العميل", 404);
+        }
+        const createdOrder = await ordersRepository.createPaperOrder({
+            companyID: data.loggedInUser.companyID,
+            clientID: client?.id,
+            loggedInUser: data.loggedInUser,
+            orderData: {
+                storeID: data.storeId,
+                branchID: client.branch?.id,
+                receiptNumber: data.receiptNumber,
+                governorate: client.branch?.governorate || "BAGHDAD",
+                locationID: client.branch?.locations[0].id,
+            },
+        });
+        return createdOrder;
+    };
     getAllOrders = async (data) => {
         const clientID = data.loggedInUser.role === "CLIENT"
             ? data.loggedInUser.id
@@ -403,14 +444,6 @@ class OrdersService {
             data.loggedInUser.role !== "COMPANY_MANAGER") {
             throw new AppError_1.AppError("ليس لديك صلاحية تعديل المبلغ المدفوع", 403);
         }
-        // if (
-        //   !data.loggedInUser.permissions?.includes("CHANGE_ORDER_STATUS") &&
-        //   data.orderData.status &&
-        //   data.loggedInUser.role !== "DELIVERY_AGENT" &&
-        //   data.loggedInUser.role !== "REPOSITORIY_EMPLOYEE"
-        // ) {
-        //   throw new AppError("ليس لديك صلاحية تعديل حاله طلب", 403);
-        // }
         let oldOrderData = await ordersRepository.getOrderById({
             orderID: data.params.orderID,
         });
@@ -459,18 +492,7 @@ class OrdersService {
         }
         if (oldOrderData?.status === "RETURNED" &&
             data.orderData.secondaryStatus === "IN_REPOSITORY") {
-            // data.orderData.deliveryAgentID = null;
             data.orderData.oldDeliveryAgentId = oldOrderData?.deliveryAgent?.id;
-        }
-        // If the order is being forwarded to the company, change branch to the branch connected to the order location
-        if (data.orderData.forwardedCompanyID) {
-            const branch = await branchesRepository.getBranchByLocation({
-                locationID: oldOrderData?.location.id,
-            });
-            if (!branch) {
-                throw new AppError_1.AppError("لا يوجد فرع مرتبط بالموقع", 500);
-            }
-            data.orderData.branchID = branch.id;
         }
         if (data.orderData.secondaryStatus === oldOrderData.secondaryStatus &&
             data.orderData.status === oldOrderData.status &&
@@ -507,26 +529,14 @@ class OrdersService {
                 throw new AppError_1.AppError("لا يوجد فرع مرتبط بالموقع", 500);
             }
             data.orderData.branchID = branch.id;
-            // data.orderData.receivedBranchId = data.orderData.branchID;
         }
-        if (data.orderData.status &&
+        if ((data.orderData.status &&
             oldOrderData.status === "DELIVERED" &&
-            !data.loggedInUser.permissions.includes("CHANGE_CLOSED_ORDER_STATUS")) {
+            !data.loggedInUser.permissions.includes("CHANGE_CLOSED_ORDER_STATUS")) ||
+            (data.orderData.status &&
+                oldOrderData.clientReport.find((r) => r.secondaryType === "RETURNED"))) {
             throw new AppError_1.AppError("لا يمكنك تغيير حاله طلبيه مغلقه", 500);
         }
-        // if (
-        //   data.orderData.status === "WITH_DELIVERY_AGENT" &&
-        //   oldOrderData.client.branchId !== data.loggedInUser.branchId &&
-        //   oldOrderData.receivedBranchId !== data.loggedInUser.branchId
-        // ) {
-        //   data.orderData.receivedBranchId = data.loggedInUser.branchId;
-        //   data.orderData.branchID = data.loggedInUser.branchId;
-        // } else if (
-        //   data.orderData.status === "WITH_DELIVERY_AGENT" &&
-        //   oldOrderData.branch?.id !== data.loggedInUser.branchId
-        // ) {
-        //   data.orderData.branchID = data.loggedInUser.branchId;
-        // }
         if (data.orderData.branchID) {
             if (oldOrderData.client.branchId !== data.orderData.branchID) {
                 data.orderData.forwardedBranchId = oldOrderData.client.branchId;
@@ -545,7 +555,7 @@ class OrdersService {
             orderID: oldOrderData.id,
             loggedInUser: data.loggedInUser,
             orderData: data.orderData,
-        });
+        }, oldOrderData);
         if (!newOrder) {
             throw new AppError_1.AppError("فشل تحديث الطلب", 500);
         }

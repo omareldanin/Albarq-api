@@ -1513,6 +1513,25 @@
         }
       }
     },
+    "/api/v1/orders/createPaperOrder": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "429": {
+            "description": "Too Many Requests"
+          }
+        }
+      }
+    },
     "/api/v1/orders/create": {
       "post": {
         "description": "",
@@ -7567,6 +7586,11 @@
                   "governoratesDeliveryCost": {
                     "type": [
                       "number"
+                    ]
+                  },
+                  "forChilds": {
+                    "type": [
+                      "boolean"
                     ]
                   }
                 },

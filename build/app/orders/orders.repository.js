@@ -296,6 +296,68 @@ class OrdersRepository {
         });
         return (0, orders_responses_1.orderReform)(createdOrder);
     }
+    async createPaperOrder(data) {
+        let randomId = await this.generateUniqueOrderId();
+        const createdOrder = await db_1.prisma.order.create({
+            data: {
+                id: randomId,
+                totalCost: 0,
+                deliveryCost: 0,
+                quantity: 0,
+                weight: 0,
+                recipientName: "افتراضي",
+                recipientPhones: [],
+                receiptNumber: data.orderData.receiptNumber,
+                recipientAddress: "",
+                clientNotes: "",
+                details: "",
+                deliveryType: "NORMAL",
+                printed: true,
+                governorate: data.orderData.governorate || "BAGHDAD",
+                branch: data.orderData.branchID
+                    ? {
+                        connect: {
+                            id: data.orderData.branchID,
+                        },
+                    }
+                    : undefined,
+                location: {
+                    connect: {
+                        id: data.orderData.locationID,
+                    },
+                },
+                store: {
+                    connect: {
+                        id: data.orderData.storeID,
+                    },
+                },
+                company: {
+                    connect: {
+                        id: data.companyID,
+                    },
+                },
+                client: {
+                    connect: {
+                        id: data.clientID,
+                    },
+                },
+                confirmed: false,
+                receivedAt: undefined,
+                status: "READY_TO_SEND",
+                secondaryStatus: "WITH_CLIENT",
+                deliveryAgent: undefined,
+                orderProducts: undefined,
+            },
+            select: orders_responses_1.orderSelect,
+        });
+        await db_1.prisma.chat.create({
+            data: {
+                orderId: createdOrder.id,
+                numberOfMessages: 0,
+            },
+        });
+        return (0, orders_responses_1.orderReform)(createdOrder);
+    }
     async getAllOrdersPaginated(data) {
         let startDate = new Date();
         let endDate = new Date();
@@ -1119,6 +1181,9 @@ class OrdersRepository {
                                     branchReport: {
                                         none: {
                                             // branchId: data.filters.branchID,
+                                            forChildBranches: data.filters.forChilds
+                                                ? true
+                                                : false,
                                             type: data.filters.orderType,
                                             report: {
                                                 deleted: false,
@@ -1341,12 +1406,6 @@ class OrdersRepository {
                                     ]
                                     : data.filters.orderType === "received"
                                         ? [
-                                            // {
-                                            //   receivedBranchId:
-                                            //     data.filters.orderType === "received"
-                                            //       ? data.filters.branchID
-                                            //       : undefined,
-                                            // },
                                             {
                                                 client: {
                                                     branchId: { not: data.filters.branchID },
@@ -1487,54 +1546,6 @@ class OrdersRepository {
                                         ]
                                         : [],
                     },
-                    // {
-                    //   forwardedBranchId:
-                    //     data.filters.orderType === "forwardedAll" &&
-                    //     (data.loggedInUser?.role === "COMPANY_MANAGER" ||
-                    //       data.loggedInUser?.mainRepository) &&
-                    //     data.filters.branchID
-                    //       ? data.filters.branchID
-                    //       : data.filters.orderType === "forwardedAll" &&
-                    //           (data.loggedInUser?.role === "COMPANY_MANAGER" ||
-                    //             data.loggedInUser?.mainRepository)
-                    //         ? {
-                    //             not: null,
-                    //           }
-                    //         : data.filters.orderType === "forwardedAll"
-                    //           ? data.loggedInUser?.branchId
-                    //           : data.filters.orderType === "receivedAll" &&
-                    //               data.filters.branchID &&
-                    //               data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-                    //               !data.loggedInUser?.mainCompany
-                    //             ? data.filters.branchID
-                    //             : data.filters.orderType === "inside"
-                    //               ? {equals: null}
-                    //               : undefined,
-                    // },
-                    // {
-                    //   receivedBranchId:
-                    //     data.filters.orderType === "receivedAll" &&
-                    //     (data.loggedInUser?.role === "COMPANY_MANAGER" ||
-                    //       data.loggedInUser?.mainRepository) &&
-                    //     data.filters.branchID
-                    //       ? data.filters.branchID
-                    //       : data.filters.orderType === "receivedAll" &&
-                    //           (data.loggedInUser?.role === "COMPANY_MANAGER" ||
-                    //             data.loggedInUser?.mainRepository)
-                    //         ? {
-                    //             not: null,
-                    //           }
-                    //         : data.filters.orderType === "forwardedAll" &&
-                    //             data.filters.branchID &&
-                    //             data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-                    //             !data.loggedInUser?.mainCompany
-                    //           ? data.filters.branchID
-                    //           : data.filters.orderType === "receivedAll"
-                    //             ? data.loggedInUser?.branchId
-                    //             : data.filters.orderType === "inside"
-                    //               ? {equals: null}
-                    //               : undefined,
-                    // },
                 ],
             };
         if (data.filters.minified === true || data.filters.forMobile === true) {
@@ -2529,33 +2540,7 @@ class OrdersRepository {
         }
         return updatedOrders;
     }
-    async updateOrder(data) {
-        const orderData = await db_1.prisma.order.findUnique({
-            where: {
-                id: data.orderID,
-            },
-            select: {
-                deliveryCost: true,
-                oldDeliveryCost: true,
-                clientNet: true,
-                companyNet: true,
-                deliveryAgentNet: true,
-                clientId: true,
-                paidAmount: true,
-                weight: true,
-                receivedAt: true,
-                deliveryAgent: {
-                    select: {
-                        deliveryCost: true,
-                    },
-                },
-                company: {
-                    select: {
-                        id: true,
-                    },
-                },
-            },
-        });
+    async updateOrder(data, orderData) {
         // Calculate order costs
         let deliveryAgentCost = orderData?.deliveryAgentNet;
         let companyNet = orderData?.companyNet;
@@ -2568,64 +2553,40 @@ class OrdersRepository {
             : orderData?.oldDeliveryCost;
         let weight = data.orderData.weight || orderData?.weight || 0;
         if (data.orderData.governorate) {
-            newDeliveryCost = await this.getDeliverCost(orderData?.clientId, data.orderData.governorate);
+            newDeliveryCost = await this.getDeliverCost(orderData?.client.id, data.orderData.governorate);
         }
-        if (weight) {
-            const companyAdditionalPrices = await db_1.prisma.company.findUnique({
-                where: {
-                    id: orderData?.company?.id,
-                },
-                select: {
-                    additionalPriceForEveryKilogram: true,
-                },
-            });
-            const oldWeight = orderData?.weight;
-            if (weight > oldWeight) {
-                newDeliveryCost = (orderData?.deliveryCost || 0);
-                newDeliveryCost +=
-                    companyAdditionalPrices?.additionalPriceForEveryKilogram
-                        ? (weight - oldWeight) *
-                            companyAdditionalPrices.additionalPriceForEveryKilogram
-                        : 0;
-            }
-            else if (weight < oldWeight) {
-                newDeliveryCost = (orderData?.deliveryCost || 0);
-                newDeliveryCost -=
-                    companyAdditionalPrices?.additionalPriceForEveryKilogram
-                        ? (oldWeight - weight) *
-                            companyAdditionalPrices.additionalPriceForEveryKilogram
-                        : 0;
-            }
-        }
+        // if (weight) {
+        //   const companyAdditionalPrices = await prisma.company.findUnique({
+        //     where: {
+        //       id: orderData?.company?.id,
+        //     },
+        //     select: {
+        //       additionalPriceForEveryKilogram: true,
+        //     },
+        //   });
+        //   const oldWeight = orderData?.weight as number;
+        //   if (weight > oldWeight) {
+        //     newDeliveryCost = (orderData?.deliveryCost || 0) as number;
+        //     newDeliveryCost +=
+        //       companyAdditionalPrices?.additionalPriceForEveryKilogram
+        //         ? (weight - oldWeight) *
+        //           companyAdditionalPrices.additionalPriceForEveryKilogram
+        //         : 0;
+        //   } else if (weight < oldWeight) {
+        //     newDeliveryCost = (orderData?.deliveryCost || 0) as number;
+        //     newDeliveryCost -=
+        //       companyAdditionalPrices?.additionalPriceForEveryKilogram
+        //         ? (oldWeight - weight) *
+        //           companyAdditionalPrices.additionalPriceForEveryKilogram
+        //         : 0;
+        //   }
+        // }
         if (data.orderData.paidAmount) {
             // calculate client net
             const deliveryCost = newDeliveryCost
                 ? newDeliveryCost
                 : (orderData?.deliveryCost || 0);
             clientNet = data.orderData.paidAmount - deliveryCost;
-            // calculate company net
-            if (data.orderData.deliveryAgentID) {
-                const orderDeliveryAgent = await db_1.prisma.employee.findUnique({
-                    where: {
-                        id: data.orderData.deliveryAgentID,
-                    },
-                    select: {
-                        deliveryCost: true,
-                    },
-                });
-                deliveryAgentCost = orderDeliveryAgent?.deliveryCost
-                    ? Number(orderDeliveryAgent?.deliveryCost)
-                    : 0;
-                deliveryAgentCost += weight * 250;
-                companyNet = data.orderData.paidAmount - deliveryAgentCost;
-            }
-            else if (orderData?.deliveryAgent) {
-                deliveryAgentCost = orderData?.deliveryAgent?.deliveryCost
-                    ? Number(orderData?.deliveryAgent?.deliveryCost)
-                    : 0;
-                deliveryAgentCost += weight * 250;
-                companyNet = data.orderData.paidAmount - deliveryAgentCost;
-            }
         }
         else {
             const deliveryCost = newDeliveryCost

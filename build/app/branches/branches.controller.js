@@ -25,7 +25,11 @@ class BranchesController {
         let companyID;
         let branchID;
         let getAll;
+        let getChilds;
         // let getChilds: boolean | undefined;
+        const myBranchs = req.query.myBranchs
+            ? req.query.myBranchs === "true"
+            : undefined;
         if (Object.keys(client_1.AdminRole).includes(loggedInUser.role)) {
             companyID = req.query.company_id ? +req.query.company_id : undefined;
         }
@@ -38,6 +42,11 @@ class BranchesController {
         if (loggedInUser.role !== "COMPANY_MANAGER" &&
             !loggedInUser.mainRepository) {
             branchID = loggedInUser.branchId;
+        }
+        if (loggedInUser.role !== "COMPANY_MANAGER" &&
+            !loggedInUser.mainRepository &&
+            myBranchs) {
+            getChilds = true;
         }
         const minified = req.query.minified
             ? req.query.minified === "true"
@@ -67,6 +76,7 @@ class BranchesController {
             locationID: locationID,
             minified: minified,
             getAll,
+            getChilds,
         });
         // Response
         res.status(200).json({

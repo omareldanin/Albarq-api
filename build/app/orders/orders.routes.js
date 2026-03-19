@@ -27,6 +27,15 @@ router
     client_1.EmployeeRole.CLIENT_ASSISTANT,
 ], [client_1.Permission.ADD_ORDER]), preventDuplicateRequests_1.preventDuplicateRequests, ordersController.createOrder);
 router
+    .route("/orders/createPaperOrder")
+    .post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
+    client_1.EmployeeRole.COMPANY_MANAGER,
+    client_1.EmployeeRole.DATA_ENTRY,
+    client_1.EmployeeRole.ACCOUNTANT,
+    client_1.ClientRole.CLIENT,
+    client_1.EmployeeRole.CLIENT_ASSISTANT,
+], [client_1.Permission.ADD_ORDER]), preventDuplicateRequests_1.preventDuplicateRequests, ordersController.createPaperOrderOrder);
+router
     .route("/orders/create")
     .post(isApiClient_1.isApiClient, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,

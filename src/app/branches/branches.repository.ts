@@ -65,6 +65,7 @@ export class BranchesRepository {
     locationID?: number;
     minified?: boolean;
     getAll?: boolean;
+    getChilds?: boolean;
     branchID?: number;
   }) {
     const cacheKey = this.branchesCacheKey(filters);
@@ -109,13 +110,6 @@ export class BranchesRepository {
             },
           ],
         },
-        // {
-        //   id: filters.getAll
-        //     ? undefined
-        //     : filters.branchID
-        //       ? filters.branchID
-        //       : undefined,
-        // },
         {
           parentBranchId: filters.branchID ? filters.branchID : undefined,
         },
@@ -130,7 +124,11 @@ export class BranchesRepository {
     if (filters.minified === true) {
       const paginatedBranches = await prisma.branch.findManyPaginated(
         {
-          where,
+          where: filters.getChilds
+            ? {
+                parentBranchId: filters.branchID,
+              }
+            : where,
           select: {
             id: true,
             name: true,

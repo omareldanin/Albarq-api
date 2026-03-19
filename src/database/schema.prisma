@@ -692,6 +692,7 @@ model BranchReport {
   branchId                 Int
   baghdadDeliveryCost      Float   @default(0)
   governoratesDeliveryCost Float   @default(0)
+  forChildBranches         Boolean @default(false)
   type                     String  @default("forwarded")
   branch                   Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
   report                   Report  @relation(fields: [id], references: [id], onDelete: Cascade)

@@ -66,6 +66,21 @@ export class OrdersController {
     });
   });
 
+  createPaperOrderOrder = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    const createdOrder = await ordersService.createPaperOrder({
+      loggedInUser: loggedInUser,
+      receiptNumber: req.body.receipt_number,
+      storeId: req.body.storeId,
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: createdOrder,
+    });
+  });
+
   getAllOrders = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
 
@@ -108,6 +123,7 @@ export class OrdersController {
       deleted: req.query.deleted,
       orderID: req.query.order_id,
       minified: req.query.minified,
+      forChilds: req.query.forChilds,
       forMobile: req.query.for_mobile,
       forwarded: req.query.forwarded,
       forwardedByID: req.query.forwarded_by_id,
@@ -202,6 +218,7 @@ export class OrdersController {
       getIncoming,
       getOutComing,
       branchId,
+      forChilds,
     } = req.query;
 
     const loggedInUser = res.locals.user as loggedInUserType;
@@ -318,6 +335,20 @@ export class OrdersController {
           governorate: governorate ? (governorate as Governorate) : undefined,
           forwardedBranchId: getIncoming && branchId ? +branchId : undefined,
           branchId: resolvedBranchId,
+          repository:
+            forChilds === "true"
+              ? {
+                  branch: {
+                    parentBranchId: loggedInUser.branchId,
+                  },
+                }
+              : forChilds === "false"
+                ? {
+                    branch: {
+                      parentBranchId: {equals: null},
+                    },
+                  }
+                : undefined,
         },
         orderBy: {
           updatedAt: "desc",
@@ -632,21 +663,38 @@ export class OrdersController {
           orderData.branchID = repository.branchId;
           orderData.deliveryAgentID = null;
         } else {
-          const mainRepository = await prisma.repository.findFirst({
-            where: {
-              mainRepository: true,
-              company: loggedInUser.companyID
-                ? {
-                    id: loggedInUser.companyID,
-                  }
-                : undefined,
-              type: "EXPORT",
-            },
-            select: {
-              id: true,
-            },
-          });
-          orderData.repositoryID = mainRepository?.id;
+          if (orderData.repositoryID) {
+            const repository = await prisma.repository.findFirst({
+              where: {
+                id: orderData.repositoryID,
+              },
+              select: {
+                branchId: true,
+                branch: {
+                  select: {
+                    governorate: true,
+                  },
+                },
+              },
+            });
+            orderData.branchID = repository?.branchId;
+          } else {
+            const mainRepository = await prisma.repository.findFirst({
+              where: {
+                mainRepository: true,
+                company: loggedInUser.companyID
+                  ? {
+                      id: loggedInUser.companyID,
+                    }
+                  : undefined,
+                type: "EXPORT",
+              },
+              select: {
+                id: true,
+              },
+            });
+            orderData.repositoryID = mainRepository?.id;
+          }
           orderData.forwardedRepo = exportRepo?.id;
           orderData.forwardedBranchId = user.branch?.id;
           orderData.deliveryAgentID = null;

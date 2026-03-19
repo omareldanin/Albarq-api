@@ -410,6 +410,11 @@ export const OrdersFiltersSchema = z.object({
   inquiryGovernorates: z.array(z.nativeEnum(Governorate)).optional(),
   inquiryStatuses: z.array(z.nativeEnum(OrderStatus)).optional(),
   orderType: z.string().optional(),
+  forChilds: z.preprocess((val) => {
+    if (val === "true") return true;
+    if (val === "false") return false;
+    return val;
+  }, z.boolean().optional()),
 });
 
 export type OrdersFiltersType = z.infer<typeof OrdersFiltersSchema>;
@@ -457,6 +462,11 @@ export const OrdersStatisticsFiltersSchema = z.object({
     return val;
   }, z.boolean().optional()),
   deliveryAgentReport: z.preprocess((val) => {
+    if (val === "true") return true;
+    if (val === "false") return false;
+    return val;
+  }, z.boolean().optional()),
+  forChilds: z.preprocess((val) => {
     if (val === "true") return true;
     if (val === "false") return false;
     return val;

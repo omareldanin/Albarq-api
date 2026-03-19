@@ -354,6 +354,13 @@ exports.OrdersFiltersSchema = zod_1.z.object({
     inquiryGovernorates: zod_1.z.array(zod_1.z.nativeEnum(client_1.Governorate)).optional(),
     inquiryStatuses: zod_1.z.array(zod_1.z.nativeEnum(client_1.OrderStatus)).optional(),
     orderType: zod_1.z.string().optional(),
+    forChilds: zod_1.z.preprocess((val) => {
+        if (val === "true")
+            return true;
+        if (val === "false")
+            return false;
+        return val;
+    }, zod_1.z.boolean().optional()),
 });
 exports.OrdersFiltersOpenAPISchema = (0, zod_openapi_1.generateSchema)(exports.OrdersFiltersSchema);
 // export const OrdersFiltersMock = generateMock(OrdersFiltersSchema);
@@ -398,6 +405,13 @@ exports.OrdersStatisticsFiltersSchema = zod_1.z.object({
         return val;
     }, zod_1.z.boolean().optional()),
     deliveryAgentReport: zod_1.z.preprocess((val) => {
+        if (val === "true")
+            return true;
+        if (val === "false")
+            return false;
+        return val;
+    }, zod_1.z.boolean().optional()),
+    forChilds: zod_1.z.preprocess((val) => {
         if (val === "true")
             return true;
         if (val === "false")

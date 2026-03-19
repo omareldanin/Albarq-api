@@ -214,6 +214,55 @@ export class OrdersService {
     return createdOrder;
   };
 
+  createPaperOrder = async (data: {
+    loggedInUser: loggedInUserType;
+    receiptNumber: string;
+    storeId: number;
+  }) => {
+    const client = await prisma.client.findUnique({
+      where: {
+        id: data.loggedInUser.id,
+      },
+      select: {
+        id: true,
+        branch: {
+          select: {
+            id: true,
+            governorate: true,
+            locations: {
+              take: 1,
+              orderBy: {
+                id: "asc",
+              },
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!client) {
+      throw new AppError("خطأ في ايجاد العميل", 404);
+    }
+
+    const createdOrder = await ordersRepository.createPaperOrder({
+      companyID: data.loggedInUser.companyID as number,
+      clientID: client?.id,
+      loggedInUser: data.loggedInUser,
+      orderData: {
+        storeID: data.storeId,
+        branchID: client.branch?.id,
+        receiptNumber: data.receiptNumber,
+        governorate: client.branch?.governorate || "BAGHDAD",
+        locationID: client.branch?.locations[0].id!!,
+      },
+    });
+
+    return createdOrder;
+  };
+
   getAllOrders = async (data: {
     filters: OrdersFiltersType;
     loggedInUser: loggedInUserType;
@@ -511,15 +560,6 @@ export class OrdersService {
       throw new AppError("ليس لديك صلاحية تعديل المبلغ المدفوع", 403);
     }
 
-    // if (
-    //   !data.loggedInUser.permissions?.includes("CHANGE_ORDER_STATUS") &&
-    //   data.orderData.status &&
-    //   data.loggedInUser.role !== "DELIVERY_AGENT" &&
-    //   data.loggedInUser.role !== "REPOSITORIY_EMPLOYEE"
-    // ) {
-    //   throw new AppError("ليس لديك صلاحية تعديل حاله طلب", 403);
-    // }
-
     let oldOrderData = await ordersRepository.getOrderById({
       orderID: data.params.orderID,
     });
@@ -584,19 +624,7 @@ export class OrdersService {
       oldOrderData?.status === "RETURNED" &&
       data.orderData.secondaryStatus === "IN_REPOSITORY"
     ) {
-      // data.orderData.deliveryAgentID = null;
       data.orderData.oldDeliveryAgentId = oldOrderData?.deliveryAgent?.id;
-    }
-
-    // If the order is being forwarded to the company, change branch to the branch connected to the order location
-    if (data.orderData.forwardedCompanyID) {
-      const branch = await branchesRepository.getBranchByLocation({
-        locationID: oldOrderData?.location.id as number,
-      });
-      if (!branch) {
-        throw new AppError("لا يوجد فرع مرتبط بالموقع", 500);
-      }
-      data.orderData.branchID = branch.id;
     }
 
     if (
@@ -648,30 +676,19 @@ export class OrdersService {
         throw new AppError("لا يوجد فرع مرتبط بالموقع", 500);
       }
       data.orderData.branchID = branch.id;
-      // data.orderData.receivedBranchId = data.orderData.branchID;
     }
 
     if (
-      data.orderData.status &&
-      oldOrderData.status === "DELIVERED" &&
-      !data.loggedInUser.permissions.includes("CHANGE_CLOSED_ORDER_STATUS")
+      (data.orderData.status &&
+        oldOrderData.status === "DELIVERED" &&
+        !data.loggedInUser.permissions.includes(
+          "CHANGE_CLOSED_ORDER_STATUS",
+        )) ||
+      (data.orderData.status &&
+        oldOrderData.clientReport.find((r) => r.secondaryType === "RETURNED"))
     ) {
       throw new AppError("لا يمكنك تغيير حاله طلبيه مغلقه", 500);
     }
-
-    // if (
-    //   data.orderData.status === "WITH_DELIVERY_AGENT" &&
-    //   oldOrderData.client.branchId !== data.loggedInUser.branchId &&
-    //   oldOrderData.receivedBranchId !== data.loggedInUser.branchId
-    // ) {
-    //   data.orderData.receivedBranchId = data.loggedInUser.branchId;
-    //   data.orderData.branchID = data.loggedInUser.branchId;
-    // } else if (
-    //   data.orderData.status === "WITH_DELIVERY_AGENT" &&
-    //   oldOrderData.branch?.id !== data.loggedInUser.branchId
-    // ) {
-    //   data.orderData.branchID = data.loggedInUser.branchId;
-    // }
 
     if (data.orderData.branchID) {
       if (oldOrderData.client.branchId !== data.orderData.branchID) {
@@ -688,11 +705,14 @@ export class OrdersService {
       data.orderData.secondaryStatus = "WITH_AGENT";
     }
 
-    const newOrder = await ordersRepository.updateOrder({
-      orderID: oldOrderData.id,
-      loggedInUser: data.loggedInUser,
-      orderData: data.orderData,
-    });
+    const newOrder = await ordersRepository.updateOrder(
+      {
+        orderID: oldOrderData.id,
+        loggedInUser: data.loggedInUser,
+        orderData: data.orderData,
+      },
+      oldOrderData,
+    );
 
     if (!newOrder) {
       throw new AppError("فشل تحديث الطلب", 500);

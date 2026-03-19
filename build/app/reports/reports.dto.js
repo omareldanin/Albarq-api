@@ -38,6 +38,7 @@ exports.ReportCreateSchema = zod_1.z
         branchID: zod_1.z.coerce.number(),
         baghdadDeliveryCost: zod_1.z.coerce.number().optional(),
         governoratesDeliveryCost: zod_1.z.coerce.number().optional(),
+        forChilds: zod_1.z.boolean().optional(),
     }),
     zod_1.z.object({
         type: zod_1.z.literal(client_1.ReportType.CLIENT),
@@ -142,7 +143,7 @@ exports.ReportCreateOrdersFiltersSchema = zod_1.z
             client_1.OrderStatus.REPLACED,
         ]))),
         branchID: zod_1.z.coerce.number(),
-        branchReport: zod_1.z.string().optional(), // Should be mandatory if ordersIDs is "*"
+        branchReport: zod_1.z.string().optional(),
     })),
     zod_1.z
         .object({
@@ -162,7 +163,7 @@ exports.ReportCreateOrdersFiltersSchema = zod_1.z
             client_1.OrderStatus.RETURNED,
         ]))),
         storeID: zod_1.z.coerce.number(),
-        clientReport: zod_1.z.string().optional(), // Should be mandatory if ordersIDs is "*"
+        clientReport: zod_1.z.string().optional(),
     })),
     zod_1.z
         .object({
@@ -192,6 +193,13 @@ exports.ReportCreateOrdersFiltersSchema = zod_1.z
         return val;
     }, zod_1.z.boolean()),
     delivered: zod_1.z.preprocess((val) => {
+        if (val === "true")
+            return true;
+        if (val === "false")
+            return false;
+        return val;
+    }, zod_1.z.boolean().optional()),
+    forChilds: zod_1.z.preprocess((val) => {
         if (val === "true")
             return true;
         if (val === "false")

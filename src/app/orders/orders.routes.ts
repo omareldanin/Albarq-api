@@ -34,6 +34,24 @@ router
   );
 
 router
+  .route("/orders/createPaperOrder")
+  .post(
+    isLoggedIn,
+    isAutherized(
+      [
+        EmployeeRole.COMPANY_MANAGER,
+        EmployeeRole.DATA_ENTRY,
+        EmployeeRole.ACCOUNTANT,
+        ClientRole.CLIENT,
+        EmployeeRole.CLIENT_ASSISTANT,
+      ],
+      [Permission.ADD_ORDER],
+    ),
+    preventDuplicateRequests,
+    ordersController.createPaperOrderOrder,
+  );
+
+router
   .route("/orders/create")
   .post(
     isApiClient,

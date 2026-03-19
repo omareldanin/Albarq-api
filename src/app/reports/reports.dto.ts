@@ -43,6 +43,7 @@ export const ReportCreateSchema = z
       branchID: z.coerce.number(),
       baghdadDeliveryCost: z.coerce.number().optional(),
       governoratesDeliveryCost: z.coerce.number().optional(),
+      forChilds: z.boolean().optional(),
     }),
     z.object({
       type: z.literal(ReportType.CLIENT),
@@ -182,7 +183,7 @@ export const ReportCreateOrdersFiltersSchema = z
             ),
           ),
           branchID: z.coerce.number(),
-          branchReport: z.string().optional(), // Should be mandatory if ordersIDs is "*"
+          branchReport: z.string().optional(),
         }),
       ),
     z
@@ -209,7 +210,7 @@ export const ReportCreateOrdersFiltersSchema = z
             ),
           ),
           storeID: z.coerce.number(),
-          clientReport: z.string().optional(), // Should be mandatory if ordersIDs is "*"
+          clientReport: z.string().optional(),
         }),
       ),
     z
@@ -246,6 +247,11 @@ export const ReportCreateOrdersFiltersSchema = z
         return val;
       }, z.boolean()),
       delivered: z.preprocess((val) => {
+        if (val === "true") return true;
+        if (val === "false") return false;
+        return val;
+      }, z.boolean().optional()),
+      forChilds: z.preprocess((val) => {
         if (val === "true") return true;
         if (val === "false") return false;
         return val;
