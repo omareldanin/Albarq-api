@@ -15,6 +15,7 @@ const generateReceipts_1 = require("./helpers/generateReceipts");
 const orders_repository_1 = require("./orders.repository");
 const orders_responses_1 = require("./orders.responses");
 const db_1 = require("../../database/db");
+const locations_repository_1 = require("../locations/locations.repository");
 const ordersRepository = new orders_repository_1.OrdersRepository();
 const employeesRepository = new employees_repository_1.EmployeesRepository();
 const clientsRepository = new clients_repository_1.ClientsRepository();
@@ -188,7 +189,7 @@ class OrdersService {
         });
         const location = await db_1.prisma.location.findFirst({
             where: {
-                name: client?.branch?.governorate + "",
+                governorateAr: locations_repository_1.governorateArabicNames[client?.branch?.governorate || "BAGHDAD"],
             },
             select: {
                 id: true,

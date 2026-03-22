@@ -34,6 +34,7 @@ import type {
 import {OrdersRepository} from "./orders.repository";
 import {orderReform, orderSelect, OrderStatusData} from "./orders.responses";
 import {prisma} from "../../database/db";
+import {governorateArabicNames} from "../locations/locations.repository";
 
 const ordersRepository = new OrdersRepository();
 const employeesRepository = new EmployeesRepository();
@@ -235,7 +236,8 @@ export class OrdersService {
     });
     const location = await prisma.location.findFirst({
       where: {
-        name: client?.branch?.governorate + "",
+        governorateAr:
+          governorateArabicNames[client?.branch?.governorate || "BAGHDAD"],
       },
       select: {
         id: true,
