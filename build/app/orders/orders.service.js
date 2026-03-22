@@ -182,17 +182,16 @@ class OrdersService {
                     select: {
                         id: true,
                         governorate: true,
-                        locations: {
-                            take: 1,
-                            orderBy: {
-                                id: "asc",
-                            },
-                            select: {
-                                id: true,
-                            },
-                        },
                     },
                 },
+            },
+        });
+        const location = await db_1.prisma.location.findFirst({
+            where: {
+                name: client?.branch?.governorate + "",
+            },
+            select: {
+                id: true,
             },
         });
         const checkOrders = await db_1.prisma.order.findMany({
@@ -217,7 +216,7 @@ class OrdersService {
                 branchID: client.branch?.id,
                 receiptNumber: data.receiptNumber,
                 governorate: client.branch?.governorate || "BAGHDAD",
-                locationID: client.branch?.locations[0].id,
+                locationID: location?.id,
             },
         });
         return createdOrder;
@@ -370,7 +369,7 @@ class OrdersService {
             inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
         }
         let size = data.filters.size || 500;
-        const { orders, ordersMetaData, pagesCount } = await ordersRepository.getAllOrdersPaginated({
+        const { orders, ordersMetaData, pagesCount, where } = await ordersRepository.getAllOrdersPaginated({
             filters: {
                 ...data.filters,
                 clientID,
@@ -394,6 +393,7 @@ class OrdersService {
             loggedInUser: data.loggedInUser,
         });
         return {
+            where,
             page: data.filters.page,
             pagesCount: pagesCount,
             orders: orders,

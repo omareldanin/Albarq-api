@@ -65,6 +65,7 @@ router.route("/branches/:branchID").get(
     EmployeeRole.COMPANY_MANAGER,
     AdminRole.ADMIN,
     AdminRole.ADMIN_ASSISTANT,
+    EmployeeRole.BRANCH_MANAGER,
   ]),
   branchesController.getBranch,
   /*

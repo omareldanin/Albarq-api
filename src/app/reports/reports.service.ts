@@ -244,20 +244,6 @@ export class ReportsService {
       orders = this.applyOrderCostUpdates(orders, updatedOrders);
     }
 
-    // if (data.reportData.type === ReportType.COMPANY) {
-    //   const updatedOrders = await ordersRepository.updateOrdersCosts2({
-    //     ordersIDs,
-    //     orders,
-    //     costs: {
-    //       baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
-    //       governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
-    //       reportType: data.reportData.type,
-    //     },
-    //   });
-
-    //   orders = this.applyOrderCostUpdates(orders, updatedOrders);
-    // }
-
     if (data.reportData.type === ReportType.DELIVERY_AGENT) {
       await ordersRepository.updateOrdersCosts2({
         ordersIDs,

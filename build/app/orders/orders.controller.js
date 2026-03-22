@@ -144,13 +144,14 @@ class OrdersController {
             updateBy: req.query.updated_by,
             createdBy: req.query.created_by,
         });
-        const { orders, ordersMetaData, page, pagesCount } = await ordersService.getAllOrders({
+        const { orders, ordersMetaData, page, pagesCount, where } = await ordersService.getAllOrders({
             loggedInUser: loggedInUser,
             filters: filters,
         });
         res.status(200).json({
             status: "success",
             page: page,
+            where,
             pagesCount: pagesCount,
             data: {
                 ordersMetaData: ordersMetaData,

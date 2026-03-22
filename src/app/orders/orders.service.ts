@@ -229,17 +229,16 @@ export class OrdersService {
           select: {
             id: true,
             governorate: true,
-            locations: {
-              take: 1,
-              orderBy: {
-                id: "asc",
-              },
-              select: {
-                id: true,
-              },
-            },
           },
         },
+      },
+    });
+    const location = await prisma.location.findFirst({
+      where: {
+        name: client?.branch?.governorate + "",
+      },
+      select: {
+        id: true,
       },
     });
 
@@ -268,7 +267,7 @@ export class OrdersService {
         branchID: client.branch?.id,
         receiptNumber: data.receiptNumber,
         governorate: client.branch?.governorate || "BAGHDAD",
-        locationID: client.branch?.locations[0].id!!,
+        locationID: location?.id!!,
       },
     });
 
@@ -445,7 +444,7 @@ export class OrdersService {
 
     let size = data.filters.size || 500;
 
-    const {orders, ordersMetaData, pagesCount} =
+    const {orders, ordersMetaData, pagesCount, where} =
       await ordersRepository.getAllOrdersPaginated({
         filters: {
           ...data.filters,
@@ -471,6 +470,7 @@ export class OrdersService {
       });
 
     return {
+      where,
       page: data.filters.page,
       pagesCount: pagesCount,
       orders: orders,

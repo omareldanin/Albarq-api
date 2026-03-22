@@ -125,6 +125,7 @@ export class ReportsRepository {
           baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
           governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
           report: report,
+          forChildBranches: data.reportData.forChilds,
           type: data.type,
         },
       });

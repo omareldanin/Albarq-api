@@ -140,7 +140,7 @@ export class OrdersController {
       createdBy: req.query.created_by,
     });
 
-    const {orders, ordersMetaData, page, pagesCount} =
+    const {orders, ordersMetaData, page, pagesCount, where} =
       await ordersService.getAllOrders({
         loggedInUser: loggedInUser,
         filters: filters,
@@ -149,6 +149,7 @@ export class OrdersController {
     res.status(200).json({
       status: "success",
       page: page,
+      where,
       pagesCount: pagesCount,
       data: {
         ordersMetaData: ordersMetaData,

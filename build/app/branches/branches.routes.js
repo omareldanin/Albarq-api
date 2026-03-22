@@ -22,6 +22,7 @@ router.route("/branches/:branchID").get(isLoggedIn_1.isLoggedIn, (0, isAutherize
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
+    client_1.EmployeeRole.BRANCH_MANAGER,
 ]), branchesController.getBranch);
 router
     .route("/branches/:branchID")

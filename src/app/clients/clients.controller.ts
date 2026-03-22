@@ -109,23 +109,33 @@ export class ClientsController {
     let branchID: number | undefined = req.query.branch_id
       ? +req.query.branch_id
       : undefined;
+
     if (
       loggedInUser.role !== EmployeeRole.COMPANY_MANAGER &&
       loggedInUser.role !== AdminRole.ADMIN &&
       loggedInUser.role !== AdminRole.ADMIN_ASSISTANT &&
       !loggedInUser.mainRepository
     ) {
-      const employee = await employeesRepository.getEmployee({
-        employeeID: loggedInUser.id,
+      const employee = await prisma.employee.findUnique({
+        where: {
+          id: loggedInUser.id,
+        },
+        select: {
+          branch: {
+            select: {
+              id: true,
+              childBranches: {
+                select: {
+                  id: true,
+                },
+              },
+            },
+          },
+        },
       });
-      branchID = employee?.branch?.id;
-      // if (!branch) {
-      //     throw new AppError("انت غير مرتبط بفرع", 500);
-      // }
-      // // TODO: Every branch should have a governorate
-      // if (!branch.governorate) {
-      //     throw new AppError("الفرع الذي تعمل به غير مرتبط بمحافظة", 500);
-      // }
+      if (!employee?.branch?.childBranches.some((b) => b.id === branchID)) {
+        branchID = employee?.branch?.id;
+      }
     }
 
     const phone = req.query.phone as string | undefined;

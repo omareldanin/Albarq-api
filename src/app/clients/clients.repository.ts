@@ -115,13 +115,13 @@ export class ClientsRepository {
     const cacheKey = this.clientsCacheKey(filters);
 
     // 1️⃣ FAST PATH – Redis
-    const cached = await redis.get(cacheKey);
-    if (cached) {
-      return JSON.parse(cached) as {
-        clients: any[];
-        pagesCount: number;
-      };
-    }
+    // const cached = await redis.get(cacheKey);
+    // if (cached) {
+    //   return JSON.parse(cached) as {
+    //     clients: any[];
+    //     pagesCount: number;
+    //   };
+    // }
 
     let clientIDs: number[] = [];
 
@@ -146,7 +146,16 @@ export class ClientsRepository {
       AND: [
         {deleted: filters.deleted === "true"},
         {company: {id: filters.companyID}},
-        {branch: filters.branchID ? {id: filters.branchID} : undefined},
+        {
+          OR: [
+            {branch: filters.branchID ? {id: filters.branchID} : undefined},
+            {
+              branch: {
+                parentBranchId: filters.branchID,
+              },
+            },
+          ],
+        },
         {user: {phone: filters.phone}},
         {user: {name: {contains: filters.name}}},
         {
@@ -213,7 +222,7 @@ export class ClientsRepository {
     }
 
     // 3️⃣ Save to Redis (TTL = 10 minutes)
-    await redis.set(cacheKey, JSON.stringify(result), "EX", 60 * 60 * 24 * 2);
+    await redis.set(cacheKey, JSON.stringify(result), "EX", 60 * 60 * 24);
 
     return result;
   }

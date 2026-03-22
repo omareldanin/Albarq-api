@@ -468,6 +468,7 @@ export class OrdersRepository {
   }) {
     let startDate = new Date();
     let endDate = new Date();
+    let childBranchs: number[] = [];
 
     if (data.filters.startDate) {
       startDate = new Date(data.filters.startDate);
@@ -487,6 +488,17 @@ export class OrdersRepository {
     }
     if (data.filters.endDeliveryDate) {
       deliveryEndDate = new Date(data.filters.endDeliveryDate);
+    }
+    if (data.filters.branchID) {
+      const branchs = await prisma.branch.findMany({
+        where: {
+          parentBranchId: data.filters.branchID,
+        },
+        select: {
+          id: true,
+        },
+      });
+      childBranchs = branchs.map((b) => b.id);
     }
 
     const where =
@@ -1456,19 +1468,6 @@ export class OrdersRepository {
                 forwarded: data.filters.forwarded,
               },
               {
-                processed: data.filters.processed,
-              },
-              {
-                forwardedBy: {
-                  id: data.filters.forwardedByID,
-                },
-              },
-              {
-                forwardedFrom: {
-                  id: data.filters.forwardedFromID,
-                },
-              },
-              {
                 OR:
                   data.filters.orderType && data.filters.orderType !== "inside"
                     ? []
@@ -1495,11 +1494,34 @@ export class OrdersRepository {
                                   },
                             },
                             {
+                              branch: data.filters.inquiryBranchesIDs
+                                ? {
+                                    parentBranchId: {
+                                      in: data.filters.inquiryBranchesIDs,
+                                    },
+                                  }
+                                : {
+                                    parentBranchId: data.filters.branchID,
+                                  },
+                            },
+                            {
                               client:
                                 data.loggedInUser?.role !== "COMPANY_MANAGER" &&
                                 !data.loggedInUser?.mainRepository
                                   ? {
                                       branchId: data.loggedInUser?.branchId,
+                                    }
+                                  : undefined,
+                            },
+                            {
+                              client:
+                                data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                                !data.loggedInUser?.mainRepository
+                                  ? {
+                                      branch: {
+                                        parentBranchId:
+                                          data.loggedInUser?.branchId,
+                                      },
                                     }
                                   : undefined,
                             },
@@ -1564,12 +1586,31 @@ export class OrdersRepository {
                       data.filters.orderType === "forwarded"
                         ? [
                             {
-                              client: {
-                                branchId: data.filters.branchID,
+                              OR: [
+                                {
+                                  client: {
+                                    branchId: data.filters.branchID,
+                                  },
+                                },
+                                {
+                                  client: {
+                                    branch: {
+                                      parentBranchId: data.filters.branchID,
+                                    },
+                                  },
+                                },
+                              ],
+                            },
+
+                            {
+                              branch: {
+                                id: {not: data.filters.branchID},
                               },
                             },
                             {
-                              branchId: {not: data.filters.branchID},
+                              branch: {
+                                id: {notIn: childBranchs},
+                              },
                             },
                           ]
                         : data.filters.orderType === "received"
@@ -1580,7 +1621,19 @@ export class OrdersRepository {
                                 },
                               },
                               {
-                                branchId: data.filters.branchID,
+                                client: {
+                                  branchId: {notIn: childBranchs},
+                                },
+                              },
+                              {
+                                OR: [
+                                  {
+                                    branchId: data.filters.branchID,
+                                  },
+                                  {
+                                    branchId: {in: childBranchs},
+                                  },
+                                ],
                               },
                             ]
                           : [],
@@ -1593,6 +1646,7 @@ export class OrdersRepository {
                             branch: {
                               id: data.filters.branchID,
                               governorate: "BAGHDAD",
+                              parentBranchId: {equals: null},
                             },
                           },
                           {
@@ -1938,6 +1992,7 @@ export class OrdersRepository {
     };
 
     return {
+      where,
       orders: ordersReformed,
       ordersMetaData: ordersMetaDataReformed,
       pagesCount: paginatedOrders.pagesCount,

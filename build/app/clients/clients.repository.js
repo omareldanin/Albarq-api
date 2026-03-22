@@ -85,10 +85,13 @@ class ClientsRepository {
     async getAllClientsPaginated(filters) {
         const cacheKey = this.clientsCacheKey(filters);
         // 1️⃣ FAST PATH – Redis
-        const cached = await redis_1.redis.get(cacheKey);
-        if (cached) {
-            return JSON.parse(cached);
-        }
+        // const cached = await redis.get(cacheKey);
+        // if (cached) {
+        //   return JSON.parse(cached) as {
+        //     clients: any[];
+        //     pagesCount: number;
+        //   };
+        // }
         let clientIDs = [];
         if (filters.loggedInUser?.role === "CLIENT_ASSISTANT") {
             const stores = await db_1.prisma.employee.findMany({
@@ -109,7 +112,16 @@ class ClientsRepository {
             AND: [
                 { deleted: filters.deleted === "true" },
                 { company: { id: filters.companyID } },
-                { branch: filters.branchID ? { id: filters.branchID } : undefined },
+                {
+                    OR: [
+                        { branch: filters.branchID ? { id: filters.branchID } : undefined },
+                        {
+                            branch: {
+                                parentBranchId: filters.branchID,
+                            },
+                        },
+                    ],
+                },
                 { user: { phone: filters.phone } },
                 { user: { name: { contains: filters.name } } },
                 {
@@ -164,7 +176,7 @@ class ClientsRepository {
             };
         }
         // 3️⃣ Save to Redis (TTL = 10 minutes)
-        await redis_1.redis.set(cacheKey, JSON.stringify(result), "EX", 60 * 60 * 24 * 2);
+        await redis_1.redis.set(cacheKey, JSON.stringify(result), "EX", 60 * 60 * 24);
         return result;
     }
     async getClient(data) {
