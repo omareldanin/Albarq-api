@@ -38,6 +38,7 @@ class AuthController {
             mainCompany: returnedUser.mainCompany,
             mainRepository: returnedUser.mainRepository,
             branchId: returnedUser.branchId,
+            parentBranchId: returnedUser.parentBranchId,
             repositoryId: returnedUser.repositoryId,
             type: returnedUser.type,
             clientId: returnedUser.clientId,
@@ -112,6 +113,7 @@ class AuthController {
                 type: user.type,
                 clientId: user.clientId,
                 repository: user.repository,
+                parentBranchId: user.parentBranchId,
             }, config_1.env.ACCESS_TOKEN_SECRET, { expiresIn: config_1.env.ACCESS_TOKEN_EXPIRES_IN });
             res.cookie("jwt", token, {
                 httpOnly: true,

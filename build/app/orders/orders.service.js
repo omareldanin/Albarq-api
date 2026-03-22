@@ -507,6 +507,7 @@ class OrdersService {
         }
         if (data.orderData.secondaryStatus === oldOrderData.secondaryStatus &&
             data.orderData.status === oldOrderData.status &&
+            data.orderData.repositoryID === oldOrderData.repository?.id &&
             !data.orderData.deliveryAgentID &&
             !data.orderData.recipientName &&
             !data.orderData.recipientPhones &&

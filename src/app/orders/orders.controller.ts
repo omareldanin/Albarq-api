@@ -682,7 +682,12 @@ export class OrdersController {
           } else {
             const mainRepository = await prisma.repository.findFirst({
               where: {
-                mainRepository: true,
+                mainRepository: loggedInUser.parentBranchId ? false : true,
+                branch: loggedInUser.parentBranchId
+                  ? {
+                      id: loggedInUser.parentBranchId,
+                    }
+                  : undefined,
                 company: loggedInUser.companyID
                   ? {
                       id: loggedInUser.companyID,

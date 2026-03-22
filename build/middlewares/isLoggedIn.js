@@ -22,7 +22,7 @@ const isLoggedIn = async (req, res, next) => {
             return next(new AppError_1.AppError("الرجاء تسجيل الدخول", 401));
         }
         // IS TOKEN VALID
-        const { id, name, username, role, permissions, companyID, companyName, mainCompany, clientId, branchId, mainRepository, repositoryId, } = jsonwebtoken_1.default.verify(token, config_1.env.ACCESS_TOKEN_SECRET);
+        const { id, name, username, role, permissions, companyID, companyName, mainCompany, clientId, branchId, mainRepository, repositoryId, parentBranchId, } = jsonwebtoken_1.default.verify(token, config_1.env.ACCESS_TOKEN_SECRET);
         // TODO: Check if user still exists
         // const user = await prisma.user.findUnique({
         //   where: {
@@ -54,6 +54,7 @@ const isLoggedIn = async (req, res, next) => {
             branchId,
             mainRepository,
             repositoryId,
+            parentBranchId,
         };
         // GRANT ACCESS
         return next();

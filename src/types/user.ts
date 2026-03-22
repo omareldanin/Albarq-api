@@ -35,6 +35,7 @@ export type loggedInUserType = {
   username: string;
   clientId: number;
   branchId: number;
+  parentBranchId: number;
   repositoryId: number;
   mainRepository: boolean;
   permissions: Permission[];

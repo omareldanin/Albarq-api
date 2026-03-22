@@ -28,6 +28,7 @@ exports.userSelect = {
             },
             branch: {
                 select: {
+                    parentBranchId: true,
                     repositories: {
                         select: {
                             mainRepository: true,
@@ -78,6 +79,7 @@ const userReform = (user) => {
         branchId: user.employee?.branchId ??
             user.employee?.branchId ??
             user.client?.branchId,
+        parentBranchId: user.employee?.branch?.parentBranchId,
         repositoryId: user.employee?.repository?.id ?? user.employee?.repository?.id ?? null,
         mainRepository: user.employee?.branch?.repositories[0]?.mainRepository || false,
         repository: user.employee?.repository?.name,

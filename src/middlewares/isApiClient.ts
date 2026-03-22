@@ -7,7 +7,7 @@ import crypto from "crypto";
 export const isApiClient = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const auth = req.headers.authorization;
 
@@ -51,6 +51,7 @@ export const isApiClient = async (
     mainCompany: true,
     clientId: client?.user.id,
     branchId: client?.branchId,
+    parentBranchId: 0,
     mainRepository: true,
     repositoryId: 0,
   } as loggedInUserType;

@@ -21,19 +21,19 @@ export class AuthController {
     if (!returnedUser) {
       throw new AppError(
         "حطأ في البيانات تاكد من ادخال البيانات بشكل صحيح",
-        401
+        401,
       );
     }
 
     const isValidPassword = bcrypt.compareSync(
       user.password + (env.PASSWORD_SALT as string),
-      returnedUser.password
+      returnedUser.password,
     );
 
     if (!isValidPassword) {
       throw new AppError(
         "حطأ في البيانات تاكد من ادخال البيانات بشكل صحيح",
-        401
+        401,
       );
     }
 
@@ -50,13 +50,14 @@ export class AuthController {
         mainCompany: returnedUser.mainCompany,
         mainRepository: returnedUser.mainRepository,
         branchId: returnedUser.branchId,
+        parentBranchId: returnedUser.parentBranchId,
         repositoryId: returnedUser.repositoryId,
         type: returnedUser.type,
         clientId: returnedUser.clientId,
         repository: returnedUser.repository,
       } as loggedInUserType,
       env.ACCESS_TOKEN_SECRET as string,
-      {expiresIn: env.ACCESS_TOKEN_EXPIRES_IN}
+      {expiresIn: env.ACCESS_TOKEN_EXPIRES_IN},
     );
 
     const refreshToken = jwt.sign(
@@ -64,7 +65,7 @@ export class AuthController {
         id: returnedUser?.id,
       },
       env.REFRESH_TOKEN_SECRET as string,
-      {expiresIn: env.REFRESH_TOKEN_EXPIRES_IN}
+      {expiresIn: env.REFRESH_TOKEN_EXPIRES_IN},
     );
 
     await usersRepository.updateUser({
@@ -108,7 +109,7 @@ export class AuthController {
         platform: user.platform,
         browser: user.browser,
         location: user.location,
-      }
+      },
     );
   });
 
@@ -119,14 +120,14 @@ export class AuthController {
       // 1) Check if token is valid
       const decoded = jwt.verify(
         refreshToken,
-        env.REFRESH_TOKEN_SECRET as string
+        env.REFRESH_TOKEN_SECRET as string,
       ) as {
         id: number;
       };
 
       // 2) Check if refresh token is in the database
       const refreshTokens = await usersRepository.getUserRefreshTokens(
-        decoded.id
+        decoded.id,
       );
       if (!refreshTokens || !refreshTokens.includes(refreshToken)) {
         throw new AppError("الرجاء تسجيل الدخول", 401);
@@ -156,9 +157,10 @@ export class AuthController {
           type: user.type,
           clientId: user.clientId,
           repository: user.repository,
+          parentBranchId: user.parentBranchId,
         } as loggedInUserType,
         env.ACCESS_TOKEN_SECRET as string,
-        {expiresIn: env.ACCESS_TOKEN_EXPIRES_IN}
+        {expiresIn: env.ACCESS_TOKEN_EXPIRES_IN},
       );
 
       res.cookie("jwt", token, {

@@ -27,6 +27,7 @@ export const userSelect = {
       },
       branch: {
         select: {
+          parentBranchId: true,
           repositories: {
             select: {
               mainRepository: true,
@@ -63,7 +64,7 @@ export const userSelect = {
 export const userReform = (
   user: Prisma.UserGetPayload<{
     select: typeof userSelect;
-  }> | null
+  }> | null,
 ) => {
   if (!user) {
     return null;
@@ -85,6 +86,8 @@ export const userReform = (
       user.employee?.branchId ??
       user.employee?.branchId ??
       user.client?.branchId,
+    parentBranchId: user.employee?.branch?.parentBranchId,
+
     repositoryId:
       user.employee?.repository?.id ?? user.employee?.repository?.id ?? null,
     mainRepository:

@@ -301,10 +301,7 @@ class ReportsService {
         // Only show reports of the same branch as the employee
         let branch;
         let repository;
-        if ((data.filters.type === client_1.ReportType.CLIENT ||
-            data.filters.type === client_1.ReportType.REPOSITORY ||
-            data.filters.type === client_1.ReportType.DELIVERY_AGENT) &&
-            data.loggedInUser.role !== client_1.EmployeeRole.COMPANY_MANAGER &&
+        if (data.loggedInUser.role !== client_1.EmployeeRole.COMPANY_MANAGER &&
             data.loggedInUser.role !== client_1.AdminRole.ADMIN &&
             data.loggedInUser.role !== client_1.AdminRole.ADMIN_ASSISTANT &&
             data.loggedInUser.role !== client_1.ClientRole.CLIENT &&

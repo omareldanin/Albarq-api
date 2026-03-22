@@ -45,6 +45,7 @@ const isApiClient = async (req, res, next) => {
         mainCompany: true,
         clientId: client?.user.id,
         branchId: client?.branchId,
+        parentBranchId: 0,
         mainRepository: true,
         repositoryId: 0,
     };

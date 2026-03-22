@@ -431,9 +431,6 @@ export class ReportsService {
     let branch: number | undefined;
     let repository: number | undefined;
     if (
-      (data.filters.type === ReportType.CLIENT ||
-        data.filters.type === ReportType.REPOSITORY ||
-        data.filters.type === ReportType.DELIVERY_AGENT) &&
       data.loggedInUser.role !== EmployeeRole.COMPANY_MANAGER &&
       data.loggedInUser.role !== AdminRole.ADMIN &&
       data.loggedInUser.role !== AdminRole.ADMIN_ASSISTANT &&
