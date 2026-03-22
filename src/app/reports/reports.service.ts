@@ -440,7 +440,7 @@ export class ReportsService {
       const employee = await employeesRepository.getEmployee({
         employeeID: data.loggedInUser.id,
       });
-      if (!employee?.repository?.mainRepository) {
+      if (!data.loggedInUser.mainRepository) {
         branch = employee?.branch?.id;
       }
       repository = employee?.repository?.id;

@@ -818,14 +818,15 @@ model ProductSizes {
 }
 
 model Notification {
-  id            Int      @id @default(autoincrement())
+  id            Int          @id @default(autoincrement())
   title         String
-  content       String   @default("")
+  content       String       @default("")
   userId        Int
-  seen          Boolean  @default(false)
-  createdAt     DateTime @default(now())
+  seen          Boolean      @default(false)
+  type          OrderStatus?
+  createdAt     DateTime     @default(now())
   receiptNumber String?
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
