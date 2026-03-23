@@ -1098,7 +1098,7 @@ export class OrdersService {
           title: `تم اعاده ارسال الطلب رقم ${order.receiptNumber} من قبل العميل -
            الملاحظه - ${data.notes}`,
           content: ``,
-          type: order.status,
+          type: "RESEND",
         });
       });
 
@@ -1109,7 +1109,7 @@ export class OrdersService {
           title: `تم اعاده ارسال الطلب رقم ${order.receiptNumber} من قبل العميل -
            الملاحظه - ${data.notes}`,
           content: ``,
-          type: order.status,
+          type: "RESEND",
         });
       }
     } catch (error) {

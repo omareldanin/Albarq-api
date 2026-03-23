@@ -858,7 +858,7 @@ class OrdersService {
                     title: `تم اعاده ارسال الطلب رقم ${order.receiptNumber} من قبل العميل -
            الملاحظه - ${data.notes}`,
                     content: ``,
-                    type: order.status,
+                    type: "RESEND",
                 });
             });
             if (order.deliveryAgentId) {
@@ -868,7 +868,7 @@ class OrdersService {
                     title: `تم اعاده ارسال الطلب رقم ${order.receiptNumber} من قبل العميل -
            الملاحظه - ${data.notes}`,
                     content: ``,
-                    type: order.status,
+                    type: "RESEND",
                 });
             }
         }
