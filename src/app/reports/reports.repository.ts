@@ -203,7 +203,6 @@ export class ReportsRepository {
       AND: [
         {
           OR: [
-            // TODO: Use employees as a branch filter instead of orders
             {
               deliveryAgentReport: data.filters.branch
                 ? {
@@ -244,12 +243,8 @@ export class ReportsRepository {
             {
               branchReport: data.filters.branch
                 ? {
-                    orders: {
-                      some: {
-                        branch: {
-                          id: data.filters.branch,
-                        },
-                      },
+                    branch: {
+                      parentBranchId: data.filters.branch,
                     },
                   }
                 : undefined,
