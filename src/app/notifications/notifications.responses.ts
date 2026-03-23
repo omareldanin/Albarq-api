@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type {Prisma} from "@prisma/client";
 
 export const notificationSelect = {
   id: true,
@@ -7,6 +7,7 @@ export const notificationSelect = {
   seen: true,
   createdAt: true,
   receiptNumber: true,
+  type: true,
   user: {
     select: {
       id: true,
@@ -18,7 +19,7 @@ export const notificationSelect = {
 export const notificationReform = (
   notification: Prisma.NotificationGetPayload<{
     select: typeof notificationSelect;
-  }>
+  }>,
 ) => {
   if (!notification) {
     return null;
@@ -28,6 +29,7 @@ export const notificationReform = (
     title: notification.title,
     content: notification.content,
     seen: notification.seen,
+    type: notification.type,
     createdAt: notification.createdAt,
     orderId: notification.receiptNumber,
     user: {

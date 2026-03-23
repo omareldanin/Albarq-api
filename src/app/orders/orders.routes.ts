@@ -554,6 +554,15 @@ router.route("/orders/:orderID").patch(
 );
 
 router
+  .route("/orders/resend/:orderID")
+  .patch(
+    upload.none(),
+    isLoggedIn,
+    isAutherized([...Object.values(ClientRole)]),
+    ordersController.resendOrder,
+  );
+
+router
   .route("/orders/sendOrders")
   .post(
     isLoggedIn,

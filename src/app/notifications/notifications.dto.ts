@@ -1,5 +1,6 @@
 // // import { generateMock } from "@anatine/zod-mock";
 import {generateSchema} from "@anatine/zod-openapi";
+import {OrderStatus} from "@prisma/client";
 import {z} from "zod";
 
 export const NotificationCreateSchema = z.object({
@@ -11,6 +12,7 @@ export const NotificationCreateSchema = z.object({
   orderId: z.coerce.string().optional(),
   receiptNumber: z.coerce.string().optional(),
   forChat: z.boolean().optional(),
+  type: z.nativeEnum(OrderStatus).optional(),
 });
 
 export type NotificationCreateType = z.infer<typeof NotificationCreateSchema>;
@@ -28,7 +30,7 @@ export const NotificationUpdateSchema = NotificationCreateSchema.pick({
 export type NotificationUpdateType = z.infer<typeof NotificationUpdateSchema>;
 
 export const NotificationUpdateOpenAPISchema = generateSchema(
-  NotificationUpdateSchema
+  NotificationUpdateSchema,
 );
 
 // export const NotificationUpdateMock = generateMock(NotificationUpdateSchema);

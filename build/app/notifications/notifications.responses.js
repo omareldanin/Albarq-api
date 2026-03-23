@@ -8,6 +8,7 @@ exports.notificationSelect = {
     seen: true,
     createdAt: true,
     receiptNumber: true,
+    type: true,
     user: {
         select: {
             id: true,
@@ -24,6 +25,7 @@ const notificationReform = (notification) => {
         title: notification.title,
         content: notification.content,
         seen: notification.seen,
+        type: notification.type,
         createdAt: notification.createdAt,
         orderId: notification.receiptNumber,
         user: {

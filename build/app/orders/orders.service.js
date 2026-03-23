@@ -828,6 +828,55 @@ class OrdersService {
         }
         return newOrder;
     };
+    resenOrderByClient = async (data) => {
+        const order = await db_1.prisma.order.findFirst({
+            where: {
+                id: data.id,
+                clientId: data.clientId,
+            },
+        });
+        if (!order) {
+            throw new AppError_1.AppError("الطلب غير موجود", 404);
+        }
+        const updated = await db_1.prisma.order.update({
+            where: {
+                id: order.id,
+            },
+            data: {
+                clientNotes: data.notes,
+                status: "RESEND",
+            },
+        });
+        try {
+            const orderInquiryEmployees = await ordersRepository.getOrderInquiryEmployeesForNotifications({
+                orderID: order.id,
+            });
+            orderInquiryEmployees.forEach(async (e) => {
+                await (0, sendNotification_1.sendNotification)({
+                    orderId: order.id,
+                    userID: e.id,
+                    title: `تم اعاده ارسال الطلب رقم ${order.receiptNumber} من قبل العميل -
+           الملاحظه - ${data.notes}`,
+                    content: ``,
+                    type: order.status,
+                });
+            });
+            if (order.deliveryAgentId) {
+                await (0, sendNotification_1.sendNotification)({
+                    orderId: order.id,
+                    userID: order.deliveryAgentId,
+                    title: `تم اعاده ارسال الطلب رقم ${order.receiptNumber} من قبل العميل -
+           الملاحظه - ${data.notes}`,
+                    content: ``,
+                    type: order.status,
+                });
+            }
+        }
+        catch (error) {
+            logger_1.Logger.error(error);
+        }
+        return { order: updated };
+    };
     repositoryConfirmOrderByReceiptNumber = async (data) => {
         const oldOrderData = await ordersRepository.getOrderByReceiptNumber({
             orderReceiptNumber: data.params.orderReceiptNumber,

@@ -1059,6 +1059,65 @@ export class OrdersService {
     return newOrder;
   };
 
+  resenOrderByClient = async (data: {
+    id: string;
+    notes: string;
+    clientId: number;
+  }) => {
+    const order = await prisma.order.findFirst({
+      where: {
+        id: data.id,
+        clientId: data.clientId,
+      },
+    });
+
+    if (!order) {
+      throw new AppError("الطلب غير موجود", 404);
+    }
+
+    const updated = await prisma.order.update({
+      where: {
+        id: order.id,
+      },
+      data: {
+        clientNotes: data.notes,
+        status: "RESEND",
+      },
+    });
+
+    try {
+      const orderInquiryEmployees =
+        await ordersRepository.getOrderInquiryEmployeesForNotifications({
+          orderID: order.id,
+        });
+
+      orderInquiryEmployees.forEach(async (e) => {
+        await sendNotification({
+          orderId: order.id,
+          userID: e.id,
+          title: `تم اعاده ارسال الطلب رقم ${order.receiptNumber} من قبل العميل -
+           الملاحظه - ${data.notes}`,
+          content: ``,
+          type: order.status,
+        });
+      });
+
+      if (order.deliveryAgentId) {
+        await sendNotification({
+          orderId: order.id,
+          userID: order.deliveryAgentId,
+          title: `تم اعاده ارسال الطلب رقم ${order.receiptNumber} من قبل العميل -
+           الملاحظه - ${data.notes}`,
+          content: ``,
+          type: order.status,
+        });
+      }
+    } catch (error) {
+      Logger.error(error);
+    }
+    return {order: updated};
+  };
+
   repositoryConfirmOrderByReceiptNumber = async (data: {
     params: {
       orderReceiptNumber: string;

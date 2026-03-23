@@ -10,6 +10,7 @@ class NotificationsRepository {
                 title: data.title,
                 content: data.content,
                 receiptNumber: data.orderId ? data.orderId : undefined,
+                type: data.type,
                 user: {
                     connect: {
                         id: data.userID,

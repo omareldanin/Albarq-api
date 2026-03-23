@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationUpdateOpenAPISchema = exports.NotificationUpdateSchema = exports.NotificationCreateSchema = void 0;
 // // import { generateMock } from "@anatine/zod-mock";
 const zod_openapi_1 = require("@anatine/zod-openapi");
+const client_1 = require("@prisma/client");
 const zod_1 = require("zod");
 exports.NotificationCreateSchema = zod_1.z.object({
     title: zod_1.z.string(),
@@ -13,6 +14,7 @@ exports.NotificationCreateSchema = zod_1.z.object({
     orderId: zod_1.z.coerce.string().optional(),
     receiptNumber: zod_1.z.coerce.string().optional(),
     forChat: zod_1.z.boolean().optional(),
+    type: zod_1.z.nativeEnum(client_1.OrderStatus).optional(),
 });
 // export const NotificationCreateOpenAPISchema = generateSchema(
 //     NotificationCreateSchema

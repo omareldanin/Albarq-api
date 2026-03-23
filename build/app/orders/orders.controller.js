@@ -403,6 +403,21 @@ class OrdersController {
             data: order,
         });
     });
+    resendOrder = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const params = {
+            orderID: req.params.orderID,
+        };
+        const loggedInUser = res.locals.user;
+        const order = await ordersService.resenOrderByClient({
+            id: params.orderID,
+            notes: req.body.notes,
+            clientId: loggedInUser.id,
+        });
+        res.status(200).json({
+            status: "success",
+            data: order,
+        });
+    });
     sendOrdersToReceivingAgent = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const ordersIDs = orders_dto_1.OrdersReceiptsCreateSchema.parse(req.body);
         const loggedInUser = res.locals.user;

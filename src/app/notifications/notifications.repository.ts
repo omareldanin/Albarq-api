@@ -15,6 +15,7 @@ export class NotificationsRepository {
         title: data.title,
         content: data.content,
         receiptNumber: data.orderId ? data.orderId : undefined,
+        type: data.type,
         user: {
           connect: {
             id: data.userID,
@@ -36,7 +37,7 @@ export class NotificationsRepository {
     userID: number,
     page: number,
     size: number,
-    seen: boolean
+    seen: boolean,
   ) {
     const paginatedNotifications = await prisma.notification.findManyPaginated(
       {
@@ -56,7 +57,7 @@ export class NotificationsRepository {
       {
         page: page,
         size: size,
-      }
+      },
     );
     const unSeenCount = await prisma.notification.count({
       where: {
