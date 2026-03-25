@@ -701,7 +701,8 @@ export class OrdersService {
           "CHANGE_CLOSED_ORDER_STATUS",
         )) ||
       (data.orderData.status &&
-        oldOrderData.clientReport.find((r) => r.secondaryType === "RETURNED"))
+        oldOrderData.clientReport.find((r) => r.secondaryType === "RETURNED") &&
+        !data.loggedInUser.permissions.includes("CHANGE_CLOSED_ORDER_STATUS"))
     ) {
       throw new AppError("لا يمكنك تغيير حاله طلبيه مغلقه", 500);
     }
