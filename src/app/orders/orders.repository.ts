@@ -2912,13 +2912,17 @@ export class OrdersRepository {
       : orderData?.oldDeliveryCost;
     let weight = (data.orderData.weight as number) || orderData?.weight || 0;
 
-    if (data.orderData.governorate) {
+    if (
+      data.orderData.governorate ||
+      data.orderData.status === "DELIVERED" ||
+      data.orderData.status === "REPLACED" ||
+      data.orderData.status === "PARTIALLY_RETURNED"
+    ) {
       newDeliveryCost = await this.getDeliverCost(
         orderData?.client.id!!,
-        data.orderData.governorate,
+        data.orderData.governorate || orderData.governorate,
       );
     }
-
     // if (weight) {
     //   const companyAdditionalPrices = await prisma.company.findUnique({
     //     where: {
@@ -2947,7 +2951,6 @@ export class OrdersRepository {
     //         : 0;
     //   }
     // }
-
     if (data.orderData.paidAmount) {
       // calculate client net
       const deliveryCost = newDeliveryCost

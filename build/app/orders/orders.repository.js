@@ -2604,8 +2604,11 @@ class OrdersRepository {
             ? orderData?.deliveryCost
             : orderData?.oldDeliveryCost;
         let weight = data.orderData.weight || orderData?.weight || 0;
-        if (data.orderData.governorate) {
-            newDeliveryCost = await this.getDeliverCost(orderData?.client.id, data.orderData.governorate);
+        if (data.orderData.governorate ||
+            data.orderData.status === "DELIVERED" ||
+            data.orderData.status === "REPLACED" ||
+            data.orderData.status === "PARTIALLY_RETURNED") {
+            newDeliveryCost = await this.getDeliverCost(orderData?.client.id, data.orderData.governorate || orderData.governorate);
         }
         // if (weight) {
         //   const companyAdditionalPrices = await prisma.company.findUnique({
