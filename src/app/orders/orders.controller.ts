@@ -1162,6 +1162,113 @@ export class OrdersController {
     res.end();
   });
 
+  getOrdersWithoutCostReportExcel = catchAsync(async (_req, res) => {
+    const orders = await prisma.order.findMany({
+      where: {
+        deleted: false,
+        status: {in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"]},
+        deliveryCost: {equals: 0},
+      },
+      select: {
+        id: true,
+        totalCost: true,
+        paidAmount: true,
+        clientNet: true,
+        receiptNumber: true,
+        weight: true,
+        recipientName: true,
+        recipientPhones: true,
+        recipientAddress: true,
+        deliveryCost: true,
+        clientNotes: true,
+        details: true,
+        status: true,
+        secondaryStatus: true,
+        createdAt: true,
+        client: {
+          select: {
+            branch: {
+              select: {
+                name: true,
+              },
+            },
+            user: {
+              select: {
+                id: true,
+                name: true,
+                phone: true,
+              },
+            },
+          },
+        },
+        governorate: true,
+        location: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        store: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Orders");
+
+    // Header row
+    sheet.addRow([
+      "رقم الطلب",
+      "رقم الوصل",
+      "اسم الصفحه",
+      "اسم العميل",
+      "اسم المستلم",
+      "هاتف المستلم",
+      "عنوان المستلم",
+      "المبلغ الاجمالي",
+      "المبلغ المستلم",
+      "تكلفة التوصيل",
+      "صافي العميل",
+      "حاله الطلب",
+      "الوزن",
+      "ملاحظات",
+      "التاريخ",
+    ]);
+
+    orders.forEach((order) => {
+      sheet.addRow([
+        order.id,
+        order.receiptNumber,
+        order.store.name,
+        order.client.user.name,
+        order.recipientName,
+        order.recipientPhones[0],
+        governorateArabicNames[order.governorate] + " - " + order.location.name,
+        order.totalCost,
+        order.paidAmount,
+        order.deliveryCost,
+        order.clientNet,
+        orderStatusArabicNames[order.status],
+        order.weight,
+        order.clientNotes,
+        new Date(order.createdAt).toLocaleString("ar-EG"),
+      ]);
+    });
+    // Set headers for a PDF response
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader("Content-Disposition", "attachment; filename=orders.xlsx");
+
+    await workbook.xlsx.write(res);
+    res.end();
+  });
+
   getRepositoryOrdersPDF = catchAsync(async (req, res) => {
     const ordersData = OrdersReportPDFCreateSchema.parse(req.body);
 

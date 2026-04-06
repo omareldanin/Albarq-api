@@ -143,6 +143,13 @@ router
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
 ]), ordersController.getOrdersReportExcel);
+router
+    .route("/orders/excelZeroCost")
+    .post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
+    ...Object.values(client_1.AdminRole),
+    ...Object.values(client_1.EmployeeRole),
+    ...Object.values(client_1.ClientRole),
+]), ordersController.getOrdersWithoutCostReportExcel);
 router.route("/repository-orders/pdf").post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     ...Object.values(client_1.AdminRole),
     ...Object.values(client_1.EmployeeRole),

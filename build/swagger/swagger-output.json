@@ -1773,6 +1773,25 @@
                 }
             }
         },
+        "/api/v1/orders/excelZeroCost": {
+            "post": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/repository-orders/pdf": {
             "post": {
                 "tags": [

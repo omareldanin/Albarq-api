@@ -1017,6 +1017,105 @@ class OrdersController {
         await workbook.xlsx.write(res);
         res.end();
     });
+    getOrdersWithoutCostReportExcel = (0, catchAsync_1.catchAsync)(async (_req, res) => {
+        const orders = await db_1.prisma.order.findMany({
+            where: {
+                deleted: false,
+                status: { in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"] },
+                deliveryCost: { equals: 0 },
+            },
+            select: {
+                id: true,
+                totalCost: true,
+                paidAmount: true,
+                clientNet: true,
+                receiptNumber: true,
+                weight: true,
+                recipientName: true,
+                recipientPhones: true,
+                recipientAddress: true,
+                deliveryCost: true,
+                clientNotes: true,
+                details: true,
+                status: true,
+                secondaryStatus: true,
+                createdAt: true,
+                client: {
+                    select: {
+                        branch: {
+                            select: {
+                                name: true,
+                            },
+                        },
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                phone: true,
+                            },
+                        },
+                    },
+                },
+                governorate: true,
+                location: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                store: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            },
+        });
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet("Orders");
+        // Header row
+        sheet.addRow([
+            "رقم الطلب",
+            "رقم الوصل",
+            "اسم الصفحه",
+            "اسم العميل",
+            "اسم المستلم",
+            "هاتف المستلم",
+            "عنوان المستلم",
+            "المبلغ الاجمالي",
+            "المبلغ المستلم",
+            "تكلفة التوصيل",
+            "صافي العميل",
+            "حاله الطلب",
+            "الوزن",
+            "ملاحظات",
+            "التاريخ",
+        ]);
+        orders.forEach((order) => {
+            sheet.addRow([
+                order.id,
+                order.receiptNumber,
+                order.store.name,
+                order.client.user.name,
+                order.recipientName,
+                order.recipientPhones[0],
+                locations_repository_1.governorateArabicNames[order.governorate] + " - " + order.location.name,
+                order.totalCost,
+                order.paidAmount,
+                order.deliveryCost,
+                order.clientNet,
+                orders_responses_1.orderStatusArabicNames[order.status],
+                order.weight,
+                order.clientNotes,
+                new Date(order.createdAt).toLocaleString("ar-EG"),
+            ]);
+        });
+        // Set headers for a PDF response
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader("Content-Disposition", "attachment; filename=orders.xlsx");
+        await workbook.xlsx.write(res);
+        res.end();
+    });
     getRepositoryOrdersPDF = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const ordersData = orders_dto_1.OrdersReportPDFCreateSchema.parse(req.body);
         const { client_id, store_id, repository_id, to_repository_id, governorate, secondaryStatus, status, getIncoming, getOutComing, branchId, } = req.query;

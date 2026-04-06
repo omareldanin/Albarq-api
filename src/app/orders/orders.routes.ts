@@ -349,6 +349,19 @@ router
     ]),
     ordersController.getOrdersReportExcel,
   );
+
+router
+  .route("/orders/excelZeroCost")
+  .post(
+    isLoggedIn,
+    isAutherized([
+      ...Object.values(AdminRole),
+      ...Object.values(EmployeeRole),
+      ...Object.values(ClientRole),
+    ]),
+    ordersController.getOrdersWithoutCostReportExcel,
+  );
+
 router.route("/repository-orders/pdf").post(
   isLoggedIn,
   isAutherized([

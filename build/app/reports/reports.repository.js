@@ -220,6 +220,28 @@ class ReportsRepository {
                                 }
                                 : undefined,
                         },
+                        {
+                            deliveryAgentReport: data.filters.branch
+                                ? {
+                                    deliveryAgent: {
+                                        branch: {
+                                            parentBranchId: data.filters.branch,
+                                        },
+                                    },
+                                }
+                                : undefined,
+                        },
+                        {
+                            deliveryAgentReport: data.filters.branch
+                                ? {
+                                    deliveryAgent: {
+                                        branch: {
+                                            id: data.filters.branch,
+                                        },
+                                    },
+                                }
+                                : undefined,
+                        },
                     ],
                 },
                 {
@@ -243,9 +265,11 @@ class ReportsRepository {
                     },
                 },
                 {
-                    clientReport: {
-                        secondaryType: data.filters.secondaryType,
-                    },
+                    clientReport: data.filters.type === "CLIENT"
+                        ? {
+                            secondaryType: data.filters.secondaryType,
+                        }
+                        : undefined,
                 },
                 {
                     clientReport: {
@@ -349,6 +373,7 @@ class ReportsRepository {
             page: data.filters.page,
             size: data.filters.size,
         });
+        console.log(paginatedReports.data.length);
         const reportsReformed = paginatedReports.data.map((report) => (0, reports_responses_1.AllreportReform)(report));
         const reportsMetaData = await db_1.prisma.report.aggregate({
             where: {

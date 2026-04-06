@@ -249,6 +249,28 @@ export class ReportsRepository {
                   }
                 : undefined,
             },
+            {
+              deliveryAgentReport: data.filters.branch
+                ? {
+                    deliveryAgent: {
+                      branch: {
+                        parentBranchId: data.filters.branch,
+                      },
+                    },
+                  }
+                : undefined,
+            },
+            {
+              deliveryAgentReport: data.filters.branch
+                ? {
+                    deliveryAgent: {
+                      branch: {
+                        id: data.filters.branch,
+                      },
+                    },
+                  }
+                : undefined,
+            },
           ],
         },
         {
@@ -272,9 +294,12 @@ export class ReportsRepository {
           },
         },
         {
-          clientReport: {
-            secondaryType: data.filters.secondaryType,
-          },
+          clientReport:
+            data.filters.type === "CLIENT"
+              ? {
+                  secondaryType: data.filters.secondaryType,
+                }
+              : undefined,
         },
         {
           clientReport: {
@@ -389,6 +414,7 @@ export class ReportsRepository {
         size: data.filters.size,
       },
     );
+    console.log(paginatedReports.data.length);
 
     const reportsReformed = paginatedReports.data.map((report) =>
       AllreportReform(report),

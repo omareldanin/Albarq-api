@@ -444,9 +444,15 @@ export class ReportsService {
         branch = employee?.branch?.id;
       }
       repository = employee?.repository?.id;
-      if (employee?.repository?.type === "RETURN") {
+      if (
+        data.loggedInUser.role === "REPOSITORIY_EMPLOYEE" &&
+        employee?.repository?.type === "RETURN"
+      ) {
         data.filters.secondaryType = "RETURNED";
-      } else if (employee?.repository?.type === "EXPORT") {
+      } else if (
+        data.loggedInUser.role === "REPOSITORIY_EMPLOYEE" &&
+        employee?.repository?.type === "EXPORT"
+      ) {
         data.filters.secondaryType = "DELIVERED";
       }
     } else if (data.filters.branch) {
