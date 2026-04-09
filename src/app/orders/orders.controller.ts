@@ -1173,6 +1173,14 @@ export class OrdersController {
             id: 114,
           },
         },
+        clientReport: {
+          some: {
+            secondaryType: "DELIVERED",
+            report: {
+              deleted: false,
+            },
+          },
+        },
       },
       select: {
         id: true,

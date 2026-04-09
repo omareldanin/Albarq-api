@@ -1475,7 +1475,7 @@ class OrdersRepository {
                                             branch: {
                                                 id: data.filters.branchID,
                                                 governorate: "BAGHDAD",
-                                                // parentBranchId: {equals: null},
+                                                parentBranchId: { equals: null },
                                             },
                                         },
                                         {
