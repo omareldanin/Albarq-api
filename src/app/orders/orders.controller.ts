@@ -1168,6 +1168,11 @@ export class OrdersController {
         deleted: false,
         status: {in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"]},
         deliveryCost: {equals: 0},
+        client: {
+          branch: {
+            id: 114,
+          },
+        },
       },
       select: {
         id: true,
