@@ -80,6 +80,52 @@ export class ReportsService {
     return orders; // optional, mutated in place
   }
 
+  private extractOrders(report: any) {
+    switch (report.type) {
+      case ReportType.CLIENT:
+        return report.clientReport?.clientReportOrders ?? [];
+
+      case ReportType.REPOSITORY:
+        return report.repositoryReport?.repositoryReportOrders ?? [];
+
+      case ReportType.BRANCH:
+        return report.branchReport?.branchReportOrders ?? [];
+
+      case ReportType.GOVERNORATE:
+        return report.governorateReport?.governorateReportOrders ?? [];
+
+      case ReportType.DELIVERY_AGENT:
+        return report.deliveryAgentReport?.deliveryAgentReportOrders ?? [];
+
+      case ReportType.COMPANY:
+        return report.companyReport?.companyReportOrders ?? [];
+
+      default:
+        return [];
+    }
+  }
+  private async handleNotifications(report: any) {
+    switch (report.type) {
+      case ReportType.CLIENT:
+        await sendNotification({
+          title:
+            report.clientReport?.secondaryType === "RETURNED"
+              ? "تم حذف كشف راجع"
+              : "تم حذف كشف واصل",
+          content: `تم حذف الكشف برقم ${report.id}`,
+          userID: report.clientReport?.client.id,
+        });
+        break;
+
+      case ReportType.DELIVERY_AGENT:
+        await sendNotification({
+          title: "تم حذف كشف",
+          content: `تم حذف الكشف برقم ${report.id}`,
+          userID: report.deliveryAgentReport?.deliveryAgent.id,
+        });
+        break;
+    }
+  }
   async createReport(data: {
     loggedInUser: loggedInUserType;
     reportData: ReportCreateType;
@@ -903,75 +949,66 @@ export class ReportsService {
       reportID: data.params.reportID,
     });
   }
-
   async deactivateReport(data: {
     params: {reportID: number};
     loggedInUser: loggedInUserType;
   }) {
+    const {reportID} = data.params;
+    const {id: userId, name} = data.loggedInUser;
+
     const report = await reportsRepository.deactivateReport({
-      reportID: data.params.reportID,
-      deletedByID: data.loggedInUser.id,
+      reportID,
+      deletedByID: userId,
     });
 
-    const orders =
-      report?.type === ReportType.CLIENT
-        ? report.clientReport?.clientReportOrders
-        : report?.type === ReportType.REPOSITORY
-          ? report?.repositoryReport?.repositoryReportOrders
-          : report?.type === ReportType.BRANCH
-            ? report?.branchReport?.branchReportOrders
-            : report?.type === ReportType.GOVERNORATE
-              ? report?.governorateReport?.governorateReportOrders
-              : report?.type === ReportType.DELIVERY_AGENT
-                ? report?.deliveryAgentReport?.deliveryAgentReportOrders
-                : report?.type === ReportType.COMPANY
-                  ? report?.companyReport?.companyReportOrders
-                  : [];
+    if (!report) return;
 
-    if (orders) {
-      for (const order of orders) {
-        await ordersRepository.updateOrderTimeline({
-          orderID: order.id,
-          data: {
-            type: "REPORT_DELETE",
-            date: report?.updatedAt || new Date(),
-            old: {
-              id: data.params.reportID,
-              type: report?.type as ReportType,
-            },
-            new: null,
-            by: {
-              id: data.loggedInUser.id,
-              name: data.loggedInUser.name,
-            },
-            message: `تم حذف كشف ${localizeReportType(
-              report?.type as ReportType,
-            )} برقم ${data.params.reportID}`,
-          },
-        });
+    if (data.loggedInUser.role !== "COMPANY_MANAGER") {
+      if (
+        (report?.type === "CLIENT" &&
+          !data.loggedInUser.permissions.includes("DELETE_CLIENT_REPORT")) ||
+        (report?.type === "BRANCH" &&
+          !data.loggedInUser.permissions.includes("DELETE_BRANCH_REPORT")) ||
+        (report?.type === "COMPANY" &&
+          !data.loggedInUser.permissions.includes("DELETE_COMPANY_REPORT")) ||
+        (report?.type === "DELIVERY_AGENT" &&
+          !data.loggedInUser.permissions.includes(
+            "DELETE_DELIVERY_AGENT_REPORT",
+          )) ||
+        (report?.type === "REPOSITORY" &&
+          !data.loggedInUser.permissions.includes("DELETE_REPOSITORY_REPORT"))
+      ) {
+        throw new AppError("ليس لديك صلاحيه", 400);
       }
     }
 
-    // Send notification to client if report type is client report
-    if (report?.type === ReportType.CLIENT) {
-      await sendNotification({
-        title:
-          report.clientReport?.secondaryType === "RETURNED"
-            ? "تم حذف كشف راجع "
-            : "تم حذف كشف واصل ",
-        content: `تم حذف الكشف برقم ${report.id}`,
-        userID: report.clientReport?.client.id as number,
-      });
+    const orders = this.extractOrders(report);
+
+    // 🚀 Run in parallel instead of sequential loop
+    if (orders.length > 0) {
+      await Promise.all(
+        orders.map((order: {id: string; receiptNumber: string}) =>
+          ordersRepository.updateOrderTimeline({
+            orderID: order.id,
+            data: {
+              type: "REPORT_DELETE",
+              date: report.updatedAt || new Date(),
+              old: {
+                id: reportID,
+                type: report.type,
+              },
+              new: null,
+              by: {id: userId, name},
+              message: `تم حذف كشف ${localizeReportType(
+                report.type,
+              )} برقم ${reportID}`,
+            },
+          }),
+        ),
+      );
     }
 
-    // Send notification to delivery agent if report type is delivery agent report
-    if (report?.type === ReportType.DELIVERY_AGENT) {
-      await sendNotification({
-        title: "تم حذف كشف",
-        content: `تم حذف الكشف برقم ${report.id}`,
-        userID: report.deliveryAgentReport?.deliveryAgent.id as number,
-      });
-    }
+    await this.handleNotifications(report);
   }
 
   async reactivateReport(data: {params: {reportID: number}}) {

@@ -229,7 +229,7 @@ router.route("/reports/:reportID").delete(
 router.route("/reports/:reportID/deactivate").patch(
   isLoggedIn,
   isAutherized(
-    [EmployeeRole.COMPANY_MANAGER, EmployeeRole.REPOSITORIY_EMPLOYEE],
+    [EmployeeRole.COMPANY_MANAGER],
     [Permission.DELETE_DELIVERY_AGENT_REPORT],
   ),
   reportController.deactivateReport,
