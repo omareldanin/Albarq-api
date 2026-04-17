@@ -60,9 +60,7 @@ export class NotificationsRepository {
     const unSeenCount = await prisma.notification.count({
       where: {
         seen: false,
-        user: {
-          id: userID,
-        },
+        userId: userID,
       },
     });
     return {
