@@ -115,13 +115,13 @@ export class ClientsRepository {
     const cacheKey = this.clientsCacheKey(filters);
 
     // 1️⃣ FAST PATH – Redis
-    // const cached = await redis.get(cacheKey);
-    // if (cached) {
-    //   return JSON.parse(cached) as {
-    //     clients: any[];
-    //     pagesCount: number;
-    //   };
-    // }
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return JSON.parse(cached) as {
+        clients: any[];
+        pagesCount: number;
+      };
+    }
 
     let clientIDs: number[] = [];
 

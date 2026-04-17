@@ -3303,9 +3303,7 @@ class OrdersRepository {
     async getOrderTimeline(data) {
         const orderTimeline = await db_1.prisma.orderTimeline.findMany({
             where: {
-                order: {
-                    id: data.params.orderID,
-                },
+                orderId: data.params.orderID,
                 type: data.filters.types ? { in: data.filters.types } : data.filters.type,
             },
             select: orders_responses_1.orderTimelineSelect,

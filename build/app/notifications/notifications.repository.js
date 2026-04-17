@@ -31,9 +31,7 @@ class NotificationsRepository {
             // if seen true gett all notifications seen and unseen
             // if seen false get only unseen notifications
             where: {
-                user: {
-                    id: userID,
-                },
+                userId: userID,
                 seen: seen ? undefined : false,
             },
             orderBy: {

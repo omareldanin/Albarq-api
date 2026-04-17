@@ -210,6 +210,7 @@ export class EmployeesRepository {
 
     // 1️⃣ Redis first (FAST PATH)
     const cached = await redis.get(cacheKey);
+
     if (cached) {
       return JSON.parse(cached) as {
         employees: any[];

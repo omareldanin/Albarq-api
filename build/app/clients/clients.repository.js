@@ -85,13 +85,10 @@ class ClientsRepository {
     async getAllClientsPaginated(filters) {
         const cacheKey = this.clientsCacheKey(filters);
         // 1️⃣ FAST PATH – Redis
-        // const cached = await redis.get(cacheKey);
-        // if (cached) {
-        //   return JSON.parse(cached) as {
-        //     clients: any[];
-        //     pagesCount: number;
-        //   };
-        // }
+        const cached = await redis_1.redis.get(cacheKey);
+        if (cached) {
+            return JSON.parse(cached);
+        }
         let clientIDs = [];
         if (filters.loggedInUser?.role === "CLIENT_ASSISTANT") {
             const stores = await db_1.prisma.employee.findMany({

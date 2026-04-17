@@ -543,6 +543,8 @@ model OrderTimeline {
   orderId   String
   createdAt DateTime          @default(now())
   order     Order             @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
 }
 
 model Department {
