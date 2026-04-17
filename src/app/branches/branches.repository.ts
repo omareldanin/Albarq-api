@@ -94,9 +94,7 @@ export class BranchesRepository {
                   : undefined,
             },
             {
-              company: {
-                id: filters.companyID,
-              },
+              companyId: filters.companyID,
             },
             {governorate: filters.governorate},
             {

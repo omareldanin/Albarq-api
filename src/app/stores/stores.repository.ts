@@ -96,9 +96,9 @@ export class StoresRepository {
             : undefined,
         },
         {deleted: filters.deleted === "true"},
-        {company: {id: filters.companyID}},
+        {companyId: filters.companyID},
         {
-          client: filters.clientID ? {id: filters.clientID} : undefined,
+          clientId: filters.clientID ? filters.clientID : undefined,
         },
         {
           name: filters.name
@@ -191,9 +191,9 @@ export class StoresRepository {
     const where = {
       AND: [
         {deleted: filters.deleted === "true"},
-        {company: {id: filters.companyID}},
+        {companyId: filters.companyID},
         {
-          client: filters.clientID ? {id: filters.clientID} : undefined,
+          clientId: filters.clientID ? filters.clientID : undefined,
         },
         {
           name: filters.name
