@@ -544,7 +544,8 @@ model OrderTimeline {
   createdAt DateTime          @default(now())
   order     Order             @relation(fields: [orderId], references: [id])
 
-  @@index([orderId])
+  @@index([orderId, createdAt])
+  @@index([orderId, type, createdAt])
 }
 
 model Department {

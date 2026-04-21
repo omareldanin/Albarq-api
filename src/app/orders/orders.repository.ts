@@ -3738,10 +3738,14 @@ export class OrdersRepository {
     params: {orderID: string | undefined};
     filters: OrderTimelineFiltersType;
   }) {
+    if (!data.params.orderID) return [];
+
     const orderTimeline = await prisma.orderTimeline.findMany({
       where: {
         orderId: data.params.orderID,
-        type: data.filters.types ? {in: data.filters.types} : data.filters.type,
+        type: data.filters.types?.length
+          ? {in: data.filters.types}
+          : data.filters.type || undefined,
       },
       select: orderTimelineSelect,
       orderBy: {
