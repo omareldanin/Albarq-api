@@ -464,6 +464,23 @@ export class OrdersController {
     });
   });
 
+  changeOrderClient = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+    const orderData = OrderUpdateSchema.parse(req.body);
+
+    const order = await ordersService.changeOrderClient({
+      orderId: req.params.orderID,
+      loggedInUser: loggedInUser,
+      clientID: orderData.clientID!!,
+      storeID: orderData.storeID!!,
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: order,
+    });
+  });
+
   resendOrder = catchAsync(async (req, res) => {
     const params = {
       orderID: req.params.orderID,

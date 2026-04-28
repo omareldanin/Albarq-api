@@ -567,6 +567,17 @@ router.route("/orders/:orderID").patch(
 );
 
 router
+  .route("/orders/changeClient/:orderID")
+  .patch(
+    isLoggedIn,
+    isAutherized(
+      [...Object.values(AdminRole), ...Object.values(EmployeeRole)],
+      [Permission.CHANGE_ORDER_CLIENT],
+    ),
+    ordersController.changeOrderClient,
+  );
+
+router
   .route("/orders/resend/:orderID")
   .patch(
     upload.none(),

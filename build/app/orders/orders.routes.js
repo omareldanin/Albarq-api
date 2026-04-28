@@ -250,6 +250,9 @@ isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.Permission.CHANGE_ORDER_RECEPIENT_NUMBER,
 ]), ordersController.updateOrder);
 router
+    .route("/orders/changeClient/:orderID")
+    .patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([...Object.values(client_1.AdminRole), ...Object.values(client_1.EmployeeRole)], [client_1.Permission.CHANGE_ORDER_CLIENT]), ordersController.changeOrderClient);
+router
     .route("/orders/resend/:orderID")
     .patch(upload.none(), isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([...Object.values(client_1.ClientRole)]), ordersController.resendOrder);
 router

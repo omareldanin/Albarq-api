@@ -728,9 +728,13 @@ class ReportsService {
     async deactivateReport(data) {
         const { reportID } = data.params;
         const { id: userId, name } = data.loggedInUser;
-        const report = await reportsRepository.deactivateReport({
-            reportID,
-            deletedByID: userId,
+        const report = await db_1.prisma.report.findUnique({
+            where: {
+                id: data.params.reportID,
+            },
+            select: {
+                type: true,
+            },
         });
         if (!report)
             return;
@@ -748,25 +752,31 @@ class ReportsService {
                 throw new AppError_1.AppError("ليس لديك صلاحيه", 400);
             }
         }
-        const orders = this.extractOrders(report);
+        const deletedReport = await reportsRepository.deactivateReport({
+            reportID,
+            deletedByID: userId,
+        });
+        if (!deletedReport)
+            return;
+        const orders = this.extractOrders(deletedReport);
         // 🚀 Run in parallel instead of sequential loop
         if (orders.length > 0) {
             await Promise.all(orders.map((order) => ordersRepository.updateOrderTimeline({
                 orderID: order.id,
                 data: {
                     type: "REPORT_DELETE",
-                    date: report.updatedAt || new Date(),
+                    date: deletedReport.updatedAt || new Date(),
                     old: {
                         id: reportID,
-                        type: report.type,
+                        type: deletedReport.type,
                     },
                     new: null,
                     by: { id: userId, name },
-                    message: `تم حذف كشف ${(0, localize_1.localizeReportType)(report.type)} برقم ${reportID}`,
+                    message: `تم حذف كشف ${(0, localize_1.localizeReportType)(deletedReport.type)} برقم ${reportID}`,
                 },
             })));
         }
-        await this.handleNotifications(report);
+        await this.handleNotifications(deletedReport);
     }
     async reactivateReport(data) {
         const report = await reportsRepository.reactivateReport({

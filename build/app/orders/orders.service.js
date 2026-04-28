@@ -878,6 +878,81 @@ class OrdersService {
         }
         return { order: updated };
     };
+    changeOrderClient = async (data) => {
+        const order = await db_1.prisma.order.findUnique({
+            where: {
+                id: data.orderId,
+            },
+            select: {
+                id: true,
+                client: {
+                    select: {
+                        id: true,
+                        branchId: true,
+                        user: {
+                            select: {
+                                name: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        if (!order) {
+            throw new AppError_1.AppError("الطلب غير موجود", 404);
+        }
+        if ((data.loggedInUser.role !== "COMPANY_MANAGER" ||
+            !data.loggedInUser.mainRepository) &&
+            order?.client.branchId !== data.loggedInUser.branchId) {
+            throw new AppError_1.AppError("الطلب غير تابع إلي الفرع الخاص بك", 500);
+        }
+        const updatedOrder = await db_1.prisma.order.update({
+            where: {
+                id: data.orderId,
+            },
+            data: {
+                clientId: data.clientID,
+                storeId: data.storeID,
+            },
+            select: {
+                id: true,
+                clientId: true,
+                updatedAt: true,
+                client: {
+                    select: {
+                        id: true,
+                        branchId: true,
+                        user: {
+                            select: {
+                                name: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        await ordersRepository.updateOrderTimeline({
+            orderID: updatedOrder.id,
+            data: {
+                type: "CLIENT_CHANGE",
+                date: updatedOrder.updatedAt,
+                old: {
+                    id: order.client.id,
+                    name: order.client.user.name,
+                },
+                new: {
+                    id: updatedOrder.clientId,
+                    name: updatedOrder.client.user.name,
+                },
+                by: {
+                    id: data.loggedInUser.id,
+                    name: data.loggedInUser.name,
+                },
+                message: `لقد تم تغيير العميل من ${order.client.user.name} إلي ${updatedOrder.client.user.name}`,
+            },
+        });
+        return updatedOrder;
+    };
     repositoryConfirmOrderByReceiptNumber = async (data) => {
         const oldOrderData = await ordersRepository.getOrderByReceiptNumber({
             orderReceiptNumber: data.params.orderReceiptNumber,

@@ -2210,6 +2210,33 @@
         }
       }
     },
+    "/api/v1/orders/changeClient/{orderID}": {
+      "patch": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "orderID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/v1/orders/resend/{orderID}": {
       "patch": {
         "description": "",

@@ -6,6 +6,7 @@ export const automaticUpdatesCronJob = cron.schedule(
   "*/10 * * * *",
   async () => {
     Logger.info("Running automatic updates");
+
     await automaticUpdatesTask();
   },
   {

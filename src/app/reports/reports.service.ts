@@ -956,9 +956,13 @@ export class ReportsService {
     const {reportID} = data.params;
     const {id: userId, name} = data.loggedInUser;
 
-    const report = await reportsRepository.deactivateReport({
-      reportID,
-      deletedByID: userId,
+    const report = await prisma.report.findUnique({
+      where: {
+        id: data.params.reportID,
+      },
+      select: {
+        type: true,
+      },
     });
 
     if (!report) return;
@@ -982,7 +986,14 @@ export class ReportsService {
       }
     }
 
-    const orders = this.extractOrders(report);
+    const deletedReport = await reportsRepository.deactivateReport({
+      reportID,
+      deletedByID: userId,
+    });
+
+    if (!deletedReport) return;
+
+    const orders = this.extractOrders(deletedReport);
 
     // 🚀 Run in parallel instead of sequential loop
     if (orders.length > 0) {
@@ -992,15 +1003,15 @@ export class ReportsService {
             orderID: order.id,
             data: {
               type: "REPORT_DELETE",
-              date: report.updatedAt || new Date(),
+              date: deletedReport.updatedAt || new Date(),
               old: {
                 id: reportID,
-                type: report.type,
+                type: deletedReport.type,
               },
               new: null,
               by: {id: userId, name},
               message: `تم حذف كشف ${localizeReportType(
-                report.type,
+                deletedReport.type,
               )} برقم ${reportID}`,
             },
           }),
@@ -1008,7 +1019,7 @@ export class ReportsService {
       );
     }
 
-    await this.handleNotifications(report);
+    await this.handleNotifications(deletedReport);
   }
 
   async reactivateReport(data: {params: {reportID: number}}) {

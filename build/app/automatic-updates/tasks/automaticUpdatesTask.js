@@ -24,6 +24,7 @@ const automaticUpdatesTask = async () => {
                     company: {
                         id: company.id,
                     },
+                    branchId: 123,
                     enabled: true,
                 },
                 select: {
@@ -42,6 +43,7 @@ const automaticUpdatesTask = async () => {
                     newOrderStatus: true,
                 },
             });
+            console.log(automaticUpdates);
             for (const automaticUpdate of automaticUpdates) {
                 const orders = await db_1.prisma.order.findMany({
                     where: {
@@ -79,6 +81,7 @@ const automaticUpdatesTask = async () => {
                 if (!orders) {
                     return;
                 }
+                console.log(orders);
                 for (const order of orders) {
                     const lastUpdate = new Date(order.updatedAt);
                     const difference = currentDate.getTime() - lastUpdate.getTime();
@@ -88,17 +91,20 @@ const automaticUpdatesTask = async () => {
                     const updateHour = automaticUpdate.updateAt === 24 ? 0 : automaticUpdate.updateAt; // handle midnight
                     const currentHour = currentDate.getHours();
                     const currentMinutes = currentDate.getMinutes();
+                    console.log(lastUpdate);
+                    console.log(difference);
+                    console.log(hoursDifference);
+                    console.log(currentHour);
                     if (automaticUpdate.checkAfter &&
-                        hoursDifference < automaticUpdate.checkAfter) {
+                        hoursDifference < automaticUpdate.checkAfter)
                         continue;
+                    if (automaticUpdate.updateAt === 24) {
+                        if (!(currentHour === 23 && currentMinutes >= 40))
+                            continue;
                     }
-                    else if (automaticUpdate.updateAt === 24 &&
-                        (currentHour < 23 || (currentHour === 23 && currentMinutes < 59))) {
-                        continue;
-                    }
-                    else if (automaticUpdate.updateAt !== 24 &&
-                        currentHour < updateHour) {
-                        continue;
+                    else {
+                        if (currentHour < updateHour)
+                            continue;
                     }
                     if (order?.status !== automaticUpdate.newOrderStatus &&
                         (automaticUpdate.newOrderStatus === client_1.OrderStatus.DELIVERED ||
