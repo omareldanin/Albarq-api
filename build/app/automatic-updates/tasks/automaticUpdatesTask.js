@@ -24,7 +24,6 @@ const automaticUpdatesTask = async () => {
                     company: {
                         id: company.id,
                     },
-                    branchId: 123,
                     enabled: true,
                 },
                 select: {

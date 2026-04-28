@@ -901,8 +901,8 @@ class OrdersService {
         if (!order) {
             throw new AppError_1.AppError("الطلب غير موجود", 404);
         }
-        if ((data.loggedInUser.role !== "COMPANY_MANAGER" ||
-            !data.loggedInUser.mainRepository) &&
+        if (data.loggedInUser.role !== "COMPANY_MANAGER" &&
+            !data.loggedInUser.mainRepository &&
             order?.client.branchId !== data.loggedInUser.branchId) {
             throw new AppError_1.AppError("الطلب غير تابع إلي الفرع الخاص بك", 500);
         }

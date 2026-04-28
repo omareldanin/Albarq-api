@@ -1150,8 +1150,8 @@ export class OrdersService {
     }
 
     if (
-      (data.loggedInUser.role !== "COMPANY_MANAGER" ||
-        !data.loggedInUser.mainRepository) &&
+      data.loggedInUser.role !== "COMPANY_MANAGER" &&
+      !data.loggedInUser.mainRepository &&
       order?.client.branchId !== data.loggedInUser.branchId
     ) {
       throw new AppError("الطلب غير تابع إلي الفرع الخاص بك", 500);
