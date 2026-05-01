@@ -43,7 +43,6 @@ export const automaticUpdatesTask = async () => {
           newOrderStatus: true,
         },
       });
-      console.log(automaticUpdates);
 
       for (const automaticUpdate of automaticUpdates) {
         const orders = await prisma.order.findMany({
@@ -84,7 +83,6 @@ export const automaticUpdatesTask = async () => {
         if (!orders) {
           return;
         }
-        console.log(orders);
 
         for (const order of orders) {
           const lastUpdate = new Date(order.updatedAt);
@@ -97,10 +95,7 @@ export const automaticUpdatesTask = async () => {
           const currentHour = currentDate.getHours();
           const currentMinutes = currentDate.getMinutes();
 
-          console.log(lastUpdate);
-          console.log(difference);
-          console.log(hoursDifference);
-          console.log(currentHour);
+          console.log("currentHour", currentHour);
           if (
             automaticUpdate.checkAfter &&
             hoursDifference < automaticUpdate.checkAfter
