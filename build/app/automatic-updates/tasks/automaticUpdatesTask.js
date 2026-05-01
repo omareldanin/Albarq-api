@@ -93,7 +93,7 @@ const automaticUpdatesTask = async () => {
                         hoursDifference < automaticUpdate.checkAfter)
                         continue;
                     if (automaticUpdate.updateAt === 24) {
-                        if (!(currentHour === 23 && currentMinutes > 40))
+                        if (!(currentHour === 23 && currentMinutes >= 50))
                             continue;
                     }
                     else {

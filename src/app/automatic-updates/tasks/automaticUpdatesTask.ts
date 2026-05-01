@@ -103,7 +103,7 @@ export const automaticUpdatesTask = async () => {
             continue;
 
           if (automaticUpdate.updateAt === 24) {
-            if (!(currentHour === 23 && currentMinutes > 40)) continue;
+            if (!(currentHour === 23 && currentMinutes >= 50)) continue;
           } else {
             if (currentHour < updateHour) continue;
           }
