@@ -542,9 +542,7 @@ export class OrdersController {
           id: {
             in: ordersIDs.ordersIDs,
           },
-          client: {
-            id: loggedInUser.id,
-          },
+          clientId: loggedInUser.id,
         },
       });
       if (count > 0) {
@@ -557,12 +555,10 @@ export class OrdersController {
         where: {
           status: "REGISTERED",
           deleted: false,
-          client: {
-            id:
-              loggedInUser.role === "CLIENT"
-                ? loggedInUser.id
-                : loggedInUser.clientId,
-          },
+          clientId:
+            loggedInUser.role === "CLIENT"
+              ? loggedInUser.id
+              : loggedInUser.clientId,
           id: {
             in: ordersIDs.ordersIDs,
           },
