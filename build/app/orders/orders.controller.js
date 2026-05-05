@@ -2036,6 +2036,8 @@ class OrdersController {
         sheet.column("E").width(15);
         sheet.cell("F1").value("الملاحظات");
         sheet.column("F").width(25);
+        sheet.cell("G1").value("رقم الطلب");
+        sheet.column("G").width(25);
         // عمل Data Validation
         for (let row = 2; row <= 1000; row++) {
             // المحافظة
