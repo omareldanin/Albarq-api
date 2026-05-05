@@ -494,6 +494,10 @@ export class OrdersService {
 
     let size = data.filters.size || 200;
 
+    if (data.filters.size > 200) {
+      size = 200;
+    }
+
     const {orders, ordersMetaData, pagesCount} =
       await ordersRepository.getAllOrdersPaginatedApiKey({
         filters: {

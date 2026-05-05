@@ -7,7 +7,6 @@ exports.automaticUpdatesCronJob = void 0;
 const node_cron_1 = __importDefault(require("node-cron"));
 const automaticUpdatesTask_1 = require("../app/automatic-updates/tasks/automaticUpdatesTask");
 exports.automaticUpdatesCronJob = node_cron_1.default.schedule("*/10 * * * *", async () => {
-    console.log("Running automatic updates");
     await (0, automaticUpdatesTask_1.automaticUpdatesTask)();
 }, {
     scheduled: false,

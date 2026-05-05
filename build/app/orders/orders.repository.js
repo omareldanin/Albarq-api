@@ -949,26 +949,22 @@ class OrdersRepository {
                     {
                         OR: [
                             {
-                                company: {
-                                    id: data.filters.companyID,
-                                },
+                                companyId: data.filters.companyID,
                             },
                             {
-                                forwardedFrom: {
-                                    id: data.filters.inquiryCompaniesIDs
-                                        ? {
-                                            in: [
-                                                ...data.filters.inquiryCompaniesIDs,
-                                                //   data.filters.companyID as number
-                                            ],
-                                        }
-                                        : data.filters.forwarded &&
-                                            data.filters.forwardedFromID === undefined
+                                forwardedFromId: data.filters.inquiryCompaniesIDs
+                                    ? {
+                                        in: [
+                                            ...data.filters.inquiryCompaniesIDs,
+                                            //   data.filters.companyID as number
+                                        ],
+                                    }
+                                    : data.filters.forwarded &&
+                                        data.filters.forwardedFromID === undefined
+                                        ? undefined
+                                        : data.filters.governorate
                                             ? undefined
-                                            : data.filters.governorate
-                                                ? undefined
-                                                : data.filters.companyID,
-                                },
+                                            : data.filters.companyID,
                             },
                         ],
                     },
@@ -1029,30 +1025,22 @@ class OrdersRepository {
                     },
                     // Filter by deliveryAgentID
                     {
-                        deliveryAgent: {
-                            id: data.filters.deliveryAgentID,
-                        },
+                        deliveryAgentId: data.filters.deliveryAgentID,
                     },
                     // Filter by clientID
                     {
-                        client: {
-                            id: data.filters.clientID,
-                        },
+                        clientId: data.filters.clientID,
                     },
                     // Filter by storeID
                     {
-                        store: {
-                            id: data.loggedInUser?.role === "CLIENT_ASSISTANT" ||
-                                data.loggedInUser?.role === "EMPLOYEE_CLIENT_ASSISTANT"
-                                ? { in: data.filters.inquiryStoresIDs }
-                                : data.filters.storeID,
-                        },
+                        storeId: data.loggedInUser?.role === "CLIENT_ASSISTANT" ||
+                            data.loggedInUser?.role === "EMPLOYEE_CLIENT_ASSISTANT"
+                            ? { in: data.filters.inquiryStoresIDs }
+                            : data.filters.storeID,
                     },
                     // Filter by locationID
                     {
-                        location: {
-                            id: data.filters.locationID,
-                        },
+                        locationId: data.filters.locationID,
                     },
                     {
                         receiptNumber: data.filters.receiptNumber,

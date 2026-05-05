@@ -21,9 +21,7 @@ const automaticUpdatesTask = async () => {
         for (const company of companies) {
             const automaticUpdates = await db_1.prisma.automaticUpdate.findMany({
                 where: {
-                    company: {
-                        id: company.id,
-                    },
+                    companyId: company.id,
                     enabled: true,
                 },
                 select: {
@@ -45,16 +43,12 @@ const automaticUpdatesTask = async () => {
             for (const automaticUpdate of automaticUpdates) {
                 const orders = await db_1.prisma.order.findMany({
                     where: {
-                        company: {
-                            id: company.id,
-                        },
+                        companyId: company.id,
                         status: automaticUpdate.orderStatus,
                         notes: automaticUpdate.notes && automaticUpdate.notes !== ""
                             ? automaticUpdate.notes
                             : undefined,
-                        branch: {
-                            id: automaticUpdate.branch.id,
-                        },
+                        branchId: automaticUpdate.branch.id,
                     },
                     select: {
                         id: true,

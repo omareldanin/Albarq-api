@@ -437,21 +437,37 @@ model Order {
   repositoryReport RepositoryReport[] @relation("OrderToRepositoryReport")
 
   @@index([receiptNumber])
-  @@index([status])
-  @@index([secondaryStatus])
-  @@index([clientId])
-  @@index([deliveryAgentId])
-  @@index([governorate])
-  @@index([storeId])
-  @@index([branchId])
+  @@index([branchReportId])
+  @@index([deliveryAgentReportId])
+  @@index([governorateReportId])
   @@index([companyId])
-  // 🚀 pagination & performance
+  @@index([forwardedFromId])
+  @@index([status])
+  @@index([clientId])
+  @@index([storeId])
+  @@index([deliveryAgentId])
+  @@index([locationId])
+  @@index([deleted])
+  @@index([printed])
+  @@index([confirmed])
+  @@index([processed])
+  @@index([processingStatus])
+  @@index([deliveryType])
+  @@index([updatedAt])
+  @@index([deliveryDate])
   @@index([createdAt(sort: Desc)])
-  @@index([clientId, createdAt(sort: Desc)])
-  @@index([branchId, createdAt(sort: Desc)])
   @@index([companyId, createdAt(sort: Desc)])
-  @@index([storeId, createdAt(sort: Desc)])
+  @@index([companyId, confirmed, createdAt(sort: Desc)])
+  @@index([branchId, createdAt(sort: Desc)])
+  @@index([clientId, createdAt(sort: Desc)])
   @@index([deliveryAgentId, createdAt(sort: Desc)])
+  @@index([storeId, createdAt(sort: Desc)])
+  @@index([companyId, status, createdAt(sort: Desc)])
+  @@index([companyId, storeId, createdAt(sort: Desc)])
+  @@index([companyId, locationId, createdAt(sort: Desc)])
+  @@index([branchId, status, createdAt(sort: Desc)])
+  @@index([clientId, status, createdAt(sort: Desc)])
+  @@index([deliveryAgentId, status, createdAt(sort: Desc)])
 }
 
 model Chat {
@@ -632,6 +648,7 @@ model Report {
   @@index([type])
   @@index([employeeId])
   @@index([companyId])
+  @@index([deleted])
 }
 
 model SavedPdf {
@@ -675,6 +692,9 @@ model ClientReport {
 
   @@index([clientId])
   @@index([storeId])
+  @@index([secondaryType])
+  @@index([clientId, secondaryType])
+  @@index([storeId, secondaryType])
 }
 
 model RepositoryReport {
@@ -688,6 +708,8 @@ model RepositoryReport {
   orders               Order[]             @relation("OrderToRepositoryReport")
 
   @@index([repositoryId])
+  @@index([secondaryType])
+  @@index([repositoryId, secondaryType])
 }
 
 model BranchReport {
@@ -702,6 +724,7 @@ model BranchReport {
   orders                   Order[] @relation("BranchReportToOrder")
 
   @@index([branchId])
+  @@index([branchId, type])
 }
 
 model DeliveryAgentReport {
