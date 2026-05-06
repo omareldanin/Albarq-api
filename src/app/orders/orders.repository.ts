@@ -33,6 +33,7 @@ import {io} from "../../server";
 import {MessagesController} from "../messages/messages.controller";
 import crypto from "crypto";
 import {redis} from "../../lib/redis";
+import {calculatePagesCount} from "../../lib/pagination";
 
 const messageController = new MessagesController();
 
@@ -1903,7 +1904,7 @@ export class OrdersRepository {
                               ]
                             : undefined,
                 },
-          select: data.filters.forMobile ? minifiedOrderSelect : orderSelect,
+          select: minifiedOrderSelect,
           orderBy: {
             createdAt: "desc",
           },
@@ -1911,6 +1912,7 @@ export class OrdersRepository {
         {
           page: data.filters.page,
           size: data.filters.size,
+          withCount: true,
         },
       );
 
@@ -1948,6 +1950,7 @@ export class OrdersRepository {
         {
           page: data.filters.page,
           size: data.filters.size,
+          withCount: false,
         },
       ),
       prisma.order.aggregate({
@@ -1982,7 +1985,10 @@ export class OrdersRepository {
       where,
       orders: ordersReformed,
       ordersMetaData: ordersMetaDataReformed,
-      pagesCount: paginatedOrders.pagesCount,
+      pagesCount: calculatePagesCount(
+        ordersMetaDataAggregate._count.id,
+        data.filters.size,
+      ),
     };
   }
 
@@ -2273,6 +2279,7 @@ export class OrdersRepository {
       {
         page: data.filters.page,
         size: data.filters.size,
+        withCount: false,
       },
     );
 
@@ -2303,7 +2310,10 @@ export class OrdersRepository {
     return {
       orders: ordersReformed,
       ordersMetaData: ordersMetaDataReformed,
-      pagesCount: paginatedOrders.pagesCount,
+      pagesCount: calculatePagesCount(
+        ordersMetaDataAggregate._count.id,
+        data.filters.size,
+      ),
     };
   }
 

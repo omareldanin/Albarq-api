@@ -12,6 +12,7 @@ const server_1 = require("../../server");
 const messages_controller_1 = require("../messages/messages.controller");
 const crypto_1 = __importDefault(require("crypto"));
 const redis_1 = require("../../lib/redis");
+const pagination_1 = require("../../lib/pagination");
 const messageController = new messages_controller_1.MessagesController();
 let counter = 0;
 class OrdersRepository {
@@ -1726,13 +1727,14 @@ class OrdersRepository {
                                         ]
                                         : undefined,
                     },
-                select: data.filters.forMobile ? orders_responses_1.minifiedOrderSelect : orders_responses_1.orderSelect,
+                select: orders_responses_1.minifiedOrderSelect,
                 orderBy: {
                     createdAt: "desc",
                 },
             }, {
                 page: data.filters.page,
                 size: data.filters.size,
+                withCount: true,
             });
             const ordersReformed = paginatedOrders.data.map(orders_responses_1.minifiedOrderReform);
             const ordersMetaDataReformed = {
@@ -1763,6 +1765,7 @@ class OrdersRepository {
             }, {
                 page: data.filters.page,
                 size: data.filters.size,
+                withCount: false,
             }),
             db_1.prisma.order.aggregate({
                 where: where,
@@ -1793,7 +1796,7 @@ class OrdersRepository {
             where,
             orders: ordersReformed,
             ordersMetaData: ordersMetaDataReformed,
-            pagesCount: paginatedOrders.pagesCount,
+            pagesCount: (0, pagination_1.calculatePagesCount)(ordersMetaDataAggregate._count.id, data.filters.size),
         };
     }
     async getAllOrdersPaginatedApiKey(data) {
@@ -2066,6 +2069,7 @@ class OrdersRepository {
         }, {
             page: data.filters.page,
             size: data.filters.size,
+            withCount: false,
         });
         const ordersReformed = paginatedOrders.data.map(orders_responses_1.orderReformApiKey);
         const ordersMetaDataAggregate = await db_1.prisma.order.aggregate({
@@ -2091,7 +2095,7 @@ class OrdersRepository {
         return {
             orders: ordersReformed,
             ordersMetaData: ordersMetaDataReformed,
-            pagesCount: paginatedOrders.pagesCount,
+            pagesCount: (0, pagination_1.calculatePagesCount)(ordersMetaDataAggregate._count.id, data.filters.size),
         };
     }
     async getOrdersByIDs(data) {

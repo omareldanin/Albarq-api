@@ -9,21 +9,21 @@ const prismaX = new client_1.PrismaClient({
     log: [
         {
             emit: "event",
-            level: "query"
+            level: "query",
         },
         {
             emit: "event",
-            level: "error"
+            level: "error",
         },
         {
             emit: "event",
-            level: "info"
+            level: "info",
         },
         {
             emit: "event",
-            level: "warn"
-        }
-    ]
+            level: "warn",
+        },
+    ],
 });
 // prismaX.$use(async (params, next) => {
 //     const before = Date.now();
@@ -84,38 +84,43 @@ exports.prisma = prismaX
                     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
                     this.findMany(args),
                     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-                    this.count({ where: args.where })
+                    this.count({ where: args.where }),
                     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
                 ]);
-            }
-        }
-    }
+            },
+        },
+    },
 })
     .$extends({
     name: "findManyPaginated",
     model: {
         $allModels: {
             async findManyPaginated(args, pagination) {
-                const data = (await exports.prisma.$transaction([
-                    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-                    this.findMany({
-                        ...args,
-                        skip: (0, pagination_1.calculateSkip)(pagination.page, pagination.size),
-                        take: pagination.size
-                    }),
-                    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-                    this.count({ where: args.where })
-                    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-                ]));
-                return {
-                    data: data[0],
-                    dataCount: data[1],
-                    // currentPage: pagination.page,
-                    pagesCount: (0, pagination_1.calculatePagesCount)(data[1], pagination.size)
+                const findArgs = {
+                    ...args,
+                    skip: (0, pagination_1.calculateSkip)(pagination.page, pagination.size),
+                    take: pagination.size,
+                    relationLoadStrategy: "query",
                 };
-            }
-        }
-    }
+                const data = await this.findMany(findArgs);
+                if (!pagination.withCount) {
+                    return {
+                        data,
+                        dataCount: undefined,
+                        pagesCount: undefined,
+                    };
+                }
+                const dataCount = await this.count({
+                    where: args.where,
+                });
+                return {
+                    data,
+                    dataCount,
+                    pagesCount: (0, pagination_1.calculatePagesCount)(dataCount, pagination.size),
+                };
+            },
+        },
+    },
 });
 // .$extends({
 //     query: {

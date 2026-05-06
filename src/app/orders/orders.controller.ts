@@ -22,6 +22,8 @@ import {
   SecondaryStatus,
 } from "@prisma/client";
 import {
+  minifiedOrderReform,
+  minifiedOrderSelect,
   orderReform,
   orderSelect,
   orderStatusArabicNames,
@@ -354,7 +356,7 @@ export class OrdersController {
         orderBy: {
           updatedAt: "desc",
         },
-        select: orderSelect,
+        select: minifiedOrderSelect,
       },
       {
         page: pageNumber,
@@ -362,7 +364,7 @@ export class OrdersController {
       },
     );
 
-    const newData = results.data.map((order) => orderReform(order));
+    const newData = results.data.map((order) => minifiedOrderReform(order));
 
     res.status(200).json({
       status: "success",
