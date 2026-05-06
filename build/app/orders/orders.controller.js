@@ -311,12 +311,12 @@ class OrdersController {
             orderBy: {
                 updatedAt: "desc",
             },
-            select: orders_responses_1.minifiedOrderSelect,
+            select: orders_responses_1.orderSelect,
         }, {
             page: pageNumber,
             size: pageSize,
         });
-        const newData = results.data.map((order) => (0, orders_responses_1.minifiedOrderReform)(order));
+        const newData = results.data.map((order) => (0, orders_responses_1.orderReform)(order));
         res.status(200).json({
             status: "success",
             pagesCount: results.pagesCount,

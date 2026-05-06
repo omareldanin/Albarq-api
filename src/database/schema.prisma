@@ -27,15 +27,15 @@ model User {
   deletedEmployees Employee[]          @relation("deletedBy")
   employee         Employee?
   message          Message[]
+  seenMsgs         MessageSeen[]
   notifications    Notification[]
   deletedOrders    Order[]             @relation("deletedBy")
   deletedReports   Report[]            @relation("deletedBy")
   deletedStores    Store[]             @relation("deletedBy")
   tickets          Ticket[]
   ticketResponses  TicketResponse[]
-  loginHistory     UsersLoginHistory[]
-  seenMsgs         MessageSeen[]
   transactions     Transaction[]
+  loginHistory     UsersLoginHistory[]
 
   @@index([name])
   @@index([phone])
@@ -68,9 +68,9 @@ model Employee {
   departmentId            Int?
   clientId                Int?
   clientAssistantRole     String?
-  orderType               String?
   emergency               Boolean                          @default(false)
   mainEmergency           Boolean                          @default(false)
+  orderType               String?
   deliveryAgentReports    DeliveryAgentReport[]
   deliveryAgentsLocations DeliveryAgentsLocations[]
   branch                  Branch?                          @relation(fields: [branchId], references: [id])
@@ -117,7 +117,6 @@ model Client {
   id                        Int                     @id
   role                      ClientRole              @default(CLIENT)
   token                     String                  @default("")
-  apiKeyHash                String?
   governoratesDeliveryCosts Json                    @default("[]")
   deletedById               Int?
   createdById               Int
@@ -130,6 +129,7 @@ model Client {
   showNumbers               Boolean                 @default(false)
   showDeliveryNumber        Boolean                 @default(false)
   isExternal                Boolean                 @default(false)
+  apiKeyHash                String?
   categories                Category[]
   branch                    Branch?                 @relation(fields: [branchId], references: [id])
   company                   Company                 @relation(fields: [companyId], references: [id])
@@ -144,10 +144,10 @@ model Client {
   orders                    Order[]
   products                  Product[]
   ReceivingAgentClients     ReceivingAgentClients[]
+  savedPdf                  SavedPdf[]
   sizes                     Size[]
   stores                    Store[]
   tickets                   Ticket[]
-  savedPdf                  SavedPdf[]
 
   @@index([companyId])
 }
@@ -207,8 +207,11 @@ model Branch {
   updatedAt           DateTime                   @updatedAt
   branchCLient        Float                      @default(1000)
   branchOrder         Float                      @default(1000)
+  parentBranchId      Int?
   automaticUpdate     AutomaticUpdate[]
   company             Company                    @relation(fields: [companyId], references: [id])
+  parentBranch        Branch?                    @relation("BranchHierarchy", fields: [parentBranchId], references: [id])
+  childBranches       Branch[]                   @relation("BranchHierarchy")
   branchReports       BranchReport[]
   clients             Client[]
   clientOrderReceipts ClientOrderReceipt[]
@@ -219,10 +222,6 @@ model Branch {
   orders              Order[]
   repositories        Repository[]
   transctions         Transaction[]
-
-  parentBranchId Int?
-  parentBranch   Branch?  @relation("BranchHierarchy", fields: [parentBranchId], references: [id])
-  childBranches  Branch[] @relation("BranchHierarchy")
 
   @@unique([name, companyId])
   @@index([companyId])
@@ -356,7 +355,6 @@ model Order {
   recipientAddress       String
   details                String                   @default("")
   notes                  String                   @default("")
-  clientNotes            String                   @default("")
   deliveryType           DeliveryType             @default(NORMAL)
   governorate            Governorate
   currentLocation        String                   @default("")
@@ -380,7 +378,6 @@ model Order {
   branchId               Int?
   automaticUpdateId      Int?
   deleted                Boolean                  @default(false)
-  receivedAt             DateTime?
   deletedAt              DateTime?
   deletedById            Int?
   processed              Boolean                  @default(false)
@@ -406,6 +403,9 @@ model Order {
   oldDeliveryCost        Float                    @default(0)
   receivedBranchId       Int?
   branchNet              Float                    @default(0)
+  pdfId                  Int?
+  receivedAt             DateTime?
+  clientNotes            String                   @default("")
   branchDeliveryCost     Float                    @default(0)
   chat                   Chat?
   CustomerOutput         CustomerOutput[]
@@ -421,6 +421,7 @@ model Order {
   forwardedFrom          Company?                 @relation("forwardedFrom", fields: [forwardedFromId], references: [id])
   governorateReport      GovernorateReport?       @relation(fields: [governorateReportId], references: [id])
   location               Location                 @relation(fields: [locationId], references: [id])
+  savedPdf               SavedPdf?                @relation(fields: [pdfId], references: [id])
   processedBy            Employee?                @relation("processedBy", fields: [processedById], references: [id])
   repository             Repository?              @relation(fields: [repositoryId], references: [id])
   store                  Store                    @relation(fields: [storeId], references: [id])
@@ -428,46 +429,44 @@ model Order {
   timeline               OrderTimeline[]
   ordersInquiryEmployees OrdersInquiryEmployees[]
   tickets                Ticket[]
-  pdfId                  Int?
-  savedPdf               SavedPdf?                @relation(fields: [pdfId], references: [id])
-
-  branchReport     BranchReport[]     @relation("BranchReportToOrder")
-  clientReport     ClientReport[]     @relation("ClientReportToOrder")
-  companyReport    CompanyReport[]    @relation("CompanyReportToOrder")
-  repositoryReport RepositoryReport[] @relation("OrderToRepositoryReport")
+  branchReport           BranchReport[]           @relation("BranchReportToOrder")
+  clientReport           ClientReport[]           @relation("ClientReportToOrder")
+  companyReport          CompanyReport[]          @relation("CompanyReportToOrder")
+  repositoryReport       RepositoryReport[]       @relation("OrderToRepositoryReport")
 
   @@index([receiptNumber])
   @@index([branchReportId])
   @@index([deliveryAgentReportId])
   @@index([governorateReportId])
-  @@index([companyId])
-  @@index([forwardedFromId])
-  @@index([status])
-  @@index([clientId])
-  @@index([storeId])
-  @@index([deliveryAgentId])
-  @@index([locationId])
-  @@index([deleted])
-  @@index([printed])
-  @@index([confirmed])
-  @@index([processed])
-  @@index([processingStatus])
-  @@index([deliveryType])
-  @@index([updatedAt])
-  @@index([deliveryDate])
-  @@index([createdAt(sort: Desc)])
-  @@index([companyId, createdAt(sort: Desc)])
-  @@index([companyId, confirmed, createdAt(sort: Desc)])
-  @@index([branchId, createdAt(sort: Desc)])
   @@index([clientId, createdAt(sort: Desc)])
+  @@index([clientId, status, createdAt(sort: Desc)])
   @@index([deliveryAgentId, createdAt(sort: Desc)])
-  @@index([storeId, createdAt(sort: Desc)])
+  @@index([deliveryAgentId, status, createdAt(sort: Desc)])
+  @@index([deliveryDate])
+  @@index([updatedAt])
+  @@index([branchId, createdAt(sort: Desc)])
+  @@index([branchId, status, createdAt(sort: Desc)])
+  @@index([clientId])
+  @@index([companyId, confirmed, createdAt(sort: Desc)])
+  @@index([companyId, createdAt(sort: Desc)])
+  @@index([companyId])
+  @@index([companyId, locationId, createdAt(sort: Desc)])
   @@index([companyId, status, createdAt(sort: Desc)])
   @@index([companyId, storeId, createdAt(sort: Desc)])
-  @@index([companyId, locationId, createdAt(sort: Desc)])
-  @@index([branchId, status, createdAt(sort: Desc)])
-  @@index([clientId, status, createdAt(sort: Desc)])
-  @@index([deliveryAgentId, status, createdAt(sort: Desc)])
+  @@index([confirmed])
+  @@index([createdAt(sort: Desc)])
+  @@index([deleted])
+  @@index([deliveryAgentId])
+  @@index([deliveryType])
+  @@index([forwardedFromId])
+  @@index([locationId])
+  @@index([printed])
+  @@index([processed])
+  @@index([processingStatus])
+  @@index([status])
+  @@index([storeId, createdAt(sort: Desc)])
+  @@index([storeId])
+  @@index([receiptNumber], map: "idx_orders_receipt_number")
 }
 
 model Chat {
@@ -499,9 +498,9 @@ model Message {
   createdBy             User?         @relation(fields: [createdById], references: [id])
   seenBy                MessageSeen[]
 
-  @@index([chatId, createdAt(sort: Desc)], name: "idx_message_chat_created")
-  @@index([chatId, createdById], name: "idx_message_chat_creator")
-  @@index([createdById], name: "idx_message_createdBy")
+  @@index([chatId, createdAt(sort: Desc)], map: "idx_message_chat_created")
+  @@index([chatId, createdById], map: "idx_message_chat_creator")
+  @@index([createdById], map: "idx_message_createdBy")
 }
 
 model MessageSeen {
@@ -509,13 +508,12 @@ model MessageSeen {
   messageId Int
   userId    Int
   seenAt    DateTime @default(now())
-
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([messageId, userId])
-  @@index([userId], name: "idx_seenBy_user")
-  @@index([messageId], name: "idx_seenBy_message")
+  @@index([userId], map: "idx_seenBy_user")
+  @@index([messageId], map: "idx_seenBy_message")
 }
 
 model CustomerOutput {
@@ -536,12 +534,12 @@ model CustomerOutput {
 model ClientOrderReceipt {
   id            Int      @id @default(autoincrement())
   receiptNumber String   @default("")
-  notes         String?  @default("")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   branchId      Int
   storeId       Int?
   paperReceipt  Boolean  @default(false)
+  notes         String?  @default("")
   branch        Branch   @relation(fields: [branchId], references: [id])
   store         Store?   @relation(fields: [storeId], references: [id])
   order         Order?
@@ -562,6 +560,8 @@ model OrderTimeline {
 
   @@index([orderId, createdAt])
   @@index([orderId, type, createdAt])
+  @@index([orderId, createdAt(sort: Desc)], map: "idx_order_timeline_order_created_desc")
+  @@index([orderId, type, createdAt(sort: Desc)], map: "idx_order_timeline_order_type_created_desc")
 }
 
 model Department {
@@ -655,8 +655,8 @@ model SavedPdf {
   id          Int      @id @default(autoincrement())
   ordersCount Int      @default(0)
   createdAt   DateTime @default(now())
-  orders      Order[]
   clientId    Int?
+  orders      Order[]
   client      Client?  @relation(fields: [clientId], references: [id])
 }
 
@@ -717,8 +717,8 @@ model BranchReport {
   branchId                 Int
   baghdadDeliveryCost      Float   @default(0)
   governoratesDeliveryCost Float   @default(0)
-  forChildBranches         Boolean @default(false)
   type                     String  @default("forwarded")
+  forChildBranches         Boolean @default(false)
   branch                   Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
   report                   Report  @relation(fields: [id], references: [id], onDelete: Cascade)
   orders                   Order[] @relation("BranchReportToOrder")
@@ -849,12 +849,17 @@ model Notification {
   content       String       @default("")
   userId        Int
   seen          Boolean      @default(false)
-  type          OrderStatus?
   createdAt     DateTime     @default(now())
   receiptNumber String?
+  type          OrderStatus?
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  @@index([userId, id])
+  @@index([userId, seen])
+  @@index([userId, seen, id])
+  @@index([userId, id(sort: Desc)], map: "idx_notification_user_id")
+  @@index([userId, seen], map: "idx_notification_user_seen")
+  @@index([userId, seen, id(sort: Desc)], map: "idx_notification_user_seen_id")
 }
 
 model Banner {
@@ -885,8 +890,6 @@ model AutomaticUpdate {
   branch          Branch                          @relation(fields: [branchId], references: [id])
   company         Company                         @relation(fields: [companyId], references: [id])
   orders          Order[]
-
-  // @@unique([orderStatus, branchId, companyId])
 }
 
 model ClosedStatus {
@@ -905,20 +908,19 @@ model ClosedStatus {
 
 model Transaction {
   id          Int             @id @default(autoincrement())
-  paidAmount  Float           @default(0)
   type        TransactionType
   for         String
   employeeId  Int?
   createdById Int?
+  companyId   Int
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  paidAmount  Float           @default(0)
   branchId    Int?
+  branch      Branch?         @relation(fields: [branchId], references: [id])
+  company     Company         @relation(fields: [companyId], references: [id])
   createdBy   User?           @relation(fields: [createdById], references: [id])
   employee    Employee?       @relation(fields: [employeeId], references: [id])
-  companyId   Int
-  company     Company         @relation(fields: [companyId], references: [id])
-  branch      Branch?         @relation(fields: [branchId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model UsersLoginHistory {
@@ -960,11 +962,11 @@ enum EmployeeRole {
   REPOSITORIY_EMPLOYEE
   INQUIRY_EMPLOYEE
   CLIENT_ASSISTANT
-  EMPLOYEE_CLIENT_ASSISTANT
   CLIENT
   ADMIN
   ADMIN_ASSISTANT
   MAIN_EMERGENCY_EMPLOYEE
+  EMPLOYEE_CLIENT_ASSISTANT
 }
 
 enum ClientRole {

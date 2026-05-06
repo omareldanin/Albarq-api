@@ -5201,11 +5201,11 @@
               "REPOSITORIY_EMPLOYEE",
               "INQUIRY_EMPLOYEE",
               "CLIENT_ASSISTANT",
-              "EMPLOYEE_CLIENT_ASSISTANT",
               "CLIENT",
               "ADMIN",
               "ADMIN_ASSISTANT",
-              "MAIN_EMERGENCY_EMPLOYEE"
+              "MAIN_EMERGENCY_EMPLOYEE",
+              "EMPLOYEE_CLIENT_ASSISTANT"
             ]
           },
           "permissions": {
@@ -5619,11 +5619,11 @@
               "REPOSITORIY_EMPLOYEE",
               "INQUIRY_EMPLOYEE",
               "CLIENT_ASSISTANT",
-              "EMPLOYEE_CLIENT_ASSISTANT",
               "CLIENT",
               "ADMIN",
               "ADMIN_ASSISTANT",
-              "MAIN_EMERGENCY_EMPLOYEE"
+              "MAIN_EMERGENCY_EMPLOYEE",
+              "EMPLOYEE_CLIENT_ASSISTANT"
             ]
           },
           "permissions": {
