@@ -434,7 +434,6 @@ model Order {
   companyReport          CompanyReport[]          @relation("CompanyReportToOrder")
   repositoryReport       RepositoryReport[]       @relation("OrderToRepositoryReport")
 
-  @@index([receiptNumber])
   @@index([branchReportId])
   @@index([deliveryAgentReportId])
   @@index([governorateReportId])
@@ -467,6 +466,7 @@ model Order {
   @@index([storeId, createdAt(sort: Desc)])
   @@index([storeId])
   @@index([receiptNumber], map: "idx_orders_receipt_number")
+  @@index([receiptNumber])
 }
 
 model Chat {
