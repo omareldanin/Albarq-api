@@ -3013,10 +3013,7 @@ export class OrdersRepository {
           ? false
           : data.orderData.confirmed,
         details: data.orderData.details,
-        receivedAt:
-          data.orderData.confirmed && !orderData?.receivedAt
-            ? new Date()
-            : undefined,
+        receivedAt: data.orderData.received ? new Date() : undefined,
         deliveryDate: data.orderData.deliveryAgentID
           ? new Date()
           : data.orderData.deliveryDate,
@@ -3279,6 +3276,19 @@ export class OrdersRepository {
         };
       };
     }
+
+    const now = new Date();
+
+    const start = new Date(now);
+    start.setHours(23, 0, 0, 0);
+
+    // if current time is before 11 PM, today's business day started yesterday 11 PM
+    if (now < start) {
+      start.setDate(start.getDate() - 1);
+    }
+
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
 
     const filtersReformed =
       data.loggedInUser.role === "INQUIRY_EMPLOYEE"
@@ -3680,7 +3690,10 @@ export class OrdersRepository {
               : undefined,
           receivedAt:
             data.loggedInUser.role !== "DELIVERY_AGENT"
-              ? {gte: new Date(Date.now() - 22 * 60 * 60 * 1000)}
+              ? {
+                  gte: start,
+                  lt: end,
+                }
               : undefined,
         },
       }),

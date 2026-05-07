@@ -42,6 +42,7 @@ exports.OrderUpdateSchema = zod_1.z
     receiptNumber: zod_1.z.string(),
     processed: zod_1.z.coerce.boolean(),
     confirmed: zod_1.z.coerce.boolean(),
+    received: zod_1.z.coerce.boolean(),
     discount: zod_1.z.coerce.number(),
     status: zod_1.z.nativeEnum(client_1.OrderStatus),
     processingStatus: zod_1.z.nativeEnum(client_1.ProcessingStatus),

@@ -64,6 +64,7 @@ export const OrderUpdateSchema = z
     receiptNumber: z.string(),
     processed: z.coerce.boolean(),
     confirmed: z.coerce.boolean(),
+    received: z.coerce.boolean(),
     discount: z.coerce.number(),
     status: z.nativeEnum(OrderStatus),
     processingStatus: z.nativeEnum(ProcessingStatus),

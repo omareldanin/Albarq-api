@@ -6835,6 +6835,11 @@
               "boolean"
             ]
           },
+          "received": {
+            "type": [
+              "boolean"
+            ]
+          },
           "discount": {
             "type": [
               "number"

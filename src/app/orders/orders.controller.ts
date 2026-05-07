@@ -696,6 +696,7 @@ export class OrdersController {
           orderData.forwardedRepo = exportRepo?.id;
           orderData.branchID = repository.branchId;
           orderData.deliveryAgentID = null;
+          orderData.received = true;
         } else {
           if (orderData.repositoryID) {
             const repository = await prisma.repository.findFirst({
@@ -712,6 +713,7 @@ export class OrdersController {
               },
             });
             orderData.branchID = repository?.branchId;
+            orderData.received = true;
           } else {
             const mainRepository = await prisma.repository.findFirst({
               where: {
@@ -750,6 +752,7 @@ export class OrdersController {
         }
         orderData.repositoryID = exportRepo?.id;
         orderData.branchID = user.branch?.id;
+        orderData.received = true;
         // orderData.deliveryAgentID = null;
       }
 
