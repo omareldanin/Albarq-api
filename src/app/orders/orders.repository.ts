@@ -3302,49 +3302,37 @@ export class OrdersRepository {
                   : undefined,
               },
               {
-                branch: data.filters.orderType
+                branchId: data.filters.orderType
                   ? undefined
                   : data.filters.inquiryBranchesIDs
                     ? {
-                        id: {
-                          in: data.filters.inquiryBranchesIDs,
-                        },
+                        in: data.filters.inquiryBranchesIDs,
                       }
                     : data.loggedInUser.mainRepository
                       ? undefined
-                      : {
-                          id: data.loggedInUser.branchId,
-                        },
+                      : data.loggedInUser.branchId,
               },
               {
-                deliveryAgent: data.filters.inquiryDeliveryAgentsIDs
+                deliveryAgentId: data.filters.inquiryDeliveryAgentsIDs
                   ? {
-                      id: {
-                        in: data.filters.inquiryDeliveryAgentsIDs,
-                      },
+                      in: data.filters.inquiryDeliveryAgentsIDs,
                     }
                   : undefined,
               },
               {
-                store: data.filters.inquiryStoresIDs
+                storeId: data.filters.inquiryStoresIDs
                   ? {
-                      id: {
-                        in: data.filters.inquiryStoresIDs,
-                      },
+                      in: data.filters.inquiryStoresIDs,
                     }
                   : undefined,
               },
               {
-                company: {
-                  id: data.filters.companyID,
-                },
+                companyId: data.filters.companyID,
               },
               {
-                location: data.filters.inquiryLocationsIDs
+                locationId: data.filters.inquiryLocationsIDs
                   ? {
-                      id: {
-                        in: data.filters.inquiryLocationsIDs,
-                      },
+                      in: data.filters.inquiryLocationsIDs,
                     }
                   : undefined,
               },
@@ -3382,30 +3370,24 @@ export class OrdersRepository {
               {
                 OR: [
                   {
-                    company: {
-                      id: data.filters.companyID,
-                    },
+                    companyId: data.filters.companyID,
                   },
                   {
-                    forwardedFrom: {
-                      id: data.filters.inquiryCompaniesIDs
-                        ? {
-                            in: [
-                              ...data.filters.inquiryCompaniesIDs,
-                              //   data.filters.companyID as number
-                            ],
-                          }
-                        : data.filters.companyID,
-                    },
+                    forwardedFromId: data.filters.inquiryCompaniesIDs
+                      ? {
+                          in: [
+                            ...data.filters.inquiryCompaniesIDs,
+                            //   data.filters.companyID as number
+                          ],
+                        }
+                      : data.filters.companyID,
                   },
                 ],
               },
               {
-                branch: data.filters.inquiryBranchesIDs
+                branchId: data.filters.inquiryBranchesIDs
                   ? {
-                      id: {
-                        in: data.filters.inquiryBranchesIDs,
-                      },
+                      in: data.filters.inquiryBranchesIDs,
                     }
                   : undefined,
               },
@@ -3444,29 +3426,23 @@ export class OrdersRepository {
                 },
               },
               {
-                client: {
-                  id: data.filters.inquiryClientsIDs
-                    ? {
-                        in: [
-                          ...data.filters.inquiryClientsIDs,
-                          //   data.filters.companyID as number
-                        ],
-                      }
-                    : data.filters.clientID,
-                },
+                clientId: data.filters.inquiryClientsIDs
+                  ? {
+                      in: [
+                        ...data.filters.inquiryClientsIDs,
+                        //   data.filters.companyID as number
+                      ],
+                    }
+                  : data.filters.clientID,
               },
               {
                 deliveryType: data.filters.deliveryType,
               },
               {
-                location: {
-                  id: data.filters.locationID,
-                },
+                locationId: data.filters.locationID,
               },
               {
-                deliveryAgent: {
-                  id: data.filters.deliveryAgentID,
-                },
+                deliveryAgentId: data.filters.deliveryAgentID,
               },
               {
                 deleted: false,
@@ -3718,7 +3694,7 @@ export class OrdersRepository {
       allOrdersStatisticsWithoutClientReport,
     });
 
-    await redis.set(cacheKey, JSON.stringify(result), "EX", 120);
+    await redis.set(cacheKey, JSON.stringify(result), "EX", 60);
 
     return {
       ...result,
