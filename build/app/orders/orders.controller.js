@@ -315,6 +315,7 @@ class OrdersController {
         }, {
             page: pageNumber,
             size: pageSize,
+            withCount: true,
         });
         const newData = results.data.map((order) => (0, orders_responses_1.orderReform)(order));
         res.status(200).json({

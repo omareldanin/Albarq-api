@@ -359,6 +359,7 @@ export class OrdersController {
       {
         page: pageNumber,
         size: pageSize,
+        withCount: true,
       },
     );
 
