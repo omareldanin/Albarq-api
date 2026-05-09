@@ -11,7 +11,7 @@ const orders_responses_1 = require("./orders.responses");
 const server_1 = require("../../server");
 const messages_controller_1 = require("../messages/messages.controller");
 const crypto_1 = __importDefault(require("crypto"));
-// import {redis} from "../../lib/redis";
+const redis_1 = require("../../lib/redis");
 const pagination_1 = require("../../lib/pagination");
 const messageController = new messages_controller_1.MessagesController();
 let counter = 0;
@@ -2855,84 +2855,11 @@ class OrdersRepository {
         return deletedOrder;
     }
     async getOrdersStatistics(data) {
-        // const cacheKey = `orders:stats:u:${data.loggedInUser.id}:r:${data.loggedInUser.role}:f:${this.hashFilters(data.filters)}`;
-        // const cached = await redis.get(cacheKey);
-        // if (cached) {
-        //   return JSON.parse(cached) as {
-        //     ordersStatisticsByStatus: {
-        //       status:
-        //         | "REGISTERED"
-        //         | "READY_TO_SEND"
-        //         | "WITH_DELIVERY_AGENT"
-        //         | "DELIVERED"
-        //         | "REPLACED"
-        //         | "PARTIALLY_RETURNED"
-        //         | "RETURNED"
-        //         | "POSTPONED"
-        //         | "CHANGE_ADDRESS"
-        //         | "RESEND"
-        //         | "WITH_RECEIVING_AGENT"
-        //         | "PROCESSING"
-        //         | "IN_MAIN_REPOSITORY"
-        //         | "IN_GOV_REPOSITORY";
-        //       totalCost: number;
-        //       count: number;
-        //       name: string;
-        //       icon: string;
-        //       inside: boolean;
-        //     }[];
-        //     ordersStatisticsByGovernorate: {
-        //       governorate:
-        //         | "AL_ANBAR"
-        //         | "BABIL"
-        //         | "BABIL_COMPANIES"
-        //         | "BAGHDAD"
-        //         | "BASRA"
-        //         | "DHI_QAR"
-        //         | "AL_QADISIYYAH"
-        //         | "DIYALA"
-        //         | "DUHOK"
-        //         | "ERBIL"
-        //         | "KARBALA"
-        //         | "KIRKUK"
-        //         | "MAYSAN"
-        //         | "MUTHANNA"
-        //         | "NAJAF"
-        //         | "NINAWA"
-        //         | "SALAH_AL_DIN"
-        //         | "SULAYMANIYAH"
-        //         | "WASIT";
-        //       totalCost: number;
-        //       count: number;
-        //     }[];
-        //     allOrdersStatistics: {
-        //       totalCost: number;
-        //       count: number;
-        //     };
-        //     allOrdersStatisticsWithoutClientReport: {
-        //       totalCost: number;
-        //       deliveryCost: number;
-        //       count: number;
-        //     };
-        //     allOrdersStatisticsWithoutDeliveryReport: {
-        //       totalCost: number;
-        //       deliveryCost: number;
-        //       count: number;
-        //     };
-        //     allOrdersStatisticsWithoutBranchReport: {
-        //       totalCost: number;
-        //       count: number;
-        //     };
-        //     allOrdersStatisticsWithoutCompanyReport: {
-        //       totalCost: number;
-        //       count: number;
-        //     };
-        //     todayOrdersStatistics: {
-        //       totalCost: number;
-        //       count: number;
-        //     };
-        //   };
-        // }
+        const cacheKey = `orders:stats:u:${data.loggedInUser.id}:r:${data.loggedInUser.role}:f:${this.hashFilters(data.filters)}`;
+        const cached = await redis_1.redis.get(cacheKey);
+        if (cached) {
+            return JSON.parse(cached);
+        }
         const now = new Date();
         const start = new Date(now);
         start.setHours(23, 0, 0, 0);
@@ -3340,7 +3267,7 @@ class OrdersRepository {
             allOrdersStatisticsWithoutDeliveryReport,
             allOrdersStatisticsWithoutClientReport,
         });
-        // await redis.set(cacheKey, JSON.stringify(result), "EX", 60);
+        await redis_1.redis.set(cacheKey, JSON.stringify(result), "EX", 60);
         return {
             ...result,
             todayOrdersStatistics: !data.filters.orderType && data.loggedInUser.role === "BRANCH_MANAGER"
