@@ -160,6 +160,7 @@ export class BranchesRepository {
         {
           page: filters.page,
           size: filters.size,
+          withCount: true,
         },
       );
 

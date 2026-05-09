@@ -66,6 +66,7 @@ class AutomaticUpdatesService {
             }, {
                 page: data.filters.page,
                 size: data.filters.size,
+                withCount: true,
             });
             return {
                 automaticUpdates: paginatedAutomaticUpdates.data,
@@ -89,6 +90,7 @@ class AutomaticUpdatesService {
         }, {
             page: data.filters.page,
             size: data.filters.size,
+            withCount: true,
         });
         return {
             automaticUpdates: paginatedAutomaticUpdates.data,

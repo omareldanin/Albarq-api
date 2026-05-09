@@ -405,6 +405,7 @@ export class EmployeesRepository {
         {
           page: data.filters.page,
           size: data.filters.size,
+          withCount: true,
         },
       );
 

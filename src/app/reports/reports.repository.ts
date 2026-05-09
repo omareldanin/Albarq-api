@@ -412,9 +412,9 @@ export class ReportsRepository {
       {
         page: data.filters.page,
         size: data.filters.size,
+        withCount: true,
       },
     );
-    console.log(paginatedReports.data.length);
 
     const reportsReformed = paginatedReports.data.map((report) =>
       AllreportReform(report),

@@ -579,6 +579,7 @@ export class MessagesController {
       {
         page,
         size,
+        withCount: true,
       },
     );
 

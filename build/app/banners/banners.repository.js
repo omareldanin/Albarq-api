@@ -13,11 +13,11 @@ class BannersRepository {
                 url: data.url,
                 company: {
                     connect: {
-                        id: companyID
-                    }
-                }
+                        id: companyID,
+                    },
+                },
             },
-            select: banners_responses_1.bannerSelect
+            select: banners_responses_1.bannerSelect,
         });
         return createdBanner;
     }
@@ -25,48 +25,52 @@ class BannersRepository {
         const paginatedBanners = await db_1.prisma.banner.findManyPaginated({
             where: {
                 company: {
-                    id: filters.companyID
-                }
+                    id: filters.companyID,
+                },
             },
             orderBy: {
-                id: "desc"
+                id: "desc",
             },
-            select: banners_responses_1.bannerSelect
+            select: banners_responses_1.bannerSelect,
         }, {
             page: filters.page,
-            size: filters.size
+            size: filters.size,
+            withCount: true,
         });
-        return { banners: paginatedBanners.data, pagesCount: paginatedBanners.pagesCount };
+        return {
+            banners: paginatedBanners.data,
+            pagesCount: paginatedBanners.pagesCount,
+        };
     }
     async getBanner(data) {
         const banner = await db_1.prisma.banner.findUnique({
             where: {
-                id: data.bannerID
+                id: data.bannerID,
             },
-            select: banners_responses_1.bannerSelect
+            select: banners_responses_1.bannerSelect,
         });
         return banner;
     }
     async updateBanner(data) {
         const banner = await db_1.prisma.banner.update({
             where: {
-                id: data.bannerID
+                id: data.bannerID,
             },
             data: {
                 title: data.bannerData.title,
                 content: data.bannerData.content,
                 image: data.bannerData.image,
-                url: data.bannerData.url
+                url: data.bannerData.url,
             },
-            select: banners_responses_1.bannerSelect
+            select: banners_responses_1.bannerSelect,
         });
         return banner;
     }
     async deleteBanner(data) {
         await db_1.prisma.banner.delete({
             where: {
-                id: data.bannerID
-            }
+                id: data.bannerID,
+            },
         });
         return true;
     }

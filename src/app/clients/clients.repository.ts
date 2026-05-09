@@ -212,6 +212,7 @@ export class ClientsRepository {
         {
           page: filters.page,
           size: filters.size,
+          withCount: true,
         },
       );
 

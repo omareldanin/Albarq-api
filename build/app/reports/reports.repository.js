@@ -372,8 +372,8 @@ class ReportsRepository {
         }, {
             page: data.filters.page,
             size: data.filters.size,
+            withCount: true,
         });
-        console.log(paginatedReports.data.length);
         const reportsReformed = paginatedReports.data.map((report) => (0, reports_responses_1.AllreportReform)(report));
         const reportsMetaData = await db_1.prisma.report.aggregate({
             where: {

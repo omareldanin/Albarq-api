@@ -55,6 +55,7 @@ export class NotificationsRepository {
       {
         page: page,
         size: size,
+        withCount: true,
       },
     );
     const unSeenCount = await prisma.notification.count({

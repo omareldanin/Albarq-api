@@ -166,6 +166,7 @@ class LocationsRepository {
             }, {
                 page: filters.page,
                 size: filters.size,
+                withCount: true,
             });
             result = {
                 locations: paginatedLocations.data.map(locations_responses_1.locationReform),

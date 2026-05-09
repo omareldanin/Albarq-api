@@ -121,6 +121,7 @@ class StoresRepository {
         }, {
             page: filters.page,
             size: filters.size,
+            withCount: true,
         });
         const result = {
             stores: paginatedStores.data.map(stores_responses_1.storeSelectReform),

@@ -204,6 +204,7 @@ export class LocationsRepository {
         {
           page: filters.page,
           size: filters.size,
+          withCount: true,
         },
       );
 

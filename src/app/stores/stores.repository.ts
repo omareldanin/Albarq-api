@@ -158,6 +158,7 @@ export class StoresRepository {
       {
         page: filters.page,
         size: filters.size,
+        withCount: true,
       },
     );
 

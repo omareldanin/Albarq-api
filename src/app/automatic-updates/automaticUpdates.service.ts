@@ -81,7 +81,8 @@ export class AutomaticUpdatesService {
           {
             page: data.filters.page,
             size: data.filters.size,
-          }
+            withCount: true,
+          },
         );
       return {
         automaticUpdates: paginatedAutomaticUpdates.data,
@@ -109,7 +110,8 @@ export class AutomaticUpdatesService {
         {
           page: data.filters.page,
           size: data.filters.size,
-        }
+          withCount: true,
+        },
       );
 
     return {

@@ -128,6 +128,7 @@ class BranchesRepository {
             }, {
                 page: filters.page,
                 size: filters.size,
+                withCount: true,
             });
             result = {
                 branches: paginatedBranches.data,

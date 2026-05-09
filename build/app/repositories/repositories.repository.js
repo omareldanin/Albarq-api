@@ -103,6 +103,7 @@ class RepositoriesRepository {
         }, {
             page: filters.page,
             size: filters.size,
+            withCount: true,
         });
         return {
             repositories: paginatedRepositories.data,

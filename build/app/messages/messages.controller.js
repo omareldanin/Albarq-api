@@ -518,6 +518,7 @@ class MessagesController {
         }, {
             page,
             size,
+            withCount: true,
         });
         const unSeenChats = await db_1.prisma.message.groupBy({
             by: ["chatId"],

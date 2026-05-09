@@ -354,6 +354,7 @@ class EmployeesRepository {
             }, {
                 page: data.filters.page,
                 size: data.filters.size,
+                withCount: true,
             });
             result = {
                 employees: employees.data.map(employees_responses_1.employeeReform),
