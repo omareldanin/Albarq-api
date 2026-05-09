@@ -682,6 +682,7 @@ model ClientReport {
   @@index([secondaryType])
   @@index([clientId, secondaryType])
   @@index([storeId, secondaryType])
+  @@index([id, secondaryType])
 }
 
 model RepositoryReport {

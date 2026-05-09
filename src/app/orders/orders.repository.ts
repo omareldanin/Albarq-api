@@ -3639,21 +3639,14 @@ export class OrdersRepository {
         },
         where: {
           ...filtersReformed,
-          OR: [
-            {
-              clientReport: {
-                none: {
-                  secondaryType: "DELIVERED",
-                  report: {
-                    deleted: false,
-                  },
-                },
-              },
-              status: {
-                in: ["DELIVERED", "REPLACED", "PARTIALLY_RETURNED"],
+          clientReport: {
+            none: {
+              secondaryType: "DELIVERED",
+              report: {
+                deleted: false,
               },
             },
-          ],
+          },
           status: {
             in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
           },
