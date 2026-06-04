@@ -6,17 +6,17 @@ import {
   OrderTimeline,
   ReportType,
 } from "@prisma/client";
-import {AppError} from "../../lib/AppError";
+import { AppError } from "../../lib/AppError";
 // import { OrderTimelineType } from "../orders/orders.dto";
-import {localizeReportType} from "../../lib/localize";
-import type {loggedInUserType} from "../../types/user";
+import { localizeReportType } from "../../lib/localize";
+import type { loggedInUserType } from "../../types/user";
 // import {ClientsRepository} from "../clients/clients.repository";
-import {EmployeesRepository} from "../employees/employees.repository";
-import {sendNotification} from "../notifications/helpers/sendNotification";
-import {OrdersRepository} from "../orders/orders.repository";
-import type {orderReform} from "../orders/orders.responses";
-import {generateReport} from "./helpers/generateReport";
-import {generateReportsReport} from "./helpers/generateReportsReport";
+import { EmployeesRepository } from "../employees/employees.repository";
+import { sendNotification } from "../notifications/helpers/sendNotification";
+import { OrdersRepository } from "../orders/orders.repository";
+import type { orderReform } from "../orders/orders.responses";
+import { generateReport } from "./helpers/generateReport";
+import { generateReportsReport } from "./helpers/generateReportsReport";
 import type {
   ReportCreateOrdersFiltersType,
   ReportCreateType,
@@ -24,11 +24,11 @@ import type {
   ReportsFiltersType,
   ReportsReportPDFCreateType,
 } from "./reports.dto";
-import {ReportsRepository} from "./reports.repository";
-import {type reportReform} from "./reports.responses";
-import {prisma} from "../../database/db";
+import { ReportsRepository } from "./reports.repository";
+import { type reportReform } from "./reports.responses";
+import { prisma } from "../../database/db";
 import axios from "axios";
-import {generateBranchClientsReport} from "./helpers/generateBranchClientsReport";
+import { generateBranchClientsReport } from "./helpers/generateBranchClientsReport";
 
 const reportsRepository = new ReportsRepository();
 const ordersRepository = new OrdersRepository();
@@ -137,7 +137,7 @@ export class ReportsService {
     if (data.reportData.ordersIDs === "*") {
       orders = (
         await ordersRepository.getAllOrdersPaginated({
-          filters: {...data.ordersFilters, size: 5000},
+          filters: { ...data.ordersFilters, size: 5000 },
           loggedInUser: data.loggedInUser,
         })
       ).orders as ReturnType<typeof orderReform>[];
@@ -275,6 +275,7 @@ export class ReportsService {
     if (
       data.reportData.type === ReportType.CLIENT ||
       data.reportData.type === ReportType.BRANCH ||
+      data.reportData.type === ReportType.COMPANY ||
       data.reportData.type === ReportType.GOVERNORATE
     ) {
       const updatedOrders = await ordersRepository.updateOrdersCosts2({
@@ -299,7 +300,7 @@ export class ReportsService {
         },
       });
 
-      orders = await ordersRepository.getOrdersByIDs({ordersIDs});
+      orders = await ordersRepository.getOrdersByIDs({ ordersIDs });
     }
 
     const reportMetaData = {
@@ -353,8 +354,8 @@ export class ReportsService {
       loggedInUser: data.loggedInUser,
       reportData:
         data.reportData.type === ReportType.CLIENT
-          ? {...data.reportData, ordersIDs, clientID}
-          : {...data.reportData, ordersIDs},
+          ? { ...data.reportData, ordersIDs, clientID }
+          : { ...data.reportData, ordersIDs },
       type: data.ordersFilters.orderType || undefined,
       reportMetaData: reportMetaData,
     });
@@ -548,7 +549,7 @@ export class ReportsService {
         reportsMetaData: {},
       };
     }
-    const {reports, reportsMetaData, pagesCount} =
+    const { reports, reportsMetaData, pagesCount } =
       await reportsRepository.getAllReportsPaginated({
         filters: {
           ...data.filters,
@@ -561,10 +562,10 @@ export class ReportsService {
         },
       });
 
-    return {page, pagesCount, reports, reportsMetaData};
+    return { page, pagesCount, reports, reportsMetaData };
   }
 
-  async getReport(data: {params: {reportID: number}}) {
+  async getReport(data: { params: { reportID: number } }) {
     const report = await reportsRepository.getReport({
       reportID: data.params.reportID,
     });
@@ -586,7 +587,7 @@ export class ReportsService {
   }
 
   async getReportPDF(data: {
-    params: {reportID: number};
+    params: { reportID: number };
     loggedInUser?: loggedInUserType;
   }) {
     const reportData = await reportsRepository.getReport({
@@ -651,7 +652,7 @@ export class ReportsService {
     const timelines = await prisma.orderTimeline.findMany({
       where: {
         type: "PAID_AMOUNT_CHANGE",
-        orderId: {in: ordersIDs},
+        orderId: { in: ordersIDs },
       },
     });
 
@@ -771,7 +772,7 @@ export class ReportsService {
   }
 
   async getReportClientsPDF(data: {
-    params: {reportID: number};
+    params: { reportID: number };
     loggedInUser?: loggedInUserType;
   }) {
     const reportData = await reportsRepository.getReport({
@@ -809,7 +810,7 @@ export class ReportsService {
         clientNet: true,
       },
       where: {
-        id: {in: ordersIDs},
+        id: { in: ordersIDs },
         // branchReport: {
         //   some: {
         //     id: data.params.reportID,
@@ -822,7 +823,7 @@ export class ReportsService {
 
     const clients = await prisma.client.findMany({
       where: {
-        id: {in: clientsIds},
+        id: { in: clientsIds },
       },
       select: {
         user: {
@@ -924,7 +925,7 @@ export class ReportsService {
   }
 
   async updateReport(data: {
-    params: {reportID: number};
+    params: { reportID: number };
     loggedInUser: loggedInUserType;
     reportData: ReportUpdateType;
   }) {
@@ -944,17 +945,17 @@ export class ReportsService {
     return report;
   }
 
-  async deleteReport(data: {params: {reportID: number}}) {
+  async deleteReport(data: { params: { reportID: number } }) {
     await reportsRepository.deleteReport({
       reportID: data.params.reportID,
     });
   }
   async deactivateReport(data: {
-    params: {reportID: number};
+    params: { reportID: number };
     loggedInUser: loggedInUserType;
   }) {
-    const {reportID} = data.params;
-    const {id: userId, name} = data.loggedInUser;
+    const { reportID } = data.params;
+    const { id: userId, name } = data.loggedInUser;
 
     const report = await prisma.report.findUnique({
       where: {
@@ -998,7 +999,7 @@ export class ReportsService {
     // 🚀 Run in parallel instead of sequential loop
     if (orders.length > 0) {
       await Promise.all(
-        orders.map((order: {id: string; receiptNumber: string}) =>
+        orders.map((order: { id: string; receiptNumber: string }) =>
           ordersRepository.updateOrderTimeline({
             orderID: order.id,
             data: {
@@ -1009,7 +1010,7 @@ export class ReportsService {
                 type: deletedReport.type,
               },
               new: null,
-              by: {id: userId, name},
+              by: { id: userId, name },
               message: `تم حذف كشف ${localizeReportType(
                 deletedReport.type,
               )} برقم ${reportID}`,
@@ -1022,7 +1023,7 @@ export class ReportsService {
     await this.handleNotifications(deletedReport);
   }
 
-  async reactivateReport(data: {params: {reportID: number}}) {
+  async reactivateReport(data: { params: { reportID: number } }) {
     const report = await reportsRepository.reactivateReport({
       reportID: data.params.reportID,
     });

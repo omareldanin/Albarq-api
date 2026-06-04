@@ -256,6 +256,20 @@ router
     .route("/orders/resend/:orderID")
     .patch(upload.none(), isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([...Object.values(client_1.ClientRole)]), ordersController.resendOrder);
 router
+    .route("/orders/forwardOrder/:orderID")
+    .patch(upload.none(), isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
+    client_1.EmployeeRole.COMPANY_MANAGER,
+    client_1.AdminRole.ADMIN,
+    client_1.AdminRole.ADMIN_ASSISTANT,
+], [client_1.Permission.CHANGE_ORDER_COMPANY]), ordersController.forwradOrderToCompany);
+router
+    .route("/orders/bulkForwardOrder/")
+    .post(upload.none(), isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
+    client_1.EmployeeRole.COMPANY_MANAGER,
+    client_1.AdminRole.ADMIN,
+    client_1.AdminRole.ADMIN_ASSISTANT,
+], [client_1.Permission.CHANGE_ORDER_COMPANY]), ordersController.bulkForwardOrdersToCompany);
+router
     .route("/orders/sendOrders")
     .post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     ...Object.values(client_1.AdminRole),

@@ -36,13 +36,15 @@
           <td style="width: 25%"></td>
         </tr>
         <tr>
-          <td style="width: 25%">صافي العميل:
-            <span>{{currency reportData.clientNet}}</span></td>
-          <td style="width: 25%">صافي الشركة المحولة:
+          {{!-- <td style="width: 25%">صافي العميل:
+            <span>{{currency reportData.clientNet}}</span></td> --}}
+          <td style="width: 25%">صافي الشركة:
             <span>{{currency reportData.companyNet}}</span></td>
+          <td style="width: 25%"></td>
           <td style="width: 25%">عدد طلبيات المحافظات:
             <span>{{reportData.governoratesOrdersCount}}</span></td>
           <td style="width: 25%"></td>
+
         </tr>
       </table>
     </header>
@@ -58,22 +60,14 @@
             <th>عنوان المستلم</th>
             <th>مبلغ الوصل</th>
             <th>المبلغ المستلم</th>
-            <th>مبلغ التوصيل</th>
-            <th>صافي العميل</th>
-            <th>الملاحظات</th>
+            <th>المبلغ المستقطع</th>
+            <th>صافي الشركه</th>
             <th>الحالة</th>
           </tr>
         </thead>
         <tbody>
           {{#each orders}}
-            <tr
-              class="{{changed
-                  status
-                  totalCost
-                  paidAmount
-                  @root.reportData.clientReport.secondaryType
-                }}"
-            >
+            <tr class="{{changed status totalCost paidAmount}}">
               <td class="nowrap">{{inc @index}}</td>
               <td>{{receiptNumber}}</td>
               <td>{{date createdAt}}</td>
@@ -85,38 +79,34 @@
               <td>{{mapPhones recipientPhones}}</td>
               <td>{{localizeGovernorate governorate}}
                 -
-                {{location.name}}
-                -
-                {{recipientAddress}}</td>
+                {{location.name}}</td>
               <td>{{currency totalCost}}</td>
               <td>{{currency paidAmount}}</td>
-              <td>{{currency deliveryCost}}</td>
-              <td>{{currency clientNet}}</td>
-              <td>{{notes}}</td>
-              {{!-- <td class="{{colorizeRow2 ../reportData.companyReport.secondaryType status}}">
-						{{localizeOrderStatus status}}</td> --}}
-              <td class="{{colorizeRow2 status}}">{{localizeOrderStatus
+              <td>{{isBaghdad
+                  governorate
+                  deliveryCost
+                  @root.reportData.companyReport.baghdadDeliveryCost
+                  @root.reportData.companyReport.governoratesDeliveryCost
+                }}</td>
+              <td>{{currency companyNet}}</td>
+              <td class="{{colorizeRow status}}">{{localizeOrderStatus
                   status
                 }}</td>
             </tr>
-            {{!-- {{log ../this}} --}}
           {{/each}}
         </tbody>
 
       </table>
-      <!-- Force page break before totals, if needed -->
       <div style="page-break-inside: avoid; break-inside: avoid;">
         <table>
           <tr>
-            <td colspan="7" style="font-weight: bold;width:20%">المجموع</td>
+            <td colspan="7" style="font-weight: bold;width:30%">المجموع</td>
             <td style="font-weight: bold">مبلغ الوصل :
               {{currency reportData.totalCost}}</td>
             <td style="font-weight: bold">المبلغ المدفوع :
               {{currency reportData.paidAmount}}</td>
-            <td style="font-weight: bold">اجور التوصيل :
-              {{currency reportData.deliveryCost}}</td>
-            <td style="font-weight: bold">صافي العميل :
-              {{currency reportData.clientNet}}</td>
+            <td style="font-weight: bold">إجمالي المبلغ المستحق :
+              {{currency reportData.companyNet}}</td>
           </tr>
         </table>
       </div>

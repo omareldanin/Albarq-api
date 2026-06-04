@@ -1,7 +1,7 @@
-import {Prisma, ReportType} from "@prisma/client";
-import {prisma} from "../../database/db";
-import {AppError} from "../../lib/AppError";
-import type {loggedInUserType} from "../../types/user";
+import { Prisma, ReportType } from "@prisma/client";
+import { prisma } from "../../database/db";
+import { AppError } from "../../lib/AppError";
+import type { loggedInUserType } from "../../types/user";
 import type {
   ReportCreateType,
   ReportUpdateType,
@@ -17,7 +17,7 @@ import {
 export class ReportsRepository {
   async createReport(data: {
     loggedInUser: loggedInUserType;
-    reportData: ReportCreateType & {ordersIDs: string[]};
+    reportData: ReportCreateType & { ordersIDs: string[] };
     type?: string;
     // TODO: Make reportMetaData a type
     reportMetaData: {
@@ -186,7 +186,7 @@ export class ReportsRepository {
     throw new AppError("Invalid report type", 400);
   }
 
-  async getAllReportsPaginated(data: {filters: ReportsFiltersType}) {
+  async getAllReportsPaginated(data: { filters: ReportsFiltersType }) {
     let startDate = new Date();
     let endDate = new Date();
     if (data.filters.startDate) {
@@ -317,8 +317,8 @@ export class ReportsRepository {
                   repositoryId: data.filters.exported_repository_id,
                   targetRepositoryId: data.filters.target_repository_id,
                   OR: [
-                    {repositoryId: data.filters.repositoryID},
-                    {targetRepositoryId: data.filters.repositoryID},
+                    { repositoryId: data.filters.repositoryID },
+                    { targetRepositoryId: data.filters.repositoryID },
                   ],
                 }
               : undefined,
@@ -361,16 +361,26 @@ export class ReportsRepository {
           type: data.filters.type,
         },
         {
-          type: {in: data.filters.types},
+          type: { in: data.filters.types },
         },
         {
           deleted: data.filters.deleted,
         },
         {
-          company: {
-            id: data.filters.company,
-          },
+          OR: [
+            {
+              company: {
+                id: data.filters.company,
+              },
+            },
+            {
+              companyReport: {
+                companyId: data.filters.company,
+              },
+            },
+          ],
         },
+
         {
           createdBy: {
             id: data.filters.createdByID,
@@ -412,7 +422,6 @@ export class ReportsRepository {
       {
         page: data.filters.page,
         size: data.filters.size,
-        withCount: true,
       },
     );
 
@@ -470,7 +479,7 @@ export class ReportsRepository {
     // return reports.map((report) => reportReform(report));
   }
 
-  async getReportsByIDs(data: {reportsIDs: number[]}) {
+  async getReportsByIDs(data: { reportsIDs: number[] }) {
     const reports = await prisma.report.findMany({
       where: {
         id: {
@@ -485,7 +494,7 @@ export class ReportsRepository {
     return reports.map(reportReform);
   }
 
-  async getReport(data: {reportID: number}) {
+  async getReport(data: { reportID: number }) {
     const report = await prisma.report.findUnique({
       where: {
         id: data.reportID,
@@ -495,7 +504,7 @@ export class ReportsRepository {
     return reportReform(report);
   }
 
-  async updateReport(data: {reportID: number; reportData: ReportUpdateType}) {
+  async updateReport(data: { reportID: number; reportData: ReportUpdateType }) {
     const report = await prisma.report.update({
       where: {
         id: data.reportID,
@@ -559,7 +568,7 @@ export class ReportsRepository {
               id: report.clientReport.id,
             },
           },
-          status: {in: ["PARTIALLY_RETURNED", "REPLACED", "RETURNED"]},
+          status: { in: ["PARTIALLY_RETURNED", "REPLACED", "RETURNED"] },
         },
         data: {
           secondaryStatus: "WITH_CLIENT",
@@ -569,7 +578,7 @@ export class ReportsRepository {
     return reportReform(report);
   }
 
-  async deleteReport(data: {reportID: number}) {
+  async deleteReport(data: { reportID: number }) {
     const deletedReport = await prisma.report.delete({
       where: {
         id: data.reportID,
@@ -579,7 +588,7 @@ export class ReportsRepository {
     return reportReform(deletedReport);
   }
 
-  async deactivateReport(data: {reportID: number; deletedByID: number}) {
+  async deactivateReport(data: { reportID: number; deletedByID: number }) {
     const report = await prisma.report.findUnique({
       where: {
         id: data.reportID,
@@ -639,7 +648,7 @@ export class ReportsRepository {
     return reportReform(deletedReport);
   }
 
-  async reactivateReport(data: {reportID: number}) {
+  async reactivateReport(data: { reportID: number }) {
     const deletedReport = await prisma.report.update({
       where: {
         id: data.reportID,

@@ -67,6 +67,7 @@ exports.orderSecondaryStatusArabicNames = {
     IN_CAR: "في الطريق",
     IN_REPOSITORY: "في المخزن",
     WITH_RECEIVING_AGENT: "مع مندوب الاستلام",
+    SEND_TO_COMPANY: "مرسل إلي",
 };
 exports.orderStatusArabicNames = {
     REGISTERED: "تم الطلب",

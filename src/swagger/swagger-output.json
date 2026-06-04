@@ -2264,6 +2264,52 @@
         }
       }
     },
+    "/api/v1/orders/forwardOrder/{orderID}": {
+      "patch": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "orderID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/orders/bulkForwardOrder/": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/v1/orders/sendOrders": {
       "post": {
         "description": "",
@@ -6885,7 +6931,8 @@
               "WITH_AGENT",
               "IN_REPOSITORY",
               "WITH_RECEIVING_AGENT",
-              "IN_CAR"
+              "IN_CAR",
+              "SEND_TO_COMPANY"
             ]
           },
           "deliveryAgentID": {

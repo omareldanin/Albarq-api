@@ -3735,6 +3735,23 @@ export class OrdersRepository {
     return orderTimeline.map(orderTimelineReform);
   }
 
+  async updateManyOrderTimeline(data: {
+    orderIDs: string[];
+    data: OrderTimelinePieceType;
+  }) {
+    await prisma.orderTimeline.createMany({
+      data: data.orderIDs.map((orderID) => ({
+        orderId: orderID,
+        type: data.data.type,
+        by: data.data.by,
+        old: JSON.stringify(data.data.old),
+        new: JSON.stringify(data.data.new),
+        message: data.data.message,
+        createdAt: data.data.date,
+      })),
+    });
+  }
+
   async getOrderTimelineApiKey(data: {params: {orderID: string | undefined}}) {
     const orderTimeline = await prisma.orderTimeline.findMany({
       where: {

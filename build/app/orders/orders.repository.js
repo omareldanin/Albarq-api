@@ -3288,6 +3288,19 @@ class OrdersRepository {
         });
         return orderTimeline.map(orders_responses_1.orderTimelineReform);
     }
+    async updateManyOrderTimeline(data) {
+        await db_1.prisma.orderTimeline.createMany({
+            data: data.orderIDs.map((orderID) => ({
+                orderId: orderID,
+                type: data.data.type,
+                by: data.data.by,
+                old: JSON.stringify(data.data.old),
+                new: JSON.stringify(data.data.new),
+                message: data.data.message,
+                createdAt: data.data.date,
+            })),
+        });
+    }
     async getOrderTimelineApiKey(data) {
         const orderTimeline = await db_1.prisma.orderTimeline.findMany({
             where: {

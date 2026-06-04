@@ -587,6 +587,38 @@ router
   );
 
 router
+  .route("/orders/forwardOrder/:orderID")
+  .patch(
+    upload.none(),
+    isLoggedIn,
+    isAutherized(
+      [
+        EmployeeRole.COMPANY_MANAGER,
+        AdminRole.ADMIN,
+        AdminRole.ADMIN_ASSISTANT,
+      ],
+      [Permission.CHANGE_ORDER_COMPANY],
+    ),
+    ordersController.forwradOrderToCompany,
+  );
+
+router
+  .route("/orders/bulkForwardOrder/")
+  .post(
+    upload.none(),
+    isLoggedIn,
+    isAutherized(
+      [
+        EmployeeRole.COMPANY_MANAGER,
+        AdminRole.ADMIN,
+        AdminRole.ADMIN_ASSISTANT,
+      ],
+      [Permission.CHANGE_ORDER_COMPANY],
+    ),
+    ordersController.bulkForwardOrdersToCompany,
+  );
+
+router
   .route("/orders/sendOrders")
   .post(
     isLoggedIn,

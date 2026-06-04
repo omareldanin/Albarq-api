@@ -121,6 +121,8 @@ export class OrdersController {
       companyReport: req.query.company_report,
       notes: req.query.notes,
       deleted: req.query.deleted,
+      notForwared: req.query.notForwared,
+      forwarededTo: req.query.forwarededTo,
       orderID: req.query.order_id,
       minified: req.query.minified,
       forChilds: req.query.forChilds,
@@ -138,6 +140,7 @@ export class OrdersController {
       orderType: req.query.orderType,
       updateBy: req.query.updated_by,
       createdBy: req.query.created_by,
+      forwarededForReport: req.query.forwarededForReport,
     });
 
     const {orders, ordersMetaData, page, pagesCount, where} =
@@ -593,6 +596,38 @@ export class OrdersController {
 
     res.status(200).json({
       status: "success",
+    });
+  });
+
+  forwradOrderToCompany = catchAsync(async (req, res) => {
+    const receiptNumber = req.params.orderID;
+    const companyId = +req.body.companyId;
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    const result = await ordersService.forwardOrderToCompany({
+      loggedInUser: loggedInUser,
+      receiptNumber: receiptNumber,
+      companyId,
+    });
+
+    res.status(200).json({
+      ...result,
+    });
+  });
+
+  bulkForwardOrdersToCompany = catchAsync(async (req, res) => {
+    const ordersIDs = req.body.ordersIDs;
+    const companyId = +req.body.companyId;
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    const result = await ordersService.bulkForwardOrdersToCompany({
+      loggedInUser: loggedInUser,
+      orderIds: ordersIDs,
+      companyId,
+    });
+
+    res.status(200).json({
+      ...result,
     });
   });
 

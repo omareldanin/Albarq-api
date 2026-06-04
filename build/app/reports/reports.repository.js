@@ -335,9 +335,18 @@ class ReportsRepository {
                     deleted: data.filters.deleted,
                 },
                 {
-                    company: {
-                        id: data.filters.company,
-                    },
+                    OR: [
+                        {
+                            company: {
+                                id: data.filters.company,
+                            },
+                        },
+                        {
+                            companyReport: {
+                                companyId: data.filters.company,
+                            },
+                        },
+                    ],
                 },
                 {
                     createdBy: {
@@ -372,7 +381,6 @@ class ReportsRepository {
         }, {
             page: data.filters.page,
             size: data.filters.size,
-            withCount: true,
         });
         const reportsReformed = paginatedReports.data.map((report) => (0, reports_responses_1.AllreportReform)(report));
         const reportsMetaData = await db_1.prisma.report.aggregate({

@@ -66,6 +66,7 @@ export const orderSecondaryStatusArabicNames = {
   IN_CAR: "في الطريق",
   IN_REPOSITORY: "في المخزن",
   WITH_RECEIVING_AGENT: "مع مندوب الاستلام",
+  SEND_TO_COMPANY: "مرسل إلي",
 };
 
 export const orderStatusArabicNames = {

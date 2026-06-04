@@ -464,6 +464,8 @@ model Chat {
   orderId          String?   @unique
   Order            Order?    @relation(fields: [orderId], references: [id])
   messages         Message[]
+
+  @@index([orderId])
 }
 
 model Message {
@@ -1062,6 +1064,7 @@ enum SecondaryStatus {
   IN_REPOSITORY
   WITH_RECEIVING_AGENT
   IN_CAR
+  SEND_TO_COMPANY
 }
 
 enum ProcessingStatus {

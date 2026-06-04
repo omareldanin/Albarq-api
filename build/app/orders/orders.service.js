@@ -881,6 +881,128 @@ class OrdersService {
         }
         return { order: updated };
     };
+    forwardOrderToCompany = async (data) => {
+        const checkOrders = await db_1.prisma.order.findMany({
+            where: {
+                OR: [
+                    {
+                        receiptNumber: data.receiptNumber,
+                    },
+                    {
+                        id: data.receiptNumber,
+                    },
+                ],
+                status: {
+                    notIn: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED", "DELIVERED"],
+                },
+                companyId: data.loggedInUser.companyID,
+                deleted: false,
+            },
+            select: orders_responses_1.orderSelect,
+        });
+        if (checkOrders.length === 0) {
+            throw new AppError_1.AppError("الطلب غير موجود", 404);
+        }
+        if (checkOrders.length > 1) {
+            return {
+                multi: true,
+                data: checkOrders.map((order) => (0, orders_responses_1.orderReform)(order)),
+            };
+        }
+        else {
+            let oldOrder = checkOrders[0];
+            const updatedOrder = await db_1.prisma.order.update({
+                where: {
+                    id: oldOrder.id,
+                },
+                data: {
+                    companyId: data.companyId,
+                    forwardedFromId: oldOrder.company.id,
+                    forwarded: true,
+                    forwardedById: data.loggedInUser.id,
+                    secondaryStatus: "SEND_TO_COMPANY",
+                    forwardedAt: new Date(),
+                },
+                select: {
+                    id: true,
+                    updatedAt: true,
+                    company: {
+                        select: {
+                            id: true,
+                            name: true,
+                        },
+                    },
+                    forwardedFrom: {
+                        select: {
+                            id: true,
+                            name: true,
+                        },
+                    },
+                },
+            });
+            await ordersRepository.updateOrderTimeline({
+                orderID: updatedOrder.id,
+                data: {
+                    type: "COMPANY_CHANGE",
+                    date: updatedOrder.updatedAt,
+                    old: {
+                        id: updatedOrder.forwardedFrom?.id,
+                        name: updatedOrder.forwardedFrom?.name,
+                    },
+                    new: {
+                        id: updatedOrder.company?.id,
+                        name: updatedOrder.company?.name,
+                    },
+                    by: { id: data.loggedInUser.id, name: data.loggedInUser.name },
+                    message: `تم احاله الطلب من  ${updatedOrder.forwardedFrom?.name} إلي ${updatedOrder.company.name}`,
+                },
+            });
+            return updatedOrder;
+        }
+    };
+    bulkForwardOrdersToCompany = async (data) => {
+        const updatedOrders = await db_1.prisma.order.updateMany({
+            where: {
+                id: { in: data.orderIds },
+            },
+            data: {
+                companyId: data.companyId,
+                forwardedFromId: data.loggedInUser.companyID,
+                forwarded: true,
+                forwardedById: data.loggedInUser.id,
+                secondaryStatus: "SEND_TO_COMPANY",
+                forwardedAt: new Date(),
+            },
+        });
+        const newCompany = await db_1.prisma.company.findUnique({
+            where: {
+                id: data.companyId,
+            },
+        });
+        const oldCompany = await db_1.prisma.company.findUnique({
+            where: {
+                id: data.loggedInUser.companyID,
+            },
+        });
+        await ordersRepository.updateManyOrderTimeline({
+            orderIDs: data.orderIds,
+            data: {
+                type: "COMPANY_CHANGE",
+                date: new Date(),
+                old: {
+                    id: oldCompany?.id,
+                    name: oldCompany?.name,
+                },
+                new: {
+                    id: newCompany?.id,
+                    name: newCompany?.name,
+                },
+                by: { id: data.loggedInUser.id, name: data.loggedInUser.name },
+                message: `تم احاله الطلب من  ${oldCompany?.name} إلي ${newCompany?.name}`,
+            },
+        });
+        return updatedOrders;
+    };
     changeOrderClient = async (data) => {
         const order = await db_1.prisma.order.findUnique({
             where: {

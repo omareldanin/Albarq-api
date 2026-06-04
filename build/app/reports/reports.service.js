@@ -174,6 +174,7 @@ class ReportsService {
         // Change orders costs reportData contains new costs
         if (data.reportData.type === client_1.ReportType.CLIENT ||
             data.reportData.type === client_1.ReportType.BRANCH ||
+            data.reportData.type === client_1.ReportType.COMPANY ||
             data.reportData.type === client_1.ReportType.GOVERNORATE) {
             const updatedOrders = await ordersRepository.updateOrdersCosts2({
                 ordersIDs,
