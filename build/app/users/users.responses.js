@@ -17,10 +17,9 @@ exports.userSelect = {
                     id: true,
                     name: true,
                     logo: true,
-                    color: true
-                }
-            }
-        }
+                },
+            },
+        },
     },
     client: {
         select: {
@@ -30,17 +29,16 @@ exports.userSelect = {
                     id: true,
                     name: true,
                     logo: true,
-                    color: true
-                }
-            }
-        }
+                },
+            },
+        },
     },
     admin: {
         select: {
             // phone: true,
-            role: true
-        }
-    }
+            role: true,
+        },
+    },
 };
 const userSelectReform = (user) => {
     if (!user) {
@@ -55,7 +53,7 @@ const userSelectReform = (user) => {
         role: user.employee?.role || user.client?.role || user.admin?.role || "",
         company: user.employee?.company || user.client?.company || null,
         permissions: user.employee?.permissions || [],
-        orderStatus: user.employee?.orderStatus || []
+        orderStatus: user.employee?.orderStatus || [],
     };
 };
 exports.userSelectReform = userSelectReform;
@@ -74,27 +72,27 @@ exports.userLoginHistorySelect = {
             username: true,
             employee: {
                 select: {
-                    role: true
-                }
+                    role: true,
+                },
             },
             client: {
                 select: {
-                    role: true
-                }
+                    role: true,
+                },
             },
             admin: {
                 select: {
-                    role: true
-                }
-            }
-        }
+                    role: true,
+                },
+            },
+        },
     },
     company: {
         select: {
             id: true,
-            name: true
-        }
-    }
+            name: true,
+        },
+    },
 };
 const userLoginHistorySelectReform = (loginHistory) => {
     return {
@@ -109,9 +107,12 @@ const userLoginHistorySelectReform = (loginHistory) => {
             id: loginHistory.user.id,
             name: loginHistory.user.name,
             username: loginHistory.user.username,
-            role: loginHistory.user.employee?.role || loginHistory.user.client?.role || loginHistory.user.admin?.role || "",
-            company: loginHistory.company
-        }
+            role: loginHistory.user.employee?.role ||
+                loginHistory.user.client?.role ||
+                loginHistory.user.admin?.role ||
+                "",
+            company: loginHistory.company,
+        },
     };
 };
 exports.userLoginHistorySelectReform = userLoginHistorySelectReform;

@@ -401,6 +401,7 @@ export class MessagesController {
     if (user.role === "EMPLOYEE_CLIENT_ASSISTANT") {
       inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
     }
+
     const chats = await prisma.chat.findManyPaginated(
       {
         where: {
@@ -444,20 +445,60 @@ export class MessagesController {
                           }
                         : undefined,
                     },
+                    // {
+                    //   branchId: orderType
+                    //     ? undefined
+                    //     : inquiryBranchesIDs
+                    //       ? {
+                    //           in: inquiryBranchesIDs,
+                    //         }
+                    //       : user.mainRepository
+                    //         ? undefined
+                    //         : user.branchId,
+                    // },
                     {
-                      branch: orderType
-                        ? undefined
-                        : inquiryBranchesIDs
-                          ? {
-                              id: {
-                                in: inquiryBranchesIDs,
+                      OR:
+                        !orderType &&
+                        user.mainRepository &&
+                        inquiryBranchesIDs?.length
+                          ? [
+                              {
+                                branchId: {in: inquiryBranchesIDs},
                               },
-                            }
-                          : employee?.mainEmergency
-                            ? undefined
-                            : {
-                                id: employee?.branchId!!,
+                              {
+                                client: {
+                                  branchId: {in: inquiryBranchesIDs},
+                                },
                               },
+                            ]
+                          : orderType === "receiving" &&
+                              user.mainRepository &&
+                              inquiryBranchesIDs?.length
+                            ? [
+                                {
+                                  branchId: {in: inquiryBranchesIDs},
+                                },
+                              ]
+                            : orderType === "forwarded" &&
+                                user.mainRepository &&
+                                inquiryBranchesIDs?.length
+                              ? [
+                                  {
+                                    client: {
+                                      branchId: {in: inquiryBranchesIDs},
+                                    },
+                                  },
+                                ]
+                              : [
+                                  {
+                                    branchId: user.branchId,
+                                  },
+                                  {
+                                    client: {
+                                      branchId: user.branchId,
+                                    },
+                                  },
+                                ],
                     },
                     {
                       store: inquiryStoresIDs
@@ -469,9 +510,10 @@ export class MessagesController {
                         : undefined,
                     },
                     {
-                      company: {
-                        id: user.companyID,
-                      },
+                      OR: [
+                        {companyId: user.companyID},
+                        {forwardedFromId: user.companyID},
+                      ],
                     },
                     {
                       location: inquiryLocationsIDs
@@ -481,22 +523,6 @@ export class MessagesController {
                             },
                           }
                         : undefined,
-                    },
-                    {
-                      forwardedBranchId:
-                        orderType === "forwarded" && inquiryBranchesIDs
-                          ? {in: inquiryBranchesIDs}
-                          : orderType === "forwarded"
-                            ? employee?.branchId
-                            : undefined,
-                    },
-                    {
-                      receivedBranchId:
-                        orderType === "receiving" && inquiryBranchesIDs
-                          ? {in: inquiryBranchesIDs}
-                          : orderType === "receiving"
-                            ? employee?.branchId
-                            : undefined,
                     },
                   ],
                 }
@@ -612,19 +638,48 @@ export class MessagesController {
                         : undefined,
                     },
                     {
-                      branch: orderType
-                        ? undefined
-                        : inquiryBranchesIDs
-                          ? {
-                              id: {
-                                in: inquiryBranchesIDs,
+                      OR:
+                        !orderType &&
+                        user.mainRepository &&
+                        inquiryBranchesIDs?.length
+                          ? [
+                              {
+                                branchId: {in: inquiryBranchesIDs},
                               },
-                            }
-                          : employee?.mainEmergency
-                            ? undefined
-                            : {
-                                id: employee?.branchId!!,
+                              {
+                                client: {
+                                  branchId: {in: inquiryBranchesIDs},
+                                },
                               },
+                            ]
+                          : orderType === "receiving" &&
+                              user.mainRepository &&
+                              inquiryBranchesIDs?.length
+                            ? [
+                                {
+                                  branchId: {in: inquiryBranchesIDs},
+                                },
+                              ]
+                            : orderType === "forwarded" &&
+                                user.mainRepository &&
+                                inquiryBranchesIDs?.length
+                              ? [
+                                  {
+                                    client: {
+                                      branchId: {in: inquiryBranchesIDs},
+                                    },
+                                  },
+                                ]
+                              : [
+                                  {
+                                    branchId: user.branchId,
+                                  },
+                                  {
+                                    client: {
+                                      branchId: user.branchId,
+                                    },
+                                  },
+                                ],
                     },
                     {
                       store: inquiryStoresIDs
@@ -636,9 +691,10 @@ export class MessagesController {
                         : undefined,
                     },
                     {
-                      company: {
-                        id: user.companyID,
-                      },
+                      OR: [
+                        {companyId: user.companyID},
+                        {forwardedFromId: user.companyID},
+                      ],
                     },
                     {
                       location: inquiryLocationsIDs
@@ -648,22 +704,6 @@ export class MessagesController {
                             },
                           }
                         : undefined,
-                    },
-                    {
-                      forwardedBranchId:
-                        orderType === "forwarded" && inquiryBranchesIDs
-                          ? {in: inquiryBranchesIDs}
-                          : orderType === "forwarded"
-                            ? employee?.branchId
-                            : undefined,
-                    },
-                    {
-                      receivedBranchId:
-                        orderType === "receiving" && inquiryBranchesIDs
-                          ? {in: inquiryBranchesIDs}
-                          : orderType === "receiving"
-                            ? employee?.branchId
-                            : undefined,
                     },
                   ],
                 }

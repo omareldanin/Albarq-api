@@ -1110,9 +1110,6 @@
         },
         "/api/v1/companies": {
             "post": {
-                "tags": [
-                    "Companies Routes"
-                ],
                 "description": "",
                 "parameters": [
                     {
@@ -1127,27 +1124,9 @@
                     "default": {
                         "description": ""
                     }
-                },
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/CompanyCreateSchema"
-                            },
-                            "examples": {
-                                "CompanyCreateExample": {
-                                    "$ref": "#/components/examples/CompanyCreateExample"
-                                }
-                            }
-                        }
-                    }
                 }
             },
             "get": {
-                "tags": [
-                    "Companies Routes"
-                ],
                 "description": "",
                 "parameters": [
                     {
@@ -1156,21 +1135,22 @@
                         "schema": {
                             "type": "string"
                         }
-                    },
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/api-key": {
+            "post": {
+                "description": "",
+                "parameters": [
                     {
-                        "name": "page",
-                        "in": "query",
-                        "description": "Page Number",
-                        "required": false,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "size",
-                        "in": "query",
-                        "description": "Page Size (Number of Items per Page) (Default: 10)",
-                        "required": false,
+                        "name": "authorization",
+                        "in": "header",
                         "schema": {
                             "type": "string"
                         }
@@ -1213,9 +1193,6 @@
                 }
             },
             "patch": {
-                "tags": [
-                    "Companies Routes"
-                ],
                 "description": "",
                 "parameters": [
                     {
@@ -1238,27 +1215,9 @@
                     "default": {
                         "description": ""
                     }
-                },
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/CompanyUpdateSchema"
-                            },
-                            "examples": {
-                                "CompanyUpdateExample": {
-                                    "$ref": "#/components/examples/CompanyUpdateExample"
-                                }
-                            }
-                        }
-                    }
                 }
             },
             "delete": {
-                "tags": [
-                    "Companies Routes"
-                ],
                 "description": "",
                 "parameters": [
                     {
@@ -5138,6 +5097,108 @@
                     }
                 }
             }
+        },
+        "/api/v1/company/forward-orders": {
+            "post": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "x-api-key",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "429": {
+                        "description": "Too Many Requests"
+                    }
+                }
+            },
+            "get": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "x-api-key",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "429": {
+                        "description": "Too Many Requests"
+                    }
+                }
+            }
+        },
+        "/api/v1/company/locations": {
+            "get": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "x-api-key",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "429": {
+                        "description": "Too Many Requests"
+                    }
+                }
+            }
+        },
+        "/api/v1/company/statues": {
+            "get": {
+                "description": "",
+                "responses": {
+                    "429": {
+                        "description": "Too Many Requests"
+                    }
+                }
+            }
+        },
+        "/api/v1/company/governorates": {
+            "get": {
+                "description": "",
+                "responses": {
+                    "429": {
+                        "description": "Too Many Requests"
+                    }
+                }
+            }
+        },
+        "/api/v1/company/forward-orders/{orderID}": {
+            "get": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "orderID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "x-api-key",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "429": {
+                        "description": "Too Many Requests"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -6454,74 +6515,78 @@
                                 ],
                                 "minLength": 6
                             },
-                            "logo": {
+                            "companyID": {
                                 "type": [
                                     "string"
                                 ]
                             },
-                            "color": {
+                            "isExternal": {
+                                "type": [
+                                    "boolean"
+                                ]
+                            },
+                            "logo": {
                                 "type": [
                                     "string"
-                                ],
-                                "minLength": 6,
-                                "maxLength": 6
+                                ]
                             },
                             "registrationText": {
                                 "type": [
                                     "string"
                                 ]
                             },
-                            "governoratePrice": {
+                            "governoratesDeliveryCosts": {
                                 "type": [
-                                    "number"
+                                    "array"
                                 ],
-                                "minimum": 0
-                            },
-                            "deliveryAgentFee": {
-                                "type": [
-                                    "number"
-                                ],
-                                "minimum": 0
-                            },
-                            "baghdadPrice": {
-                                "type": [
-                                    "number"
-                                ],
-                                "minimum": 0
-                            },
-                            "additionalPriceForEvery500000IraqiDinar": {
-                                "type": [
-                                    "number"
-                                ],
-                                "minimum": 0
-                            },
-                            "additionalPriceForEveryKilogram": {
-                                "type": [
-                                    "number"
-                                ],
-                                "minimum": 0
-                            },
-                            "additionalPriceForRemoteAreas": {
-                                "type": [
-                                    "number"
-                                ],
-                                "minimum": 0
-                            },
-                            "orderStatusAutomaticUpdate": {
-                                "type": [
-                                    "boolean"
-                                ]
+                                "items": {
+                                    "type": [
+                                        "object"
+                                    ],
+                                    "properties": {
+                                        "governorate": {
+                                            "type": [
+                                                "string"
+                                            ],
+                                            "enum": [
+                                                "AL_ANBAR",
+                                                "BABIL",
+                                                "BABIL_COMPANIES",
+                                                "BAGHDAD",
+                                                "BASRA",
+                                                "DHI_QAR",
+                                                "AL_QADISIYYAH",
+                                                "DIYALA",
+                                                "DUHOK",
+                                                "ERBIL",
+                                                "KARBALA",
+                                                "KIRKUK",
+                                                "MAYSAN",
+                                                "MUTHANNA",
+                                                "NAJAF",
+                                                "NINAWA",
+                                                "SALAH_AL_DIN",
+                                                "SULAYMANIYAH",
+                                                "WASIT"
+                                            ]
+                                        },
+                                        "cost": {
+                                            "default": 0,
+                                            "type": [
+                                                "number"
+                                            ],
+                                            "maximum": 100000
+                                        }
+                                    },
+                                    "required": [
+                                        "governorate"
+                                    ]
+                                }
                             }
                         },
                         "required": [
                             "name",
-                            "phone",
-                            "governoratePrice",
-                            "deliveryAgentFee",
-                            "baghdadPrice",
-                            "additionalPriceForEvery500000IraqiDinar",
-                            "additionalPriceForEveryKilogram",
-                            "additionalPriceForRemoteAreas"
+                            "phone"
                         ]
                     },
                     "companyManager": {
@@ -6599,57 +6664,9 @@
                             "string"
                         ]
                     },
-                    "color": {
-                        "type": [
-                            "string"
-                        ],
-                        "minLength": 6,
-                        "maxLength": 6
-                    },
                     "registrationText": {
                         "type": [
                             "string"
-                        ]
-                    },
-                    "governoratePrice": {
-                        "type": [
-                            "number"
-                        ],
-                        "minimum": 0
-                    },
-                    "deliveryAgentFee": {
-                        "type": [
-                            "number"
-                        ],
-                        "minimum": 0
-                    },
-                    "baghdadPrice": {
-                        "type": [
-                            "number"
-                        ],
-                        "minimum": 0
-                    },
-                    "additionalPriceForEvery500000IraqiDinar": {
-                        "type": [
-                            "number"
-                        ],
-                        "minimum": 0
-                    },
-                    "additionalPriceForEveryKilogram": {
-                        "type": [
-                            "number"
-                        ],
-                        "minimum": 0
-                    },
-                    "additionalPriceForRemoteAreas": {
-                        "type": [
-                            "number"
-                        ],
-                        "minimum": 0
-                    },
-                    "orderStatusAutomaticUpdate": {
-                        "type": [
-                            "boolean"
                         ]
                     },
                     "password": {
@@ -6657,6 +6674,64 @@
                             "string"
                         ],
                         "minLength": 6
+                    },
+                    "companyID": {
+                        "type": [
+                            "string"
+                        ]
+                    },
+                    "isExternal": {
+                        "type": [
+                            "boolean"
+                        ]
+                    },
+                    "governoratesDeliveryCosts": {
+                        "type": [
+                            "array"
+                        ],
+                        "items": {
+                            "type": [
+                                "object"
+                            ],
+                            "properties": {
+                                "governorate": {
+                                    "type": [
+                                        "string"
+                                    ],
+                                    "enum": [
+                                        "AL_ANBAR",
+                                        "BABIL",
+                                        "BABIL_COMPANIES",
+                                        "BAGHDAD",
+                                        "BASRA",
+                                        "DHI_QAR",
+                                        "AL_QADISIYYAH",
+                                        "DIYALA",
+                                        "DUHOK",
+                                        "ERBIL",
+                                        "KARBALA",
+                                        "KIRKUK",
+                                        "MAYSAN",
+                                        "MUTHANNA",
+                                        "NAJAF",
+                                        "NINAWA",
+                                        "SALAH_AL_DIN",
+                                        "SULAYMANIYAH",
+                                        "WASIT"
+                                    ]
+                                },
+                                "cost": {
+                                    "default": 0,
+                                    "type": [
+                                        "number"
+                                    ],
+                                    "maximum": 100000
+                                }
+                            },
+                            "required": [
+                                "governorate"
+                            ]
+                        }
                     }
                 }
             },

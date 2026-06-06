@@ -64,7 +64,6 @@ class OrdersRepository {
         })?.cost || 0);
     }
     async createOrder(data) {
-        let totalCost = 0;
         let weight = data.orderData.weight || 0;
         let status = "REGISTERED";
         let secondaryStatus = "WITH_CLIENT";
@@ -149,38 +148,6 @@ class OrdersRepository {
                 governoratesDeliveryCosts.find((governorateDeliveryCost) => {
                     return (governorateDeliveryCost.governorate === data.orderData.governorate);
                 })?.cost || 0;
-        }
-        // Add Additional costs
-        const companyAdditionalPrices = await db_1.prisma.company.findUnique({
-            where: {
-                id: data.companyID,
-            },
-            select: {
-                additionalPriceForEvery500000IraqiDinar: true,
-                additionalPriceForEveryKilogram: true,
-                additionalPriceForRemoteAreas: true,
-            },
-        });
-        deliveryCost +=
-            companyAdditionalPrices?.additionalPriceForEvery500000IraqiDinar
-                ? companyAdditionalPrices?.additionalPriceForEvery500000IraqiDinar *
-                    Math.ceil(totalCost / 500000)
-                : 0;
-        deliveryCost += companyAdditionalPrices?.additionalPriceForEveryKilogram
-            ? weight * companyAdditionalPrices?.additionalPriceForEveryKilogram
-            : 0;
-        if (data.orderData.locationID) {
-            const location = await db_1.prisma.location.findUnique({
-                where: {
-                    id: data.orderData.locationID,
-                },
-                select: {
-                    remote: true,
-                },
-            });
-            deliveryCost += location?.remote
-                ? companyAdditionalPrices?.additionalPriceForRemoteAreas || 0
-                : 0;
         }
         let randomId = await this.generateUniqueOrderId();
         // Create order
@@ -490,6 +457,45 @@ class OrdersRepository {
                         ],
                     },
                     {
+                        OR: data.filters.notForwared
+                            ? [
+                                {
+                                    companyId: data.filters.companyID,
+                                },
+                            ]
+                            : data.filters.forwarededTo
+                                ? [
+                                    {
+                                        forwardedFromId: data.filters.companyID,
+                                    },
+                                ]
+                                : data.filters.forwarded &&
+                                    data.filters.forwardedFromID !== undefined
+                                    ? [
+                                        {
+                                            forwardedFromId: data.filters.companyID,
+                                        },
+                                    ]
+                                    : [
+                                        {
+                                            companyId: data.filters.companyID,
+                                        },
+                                        {
+                                            forwardedFromId: data.filters.inquiryCompaniesIDs
+                                                ? {
+                                                    in: [
+                                                        ...data.filters.inquiryCompaniesIDs,
+                                                        //   data.filters.companyID as number
+                                                    ],
+                                                }
+                                                : data.filters.forwarded &&
+                                                    data.filters.forwardedFromID === undefined
+                                                    ? undefined
+                                                    : data.filters.companyID,
+                                        },
+                                    ],
+                    },
+                    {
                         deleted: data.filters.deleted,
                     },
                     // Filter by orderID
@@ -567,11 +573,6 @@ class OrdersRepository {
                     },
                     {
                         locationId: data.filters.locationID,
-                    },
-                    {
-                        company: {
-                            id: data.filters.companyID,
-                        },
                     },
                     // Filter by startDate
                     {
@@ -948,26 +949,43 @@ class OrdersRepository {
                         ],
                     },
                     {
-                        OR: [
-                            {
-                                companyId: data.filters.companyID,
-                            },
-                            {
-                                forwardedFromId: data.filters.inquiryCompaniesIDs
-                                    ? {
-                                        in: [
-                                            ...data.filters.inquiryCompaniesIDs,
-                                            //   data.filters.companyID as number
-                                        ],
-                                    }
-                                    : data.filters.forwarded &&
-                                        data.filters.forwardedFromID === undefined
-                                        ? undefined
-                                        : data.filters.governorate
-                                            ? undefined
-                                            : data.filters.companyID,
-                            },
-                        ],
+                        OR: data.filters.notForwared
+                            ? [
+                                {
+                                    companyId: data.filters.companyID,
+                                },
+                            ]
+                            : data.filters.forwarededTo
+                                ? [
+                                    {
+                                        forwardedFromId: data.filters.companyID,
+                                    },
+                                ]
+                                : data.filters.forwarded &&
+                                    data.filters.forwardedFromID !== undefined
+                                    ? [
+                                        {
+                                            forwardedFromId: data.filters.companyID,
+                                        },
+                                    ]
+                                    : [
+                                        {
+                                            companyId: data.filters.companyID,
+                                        },
+                                        {
+                                            forwardedFromId: data.filters.inquiryCompaniesIDs
+                                                ? {
+                                                    in: [
+                                                        ...data.filters.inquiryCompaniesIDs,
+                                                        //   data.filters.companyID as number
+                                                    ],
+                                                }
+                                                : data.filters.forwarded &&
+                                                    data.filters.forwardedFromID === undefined
+                                                    ? undefined
+                                                    : data.filters.companyID,
+                                        },
+                                    ],
                     },
                     // Filter by companyID
                     {
@@ -2246,13 +2264,6 @@ class OrdersRepository {
                     paidAmount: true,
                     weight: true,
                     deliveryCost: true,
-                    company: {
-                        select: {
-                            additionalPriceForEvery500000IraqiDinar: true,
-                            additionalPriceForEveryKilogram: true,
-                            additionalPriceForRemoteAreas: true,
-                        },
-                    },
                 },
             });
             // Update Baghdad orders costs
@@ -2286,13 +2297,6 @@ class OrdersRepository {
                     paidAmount: true,
                     deliveryCost: true,
                     weight: true,
-                    company: {
-                        select: {
-                            additionalPriceForEvery500000IraqiDinar: true,
-                            additionalPriceForEveryKilogram: true,
-                            additionalPriceForRemoteAreas: true,
-                        },
-                    },
                 },
             });
             // Update governorates orders costs
@@ -2578,6 +2582,33 @@ class OrdersRepository {
         "paidAmount" -
         (${data.costs.deliveryAgentDeliveryCost}
          + COALESCE("weight", 0) * 250)
+    WHERE id = ANY(${data.ordersIDs});
+  `;
+        }
+        if (data.costs.reportType === client_1.ReportType.COMPANY &&
+            (data.costs.baghdadDeliveryCost || data.costs.governoratesDeliveryCost)) {
+            for (const order of data.orders) {
+                const cost = order?.governorate === client_1.Governorate.BAGHDAD
+                    ? data.costs.baghdadDeliveryCost
+                    : data.costs.governoratesDeliveryCost;
+                if (!cost)
+                    continue;
+                updatedOrders.push({
+                    id: order?.id,
+                    companyNet: order?.paidAmount - cost,
+                });
+            }
+            // single DB update
+            await db_1.prisma.$executeRaw `
+    UPDATE "Order"
+    SET
+      "companyNet" =
+        "paidAmount" -
+        CASE
+          WHEN "governorate" = 'BAGHDAD'
+            THEN ${data.costs.baghdadDeliveryCost}
+          ELSE ${data.costs.governoratesDeliveryCost}
+        END
     WHERE id = ANY(${data.ordersIDs});
   `;
         }
@@ -2873,6 +2904,23 @@ class OrdersRepository {
             ? {
                 AND: [
                     {
+                        OR: [
+                            {
+                                companyId: data.filters.companyID,
+                            },
+                            {
+                                forwardedFromId: data.filters.inquiryCompaniesIDs
+                                    ? {
+                                        in: [
+                                            ...data.filters.inquiryCompaniesIDs,
+                                            //   data.filters.companyID as number
+                                        ],
+                                    }
+                                    : data.filters.companyID,
+                            },
+                        ],
+                    },
+                    {
                         status: data.filters.inquiryStatuses
                             ? {
                                 in: data.filters.inquiryStatuses,
@@ -2913,9 +2961,6 @@ class OrdersRepository {
                                 in: data.filters.inquiryStoresIDs,
                             }
                             : undefined,
-                    },
-                    {
-                        companyId: data.filters.companyID,
                     },
                     {
                         locationId: data.filters.inquiryLocationsIDs

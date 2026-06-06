@@ -15,7 +15,6 @@ const automaticUpdatesTask = async () => {
         const companies = await db_1.prisma.company.findMany({
             select: {
                 id: true,
-                orderStatusAutomaticUpdate: true,
             },
         });
         for (const company of companies) {

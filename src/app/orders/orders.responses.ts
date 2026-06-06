@@ -95,6 +95,7 @@ export const orderSelect = {
   printed: true,
   deliveryAgentNet: true,
   companyNet: true,
+  discount: true,
   branchNet: true,
   receiptNumber: true,
   quantity: true,
@@ -110,13 +111,50 @@ export const orderSelect = {
   confirmed: true,
   deliveryType: true,
   deliveryDate: true,
+  currentLocation: true,
   createdAt: true,
   updatedAt: true,
   processingStatus: true,
+  processed: true,
+  processedAt: true,
   forwardedRepo: true,
   forwardedBranchId: true,
   receivedBranchId: true,
   branchDeliveryCost: true,
+  forwardedFromId: true,
+  processedBy: {
+    select: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+        },
+      },
+      role: true,
+    },
+  },
+  forwarded: true,
+  forwardedAt: true,
+  forwardedBy: {
+    select: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+        },
+      },
+    },
+  },
+  forwardedFrom: {
+    select: {
+      id: true,
+      name: true,
+      logo: true,
+      registrationText: true,
+    },
+  },
   client: {
     select: {
       showNumbers: true,
@@ -154,6 +192,14 @@ export const orderSelect = {
     },
   },
   oldDeliveryAgentId: true,
+  orderProducts: {
+    select: {
+      quantity: true,
+      product: true,
+      color: true,
+      size: true,
+    },
+  },
   governorate: true,
   location: {
     select: {
@@ -188,11 +234,6 @@ export const orderSelect = {
   },
 
   repositoryReport: {
-    where: {
-      report: {
-        deleted: false,
-      },
-    },
     select: {
       id: true,
       secondaryType: true,
@@ -206,11 +247,6 @@ export const orderSelect = {
     },
   },
   branchReport: {
-    where: {
-      report: {
-        deleted: false,
-      },
-    },
     select: {
       id: true,
       branchId: true,
@@ -224,11 +260,6 @@ export const orderSelect = {
     },
   },
   deliveryAgentReport: {
-    where: {
-      report: {
-        deleted: false,
-      },
-    },
     select: {
       id: true,
       deliveryAgentId: true,
@@ -241,11 +272,6 @@ export const orderSelect = {
     },
   },
   governorateReport: {
-    where: {
-      report: {
-        deleted: false,
-      },
-    },
     select: {
       id: true,
       governorate: true,
@@ -258,11 +284,6 @@ export const orderSelect = {
     },
   },
   companyReport: {
-    where: {
-      report: {
-        deleted: false,
-      },
-    },
     select: {
       id: true,
       secondaryType: true,

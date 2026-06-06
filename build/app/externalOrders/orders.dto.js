@@ -1,0 +1,30 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.OrderCreateSchema = void 0;
+const client_1 = require("@prisma/client");
+const zod_1 = require("zod");
+exports.OrderCreateSchema = zod_1.z.object({
+    receiptNumber: zod_1.z.string().optional(),
+    clientName: zod_1.z
+        .string()
+        .min(5, { message: "يجب إدخال اسم العميل اكثر من 5 حروف" }),
+    storeName: zod_1.z
+        .string()
+        .min(4, { message: "يجب إدخال اسم المتجر اكثر من 4 حروف" }),
+    clientPhone: zod_1.z
+        .string()
+        .min(11, { message: "يجب إدخال رقم هاتف العميل من 11 رقم" }),
+    recipientName: zod_1.z.string().optional().default("غير معرف"),
+    confirmed: zod_1.z.coerce.boolean().optional(),
+    status: zod_1.z.nativeEnum(client_1.OrderStatus).default(client_1.OrderStatus.REGISTERED),
+    recipientPhones: zod_1.z.array(zod_1.z.string().min(6)).optional(),
+    recipientPhone: zod_1.z.string().min(6).optional(),
+    recipientAddress: zod_1.z.string(),
+    details: zod_1.z.string().optional(),
+    notes: zod_1.z.string().optional(),
+    governorate: zod_1.z.nativeEnum(client_1.Governorate),
+    locationID: zod_1.z.coerce.number(),
+    totalCost: zod_1.z.number(),
+    quantity: zod_1.z.number().default(1),
+});
+//# sourceMappingURL=orders.dto.js.map

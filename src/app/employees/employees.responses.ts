@@ -30,7 +30,6 @@ export const employeeSelect = {
       id: true,
       name: true,
       logo: true,
-      color: true,
     },
   },
   deleted: true,
@@ -148,7 +147,7 @@ export const employeeSelect = {
 export const employeeReform = (
   employee: Prisma.EmployeeGetPayload<{
     select: typeof employeeSelect;
-  }> | null
+  }> | null,
 ) => {
   if (!employee) {
     return null;
@@ -201,7 +200,7 @@ export const employeeReform = (
     inquiryDeliveryAgents: employee.inquiryDeliveryAgents.map(
       (deliveryAgent) => {
         return deliveryAgent.deliveryAgent.user;
-      }
+      },
     ),
     // inquiryEmployees: employee.inquiryEmployees.map((inquiryEmployee) => {
     //     return inquiryEmployee.inquiryEmployee.user;

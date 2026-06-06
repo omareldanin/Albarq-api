@@ -13,95 +13,71 @@ const router = Router();
 const companiesController = new CompaniesController();
 
 router.route("/companies").post(
-    isLoggedIn,
-    isAutherized([AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
-    upload.single("logo"),
-    // upload.none(),
-    companiesController.createCompany
-    /*
-        #swagger.tags = ['Companies Routes']
-
-        #swagger.requestBody = {
-            required: true,
-            content: {
-                "application/json": {
-                    schema: { $ref: "#/components/schemas/CompanyCreateSchema" },
-                    examples: {
-                        CompanyCreateExample: { $ref: "#/components/examples/CompanyCreateExample" }
-                    }
-                }
-            }
-        }
-    */
+  isLoggedIn,
+  isAutherized([AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
+  upload.single("logo"),
+  // upload.none(),
+  companiesController.createCompany,
 );
 
-router.route("/companies").get(
+router
+  .route("/companies/api-key")
+  .post(
     isLoggedIn,
-    isAutherized([
-        EmployeeRole.COMPANY_MANAGER,
-        AdminRole.ADMIN,
-        AdminRole.ADMIN_ASSISTANT,
-        //TODO: Remove later
-        ...Object.values(EmployeeRole),
-        ...Object.values(ClientRole)
-    ]),
-    companiesController.getAllCompanies
-    /*
-        #swagger.tags = ['Companies Routes']
+    isAutherized([AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
+    upload.none(),
+    companiesController.generateApikey,
+  );
 
-        #swagger.parameters['page'] = {
-            in: 'query',
-            description: 'Page Number',
-            required: false
-        }
-
-        #swagger.parameters['size'] = {
-            in: 'query',
-            description: 'Page Size (Number of Items per Page) (Default: 10)',
-            required: false
-        }
-    */
+router.route("/companies").get(
+  isLoggedIn,
+  isAutherized([
+    EmployeeRole.COMPANY_MANAGER,
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+    //TODO: Remove later
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  companiesController.getAllCompanies,
 );
 
 router.route("/companies/:companyID").get(
-    isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
-    companiesController.getCompany
-    /*
+  isLoggedIn,
+  isAutherized([
+    EmployeeRole.COMPANY_MANAGER,
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+  ]),
+  companiesController.getCompany,
+  /*
         #swagger.tags = ['Companies Routes']
     */
 );
 
-router.route("/companies/:companyID").patch(
+router
+  .route("/companies/:companyID")
+  .patch(
     isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
+    isAutherized([
+      EmployeeRole.COMPANY_MANAGER,
+      AdminRole.ADMIN,
+      AdminRole.ADMIN_ASSISTANT,
+    ]),
     upload.single("logo"),
-    // upload.none(),
-    companiesController.updateCompany
-    /*
-        #swagger.tags = ['Companies Routes']
+    companiesController.updateCompany,
+  );
 
-        #swagger.requestBody = {
-            required: true,
-            content: {
-                "application/json": {
-                    schema: { $ref: "#/components/schemas/CompanyUpdateSchema" },
-                    examples: {
-                        CompanyUpdateExample: { $ref: "#/components/examples/CompanyUpdateExample" }
-                    }
-                }
-            }
-        }
-    */
-);
-
-router.route("/companies/:companyID").delete(
+router
+  .route("/companies/:companyID")
+  .delete(
     isLoggedIn,
-    isAutherized([EmployeeRole.COMPANY_MANAGER, AdminRole.ADMIN, AdminRole.ADMIN_ASSISTANT]),
-    companiesController.deleteCompany
-    /*
-        #swagger.tags = ['Companies Routes']
-    */
-);
+    isAutherized([
+      EmployeeRole.COMPANY_MANAGER,
+      AdminRole.ADMIN,
+      AdminRole.ADMIN_ASSISTANT,
+    ]),
+    companiesController.deleteCompany,
+  );
 
 export default router;

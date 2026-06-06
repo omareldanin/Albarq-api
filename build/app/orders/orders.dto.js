@@ -266,27 +266,6 @@ exports.OrdersFiltersSchema = zod_1.z.object({
             return false;
         return val;
     }, zod_1.z.boolean().optional()),
-    notForwared: zod_1.z.preprocess((val) => {
-        if (val === "true")
-            return true;
-        if (val === "false")
-            return false;
-        return false;
-    }, zod_1.z.boolean().default(false).optional()),
-    forwarededTo: zod_1.z.preprocess((val) => {
-        if (val === "true")
-            return true;
-        if (val === "false")
-            return false;
-        return false;
-    }, zod_1.z.boolean().default(false).optional()),
-    forwarededForReport: zod_1.z.preprocess((val) => {
-        if (val === "true")
-            return true;
-        if (val === "false")
-            return false;
-        return false;
-    }, zod_1.z.boolean().default(false).optional()),
     forwardedByID: zod_1.z.coerce.number().optional(),
     forwardedFromID: zod_1.z.coerce.number().optional(),
     clientID: zod_1.z.coerce.number().optional(),
@@ -346,6 +325,27 @@ exports.OrdersFiltersSchema = zod_1.z.object({
     companyReport: zod_1.z.string().optional(),
     notes: zod_1.z.string().optional(),
     deleted: zod_1.z.preprocess((val) => {
+        if (val === "true")
+            return true;
+        if (val === "false")
+            return false;
+        return false;
+    }, zod_1.z.boolean().default(false).optional()),
+    notForwared: zod_1.z.preprocess((val) => {
+        if (val === "true")
+            return true;
+        if (val === "false")
+            return false;
+        return false;
+    }, zod_1.z.boolean().default(false).optional()),
+    forwarededTo: zod_1.z.preprocess((val) => {
+        if (val === "true")
+            return true;
+        if (val === "false")
+            return false;
+        return false;
+    }, zod_1.z.boolean().default(false).optional()),
+    forwarededForReport: zod_1.z.preprocess((val) => {
         if (val === "true")
             return true;
         if (val === "false")

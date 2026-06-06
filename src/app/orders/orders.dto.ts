@@ -322,21 +322,6 @@ export const OrdersFiltersSchema = z.object({
     if (val === "false") return false;
     return val;
   }, z.boolean().optional()),
-  notForwared: z.preprocess((val) => {
-    if (val === "true") return true;
-    if (val === "false") return false;
-    return false;
-  }, z.boolean().default(false).optional()),
-  forwarededTo: z.preprocess((val) => {
-    if (val === "true") return true;
-    if (val === "false") return false;
-    return false;
-  }, z.boolean().default(false).optional()),
-  forwarededForReport: z.preprocess((val) => {
-    if (val === "true") return true;
-    if (val === "false") return false;
-    return false;
-  }, z.boolean().default(false).optional()),
   forwardedByID: z.coerce.number().optional(),
   forwardedFromID: z.coerce.number().optional(),
   clientID: z.coerce.number().optional(),
@@ -402,6 +387,21 @@ export const OrdersFiltersSchema = z.object({
   companyReport: z.string().optional(),
   notes: z.string().optional(),
   deleted: z.preprocess((val) => {
+    if (val === "true") return true;
+    if (val === "false") return false;
+    return false;
+  }, z.boolean().default(false).optional()),
+  notForwared: z.preprocess((val) => {
+    if (val === "true") return true;
+    if (val === "false") return false;
+    return false;
+  }, z.boolean().default(false).optional()),
+  forwarededTo: z.preprocess((val) => {
+    if (val === "true") return true;
+    if (val === "false") return false;
+    return false;
+  }, z.boolean().default(false).optional()),
+  forwarededForReport: z.preprocess((val) => {
     if (val === "true") return true;
     if (val === "false") return false;
     return false;

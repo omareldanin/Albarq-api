@@ -39,7 +39,6 @@ exports.clientSelect = {
             id: true,
             name: true,
             logo: true,
-            color: true,
         },
     },
     deleted: true,

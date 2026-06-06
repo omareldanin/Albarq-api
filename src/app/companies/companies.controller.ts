@@ -6,131 +6,187 @@ import type { loggedInUserType } from "../../types/user";
 import { EmployeesRepository } from "../employees/employees.repository";
 import { CompanyCreateSchema, CompanyUpdateSchema } from "./companies.dto";
 import { CompaniesRepository } from "./companies.repository";
+import crypto from "crypto";
+import { prisma } from "../../database/db";
 
 const companiesRepository = new CompaniesRepository();
 const employeesRepository = new EmployeesRepository();
 
 export class CompaniesController {
-    createCompany = catchAsync(async (req, res) => {
-        const loggedInUser = res.locals.user as loggedInUserType;
-        const companyData = CompanyCreateSchema.parse(req.body);
+  createCompany = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+    const companyData = CompanyCreateSchema.parse(req.body);
 
-        let logo: string | undefined;
-        if (req.file) {
-            const file = req.file as Express.MulterS3.File;
-            logo = file.location;
-        }
+    let logo: string | undefined;
+    if (req.file) {
+      const file = req.file as Express.MulterS3.File;
+      logo = file.location;
+    }
 
-        const hashedPassword = bcrypt.hashSync(
-            companyData.companyManager.password + (env.PASSWORD_SALT as string),
-            12
-        );
+    const hashedPassword = bcrypt.hashSync(
+      companyData.companyManager.password + (env.PASSWORD_SALT as string),
+      12,
+    );
 
-        const createdCompany = await companiesRepository.createCompany({
-            loggedInUser: loggedInUser,
-            companyData: {
-                companyData: { ...companyData.companyData, logo },
-                companyManager: {
-                    ...companyData.companyManager,
-                    password: hashedPassword,
-                    avatar: logo
-                }
-            }
-        });
-
-        res.status(200).json({
-            status: "success",
-            data: createdCompany
-        });
+    const createdCompany = await companiesRepository.createCompany({
+      loggedInUser: loggedInUser,
+      companyData: {
+        companyData: { ...companyData.companyData, logo },
+        companyManager: {
+          ...companyData.companyManager,
+          password: hashedPassword,
+          avatar: logo,
+        },
+      },
     });
 
-    getAllCompanies = catchAsync(async (req, res) => {
-        const minified = req.query.minified ? req.query.minified === "true" : undefined;
+    res.status(200).json({
+      status: "success",
+      data: createdCompany,
+    });
+  });
 
-        const mainCompany = req.query.main_company ? req.query.main_company === "true" : undefined;
-        let size = req.query.size ? +req.query.size : 10;
-        if (size > 500 && minified !== true) {
-            size = 10;
-        }
+  generateApikey = catchAsync(async (req, res) => {
+    const { id } = req.body;
 
-        let page = 1;
-        if (req.query.page && !Number.isNaN(+req.query.page) && +req.query.page > 0) {
-            page = +req.query.page;
-        }
+    if (!id) {
+      throw new AppError("Client name and permissions are required", 400);
+    }
 
-        const { companies, pagesCount } = await companiesRepository.getAllCompaniesPaginated({
-            page: page,
-            size: size,
-            minified: minified,
-            mainCompany: mainCompany
-        });
-
-        res.status(200).json({
-            status: "success",
-            page: page,
-            pagesCount: pagesCount,
-            data: companies
-        });
+    const company = await companiesRepository.getCompany({
+      companyID: id,
     });
 
-    getCompany = catchAsync(async (req, res) => {
-        const companyID = +req.params.companyID;
+    if (!company) {
+      throw new AppError("company not found", 404);
+    }
 
-        const company = await companiesRepository.getCompany({
-            companyID: +companyID
-        });
+    const rawApiKey = `albarq_live_${crypto.randomBytes(32).toString("hex")}`;
 
-        res.status(200).json({
-            status: "success",
-            data: company
-        });
+    const apiKeyHash = crypto
+      .createHash("sha256")
+      .update(rawApiKey)
+      .digest("hex");
+
+    await prisma.company.update({
+      where: {
+        id: company.id,
+      },
+      data: {
+        apiKeyHash,
+      },
     });
 
-    updateCompany = catchAsync(async (req, res) => {
-        const companyID = +req.params.companyID;
-        const companyData = CompanyUpdateSchema.parse(req.body);
+    res.status(200).json({
+      status: "success",
+      apiKey: rawApiKey,
+    });
+  });
 
-        let logo: string | undefined;
-        if (req.file) {
-            const file = req.file as Express.MulterS3.File;
-            logo = file.location;
-        }
+  getAllCompanies = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
 
-        const companyManagerID = (
-            await employeesRepository.getCompanyManager({
-                companyID: +companyID
-            })
-        ).id;
-        if (!companyManagerID) {
-            throw new AppError("لا يوجد مدير لهذه الشركة", 404);
-        }
-        companyData.companyManagerID = companyManagerID;
+    const minified = req.query.minified
+      ? req.query.minified === "true"
+      : undefined;
 
-        if (companyData.password) {
-            const hashedPassword = bcrypt.hashSync(companyData.password + (env.PASSWORD_SALT as string), 12);
-            companyData.password = hashedPassword;
-        }
+    const mainCompany = req.query.main_company
+      ? req.query.main_company === "true"
+      : undefined;
+    let size = req.query.size ? +req.query.size : 10;
+    if (size > 500 && minified !== true) {
+      size = 10;
+    }
 
-        const company = await companiesRepository.updateCompany({
-            companyID: +companyID,
-            companyData: { ...companyData, logo }
-        });
+    let page = 1;
+    if (
+      req.query.page &&
+      !Number.isNaN(+req.query.page) &&
+      +req.query.page > 0
+    ) {
+      page = +req.query.page;
+    }
 
-        res.status(200).json({
-            status: "success",
-            data: company
-        });
+    const { companies, pagesCount } =
+      await companiesRepository.getAllCompaniesPaginated(
+        {
+          page: page,
+          size: size,
+          minified: minified,
+          mainCompany: mainCompany,
+        },
+        loggedInUser,
+      );
+
+    res.status(200).json({
+      status: "success",
+      page: page,
+      pagesCount: pagesCount,
+      data: companies,
+    });
+  });
+
+  getCompany = catchAsync(async (req, res) => {
+    const companyID = +req.params.companyID;
+
+    const company = await companiesRepository.getCompany({
+      companyID: +companyID,
     });
 
-    deleteCompany = catchAsync(async (req, res) => {
-        const companyID = +req.params.companyID;
-
-        await companiesRepository.deleteCompany({
-            companyID: +companyID
-        });
-
-        res.status(200).json({
-            status: "success"
-        });
+    res.status(200).json({
+      status: "success",
+      data: company,
     });
+  });
+
+  updateCompany = catchAsync(async (req, res) => {
+    const companyID = +req.params.companyID;
+    const companyData = CompanyUpdateSchema.parse(req.body);
+
+    let logo: string | undefined;
+    if (req.file) {
+      const file = req.file as Express.MulterS3.File;
+      logo = file.location;
+    }
+
+    const companyManagerID = (
+      await employeesRepository.getCompanyManager({
+        companyID: +companyID,
+      })
+    ).id;
+    if (!companyManagerID) {
+      throw new AppError("لا يوجد مدير لهذه الشركة", 404);
+    }
+    companyData.companyManagerID = companyManagerID;
+
+    if (companyData.password) {
+      const hashedPassword = bcrypt.hashSync(
+        companyData.password + (env.PASSWORD_SALT as string),
+        12,
+      );
+      companyData.password = hashedPassword;
+    }
+
+    const company = await companiesRepository.updateCompany({
+      companyID: +companyID,
+      companyData: { ...companyData, logo },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: company,
+    });
+  });
+
+  deleteCompany = catchAsync(async (req, res) => {
+    const companyID = +req.params.companyID;
+
+    await companiesRepository.deleteCompany({
+      companyID: +companyID,
+    });
+
+    res.status(200).json({
+      status: "success",
+    });
+  });
 }

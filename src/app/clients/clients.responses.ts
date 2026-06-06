@@ -38,7 +38,6 @@ export const clientSelect = {
       id: true,
       name: true,
       logo: true,
-      color: true,
     },
   },
   deleted: true,
@@ -54,7 +53,7 @@ export const clientSelect = {
 export const clientReform = (
   client: Prisma.ClientGetPayload<{
     select: typeof clientSelect;
-  }> | null
+  }> | null,
 ) => {
   if (!client) {
     return null;

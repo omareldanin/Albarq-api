@@ -9,115 +9,124 @@ class CompaniesRepository {
             data: {
                 name: data.companyData.companyData.name,
                 phone: data.companyData.companyData.phone,
-                // website: data.companyData.companyData.website,
                 logo: data.companyData.companyData.logo,
-                color: data.companyData.companyData.color,
                 registrationText: data.companyData.companyData.registrationText,
-                governoratePrice: data.companyData.companyData.governoratePrice,
-                deliveryAgentFee: data.companyData.companyData.deliveryAgentFee,
-                baghdadPrice: data.companyData.companyData.baghdadPrice,
-                additionalPriceForEvery500000IraqiDinar: data.companyData.companyData.additionalPriceForEvery500000IraqiDinar,
-                additionalPriceForEveryKilogram: data.companyData.companyData.additionalPriceForEveryKilogram,
-                additionalPriceForRemoteAreas: data.companyData.companyData.additionalPriceForRemoteAreas,
-                orderStatusAutomaticUpdate: data.companyData.companyData.orderStatusAutomaticUpdate,
-                employees: {
-                    create: {
-                        user: {
-                            create: {
-                                username: data.companyData.companyManager.username,
-                                name: data.companyData.companyManager.name,
-                                password: data.companyData.companyManager.password,
-                                phone: data.companyData.companyManager.phone
-                            }
+                governoratesDeliveryCosts: data.companyData.companyData.governoratesDeliveryCosts,
+                isExternal: data.loggedInUser.role === "COMPANY_MANAGER" ||
+                    data.companyData.companyData.isExternal
+                    ? true
+                    : false,
+                targetCompanyId: data.loggedInUser.role === "COMPANY_MANAGER"
+                    ? data.loggedInUser.companyID
+                    : data.companyData.companyData.companyID
+                        ? +data.companyData.companyData.companyID
+                        : undefined,
+                employees: data.loggedInUser.role === "COMPANY_MANAGER"
+                    ? undefined
+                    : {
+                        create: {
+                            user: {
+                                create: {
+                                    username: data.companyData.companyManager.username,
+                                    name: data.companyData.companyManager.name,
+                                    password: data.companyData.companyManager.password,
+                                    phone: data.companyData.companyManager.phone,
+                                },
+                            },
+                            createdBy: {
+                                connect: {
+                                    id: data.loggedInUser.id,
+                                },
+                            },
+                            role: "COMPANY_MANAGER",
                         },
-                        createdBy: {
-                            connect: {
-                                id: data.loggedInUser.id
-                            }
-                        },
-                        role: "COMPANY_MANAGER"
-                    }
-                }
+                    },
             },
-            select: companies_responses_1.companySelect
+            select: companies_responses_1.companySelect,
         });
         return createdCompany;
     }
-    async getAllCompaniesPaginated(filters) {
+    async getAllCompaniesPaginated(filters, loggedInUser) {
         if (filters.minified === true) {
             const paginatedCompanies = await db_1.prisma.company.findManyPaginated({
                 select: {
                     id: true,
-                    name: true
+                    name: true,
                 },
                 where: {
-                    mainCompany: filters.mainCompany
+                    mainCompany: filters.mainCompany,
+                    isExternal: loggedInUser.role !== "ADMIN" ? false : undefined,
                 },
                 orderBy: [
                     {
-                        mainCompany: "desc"
+                        mainCompany: "desc",
                     },
                     {
-                        name: "asc"
-                    }
-                ]
+                        name: "asc",
+                    },
+                ],
             }, {
                 page: filters.page,
-                size: filters.size
+                size: filters.size,
+                withCount: true,
             });
-            return { companies: paginatedCompanies.data, pagesCount: paginatedCompanies.pagesCount };
+            return {
+                companies: paginatedCompanies.data,
+                pagesCount: paginatedCompanies.pagesCount,
+            };
         }
         const paginatedCompanies = await db_1.prisma.company.findManyPaginated({
             orderBy: [
                 {
-                    mainCompany: "desc"
+                    mainCompany: "desc",
                 },
                 {
-                    name: "asc"
-                }
+                    name: "asc",
+                },
             ],
             select: companies_responses_1.companySelect,
             where: {
-                mainCompany: filters.mainCompany
-            }
+                mainCompany: filters.mainCompany,
+                isExternal: loggedInUser.role !== "ADMIN" ? false : undefined,
+            },
         }, {
             page: filters.page,
-            size: filters.size
+            size: filters.size,
+            withCount: true,
         });
-        return { companies: paginatedCompanies.data, pagesCount: paginatedCompanies.pagesCount };
+        return {
+            companies: paginatedCompanies.data,
+            pagesCount: paginatedCompanies.pagesCount,
+        };
     }
     async getCompany(data) {
         const company = await db_1.prisma.company.findUnique({
             where: {
-                id: data.companyID
+                id: data.companyID,
             },
-            select: companies_responses_1.companySelect
+            select: companies_responses_1.companySelect,
         });
         return company;
     }
     async updateCompany(data) {
         const company = await db_1.prisma.company.update({
             where: {
-                id: data.companyID
+                id: data.companyID,
             },
             data: {
                 name: data.companyData.name,
                 phone: data.companyData.phone,
-                // website: data.companyData.website,
                 logo: data.companyData.logo,
-                color: data.companyData.color,
                 registrationText: data.companyData.registrationText,
-                governoratePrice: data.companyData.governoratePrice,
-                deliveryAgentFee: data.companyData.deliveryAgentFee,
-                baghdadPrice: data.companyData.baghdadPrice,
-                additionalPriceForEvery500000IraqiDinar: data.companyData.additionalPriceForEvery500000IraqiDinar,
-                additionalPriceForEveryKilogram: data.companyData.additionalPriceForEveryKilogram,
-                additionalPriceForRemoteAreas: data.companyData.additionalPriceForRemoteAreas,
-                orderStatusAutomaticUpdate: data.companyData.orderStatusAutomaticUpdate,
+                governoratesDeliveryCosts: data.companyData.governoratesDeliveryCosts,
+                isExternal: data.companyData.isExternal ? true : false,
+                targetCompanyId: data.companyData.companyID
+                    ? +data.companyData.companyID
+                    : undefined,
                 employees: {
                     update: {
                         where: {
-                            id: data.companyData.companyManagerID
+                            id: data.companyData.companyManagerID,
                         },
                         data: {
                             user: {
@@ -125,40 +134,28 @@ class CompaniesRepository {
                                     username: data.companyData.phone,
                                     phone: data.companyData.phone,
                                     password: data.companyData.password,
-                                    avatar: data.companyData.logo
-                                }
-                            }
-                        }
-                    }
-                }
+                                    avatar: data.companyData.logo,
+                                },
+                            },
+                        },
+                    },
+                },
             },
-            select: companies_responses_1.companySelect
+            select: companies_responses_1.companySelect,
         });
         return company;
     }
-    // add or substract money from company treasury
-    async updateCompanyTreasury(data) {
-        await db_1.prisma.company.update({
-            where: {
-                id: data.companyID
-            },
-            data: {
-                treasury: data.treasury.type === "increment"
-                    ? {
-                        increment: data.treasury.amount
-                    }
-                    : {
-                        decrement: data.treasury.amount
-                    }
-            }
-        });
-    }
     async deleteCompany(data) {
+        await db_1.prisma.employee.deleteMany({
+            where: {
+                companyId: data.companyID,
+            },
+        });
         await db_1.prisma.company.delete({
             where: {
-                id: data.companyID
+                id: data.companyID,
             },
-            select: companies_responses_1.companySelect
+            select: companies_responses_1.companySelect,
         });
         return true;
     }

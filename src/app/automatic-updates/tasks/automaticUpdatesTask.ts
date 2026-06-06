@@ -15,7 +15,6 @@ export const automaticUpdatesTask = async () => {
     const companies = await prisma.company.findMany({
       select: {
         id: true,
-        orderStatusAutomaticUpdate: true,
       },
     });
 

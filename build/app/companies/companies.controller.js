@@ -32,6 +32,9 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CompaniesController = void 0;
 const bcrypt = __importStar(require("bcrypt"));
@@ -41,6 +44,8 @@ const catchAsync_1 = require("../../lib/catchAsync");
 const employees_repository_1 = require("../employees/employees.repository");
 const companies_dto_1 = require("./companies.dto");
 const companies_repository_1 = require("./companies.repository");
+const crypto_1 = __importDefault(require("crypto"));
+const db_1 = require("../../database/db");
 const companiesRepository = new companies_repository_1.CompaniesRepository();
 const employeesRepository = new employees_repository_1.EmployeesRepository();
 class CompaniesController {
@@ -60,47 +65,83 @@ class CompaniesController {
                 companyManager: {
                     ...companyData.companyManager,
                     password: hashedPassword,
-                    avatar: logo
-                }
-            }
+                    avatar: logo,
+                },
+            },
         });
         res.status(200).json({
             status: "success",
-            data: createdCompany
+            data: createdCompany,
+        });
+    });
+    generateApikey = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const { id } = req.body;
+        if (!id) {
+            throw new AppError_1.AppError("Client name and permissions are required", 400);
+        }
+        const company = await companiesRepository.getCompany({
+            companyID: id,
+        });
+        if (!company) {
+            throw new AppError_1.AppError("company not found", 404);
+        }
+        const rawApiKey = `albarq_live_${crypto_1.default.randomBytes(32).toString("hex")}`;
+        const apiKeyHash = crypto_1.default
+            .createHash("sha256")
+            .update(rawApiKey)
+            .digest("hex");
+        await db_1.prisma.company.update({
+            where: {
+                id: company.id,
+            },
+            data: {
+                apiKeyHash,
+            },
+        });
+        res.status(200).json({
+            status: "success",
+            apiKey: rawApiKey,
         });
     });
     getAllCompanies = (0, catchAsync_1.catchAsync)(async (req, res) => {
-        const minified = req.query.minified ? req.query.minified === "true" : undefined;
-        const mainCompany = req.query.main_company ? req.query.main_company === "true" : undefined;
+        const loggedInUser = res.locals.user;
+        const minified = req.query.minified
+            ? req.query.minified === "true"
+            : undefined;
+        const mainCompany = req.query.main_company
+            ? req.query.main_company === "true"
+            : undefined;
         let size = req.query.size ? +req.query.size : 10;
         if (size > 500 && minified !== true) {
             size = 10;
         }
         let page = 1;
-        if (req.query.page && !Number.isNaN(+req.query.page) && +req.query.page > 0) {
+        if (req.query.page &&
+            !Number.isNaN(+req.query.page) &&
+            +req.query.page > 0) {
             page = +req.query.page;
         }
         const { companies, pagesCount } = await companiesRepository.getAllCompaniesPaginated({
             page: page,
             size: size,
             minified: minified,
-            mainCompany: mainCompany
-        });
+            mainCompany: mainCompany,
+        }, loggedInUser);
         res.status(200).json({
             status: "success",
             page: page,
             pagesCount: pagesCount,
-            data: companies
+            data: companies,
         });
     });
     getCompany = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const companyID = +req.params.companyID;
         const company = await companiesRepository.getCompany({
-            companyID: +companyID
+            companyID: +companyID,
         });
         res.status(200).json({
             status: "success",
-            data: company
+            data: company,
         });
     });
     updateCompany = (0, catchAsync_1.catchAsync)(async (req, res) => {
@@ -112,7 +153,7 @@ class CompaniesController {
             logo = file.location;
         }
         const companyManagerID = (await employeesRepository.getCompanyManager({
-            companyID: +companyID
+            companyID: +companyID,
         })).id;
         if (!companyManagerID) {
             throw new AppError_1.AppError("لا يوجد مدير لهذه الشركة", 404);
@@ -124,20 +165,20 @@ class CompaniesController {
         }
         const company = await companiesRepository.updateCompany({
             companyID: +companyID,
-            companyData: { ...companyData, logo }
+            companyData: { ...companyData, logo },
         });
         res.status(200).json({
             status: "success",
-            data: company
+            data: company,
         });
     });
     deleteCompany = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const companyID = +req.params.companyID;
         await companiesRepository.deleteCompany({
-            companyID: +companyID
+            companyID: +companyID,
         });
         res.status(200).json({
-            status: "success"
+            status: "success",
         });
     });
 }

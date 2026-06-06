@@ -29,6 +29,7 @@ const deparment_routes_1 = __importDefault(require("../app/departments/deparment
 const tickets_routes_1 = __importDefault(require("../app/tickets/tickets.routes"));
 const messages_routes_1 = __importDefault(require("../app/messages/messages.routes"));
 const transactions_routes_1 = __importDefault(require("../app/transactions/transactions.routes"));
+const orders_routes_2 = __importDefault(require("../app/externalOrders/orders.routes"));
 const catchAsync_1 = require("../lib/catchAsync");
 const upload_1 = require("../middlewares/upload");
 const router = (0, express_1.Router)();
@@ -57,6 +58,7 @@ router.use("/", tickets_routes_1.default);
 router.use("/", messages_routes_1.default);
 router.use("/", closedStatus_routes_1.default);
 router.use("/", transactions_routes_1.default);
+router.use("/", orders_routes_2.default);
 /*******************************************************************************
  * TEST ROUTES
  * TODO: Remove these routes
