@@ -19,6 +19,11 @@ class AuthRepository {
                             deleted: false,
                         },
                     },
+                    {
+                        admin: {
+                            role: "ADMIN",
+                        },
+                    },
                 ],
             },
             select: auth_responses_1.userSelect,

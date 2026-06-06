@@ -18,6 +18,11 @@ export class AuthRepository {
               deleted: false,
             },
           },
+          {
+            admin: {
+              role: "ADMIN",
+            },
+          },
         ],
       },
       select: userSelect,

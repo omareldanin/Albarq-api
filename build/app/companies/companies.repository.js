@@ -146,7 +146,82 @@ class CompaniesRepository {
         return company;
     }
     async deleteCompany(data) {
+        await db_1.prisma.usersLoginHistory.deleteMany({
+            where: {
+                companyId: data.companyID,
+            },
+        });
+        await db_1.prisma.transaction.deleteMany({
+            where: {
+                companyId: data.companyID,
+            },
+        });
         await db_1.prisma.employee.deleteMany({
+            where: {
+                companyId: data.companyID,
+            },
+        });
+        await db_1.prisma.size.deleteMany({
+            where: {
+                client: {
+                    companyId: data.companyID,
+                },
+            },
+        });
+        await db_1.prisma.category.deleteMany({
+            where: {
+                client: {
+                    companyId: data.companyID,
+                },
+            },
+        });
+        await db_1.prisma.color.deleteMany({
+            where: {
+                client: {
+                    companyId: data.companyID,
+                },
+            },
+        });
+        await db_1.prisma.product.deleteMany({
+            where: {
+                companyId: data.companyID,
+            },
+        });
+        await db_1.prisma.orderTimeline.deleteMany({
+            where: {
+                order: {
+                    companyId: data.companyID,
+                },
+            },
+        });
+        await db_1.prisma.order.deleteMany({
+            where: {
+                companyId: data.companyID,
+            },
+        });
+        await db_1.prisma.store.deleteMany({
+            where: {
+                companyId: data.companyID,
+            },
+        });
+        await db_1.prisma.client.deleteMany({
+            where: {
+                companyId: data.companyID,
+            },
+        });
+        await db_1.prisma.clientOrderReceipt.deleteMany({
+            where: {
+                branch: {
+                    companyId: data.companyID,
+                },
+            },
+        });
+        await db_1.prisma.repository.deleteMany({
+            where: {
+                companyId: data.companyID,
+            },
+        });
+        await db_1.prisma.branch.deleteMany({
             where: {
                 companyId: data.companyID,
             },
