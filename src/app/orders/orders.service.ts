@@ -35,6 +35,7 @@ import {OrdersRepository} from "./orders.repository";
 import {orderReform, orderSelect, OrderStatusData} from "./orders.responses";
 import {prisma} from "../../database/db";
 import {governorateArabicNames} from "../locations/locations.repository";
+import axios from "axios";
 
 const ordersRepository = new OrdersRepository();
 const employeesRepository = new EmployeesRepository();
@@ -738,6 +739,45 @@ export class OrdersService {
     if (!newOrder) {
       throw new AppError("فشل تحديث الطلب", 500);
     }
+
+    if (
+      (oldOrderData.status !== newOrder.status ||
+        newOrder.paidAmount !== oldOrderData.paidAmount) &&
+      oldOrderData.forwarded &&
+      oldOrderData.forwardedFromId !== oldOrderData.company.id
+    ) {
+      const companyId = oldOrderData.company.id;
+
+      const webhookUrl = oldOrderData.forwardedFrom?.webhookUrl;
+
+      if (webhookUrl) {
+        const payload: any = {
+          id: newOrder.id,
+          receiptNumber: newOrder.receiptNumber,
+          notes: newOrder.notes,
+          status: newOrder.status,
+        };
+
+        if (
+          newOrder.status === "DELIVERED" ||
+          newOrder.status === "PARTIALLY_RETURNED" ||
+          newOrder.status === "REPLACED"
+        ) {
+          payload.paidAmount = newOrder.paidAmount;
+        }
+
+        try {
+          await axios.post(webhookUrl, payload, {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            timeout: 10000,
+          });
+        } catch (error) {
+          console.error(`Webhook failed for company ${companyId}`, error);
+        }
+      }
+    }
     // Update Order Timeline
     try {
       // Update status
@@ -783,7 +823,11 @@ export class OrdersService {
           const clientAssitants = await prisma.employee.findMany({
             where: {
               AND: [
-                {role: {in: ["CLIENT_ASSISTANT", "EMPLOYEE_CLIENT_ASSISTANT"]}},
+                {
+                  role: {
+                    in: ["CLIENT_ASSISTANT", "EMPLOYEE_CLIENT_ASSISTANT"],
+                  },
+                },
                 {
                   OR: [
                     {

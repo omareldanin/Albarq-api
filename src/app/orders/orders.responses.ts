@@ -152,7 +152,7 @@ export const orderSelect = {
       id: true,
       name: true,
       logo: true,
-      registrationText: true,
+      webhookUrl: true,
     },
   },
   client: {

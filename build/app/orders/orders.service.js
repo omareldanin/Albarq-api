@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrdersService = void 0;
 const client_1 = require("@prisma/client");
@@ -16,6 +19,7 @@ const orders_repository_1 = require("./orders.repository");
 const orders_responses_1 = require("./orders.responses");
 const db_1 = require("../../database/db");
 const locations_repository_1 = require("../locations/locations.repository");
+const axios_1 = __importDefault(require("axios"));
 const ordersRepository = new orders_repository_1.OrdersRepository();
 const employeesRepository = new employees_repository_1.EmployeesRepository();
 const clientsRepository = new clients_repository_1.ClientsRepository();
@@ -575,6 +579,37 @@ class OrdersService {
         if (!newOrder) {
             throw new AppError_1.AppError("فشل تحديث الطلب", 500);
         }
+        if ((oldOrderData.status !== newOrder.status ||
+            newOrder.paidAmount !== oldOrderData.paidAmount) &&
+            oldOrderData.forwarded &&
+            oldOrderData.forwardedFromId !== oldOrderData.company.id) {
+            const companyId = oldOrderData.company.id;
+            const webhookUrl = oldOrderData.forwardedFrom?.webhookUrl;
+            if (webhookUrl) {
+                const payload = {
+                    id: newOrder.id,
+                    receiptNumber: newOrder.receiptNumber,
+                    notes: newOrder.notes,
+                    status: newOrder.status,
+                };
+                if (newOrder.status === "DELIVERED" ||
+                    newOrder.status === "PARTIALLY_RETURNED" ||
+                    newOrder.status === "REPLACED") {
+                    payload.paidAmount = newOrder.paidAmount;
+                }
+                try {
+                    await axios_1.default.post(webhookUrl, payload, {
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        timeout: 10000,
+                    });
+                }
+                catch (error) {
+                    console.error(`Webhook failed for company ${companyId}`, error);
+                }
+            }
+        }
         // Update Order Timeline
         try {
             // Update status
@@ -604,7 +639,11 @@ class OrdersService {
                     const clientAssitants = await db_1.prisma.employee.findMany({
                         where: {
                             AND: [
-                                { role: { in: ["CLIENT_ASSISTANT", "EMPLOYEE_CLIENT_ASSISTANT"] } },
+                                {
+                                    role: {
+                                        in: ["CLIENT_ASSISTANT", "EMPLOYEE_CLIENT_ASSISTANT"],
+                                    },
+                                },
                                 {
                                     OR: [
                                         {

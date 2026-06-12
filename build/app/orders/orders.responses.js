@@ -151,7 +151,7 @@ exports.orderSelect = {
             id: true,
             name: true,
             logo: true,
-            registrationText: true,
+            webhookUrl: true,
         },
     },
     client: {
