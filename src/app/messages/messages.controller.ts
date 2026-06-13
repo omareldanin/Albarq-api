@@ -77,23 +77,25 @@ export class MessagesController {
                     },
                   },
                 },
-                {
-                  branch: {
-                    repositories: {
-                      some: {
-                        mainRepository: true,
+                order.client.branchId
+                  ? {
+                      branch: {
+                        repositories: {
+                          some: {
+                            mainRepository: true,
+                          },
+                        },
                       },
-                    },
-                  },
-                  orderType: null,
-                  inquiryBranches: {
-                    some: {
-                      branchId: {
-                        in: [order.client.branchId!!],
+                      orderType: null,
+                      inquiryBranches: {
+                        some: {
+                          branchId: {
+                            in: [order.client.branchId],
+                          },
+                        },
                       },
-                    },
-                  },
-                },
+                    }
+                  : {},
                 {
                   branch: {
                     repositories: {
@@ -111,23 +113,25 @@ export class MessagesController {
                     },
                   },
                 },
-                {
-                  branch: {
-                    repositories: {
-                      some: {
-                        mainRepository: true,
+                order.client.branchId
+                  ? {
+                      branch: {
+                        repositories: {
+                          some: {
+                            mainRepository: true,
+                          },
+                        },
                       },
-                    },
-                  },
-                  orderType: "forwarded",
-                  inquiryBranches: {
-                    some: {
-                      branchId: {
-                        in: [order.client.branchId!!],
+                      orderType: "forwarded",
+                      inquiryBranches: {
+                        some: {
+                          branchId: {
+                            in: [order.client.branchId!!],
+                          },
+                        },
                       },
-                    },
-                  },
-                },
+                    }
+                  : {},
                 {
                   branch: {
                     repositories: {

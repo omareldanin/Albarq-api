@@ -3136,22 +3136,6 @@ export class OrdersRepository {
               },
             }
           : undefined,
-        ordersInquiryEmployees: data.orderData.inquiryEmployeesIDs
-          ? {
-              deleteMany: {
-                orderId: data.orderID,
-              },
-              create: data.orderData.inquiryEmployeesIDs?.map((id) => {
-                return {
-                  inquiryEmployee: {
-                    connect: {
-                      id: id,
-                    },
-                  },
-                };
-              }),
-            }
-          : undefined,
       },
       select: orderSelect,
     });
