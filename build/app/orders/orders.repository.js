@@ -3713,23 +3713,23 @@ class OrdersRepository {
                                     },
                                 },
                             },
-                            {
-                                branch: {
-                                    repositories: {
+                            order.client.branchId
+                                ? {
+                                    branch: {
+                                        repositories: {
+                                            some: {
+                                                mainRepository: true,
+                                            },
+                                        },
+                                    },
+                                    orderType: null,
+                                    inquiryBranches: {
                                         some: {
-                                            mainRepository: true,
+                                            branchId: order.client.branchId,
                                         },
                                     },
-                                },
-                                orderType: null,
-                                inquiryBranches: {
-                                    some: {
-                                        branchId: {
-                                            in: [order.client.branchId],
-                                        },
-                                    },
-                                },
-                            },
+                                }
+                                : {},
                             {
                                 branch: {
                                     repositories: {
@@ -3747,23 +3747,23 @@ class OrdersRepository {
                                     },
                                 },
                             },
-                            {
-                                branch: {
-                                    repositories: {
+                            order.client.branchId
+                                ? {
+                                    branch: {
+                                        repositories: {
+                                            some: {
+                                                mainRepository: true,
+                                            },
+                                        },
+                                    },
+                                    orderType: "forwarded",
+                                    inquiryBranches: {
                                         some: {
-                                            mainRepository: true,
+                                            branchId: order.client.branchId,
                                         },
                                     },
-                                },
-                                orderType: "forwarded",
-                                inquiryBranches: {
-                                    some: {
-                                        branchId: {
-                                            in: [order.client.branchId],
-                                        },
-                                    },
-                                },
-                            },
+                                }
+                                : {},
                             {
                                 branch: {
                                     repositories: {
