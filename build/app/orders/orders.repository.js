@@ -3540,9 +3540,7 @@ class OrdersRepository {
                                 orderType: null,
                                 inquiryBranches: {
                                     some: {
-                                        branchId: {
-                                            in: [order.client.branchId],
-                                        },
+                                        branchId: order.client.branchId,
                                     },
                                 },
                             },
@@ -3574,9 +3572,7 @@ class OrdersRepository {
                                 orderType: "forwarded",
                                 inquiryBranches: {
                                     some: {
-                                        branchId: {
-                                            in: [order.client.branchId],
-                                        },
+                                        branchId: order.client.branchId,
                                     },
                                 },
                             },
