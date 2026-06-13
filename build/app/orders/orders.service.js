@@ -597,6 +597,7 @@ class OrdersService {
                     newOrder.status === "REPLACED") {
                     payload.paidAmount = newOrder.paidAmount;
                 }
+                console.log("payload", payload);
                 try {
                     await axios_1.default.post(webhookUrl, payload, {
                         headers: {

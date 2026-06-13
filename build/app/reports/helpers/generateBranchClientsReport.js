@@ -10,8 +10,8 @@ const AppError_1 = require("../../../lib/AppError");
 const generateHTML_1 = require("../../../lib/generateHTML");
 const generatePDF_1 = require("../../../lib/generatePDF");
 const logger_1 = require("../../../lib/logger");
-const uploadPdfToSpaces_1 = require("../../../lib/uploadPdfToSpaces");
-const db_1 = require("../../../database/db");
+// import {uploadPdfToSpaces} from "../../../lib/uploadPdfToSpaces";
+// import {prisma} from "../../../database/db";
 const generateBranchClientsReport = async (reportData, clients) => {
     const STATIC_DIR = process.env.NODE_ENV === "production"
         ? node_path_1.default.join(process.cwd(), "build/static")
@@ -23,13 +23,7 @@ const generateBranchClientsReport = async (reportData, clients) => {
         const css = await promises_1.default.readFile(node_path_1.default.join(STATIC_DIR, "styles/reportStyle.css"), "utf8");
         const html = await (0, generateHTML_1.generateHTML)(template, { reportData, clients });
         const pdf = await (0, generatePDF_1.generatePDF)(html, css);
-        const pdfUrl = await (0, uploadPdfToSpaces_1.uploadPdfToSpaces)(pdf, reportData?.id);
-        await db_1.prisma.report.update({
-            where: { id: reportData?.id },
-            data: {
-                url: pdfUrl,
-            },
-        });
+        // const pdfUrl = await uploadPdfToSpaces(pdf, reportData?.id!!);
         return pdf;
     }
     catch (error) {

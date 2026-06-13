@@ -766,6 +766,8 @@ export class OrdersService {
           payload.paidAmount = newOrder.paidAmount;
         }
 
+        console.log("payload", payload);
+
         try {
           await axios.post(webhookUrl, payload, {
             headers: {

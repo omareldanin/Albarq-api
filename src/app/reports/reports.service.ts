@@ -950,6 +950,7 @@ export class ReportsService {
       reportID: data.params.reportID,
     });
   }
+
   async deactivateReport(data: {
     params: {reportID: number};
     loggedInUser: loggedInUserType;
