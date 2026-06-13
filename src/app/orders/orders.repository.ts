@@ -4003,21 +4003,23 @@ export class OrdersRepository {
                     },
                   },
                 },
-                {
-                  branch: {
-                    repositories: {
-                      some: {
-                        mainRepository: true,
+                order.client.branchId
+                  ? {
+                      branch: {
+                        repositories: {
+                          some: {
+                            mainRepository: true,
+                          },
+                        },
                       },
-                    },
-                  },
-                  orderType: null,
-                  inquiryBranches: {
-                    some: {
-                      branchId: order.client.branchId!!,
-                    },
-                  },
-                },
+                      orderType: null,
+                      inquiryBranches: {
+                        some: {
+                          branchId: order.client.branchId,
+                        },
+                      },
+                    }
+                  : {},
                 {
                   branch: {
                     repositories: {
@@ -4035,21 +4037,23 @@ export class OrdersRepository {
                     },
                   },
                 },
-                {
-                  branch: {
-                    repositories: {
-                      some: {
-                        mainRepository: true,
+                order.client.branchId
+                  ? {
+                      branch: {
+                        repositories: {
+                          some: {
+                            mainRepository: true,
+                          },
+                        },
                       },
-                    },
-                  },
-                  orderType: "forwarded",
-                  inquiryBranches: {
-                    some: {
-                      branchId: order.client.branchId!!,
-                    },
-                  },
-                },
+                      orderType: "forwarded",
+                      inquiryBranches: {
+                        some: {
+                          branchId: order.client.branchId!!,
+                        },
+                      },
+                    }
+                  : {},
                 {
                   branch: {
                     repositories: {
