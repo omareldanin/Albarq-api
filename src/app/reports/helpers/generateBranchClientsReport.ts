@@ -5,8 +5,6 @@ import {generateHTML} from "../../../lib/generateHTML";
 import {generatePDF} from "../../../lib/generatePDF";
 import {Logger} from "../../../lib/logger";
 import type {reportReform} from "../reports.responses";
-import {uploadPdfToSpaces} from "../../../lib/uploadPdfToSpaces";
-import {prisma} from "../../../database/db";
 
 export const generateBranchClientsReport = async (
   reportData: ReturnType<typeof reportReform>,
@@ -34,15 +32,6 @@ export const generateBranchClientsReport = async (
     const html = await generateHTML(template, {reportData, clients});
 
     const pdf = await generatePDF(html, css);
-
-    const pdfUrl = await uploadPdfToSpaces(pdf, reportData?.id!!);
-
-    await prisma.report.update({
-      where: {id: reportData?.id},
-      data: {
-        url: pdfUrl,
-      },
-    });
 
     return pdf;
   } catch (error) {
