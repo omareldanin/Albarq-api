@@ -1,5 +1,5 @@
-import {catchAsync} from "../../lib/catchAsync";
-import type {loggedInUserType} from "../../types/user";
+import { catchAsync } from "../../lib/catchAsync";
+import type { loggedInUserType } from "../../types/user";
 import {
   ReportCreateOrdersFiltersSchema,
   ReportCreateSchema,
@@ -7,7 +7,7 @@ import {
   ReportsFiltersSchema,
   ReportsReportPDFCreateSchema,
 } from "./reports.dto";
-import {ReportsService} from "./reports.service";
+import { ReportsService } from "./reports.service";
 
 const reportsService = new ReportsService();
 
@@ -59,6 +59,7 @@ export class ReportController {
     // Set headers for a PDF response
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "attachment; filename=generated.pdf");
+    console.log("PDF size:", pdfBuffer.length);
 
     res.send(pdfBuffer);
   });
@@ -121,7 +122,7 @@ export class ReportController {
       return;
     }
 
-    const {page, pagesCount, reports, reportsMetaData} =
+    const { page, pagesCount, reports, reportsMetaData } =
       await reportsService.getAllReports({
         loggedInUser: loggedInUser,
         filters: filters,
@@ -162,7 +163,7 @@ export class ReportController {
   });
 
   getReport = catchAsync(async (req, res) => {
-    const params = {reportID: +req.params.reportID};
+    const params = { reportID: +req.params.reportID };
 
     const report = await reportsService.getReport({
       params: params,
@@ -175,7 +176,7 @@ export class ReportController {
   });
 
   getReportPDF = catchAsync(async (req, res) => {
-    const params = {reportID: +req.params.reportID};
+    const params = { reportID: +req.params.reportID };
     const loggedInUser: loggedInUserType = res.locals.user;
 
     const pdf = await reportsService.getReportPDF({
@@ -193,7 +194,7 @@ export class ReportController {
   });
 
   getReportClientsPDF = catchAsync(async (req, res) => {
-    const params = {reportID: +req.params.reportID};
+    const params = { reportID: +req.params.reportID };
     const loggedInUser: loggedInUserType = res.locals.user;
 
     const pdf = await reportsService.getReportClientsPDF({
@@ -254,7 +255,7 @@ export class ReportController {
   updateReport = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
     const reportData = ReportUpdateSchema.parse(req.body);
-    const params = {reportID: +req.params.reportID};
+    const params = { reportID: +req.params.reportID };
 
     const report = await reportsService.updateReport({
       params: params,
@@ -269,9 +270,9 @@ export class ReportController {
   });
 
   deleteReport = catchAsync(async (req, res) => {
-    const params = {reportID: +req.params.reportID};
+    const params = { reportID: +req.params.reportID };
 
-    await reportsService.deleteReport({params});
+    await reportsService.deleteReport({ params });
 
     res.status(200).json({
       status: "success",
@@ -279,10 +280,10 @@ export class ReportController {
   });
 
   deactivateReport = catchAsync(async (req, res) => {
-    const params = {reportID: +req.params.reportID};
+    const params = { reportID: +req.params.reportID };
     const loggedInUser = res.locals.user as loggedInUserType;
 
-    await reportsService.deactivateReport({params: params, loggedInUser});
+    await reportsService.deactivateReport({ params: params, loggedInUser });
 
     res.status(200).json({
       status: "success",
@@ -290,9 +291,9 @@ export class ReportController {
   });
 
   reactivateReport = catchAsync(async (req, res) => {
-    const params = {reportID: +req.params.reportID};
+    const params = { reportID: +req.params.reportID };
 
-    await reportsService.reactivateReport({params: params});
+    await reportsService.reactivateReport({ params: params });
 
     res.status(200).json({
       status: "success",

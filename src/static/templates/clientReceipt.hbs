@@ -4,33 +4,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>فاتورة</title>
     <style>
-      .receipt {
-        margin-top: 10px;
-        position: relative;
-        margin-bottom: 10px;
-      }
-      p {
-        margin: 10px 0 0;
-      }
-      .logo {
-        width: 70px;
-        position: absolute;
-        top: 5px;
-        left: 10px;
-      }
-      .receipt div {
-        margin-top: 6px;
-        font-weight: bold;
-        font-size: 14px;
-      }
-      .footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: end;
-      }
-      .footer div {
-        font-weight: lighter !important;
-      }
+      .receipt{ margin-top: 10px; position: relative; margin-bottom: 10px; } p{
+      margin: 10px 0 0; } .logo { width: 70px; position: absolute; top: 5px;
+      left: 10px; } .receipt div{ margin-top: 6px; font-weight: bold; font-size:
+      14px; } .footer{ display: flex;justify-content: space-between;
+      align-items: end; } .footer div{ font-weight: lighter !important; }
     </style>
   </head>
   <body style="direction: rtl">
@@ -71,10 +49,10 @@
         <div class="footer">
           <div>
             <span style="display: block;">ملاحظات مهمه</span>
-            <span style="display: block;">* الشركة مسؤولة عن توصيل الطلبات فقط</span>
+            <span style="display: block;">* الشركة مسئولة عن توصيل الطلبات فقط</span>
           </div>
-          <div style="margin-left: 30px;">
-            <img style="width: 75px;" src="{{QRCode this}}" />
+          <div style="float: left;margin-top: 0px;">
+            <img src="{{QRCode this}}" />
           </div>
         </div>
       </div>

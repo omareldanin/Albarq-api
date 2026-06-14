@@ -24,6 +24,7 @@ class ReportsRepository {
                 },
                 company: {
                     connect: {
+                        // TODO: Is it always number ?
                         id: data.loggedInUser.companyID,
                     },
                 },

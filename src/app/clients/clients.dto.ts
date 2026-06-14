@@ -19,6 +19,11 @@ export const ClientCreateSchema = z.object({
     if (val === "false") return false;
     return val;
   }, z.boolean().optional()),
+  activeProfit: z.preprocess((val) => {
+    if (val === "true") return true;
+    if (val === "false") return false;
+    return val;
+  }, z.boolean().optional()),
   isExternal: z.preprocess((val) => {
     if (val === "true") return true;
     if (val === "false") return false;
@@ -30,6 +35,10 @@ export const ClientCreateSchema = z.object({
   repositoryID: z.coerce.number().optional(),
   avatar: z.string().optional(),
   companyID: z.coerce.number().optional(),
+  deliveryAgentProfit: z.coerce.number().optional(),
+  mainBranchProfit: z.coerce.number().optional(),
+  forwardedBranchProfit: z.coerce.number().optional(),
+  receivingBranchProfit: z.coerce.number().optional(),
   governoratesDeliveryCosts: z
     .preprocess(
       (data) => {
@@ -42,8 +51,8 @@ export const ClientCreateSchema = z.object({
         z.object({
           governorate: z.nativeEnum(Governorate),
           cost: z.coerce.number().max(100000).default(0),
-        })
-      )
+        }),
+      ),
     )
     .optional(),
 });

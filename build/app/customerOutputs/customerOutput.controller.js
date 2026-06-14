@@ -10,6 +10,7 @@ const sendNotification_1 = require("../notifications/helpers/sendNotification");
 const orders_repository_1 = require("../orders/orders.repository");
 const localize_1 = require("../../lib/localize");
 const generateReport_1 = require("../reports/helpers/generateReport");
+const reportsOrders_response_1 = require("../orders/reportsOrders.response");
 const reportsRepository = new reports_repository_1.ReportsRepository();
 const ordersRepository = new orders_repository_1.OrdersRepository();
 class CustomerOutputController {
@@ -303,14 +304,14 @@ class CustomerOutputController {
             select: {
                 id: true,
                 order: {
-                    select: orders_responses_1.orderSelect,
+                    select: reportsOrders_response_1.reportsOrderSelect,
                 },
             },
         }, {
             page: 1,
             size: 5000,
         });
-        const orders = results.data.map((order) => (0, orders_responses_1.orderReform)(order.order));
+        const orders = results.data.map((order) => (0, reportsOrders_response_1.reportsOrderReform)(order.order));
         if (!results || results.data.length === 0) {
             throw new AppError_1.AppError("لا يوجد طلبات لعمل الكشف", 400);
         }

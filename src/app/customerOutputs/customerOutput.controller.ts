@@ -9,6 +9,10 @@ import {OrdersRepository} from "../orders/orders.repository";
 import {ReportType} from "@prisma/client";
 import {localizeReportType} from "../../lib/localize";
 import {generateReport} from "../reports/helpers/generateReport";
+import {
+  reportsOrderReform,
+  reportsOrderSelect,
+} from "../orders/reportsOrders.response";
 
 const reportsRepository = new ReportsRepository();
 const ordersRepository = new OrdersRepository();
@@ -358,7 +362,7 @@ export class CustomerOutputController {
         select: {
           id: true,
           order: {
-            select: orderSelect,
+            select: reportsOrderSelect,
           },
         },
       },
@@ -368,7 +372,7 @@ export class CustomerOutputController {
       },
     );
 
-    const orders = results.data.map((order) => orderReform(order.order));
+    const orders = results.data.map((order) => reportsOrderReform(order.order));
 
     if (!results || results.data.length === 0) {
       throw new AppError("لا يوجد طلبات لعمل الكشف", 400);

@@ -34,6 +34,7 @@ import {MessagesController} from "../messages/messages.controller";
 import crypto from "crypto";
 import {redis} from "../../lib/redis";
 import {calculatePagesCount} from "../../lib/pagination";
+import {reportsOrderReform, reportsOrderSelect} from "./reportsOrders.response";
 
 const messageController = new MessagesController();
 
@@ -91,6 +92,7 @@ export class OrdersRepository {
   }
 
   async getDeliverCost(clientId: number, governorate: Governorate) {
+    let deliveryCost = 0;
     const client = await prisma.client.findUnique({
       where: {
         id: clientId,
@@ -98,6 +100,11 @@ export class OrdersRepository {
       select: {
         governoratesDeliveryCosts: true,
         branchId: true,
+        activeProfit: true,
+        mainBranchProfit: true,
+        deliveryAgentProfit: true,
+        forwardedBranchProfit: true,
+        receivingBranchProfit: true,
       },
     });
     if (!client) {
@@ -109,13 +116,25 @@ export class OrdersRepository {
       cost: number;
     }[];
 
-    return (
-      governoratesDeliveryCosts.find(
-        (governorateDeliveryCost: {governorate: Governorate; cost: number}) => {
-          return governorateDeliveryCost.governorate === governorate;
-        },
-      )?.cost || 0
-    );
+    if (governoratesDeliveryCosts && client.activeProfit === false) {
+      deliveryCost =
+        governoratesDeliveryCosts.find(
+          (governorateDeliveryCost: {
+            governorate: Governorate;
+            cost: number;
+          }) => {
+            return governorateDeliveryCost.governorate === governorate;
+          },
+        )?.cost || 0;
+    } else {
+      deliveryCost =
+        client.deliveryAgentProfit +
+        client.mainBranchProfit +
+        client.receivingBranchProfit +
+        client.forwardedBranchProfit;
+    }
+
+    return deliveryCost;
   }
 
   async createOrder(data: {
@@ -137,6 +156,11 @@ export class OrdersRepository {
       select: {
         governoratesDeliveryCosts: true,
         branchId: true,
+        activeProfit: true,
+        mainBranchProfit: true,
+        deliveryAgentProfit: true,
+        forwardedBranchProfit: true,
+        receivingBranchProfit: true,
       },
     });
 
@@ -215,7 +239,7 @@ export class OrdersRepository {
       cost: number;
     }[];
 
-    if (governoratesDeliveryCosts) {
+    if (governoratesDeliveryCosts && client.activeProfit === false) {
       deliveryCost =
         governoratesDeliveryCosts.find(
           (governorateDeliveryCost: {
@@ -227,6 +251,12 @@ export class OrdersRepository {
             );
           },
         )?.cost || 0;
+    } else {
+      deliveryCost =
+        client.deliveryAgentProfit +
+        client.mainBranchProfit +
+        client.receivingBranchProfit +
+        client.forwardedBranchProfit;
     }
 
     let randomId = await this.generateUniqueOrderId();
@@ -428,6 +458,7 @@ export class OrdersRepository {
   async getAllOrdersPaginated(data: {
     filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
     loggedInUser: loggedInUserType | undefined;
+    forReport?: boolean;
   }) {
     let startDate = new Date();
     let endDate = new Date();
@@ -1950,6 +1981,29 @@ export class OrdersRepository {
       };
     }
 
+    if (data.forReport === true) {
+      const paginatedOrders = await prisma.order.findManyPaginated(
+        {
+          where: {
+            ...where,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+          select: reportsOrderSelect,
+        },
+        {
+          page: data.filters.page,
+          size: data.filters.size,
+        },
+      );
+      const ordersReformed = paginatedOrders.data.map(reportsOrderReform);
+      return {
+        orders: ordersReformed,
+        pagesCount: paginatedOrders.pagesCount,
+      };
+    }
+
     const [paginatedOrders, ordersMetaDataAggregate] = await Promise.all([
       prisma.order.findManyPaginated(
         {
@@ -2444,6 +2498,21 @@ export class OrdersRepository {
     return reformedOrder;
   }
 
+  async getOrdersByIDForReports(data: {ordersIDs: string[]}) {
+    const orders = await prisma.order.findMany({
+      where: {
+        id: {
+          in: data.ordersIDs,
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {...reportsOrderSelect},
+    });
+    return orders.map(reportsOrderReform);
+  }
+
   async getOrderByIdApiKey(data: {orderID: string}) {
     const order = await prisma.order.findUnique({
       where: {
@@ -2717,7 +2786,8 @@ export class OrdersRepository {
 
   async updateOrdersCosts2(data: {
     ordersIDs: string[];
-    orders: ReturnType<typeof orderReform>[];
+    orders: ReturnType<typeof reportsOrderReform>[];
+    branchReportType?: string;
     clientId?: number;
     costs: {
       baghdadDeliveryCost?: number;
@@ -2748,25 +2818,25 @@ export class OrdersRepository {
       }
 
       await prisma.$executeRaw`
-  UPDATE "Order"
-  SET
-    "deliveryCost" =
-      CASE
-        WHEN "governorate" = 'BAGHDAD'
-          THEN COALESCE(${data.costs.baghdadDeliveryCost}, "deliveryCost")::double precision
-        ELSE COALESCE(${data.costs.governoratesDeliveryCost}, "deliveryCost")::double precision
-      END,
-    "clientNet" =
-      "paidAmount" -
-      (
-        CASE
-          WHEN "governorate" = 'BAGHDAD'
-            THEN COALESCE(${data.costs.baghdadDeliveryCost}, "deliveryCost")::double precision
-          ELSE COALESCE(${data.costs.governoratesDeliveryCost}, "deliveryCost")::double precision
-        END
-      )
-  WHERE id = ANY(${data.ordersIDs});
-`;
+        UPDATE "Order"
+        SET
+          "deliveryCost" =
+            CASE
+              WHEN "governorate" = 'BAGHDAD'
+                THEN COALESCE(${data.costs.baghdadDeliveryCost}, "deliveryCost")::double precision
+              ELSE COALESCE(${data.costs.governoratesDeliveryCost}, "deliveryCost")::double precision
+            END,
+          "clientNet" =
+            "paidAmount" -
+            (
+              CASE
+                WHEN "governorate" = 'BAGHDAD'
+                  THEN COALESCE(${data.costs.baghdadDeliveryCost}, "deliveryCost")::double precision
+                ELSE COALESCE(${data.costs.governoratesDeliveryCost}, "deliveryCost")::double precision
+              END
+            )
+        WHERE id = ANY(${data.ordersIDs});
+      `;
     }
 
     /* ===============================
@@ -2777,21 +2847,28 @@ export class OrdersRepository {
       data.costs.reportType === ReportType.BRANCH &&
       (data.costs.baghdadDeliveryCost || data.costs.governoratesDeliveryCost)
     ) {
-      // const orders = await prisma.order.findMany({
-      //   where: {id: {in: data.ordersIDs}},
-      //   select: {
-      //     id: true,
-      //     paidAmount: true,
-      //     governorate: true,
-      //   },
-      // });
-
-      // build response
       for (const order of data.orders) {
-        const cost =
+        let cost =
           order?.governorate === Governorate.BAGHDAD
             ? data.costs.baghdadDeliveryCost
             : data.costs.governoratesDeliveryCost;
+
+        if (
+          order?.client.activeProfit &&
+          data.branchReportType === "received"
+        ) {
+          cost =
+            order.client.receivingBranchProfit +
+            order.client.deliveryAgentProfit!!;
+        } else if (
+          order?.client.activeProfit &&
+          data.branchReportType === "forwarded"
+        ) {
+          cost =
+            order.client.receivingBranchProfit!! +
+            order.client.deliveryAgentProfit!! +
+            order.client.mainBranchProfit!!;
+        }
 
         if (!cost) continue;
 
@@ -2803,17 +2880,37 @@ export class OrdersRepository {
 
       // single DB update
       await prisma.$executeRaw`
-    UPDATE "Order"
-    SET
-      "branchNet" =
-        "paidAmount" -
-        CASE
-          WHEN "governorate" = 'BAGHDAD'
-            THEN ${data.costs.baghdadDeliveryCost}
-          ELSE ${data.costs.governoratesDeliveryCost}
-        END
-    WHERE id = ANY(${data.ordersIDs});
-  `;
+        UPDATE "Order" o
+        SET
+          "branchNet" =
+            o."paidAmount" -
+            (
+              CASE
+                WHEN ${data.branchReportType} = 'received'
+                    AND c."activeProfit" = true
+                THEN
+                  COALESCE(c."receivingBranchProfit", 0) +
+                  COALESCE(c."deliveryAgentProfit", 0)
+
+                WHEN ${data.branchReportType} = 'forwarded'
+                    AND c."activeProfit" = true
+                THEN
+                  COALESCE(c."receivingBranchProfit", 0) +
+                  COALESCE(c."deliveryAgentProfit", 0) +
+                  COALESCE(c."mainBranchProfit", 0)
+
+                ELSE
+                  CASE
+                    WHEN o."governorate" = 'BAGHDAD'
+                      THEN ${data.costs.baghdadDeliveryCost}
+                    ELSE ${data.costs.governoratesDeliveryCost}
+                  END
+              END
+            )
+        FROM "Client" c
+        WHERE o."clientId" = c."id"
+          AND o."id" = ANY(${data.ordersIDs});
+      `;
     }
 
     if (data.costs.reportType === ReportType.BRANCH) {
@@ -2821,26 +2918,12 @@ export class OrdersRepository {
         !data.costs.baghdadDeliveryCost &&
         !data.costs.governoratesDeliveryCost
       ) {
-        // const orders = await prisma.order.findMany({
-        //   where: {id: {in: data.ordersIDs}},
-        //   select: {
-        //     id: true,
-        //     paidAmount: true,
-        //     governorate: true,
-        //     client: {
-        //       select: {
-        //         governoratesDeliveryCosts: true,
-        //       },
-        //     },
-        //   },
-        // });
-
         await prisma.$executeRaw`
-  UPDATE "Order"
-  SET
-    "branchNet" = "paidAmount" - "deliveryCost"
-  WHERE id = ANY(${data.ordersIDs});
-`;
+              UPDATE "Order"
+              SET
+                "branchNet" = "paidAmount" - "deliveryCost"
+              WHERE id = ANY(${data.ordersIDs});
+            `;
       }
     }
 
@@ -2848,24 +2931,20 @@ export class OrdersRepository {
        DELIVERY AGENT REPORT
     =============================== */
     if (data.costs.deliveryAgentDeliveryCost) {
-      const orders = await prisma.order.findMany({
-        where: {id: {in: data.ordersIDs}},
-        select: {
-          id: true,
-          paidAmount: true,
-          weight: true,
-        },
-      });
-
       // build response
-      for (const order of orders) {
-        const deliveryAgentNet =
-          data.costs.deliveryAgentDeliveryCost + (order.weight || 0) * 250;
+      for (const order of data.orders) {
+        let deliveryAgentNet =
+          data.costs.deliveryAgentDeliveryCost + (order?.weight || 0) * 250;
 
-        const companyNet = (order.paidAmount || 0) - deliveryAgentNet;
+        if (order?.client.deliveryAgentProfit) {
+          deliveryAgentNet =
+            order?.client.deliveryAgentProfit + (order?.weight || 0) * 250;
+        }
+
+        const companyNet = (order?.paidAmount || 0) - deliveryAgentNet;
 
         updatedOrders.push({
-          id: order.id,
+          id: order?.id!!,
           deliveryAgentNet,
           companyNet,
         });
@@ -2873,19 +2952,37 @@ export class OrdersRepository {
 
       // single DB update
       await prisma.$executeRaw`
-    UPDATE "Order"
-    SET
-      "deliveryAgentNet" =
-        ${data.costs.deliveryAgentDeliveryCost}
-        + COALESCE("weight", 0) * 250,
-      "companyNet" =
-        "paidAmount" -
-        (${data.costs.deliveryAgentDeliveryCost}
-         + COALESCE("weight", 0) * 250)
-    WHERE id = ANY(${data.ordersIDs});
-  `;
-    }
+            UPDATE "Order" o
+            SET
+              "deliveryAgentNet" =
+                (
+                  CASE
+                    WHEN c."activeProfit" = true
+                    THEN c."deliveryAgentProfit"
+                    ELSE ${data.costs.deliveryAgentDeliveryCost}
+                  END
+                ) + COALESCE(o."weight", 0) * 250,
 
+              "companyNet" =
+                o."paidAmount" -
+                (
+                  (
+                    CASE
+                      WHEN c."activeProfit" = true
+                      THEN c."deliveryAgentProfit"
+                      ELSE ${data.costs.deliveryAgentDeliveryCost}
+                    END
+                  ) + COALESCE(o."weight", 0) * 250
+                )
+
+            FROM "Client" c
+            WHERE o."clientId" = c."id"
+              AND o."id" = ANY(${data.ordersIDs});
+          `;
+    }
+    /* ===============================
+       COMPANY REPORT
+    =============================== */
     if (
       data.costs.reportType === ReportType.COMPANY &&
       (data.costs.baghdadDeliveryCost || data.costs.governoratesDeliveryCost)

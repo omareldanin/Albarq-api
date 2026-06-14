@@ -4,16 +4,16 @@ import type { ReportType } from "@prisma/client";
 import { AppError } from "../../..//lib/AppError";
 import { generateHTML } from "../../..//lib/generateHTML";
 import { generatePDF } from "../../..//lib/generatePDF";
-import type { orderReform } from "../../../app/orders/orders.responses";
 import { Logger } from "../../../lib/logger";
 import type { reportReform } from "../reports.responses";
 import { uploadPdfToSpaces } from "../../../lib/uploadPdfToSpaces";
 import { prisma } from "../../../database/db";
+import { reportsOrderReform } from "../../orders/reportsOrders.response";
 
 export const generateReport = async (
   reportType: ReportType,
   reportData: ReturnType<typeof reportReform>,
-  orders: ReturnType<typeof orderReform>[],
+  orders: ReturnType<typeof reportsOrderReform>[],
 ) => {
   const STATIC_DIR =
     process.env.NODE_ENV === "production"

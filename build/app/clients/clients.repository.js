@@ -57,6 +57,11 @@ class ClientsRepository {
                 showNumbers: data.showNumbers,
                 showDeliveryNumber: data.showDeliveryNumber,
                 isExternal: data.isExternal,
+                deliveryAgentProfit: data.deliveryAgentProfit,
+                mainBranchProfit: data.mainBranchProfit,
+                forwardedBranchProfit: data.forwardedBranchProfit,
+                receivingBranchProfit: data.receivingBranchProfit,
+                activeProfit: data.activeProfit,
                 branch: data.branchID
                     ? {
                         connect: {
@@ -85,10 +90,13 @@ class ClientsRepository {
     async getAllClientsPaginated(filters) {
         const cacheKey = this.clientsCacheKey(filters);
         // 1️⃣ FAST PATH – Redis
-        const cached = await redis_1.redis.get(cacheKey);
-        if (cached) {
-            return JSON.parse(cached);
-        }
+        // const cached = await redis.get(cacheKey);
+        // if (cached) {
+        //   return JSON.parse(cached) as {
+        //     clients: any[];
+        //     pagesCount: number;
+        //   };
+        // }
         let clientIDs = [];
         if (filters.loggedInUser?.role === "CLIENT_ASSISTANT") {
             const stores = await db_1.prisma.employee.findMany({
@@ -166,7 +174,6 @@ class ClientsRepository {
             }, {
                 page: filters.page,
                 size: filters.size,
-                withCount: true,
             });
             result = {
                 clients: paginatedClients.data.map(clients_responses_1.clientReform),
@@ -211,6 +218,11 @@ class ClientsRepository {
                 showNumbers: data.clientData.showNumbers,
                 isExternal: data.clientData.isExternal,
                 showDeliveryNumber: data.clientData.showDeliveryNumber,
+                deliveryAgentProfit: data.clientData.deliveryAgentProfit,
+                mainBranchProfit: data.clientData.mainBranchProfit,
+                forwardedBranchProfit: data.clientData.forwardedBranchProfit,
+                receivingBranchProfit: data.clientData.receivingBranchProfit,
+                activeProfit: data.clientData.activeProfit,
                 branch: data.clientData.branchID
                     ? {
                         connect: {

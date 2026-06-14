@@ -92,13 +92,14 @@ class ReportsService {
         let ordersIDs = [];
         if (data.reportData.ordersIDs === "*") {
             orders = (await ordersRepository.getAllOrdersPaginated({
-                filters: { ...data.ordersFilters, size: 5000 },
+                filters: { ...data.ordersFilters, size: 10000 },
                 loggedInUser: data.loggedInUser,
+                forReport: true,
             })).orders;
             ordersIDs = orders.map((o) => o.id);
         }
         else {
-            orders = await ordersRepository.getOrdersByIDs({
+            orders = await ordersRepository.getOrdersByIDForReports({
                 ordersIDs: data.reportData.ordersIDs,
             });
             ordersIDs = data.reportData.ordersIDs;
@@ -111,14 +112,10 @@ class ReportsService {
             for (const order of orders) {
                 const returnedReport = order?.clientReport.find((r) => r.secondaryType === "RETURNED");
                 const deliveredReport = order?.clientReport.find((r) => r.secondaryType === "DELIVERED");
-                if (deliveredReport &&
-                    deliveredReport.deleted !== true &&
-                    data.reportData.secondaryType === "DELIVERED") {
+                if (deliveredReport && data.reportData.secondaryType === "DELIVERED") {
                     throw new AppError_1.AppError(`الطلب ${order?.receiptNumber} يوجد في كشف عملاء واصل اخر رقمه ${deliveredReport.id}`, 400);
                 }
-                if (returnedReport &&
-                    returnedReport.deleted !== true &&
-                    data.reportData.secondaryType === "RETURNED") {
+                if (returnedReport && data.reportData.secondaryType === "RETURNED") {
                     throw new AppError_1.AppError(`الطلب ${order?.receiptNumber} يوجد في كشف عملاء راجع اخر رقمه ${returnedReport.id}`, 400);
                 }
             }
@@ -127,30 +124,24 @@ class ReportsService {
             for (const order of orders) {
                 const returnedReport = order?.repositoryReport.find((r) => r.secondaryType === "RETURNED");
                 const deliveredReport = order?.clientReport.find((r) => r.secondaryType === "DELIVERED");
-                if (deliveredReport &&
-                    deliveredReport.deleted !== true &&
-                    data.reportData.secondaryType === "DELIVERED") {
+                if (deliveredReport && data.reportData.secondaryType === "DELIVERED") {
                     throw new AppError_1.AppError(`الطلب ${order?.receiptNumber} يوجد في كشف مخازن واصل اخر رقمه ${deliveredReport.id}`, 400);
                 }
-                if (returnedReport &&
-                    returnedReport.deleted !== true &&
-                    data.reportData.secondaryType === "RETURNED") {
+                if (returnedReport && data.reportData.secondaryType === "RETURNED") {
                     throw new AppError_1.AppError(`الطلب ${order?.receiptNumber} يوجد في كشف مخازن راجع اخر رقمه ${returnedReport.id}`, 400);
                 }
             }
         }
         else if (data.reportData.type === client_1.ReportType.GOVERNORATE) {
             for (const order of orders) {
-                if (order?.governorateReport &&
-                    order?.governorateReport.deleted !== true) {
+                if (order?.governorateReport) {
                     throw new AppError_1.AppError(`الطلب ${order.receiptNumber} يوجد في كشف محافظة اخر رقمه ${order.governorateReport.id}`, 400);
                 }
             }
         }
         else if (data.reportData.type === client_1.ReportType.DELIVERY_AGENT) {
             for (const order of orders) {
-                if (order?.deliveryAgentReport &&
-                    order?.deliveryAgentReport.deleted !== true) {
+                if (order?.deliveryAgentReport) {
                     throw new AppError_1.AppError(`الطلب ${order.receiptNumber} يوجد في كشف مندوبين اخر رقمه ${order.deliveryAgentReport.id}`, 400);
                 }
             }
@@ -159,14 +150,10 @@ class ReportsService {
             for (const order of orders) {
                 const returnedReport = order?.companyReport.find((r) => r.secondaryType === "RETURNED");
                 const deliveredReport = order?.companyReport.find((r) => r.secondaryType === "DELIVERED");
-                if (deliveredReport &&
-                    deliveredReport.deleted !== true &&
-                    data.reportData.secondaryType === "DELIVERED") {
+                if (deliveredReport && data.reportData.secondaryType === "DELIVERED") {
                     throw new AppError_1.AppError(`الطلب ${order?.receiptNumber} يوجد في كشف شركة واصل اخر رقمه ${deliveredReport.id}`, 400);
                 }
-                if (returnedReport &&
-                    returnedReport.deleted !== true &&
-                    data.reportData.secondaryType === "RETURNED") {
+                if (returnedReport && data.reportData.secondaryType === "RETURNED") {
                     throw new AppError_1.AppError(`الطلب ${order?.receiptNumber} يوجد في كشف شركة راجع اخر رقمه ${returnedReport.id}`, 400);
                 }
             }
@@ -179,6 +166,7 @@ class ReportsService {
             const updatedOrders = await ordersRepository.updateOrdersCosts2({
                 ordersIDs,
                 orders,
+                branchReportType: data.ordersFilters.orderType,
                 costs: {
                     baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
                     governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
@@ -195,7 +183,7 @@ class ReportsService {
                     deliveryAgentDeliveryCost: data.reportData.deliveryAgentDeliveryCost,
                 },
             });
-            orders = await ordersRepository.getOrdersByIDs({ ordersIDs });
+            orders = await ordersRepository.getOrdersByIDForReports({ ordersIDs });
         }
         const reportMetaData = {
             baghdadOrdersCount: 0,
@@ -482,7 +470,7 @@ class ReportsService {
         }
         const ordersIDs = orders.map((o) => o.id);
         // ========= Fetch orders data ==========
-        let ordersData = await ordersRepository.getOrdersByIDs({
+        let ordersData = await ordersRepository.getOrdersByIDForReports({
             ordersIDs,
         });
         // ========= Fetch all timelines in one query ==========
@@ -568,8 +556,8 @@ class ReportsService {
                     order.branchNet = newPaidAmount - governorateCost;
             }
             if (type === "DELIVERY_AGENT") {
-                const weightCost = (order.weight || 0) * 250;
-                const deliveryNet = deliveryBaseCost + weightCost;
+                // const weightCost = (order.weight || 0) * 250;
+                const deliveryNet = deliveryBaseCost;
                 order.deliveryAgentNet = deliveryNet;
                 order.companyNet = newPaidAmount - deliveryNet;
             }

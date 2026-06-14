@@ -37,15 +37,8 @@ const generateHTML = async (template, data) => {
             }
             return "";
         });
-        hb.registerHelper("isBaghdad", (governorate, baghdadDeliveryCost, governoratesDeliveryCost, deliveryCost) => {
-            if ((!baghdadDeliveryCost && !governoratesDeliveryCost) ||
-                (+baghdadDeliveryCost === 0 && +governoratesDeliveryCost === 0)) {
-                return Number(deliveryCost || 0).toLocaleString("en-GB");
-            }
-            else if (governorate === client_1.Governorate.BAGHDAD) {
-                return Number(baghdadDeliveryCost || 0).toLocaleString("en-GB");
-            }
-            return Number(governoratesDeliveryCost || 0).toLocaleString("en-GB");
+        hb.registerHelper("isBaghdad", (paidAmount, branchNet) => {
+            return Number(paidAmount - branchNet).toLocaleString("en-GB");
         });
         hb.registerHelper("colorizeRow2", (secondaryReportType, status) => {
             if (secondaryReportType === client_1.SecondaryReportType.RETURNED) {

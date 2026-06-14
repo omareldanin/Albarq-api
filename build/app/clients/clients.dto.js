@@ -25,6 +25,13 @@ exports.ClientCreateSchema = zod_1.z.object({
             return false;
         return val;
     }, zod_1.z.boolean().optional()),
+    activeProfit: zod_1.z.preprocess((val) => {
+        if (val === "true")
+            return true;
+        if (val === "false")
+            return false;
+        return val;
+    }, zod_1.z.boolean().optional()),
     isExternal: zod_1.z.preprocess((val) => {
         if (val === "true")
             return true;
@@ -38,6 +45,10 @@ exports.ClientCreateSchema = zod_1.z.object({
     repositoryID: zod_1.z.coerce.number().optional(),
     avatar: zod_1.z.string().optional(),
     companyID: zod_1.z.coerce.number().optional(),
+    deliveryAgentProfit: zod_1.z.coerce.number().optional(),
+    mainBranchProfit: zod_1.z.coerce.number().optional(),
+    forwardedBranchProfit: zod_1.z.coerce.number().optional(),
+    receivingBranchProfit: zod_1.z.coerce.number().optional(),
     governoratesDeliveryCosts: zod_1.z
         .preprocess((data) => {
         if (typeof data === "string") {

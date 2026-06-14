@@ -6,17 +6,16 @@ import {
   OrderTimeline,
   ReportType,
 } from "@prisma/client";
-import {AppError} from "../../lib/AppError";
+import { AppError } from "../../lib/AppError";
 // import { OrderTimelineType } from "../orders/orders.dto";
-import {localizeReportType} from "../../lib/localize";
-import type {loggedInUserType} from "../../types/user";
+import { localizeReportType } from "../../lib/localize";
+import type { loggedInUserType } from "../../types/user";
 // import {ClientsRepository} from "../clients/clients.repository";
-import {EmployeesRepository} from "../employees/employees.repository";
-import {sendNotification} from "../notifications/helpers/sendNotification";
-import {OrdersRepository} from "../orders/orders.repository";
-import type {orderReform} from "../orders/orders.responses";
-import {generateReport} from "./helpers/generateReport";
-import {generateReportsReport} from "./helpers/generateReportsReport";
+import { EmployeesRepository } from "../employees/employees.repository";
+import { sendNotification } from "../notifications/helpers/sendNotification";
+import { OrdersRepository } from "../orders/orders.repository";
+import { generateReport } from "./helpers/generateReport";
+import { generateReportsReport } from "./helpers/generateReportsReport";
 import type {
   ReportCreateOrdersFiltersType,
   ReportCreateType,
@@ -24,11 +23,12 @@ import type {
   ReportsFiltersType,
   ReportsReportPDFCreateType,
 } from "./reports.dto";
-import {ReportsRepository} from "./reports.repository";
-import {type reportReform} from "./reports.responses";
-import {prisma} from "../../database/db";
+import { ReportsRepository } from "./reports.repository";
+import { type reportReform } from "./reports.responses";
+import { prisma } from "../../database/db";
 import axios from "axios";
-import {generateBranchClientsReport} from "./helpers/generateBranchClientsReport";
+import { generateBranchClientsReport } from "./helpers/generateBranchClientsReport";
+import { reportsOrderReform } from "../orders/reportsOrders.response";
 
 const reportsRepository = new ReportsRepository();
 const ordersRepository = new OrdersRepository();
@@ -46,7 +46,7 @@ type UpdatedOrderCosts = {
 
 export class ReportsService {
   applyOrderCostUpdates(
-    orders: ReturnType<typeof orderReform>[],
+    orders: ReturnType<typeof reportsOrderReform>[],
     updates: UpdatedOrderCosts[],
   ) {
     const map = new Map<string, UpdatedOrderCosts>(
@@ -131,20 +131,21 @@ export class ReportsService {
     reportData: ReportCreateType;
     ordersFilters: ReportCreateOrdersFiltersType;
   }) {
-    let orders: ReturnType<typeof orderReform>[];
+    let orders: ReturnType<typeof reportsOrderReform>[];
     let ordersIDs: string[] = [];
 
     if (data.reportData.ordersIDs === "*") {
       orders = (
         await ordersRepository.getAllOrdersPaginated({
-          filters: {...data.ordersFilters, size: 5000},
+          filters: { ...data.ordersFilters, size: 10000 },
           loggedInUser: data.loggedInUser,
+          forReport: true,
         })
-      ).orders as ReturnType<typeof orderReform>[];
+      ).orders as ReturnType<typeof reportsOrderReform>[];
 
       ordersIDs = orders.map((o) => o!!.id);
     } else {
-      orders = await ordersRepository.getOrdersByIDs({
+      orders = await ordersRepository.getOrdersByIDForReports({
         ordersIDs: data.reportData.ordersIDs,
       });
       ordersIDs = data.reportData.ordersIDs;
@@ -164,21 +165,13 @@ export class ReportsService {
           (r) => r.secondaryType === "DELIVERED",
         );
 
-        if (
-          deliveredReport &&
-          deliveredReport.deleted !== true &&
-          data.reportData.secondaryType === "DELIVERED"
-        ) {
+        if (deliveredReport && data.reportData.secondaryType === "DELIVERED") {
           throw new AppError(
             `الطلب ${order?.receiptNumber} يوجد في كشف عملاء واصل اخر رقمه ${deliveredReport.id}`,
             400,
           );
         }
-        if (
-          returnedReport &&
-          returnedReport.deleted !== true &&
-          data.reportData.secondaryType === "RETURNED"
-        ) {
+        if (returnedReport && data.reportData.secondaryType === "RETURNED") {
           throw new AppError(
             `الطلب ${order?.receiptNumber} يوجد في كشف عملاء راجع اخر رقمه ${returnedReport.id}`,
             400,
@@ -194,21 +187,13 @@ export class ReportsService {
           (r) => r.secondaryType === "DELIVERED",
         );
 
-        if (
-          deliveredReport &&
-          deliveredReport.deleted !== true &&
-          data.reportData.secondaryType === "DELIVERED"
-        ) {
+        if (deliveredReport && data.reportData.secondaryType === "DELIVERED") {
           throw new AppError(
             `الطلب ${order?.receiptNumber} يوجد في كشف مخازن واصل اخر رقمه ${deliveredReport.id}`,
             400,
           );
         }
-        if (
-          returnedReport &&
-          returnedReport.deleted !== true &&
-          data.reportData.secondaryType === "RETURNED"
-        ) {
+        if (returnedReport && data.reportData.secondaryType === "RETURNED") {
           throw new AppError(
             `الطلب ${order?.receiptNumber} يوجد في كشف مخازن راجع اخر رقمه ${returnedReport.id}`,
             400,
@@ -217,10 +202,7 @@ export class ReportsService {
       }
     } else if (data.reportData.type === ReportType.GOVERNORATE) {
       for (const order of orders) {
-        if (
-          order?.governorateReport &&
-          order?.governorateReport.deleted !== true
-        ) {
+        if (order?.governorateReport) {
           throw new AppError(
             `الطلب ${order.receiptNumber} يوجد في كشف محافظة اخر رقمه ${order.governorateReport.id}`,
             400,
@@ -229,10 +211,7 @@ export class ReportsService {
       }
     } else if (data.reportData.type === ReportType.DELIVERY_AGENT) {
       for (const order of orders) {
-        if (
-          order?.deliveryAgentReport &&
-          order?.deliveryAgentReport.deleted !== true
-        ) {
+        if (order?.deliveryAgentReport) {
           throw new AppError(
             `الطلب ${order.receiptNumber} يوجد في كشف مندوبين اخر رقمه ${order.deliveryAgentReport.id}`,
             400,
@@ -248,21 +227,13 @@ export class ReportsService {
           (r) => r.secondaryType === "DELIVERED",
         );
 
-        if (
-          deliveredReport &&
-          deliveredReport.deleted !== true &&
-          data.reportData.secondaryType === "DELIVERED"
-        ) {
+        if (deliveredReport && data.reportData.secondaryType === "DELIVERED") {
           throw new AppError(
             `الطلب ${order?.receiptNumber} يوجد في كشف شركة واصل اخر رقمه ${deliveredReport.id}`,
             400,
           );
         }
-        if (
-          returnedReport &&
-          returnedReport.deleted !== true &&
-          data.reportData.secondaryType === "RETURNED"
-        ) {
+        if (returnedReport && data.reportData.secondaryType === "RETURNED") {
           throw new AppError(
             `الطلب ${order?.receiptNumber} يوجد في كشف شركة راجع اخر رقمه ${returnedReport.id}`,
             400,
@@ -281,6 +252,7 @@ export class ReportsService {
       const updatedOrders = await ordersRepository.updateOrdersCosts2({
         ordersIDs,
         orders,
+        branchReportType: data.ordersFilters.orderType,
         costs: {
           baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
           governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
@@ -300,7 +272,7 @@ export class ReportsService {
         },
       });
 
-      orders = await ordersRepository.getOrdersByIDs({ordersIDs});
+      orders = await ordersRepository.getOrdersByIDForReports({ ordersIDs });
     }
 
     const reportMetaData = {
@@ -354,8 +326,8 @@ export class ReportsService {
       loggedInUser: data.loggedInUser,
       reportData:
         data.reportData.type === ReportType.CLIENT
-          ? {...data.reportData, ordersIDs, clientID}
-          : {...data.reportData, ordersIDs},
+          ? { ...data.reportData, ordersIDs, clientID }
+          : { ...data.reportData, ordersIDs },
       type: data.ordersFilters.orderType || undefined,
       reportMetaData: reportMetaData,
     });
@@ -549,7 +521,7 @@ export class ReportsService {
         reportsMetaData: {},
       };
     }
-    const {reports, reportsMetaData, pagesCount} =
+    const { reports, reportsMetaData, pagesCount } =
       await reportsRepository.getAllReportsPaginated({
         filters: {
           ...data.filters,
@@ -562,10 +534,10 @@ export class ReportsService {
         },
       });
 
-    return {page, pagesCount, reports, reportsMetaData};
+    return { page, pagesCount, reports, reportsMetaData };
   }
 
-  async getReport(data: {params: {reportID: number}}) {
+  async getReport(data: { params: { reportID: number } }) {
     const report = await reportsRepository.getReport({
       reportID: data.params.reportID,
     });
@@ -587,7 +559,7 @@ export class ReportsService {
   }
 
   async getReportPDF(data: {
-    params: {reportID: number};
+    params: { reportID: number };
     loggedInUser?: loggedInUserType;
   }) {
     const reportData = await reportsRepository.getReport({
@@ -644,7 +616,7 @@ export class ReportsService {
     const ordersIDs = orders.map((o) => o.id);
 
     // ========= Fetch orders data ==========
-    let ordersData = await ordersRepository.getOrdersByIDs({
+    let ordersData = await ordersRepository.getOrdersByIDForReports({
       ordersIDs,
     });
 
@@ -652,7 +624,7 @@ export class ReportsService {
     const timelines = await prisma.orderTimeline.findMany({
       where: {
         type: "PAID_AMOUNT_CHANGE",
-        orderId: {in: ordersIDs},
+        orderId: { in: ordersIDs },
       },
     });
 
@@ -751,8 +723,8 @@ export class ReportsService {
       }
 
       if (type === "DELIVERY_AGENT") {
-        const weightCost = (order.weight || 0) * 250;
-        const deliveryNet = deliveryBaseCost + weightCost;
+        // const weightCost = (order.weight || 0) * 250;
+        const deliveryNet = deliveryBaseCost;
         order.deliveryAgentNet = deliveryNet;
         order.companyNet = newPaidAmount - deliveryNet;
       }
@@ -772,7 +744,7 @@ export class ReportsService {
   }
 
   async getReportClientsPDF(data: {
-    params: {reportID: number};
+    params: { reportID: number };
     loggedInUser?: loggedInUserType;
   }) {
     const reportData = await reportsRepository.getReport({
@@ -810,7 +782,7 @@ export class ReportsService {
         clientNet: true,
       },
       where: {
-        id: {in: ordersIDs},
+        id: { in: ordersIDs },
         // branchReport: {
         //   some: {
         //     id: data.params.reportID,
@@ -823,7 +795,7 @@ export class ReportsService {
 
     const clients = await prisma.client.findMany({
       where: {
-        id: {in: clientsIds},
+        id: { in: clientsIds },
       },
       select: {
         user: {
@@ -925,7 +897,7 @@ export class ReportsService {
   }
 
   async updateReport(data: {
-    params: {reportID: number};
+    params: { reportID: number };
     loggedInUser: loggedInUserType;
     reportData: ReportUpdateType;
   }) {
@@ -945,18 +917,17 @@ export class ReportsService {
     return report;
   }
 
-  async deleteReport(data: {params: {reportID: number}}) {
+  async deleteReport(data: { params: { reportID: number } }) {
     await reportsRepository.deleteReport({
       reportID: data.params.reportID,
     });
   }
-
   async deactivateReport(data: {
-    params: {reportID: number};
+    params: { reportID: number };
     loggedInUser: loggedInUserType;
   }) {
-    const {reportID} = data.params;
-    const {id: userId, name} = data.loggedInUser;
+    const { reportID } = data.params;
+    const { id: userId, name } = data.loggedInUser;
 
     const report = await prisma.report.findUnique({
       where: {
@@ -1000,7 +971,7 @@ export class ReportsService {
     // 🚀 Run in parallel instead of sequential loop
     if (orders.length > 0) {
       await Promise.all(
-        orders.map((order: {id: string; receiptNumber: string}) =>
+        orders.map((order: { id: string; receiptNumber: string }) =>
           ordersRepository.updateOrderTimeline({
             orderID: order.id,
             data: {
@@ -1011,7 +982,7 @@ export class ReportsService {
                 type: deletedReport.type,
               },
               new: null,
-              by: {id: userId, name},
+              by: { id: userId, name },
               message: `تم حذف كشف ${localizeReportType(
                 deletedReport.type,
               )} برقم ${reportID}`,
@@ -1024,7 +995,7 @@ export class ReportsService {
     await this.handleNotifications(deletedReport);
   }
 
-  async reactivateReport(data: {params: {reportID: number}}) {
+  async reactivateReport(data: { params: { reportID: number } }) {
     const report = await reportsRepository.reactivateReport({
       reportID: data.params.reportID,
     });

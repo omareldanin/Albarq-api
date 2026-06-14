@@ -114,47 +114,54 @@ model InquiryEmployeesDeliveryAgents {
 }
 
 model Client {
-  id                        Int                     @id
-  role                      ClientRole              @default(CLIENT)
-  token                     String                  @default("")
-  governoratesDeliveryCosts Json                    @default("[]")
+  id                        Int        @id
+  role                      ClientRole @default(CLIENT)
+  token                     String     @default("")
+  governoratesDeliveryCosts Json       @default("[]")
   deletedById               Int?
   createdById               Int?
   repositoryId              Int?
   branchId                  Int?
   companyId                 Int
-  deleted                   Boolean                 @default(false)
+  deleted                   Boolean    @default(false)
   deletedAt                 DateTime?
   receivingAgentId          Int?
-  showNumbers               Boolean                 @default(false)
-  showDeliveryNumber        Boolean                 @default(false)
-  isExternal                Boolean                 @default(false)
+  showNumbers               Boolean    @default(false)
+  showDeliveryNumber        Boolean    @default(false)
+  isExternal                Boolean    @default(false)
   apiKeyHash                String?
-  categories                Category[]
-  branch                    Branch?                 @relation(fields: [branchId], references: [id])
-  company                   Company                 @relation(fields: [companyId], references: [id])
-  createdBy                 User?                   @relation("createdBy", fields: [createdById], references: [id])
-  deletedBy                 User?                   @relation("deletedBy", fields: [deletedById], references: [id])
-  user                      User                    @relation(fields: [id], references: [id])
-  repository                Repository?             @relation(fields: [repositoryId], references: [id])
-  clientReports             ClientReport[]
-  colors                    Color[]
-  CustomerOutput            CustomerOutput[]
-  employees                 Employee[]
-  orders                    Order[]
-  products                  Product[]
-  ReceivingAgentClients     ReceivingAgentClients[]
-  savedPdf                  SavedPdf[]
-  sizes                     Size[]
-  stores                    Store[]
-  tickets                   Ticket[]
+  deliveryAgentProfit       Int        @default(0)
+  mainBranchProfit          Int        @default(0)
+  forwardedBranchProfit     Int        @default(0)
+  receivingBranchProfit     Int        @default(0)
+  activeProfit              Boolean    @default(false)
+
+  categories            Category[]
+  branch                Branch?                 @relation(fields: [branchId], references: [id])
+  company               Company                 @relation(fields: [companyId], references: [id])
+  createdBy             User?                   @relation("createdBy", fields: [createdById], references: [id])
+  deletedBy             User?                   @relation("deletedBy", fields: [deletedById], references: [id])
+  user                  User                    @relation(fields: [id], references: [id])
+  repository            Repository?             @relation(fields: [repositoryId], references: [id])
+  clientReports         ClientReport[]
+  colors                Color[]
+  CustomerOutput        CustomerOutput[]
+  employees             Employee[]
+  orders                Order[]
+  products              Product[]
+  ReceivingAgentClients ReceivingAgentClients[]
+  savedPdf              SavedPdf[]
+  sizes                 Size[]
+  stores                Store[]
+  tickets               Ticket[]
 
   @@index([companyId])
+  @@index([branchId])
 }
 
 model Store {
   id                  Int                      @id @default(autoincrement())
-  name                String                   @unique
+  name                String
   logo                String                   @default("https://w7.pngwing.com/pngs/307/22/png-transparent-computer-icons-business-company-corporation-company-angle-company-text.png")
   notes               String                   @default("")
   clientAssistantId   Int?
@@ -239,7 +246,7 @@ model InquiryEmployeesBranches {
 
 model Repository {
   id                Int                @id @default(autoincrement())
-  name              String             @unique
+  name              String
   branchId          Int
   companyId         Int
   createdAt         DateTime           @default(now())

@@ -1,4 +1,4 @@
-import {Governorate, OrderStatus, SecondaryReportType} from "@prisma/client";
+import {OrderStatus, SecondaryReportType} from "@prisma/client";
 import handlebars from "handlebars";
 // @ts-expect-error
 import asyncHelpers from "handlebars-async-helpers";
@@ -39,25 +39,9 @@ export const generateHTML = async (template: string, data: object) => {
       }
       return "";
     });
-    hb.registerHelper(
-      "isBaghdad",
-      (
-        governorate,
-        baghdadDeliveryCost,
-        governoratesDeliveryCost,
-        deliveryCost,
-      ) => {
-        if (
-          (!baghdadDeliveryCost && !governoratesDeliveryCost) ||
-          (+baghdadDeliveryCost === 0 && +governoratesDeliveryCost === 0)
-        ) {
-          return Number(deliveryCost || 0).toLocaleString("en-GB");
-        } else if (governorate === Governorate.BAGHDAD) {
-          return Number(baghdadDeliveryCost || 0).toLocaleString("en-GB");
-        }
-        return Number(governoratesDeliveryCost || 0).toLocaleString("en-GB");
-      },
-    );
+    hb.registerHelper("isBaghdad", (paidAmount, branchNet) => {
+      return Number(paidAmount - branchNet).toLocaleString("en-GB");
+    });
     hb.registerHelper("colorizeRow2", (secondaryReportType, status) => {
       if (secondaryReportType === SecondaryReportType.RETURNED) {
         return "";

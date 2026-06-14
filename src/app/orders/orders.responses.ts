@@ -59,6 +59,9 @@ export const OrderStatusData = {
     icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/inRepo.png",
   },
 };
+export const getStatusIcon = (companyId: number, icon: string) => {
+  return `https://albarq-bucket.fra1.digitaloceanspaces.com/icons/${companyId}/${icon}`;
+};
 
 export const orderSecondaryStatusArabicNames = {
   WITH_CLIENT: "مع العميل",

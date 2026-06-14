@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.orderTimelineReform = exports.orderTimelineSelect = exports.statisticsReformed = exports.minifiedOrderReform = exports.mobileOrderReform = exports.orderReformApiKey = exports.orderReform = exports.minifiedOrderSelect = exports.orderSelectApiKey = exports.orderSelect = exports.orderStatusArabicNames = exports.orderSecondaryStatusArabicNames = exports.OrderStatusData = void 0;
+exports.orderTimelineReform = exports.orderTimelineSelect = exports.statisticsReformed = exports.minifiedOrderReform = exports.mobileOrderReform = exports.orderReformApiKey = exports.orderReform = exports.minifiedOrderSelect = exports.orderSelectApiKey = exports.orderSelect = exports.orderStatusArabicNames = exports.orderSecondaryStatusArabicNames = exports.getStatusIcon = exports.OrderStatusData = void 0;
 exports.getRoleBasedOrCondition = getRoleBasedOrCondition;
 const client_1 = require("@prisma/client");
 exports.OrderStatusData = {
@@ -61,6 +61,10 @@ exports.OrderStatusData = {
         icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/inRepo.png",
     },
 };
+const getStatusIcon = (companyId, icon) => {
+    return `https://albarq-bucket.fra1.digitaloceanspaces.com/icons/${companyId}/${icon}`;
+};
+exports.getStatusIcon = getStatusIcon;
 exports.orderSecondaryStatusArabicNames = {
     WITH_CLIENT: "مع العميل",
     WITH_AGENT: "مع المندوب",

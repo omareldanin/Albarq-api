@@ -73,6 +73,11 @@ export class ClientsRepository {
         showNumbers: data.showNumbers,
         showDeliveryNumber: data.showDeliveryNumber,
         isExternal: data.isExternal,
+        deliveryAgentProfit: data.deliveryAgentProfit,
+        mainBranchProfit: data.mainBranchProfit,
+        forwardedBranchProfit: data.forwardedBranchProfit,
+        receivingBranchProfit: data.receivingBranchProfit,
+        activeProfit: data.activeProfit,
         branch: data.branchID
           ? {
               connect: {
@@ -115,13 +120,13 @@ export class ClientsRepository {
     const cacheKey = this.clientsCacheKey(filters);
 
     // 1️⃣ FAST PATH – Redis
-    const cached = await redis.get(cacheKey);
-    if (cached) {
-      return JSON.parse(cached) as {
-        clients: any[];
-        pagesCount: number;
-      };
-    }
+    // const cached = await redis.get(cacheKey);
+    // if (cached) {
+    //   return JSON.parse(cached) as {
+    //     clients: any[];
+    //     pagesCount: number;
+    //   };
+    // }
 
     let clientIDs: number[] = [];
 
@@ -212,7 +217,6 @@ export class ClientsRepository {
         {
           page: filters.page,
           size: filters.size,
-          withCount: true,
         },
       );
 
@@ -267,6 +271,11 @@ export class ClientsRepository {
         showNumbers: data.clientData.showNumbers,
         isExternal: data.clientData.isExternal,
         showDeliveryNumber: data.clientData.showDeliveryNumber,
+        deliveryAgentProfit: data.clientData.deliveryAgentProfit,
+        mainBranchProfit: data.clientData.mainBranchProfit,
+        forwardedBranchProfit: data.clientData.forwardedBranchProfit,
+        receivingBranchProfit: data.clientData.receivingBranchProfit,
+        activeProfit: data.clientData.activeProfit,
         branch: data.clientData.branchID
           ? {
               connect: {

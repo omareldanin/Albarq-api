@@ -6176,6 +6176,11 @@
               "boolean"
             ]
           },
+          "activeProfit": {
+            "type": [
+              "boolean"
+            ]
+          },
           "isExternal": {
             "type": [
               "boolean"
@@ -6208,6 +6213,26 @@
             ]
           },
           "companyID": {
+            "type": [
+              "number"
+            ]
+          },
+          "deliveryAgentProfit": {
+            "type": [
+              "number"
+            ]
+          },
+          "mainBranchProfit": {
+            "type": [
+              "number"
+            ]
+          },
+          "forwardedBranchProfit": {
+            "type": [
+              "number"
+            ]
+          },
+          "receivingBranchProfit": {
             "type": [
               "number"
             ]
@@ -6315,6 +6340,11 @@
               "boolean"
             ]
           },
+          "activeProfit": {
+            "type": [
+              "boolean"
+            ]
+          },
           "isExternal": {
             "type": [
               "boolean"
@@ -6347,6 +6377,26 @@
             ]
           },
           "companyID": {
+            "type": [
+              "number"
+            ]
+          },
+          "deliveryAgentProfit": {
+            "type": [
+              "number"
+            ]
+          },
+          "mainBranchProfit": {
+            "type": [
+              "number"
+            ]
+          },
+          "forwardedBranchProfit": {
+            "type": [
+              "number"
+            ]
+          },
+          "receivingBranchProfit": {
             "type": [
               "number"
             ]

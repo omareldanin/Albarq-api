@@ -1861,7 +1861,7 @@ class OrdersService {
                         totalCost: total,
                         count: count,
                         name: "الرواجع",
-                        icon: orders_responses_1.OrderStatusData["RETURNED"].icon,
+                        icon: (0, orders_responses_1.getStatusIcon)(data.loggedInUser.companyID, orders_responses_1.OrderStatusData["RETURNED"].icon),
                     },
                 ],
             };
@@ -1891,31 +1891,12 @@ class OrdersService {
                 },
                 select: {
                     orderStatus: true,
-                    inquiryStores: true,
-                },
-            });
-            const readyToPrint = await db_1.prisma.order.count({
-                where: {
-                    storeId: { in: employee?.inquiryStores.map((s) => s.storeId) },
-                    status: "REGISTERED",
-                    printed: false,
-                    deleted: false,
-                },
-            });
-            const readyToShip = await db_1.prisma.order.count({
-                where: {
-                    storeId: { in: employee?.inquiryStores.map((s) => s.storeId) },
-                    status: "REGISTERED",
-                    printed: true,
-                    deleted: false,
                 },
             });
             const newStatistics = statistics.ordersStatisticsByStatus.filter((status) => employee?.orderStatus.includes(status.status));
             return {
                 ...statistics,
                 ordersStatisticsByStatus: employee?.orderStatus ? newStatistics : [],
-                readyToPrint,
-                readyToShip,
             };
         }
         if (data.loggedInUser.role === "DELIVERY_AGENT") {
@@ -1963,7 +1944,7 @@ class OrdersService {
                         totalCost: 0,
                         count: inRepo,
                         name: "في المخزن",
-                        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/delivered.png",
+                        icon: (0, orders_responses_1.getStatusIcon)(data.loggedInUser.companyID, orders_responses_1.OrderStatusData["DELIVERED"].icon),
                         inside: false,
                     },
                     {
@@ -1973,7 +1954,7 @@ class OrdersService {
                         name: data.loggedInUser.mainRepository
                             ? "المرسله إلي الافرع"
                             : "المرسله إلي الرئيسي",
-                        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/receiving.png",
+                        icon: (0, orders_responses_1.getStatusIcon)(data.loggedInUser.companyID, orders_responses_1.OrderStatusData["WITH_RECEIVING_AGENT"].icon),
                         inside: false,
                     },
                     {
@@ -1983,30 +1964,86 @@ class OrdersService {
                         name: data.loggedInUser.mainRepository
                             ? "المرسله من الافرع"
                             : "المرسله من الرئيسي",
-                        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/receiving.png",
+                        icon: (0, orders_responses_1.getStatusIcon)(data.loggedInUser.companyID, orders_responses_1.OrderStatusData["WITH_RECEIVING_AGENT"].icon),
                         inside: false,
                     },
                 ],
             };
         }
         if (data.loggedInUser.role === "CLIENT") {
-            const readyToPrint = await db_1.prisma.order.count({
-                where: {
-                    clientId: data.loggedInUser.id,
-                    status: "REGISTERED",
-                    printed: false,
-                    deleted: false,
-                },
+            let newStatusStatistics = statistics.ordersStatisticsByStatus;
+            let deliveredOrders = {
+                status: "DELIVERED",
+                count: 0,
+                totalCost: 0,
+                name: "تم التوصيل",
+                icon: (0, orders_responses_1.getStatusIcon)(data.loggedInUser.companyID, orders_responses_1.OrderStatusData["DELIVERED"].icon),
+                inside: true,
+            };
+            const pReturedOrders = newStatusStatistics.find((status) => status.status === "PARTIALLY_RETURNED");
+            const deOrders = newStatusStatistics.find((status) => status.status === "DELIVERED");
+            const replacedOrders = newStatusStatistics.find((status) => status.status === "REPLACED");
+            deliveredOrders.count += pReturedOrders?.count
+                ? pReturedOrders?.count
+                : 0;
+            deliveredOrders.totalCost += pReturedOrders?.totalCost
+                ? pReturedOrders?.totalCost
+                : 0;
+            deliveredOrders.count += replacedOrders?.count
+                ? replacedOrders?.count
+                : 0;
+            deliveredOrders.totalCost += replacedOrders?.totalCost
+                ? replacedOrders?.totalCost
+                : 0;
+            deliveredOrders.count += deOrders?.count ? deOrders?.count : 0;
+            deliveredOrders.totalCost += deOrders?.totalCost
+                ? deOrders?.totalCost
+                : 0;
+            let reg = newStatusStatistics.find((status) => status.status === "REGISTERED");
+            let ready = newStatusStatistics.find((status) => status.status === "READY_TO_SEND");
+            let withR = newStatusStatistics.find((status) => status.status === "WITH_RECEIVING_AGENT");
+            let inGov = newStatusStatistics.find((status) => status.status === "IN_GOV_REPOSITORY");
+            let inMain = newStatusStatistics.find((status) => status.status === "IN_MAIN_REPOSITORY");
+            let rCount = 0, rTotal = 0, dCount = 0, dtotal = 0;
+            rCount += reg?.count ? reg.count : 0;
+            rCount += ready?.count ? ready.count : 0;
+            rTotal += reg?.totalCost ? reg.totalCost : 0;
+            rTotal += ready?.totalCost ? ready.totalCost : 0;
+            dCount += withR?.count ? withR.count : 0;
+            dCount += inGov?.count ? inGov.count : 0;
+            dCount += inMain?.count ? inMain.count : 0;
+            dtotal += withR?.totalCost ? withR.totalCost : 0;
+            dtotal += inGov?.totalCost ? inGov.totalCost : 0;
+            dtotal += inMain?.totalCost ? inMain.totalCost : 0;
+            let updatedStatusStatistics = newStatusStatistics.filter((status) => status.status !== "REGISTERED" &&
+                status.status !== "READY_TO_SEND" &&
+                status.status !== "WITH_RECEIVING_AGENT" &&
+                status.status !== "DELIVERED" &&
+                status.status !== "PARTIALLY_RETURNED" &&
+                status.status !== "REPLACED" &&
+                status.status !== "IN_GOV_REPOSITORY" &&
+                status.status !== "IN_MAIN_REPOSITORY");
+            updatedStatusStatistics.unshift(deliveredOrders);
+            updatedStatusStatistics.unshift({
+                name: "قيد التوصيل",
+                status: "WITH_RECEIVING_AGENT",
+                icon: (0, orders_responses_1.getStatusIcon)(data.loggedInUser.companyID, orders_responses_1.OrderStatusData["WITH_RECEIVING_AGENT"].icon),
+                count: dCount,
+                totalCost: dtotal,
+                inside: true,
             });
-            const readyToShip = await db_1.prisma.order.count({
-                where: {
-                    clientId: data.loggedInUser.id,
-                    status: "REGISTERED",
-                    printed: true,
-                    deleted: false,
-                },
+            updatedStatusStatistics.unshift({
+                name: "قيد الارسال",
+                status: "REGISTERED",
+                icon: (0, orders_responses_1.getStatusIcon)(data.loggedInUser.companyID, orders_responses_1.OrderStatusData["REGISTERED"].icon),
+                count: rCount,
+                totalCost: rTotal,
+                inside: true,
             });
-            return { ...statistics, readyToPrint, readyToShip };
+            return {
+                ...statistics,
+                ordersStatisticsByStatus: updatedStatusStatistics,
+            };
         }
         return statistics;
     };
