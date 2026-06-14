@@ -6,59 +6,59 @@ const client_1 = require("@prisma/client");
 exports.OrderStatusData = {
     REGISTERED: {
         name: "مسجل",
-        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/registered.png",
+        icon: "registered.png",
     },
     READY_TO_SEND: {
         name: "جاهز للشحن",
-        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/ready.png",
+        icon: "ready.png",
     },
     WITH_RECEIVING_AGENT: {
         name: "مع مندوب الاستلام",
-        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/receiving.png",
+        icon: "receiving.png",
     },
     WITH_DELIVERY_AGENT: {
         name: "بالطريق مع المندوب",
-        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/delivery.png",
+        icon: "delivery.png",
     },
     DELIVERED: {
         name: "تم التوصيل",
-        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/delivered.png",
+        icon: "delivered.png",
     },
     POSTPONED: {
         name: "مؤجل",
-        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/delay.png",
+        icon: "delay.png",
     },
     RESEND: {
         name: "اعاده إرسال",
-        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/resend.png",
+        icon: "resend.png",
     },
     PROCESSING: {
         name: "قيد المعالجه",
-        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/recovery.png",
+        icon: "recovery.png",
     },
     PARTIALLY_RETURNED: {
-        name: "راجع حزئي",
-        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/partially.png",
+        name: "راجع جزئي",
+        icon: "partially.png",
     },
     REPLACED: {
         name: "استبدال",
-        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/replaced.png",
+        icon: "replaced.png",
     },
     CHANGE_ADDRESS: {
         name: "تغيير عنوان",
-        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/changeAddress.png",
+        icon: "changeAddress.png",
     },
     RETURNED: {
         name: "راجع كلي",
-        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/returned.png",
+        icon: "returned.png",
     },
     IN_MAIN_REPOSITORY: {
         name: "في المخزن الرئيسي",
-        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/inRepo.png",
+        icon: "inRepo.png",
     },
     IN_GOV_REPOSITORY: {
         name: "في مخزن الفرع",
-        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/inRepo.png",
+        icon: "inRepo.png",
     },
 };
 const getStatusIcon = (companyId, icon) => {
