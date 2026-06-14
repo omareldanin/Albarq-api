@@ -1311,7 +1311,7 @@ class OrdersController {
             companyReport: req.query.company_report,
             orderType: req.query.orderType,
         });
-        const statistics = await ordersService.getOrdersStatistics({
+        const statistics = await ordersService.getOrdersStatistic({
             loggedInUser: loggedInUser,
             filters: filters,
         });
