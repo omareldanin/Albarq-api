@@ -243,7 +243,7 @@ router.route("/orders/v2/statistics").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getOrdersStatisticsV2,
+  ordersController.getOrdersStatistics,
 );
 
 router.route("/orders/clientStatistics").get(
