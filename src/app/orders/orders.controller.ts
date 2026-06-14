@@ -1517,7 +1517,7 @@ export class OrdersController {
       orderType: req.query.orderType,
     });
 
-    const statistics = await ordersService.getOrdersStatistics({
+    const statistics = await ordersService.getOrdersStatistic({
       loggedInUser: loggedInUser,
       filters: filters,
     });

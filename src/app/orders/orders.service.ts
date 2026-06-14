@@ -1686,474 +1686,6 @@ export class OrdersService {
     return results;
   };
 
-  getOrdersStatistics = async (data: {
-    filters: OrdersStatisticsFiltersType;
-    loggedInUser: loggedInUserType;
-  }) => {
-    const clientID =
-      data.loggedInUser.role === "CLIENT"
-        ? data.loggedInUser.id
-        : data.loggedInUser.role === "CLIENT_ASSISTANT"
-          ? data.loggedInUser.clientId
-          : data.filters.clientID;
-    const deliveryAgentID =
-      data.loggedInUser.role === EmployeeRole.DELIVERY_AGENT
-        ? data.loggedInUser.id
-        : data.filters.deliveryAgentID;
-
-    const companyID = data.filters.companyID
-      ? data.filters.companyID
-      : data.loggedInUser.companyID || undefined;
-
-    // Inquiry Employee Filters
-    let inquiryStatuses: OrderStatus[] | undefined = undefined;
-    let inquiryGovernorates: Governorate[] | undefined = undefined;
-    let inquiryLocationsIDs: number[] | undefined = undefined;
-    let inquiryBranchesIDs: number[] | undefined = undefined;
-    let inquiryStoresIDs: number[] | undefined = undefined;
-    let inquiryCompaniesIDs: number[] | undefined = undefined;
-    let inquiryClientsIDs: number[] | undefined = undefined;
-    let inquiryDeliveryAgentsIDs: number[] | undefined = undefined;
-    let orderType: string | undefined = data.filters.orderType;
-
-    if (data.loggedInUser.role === "INQUIRY_EMPLOYEE") {
-      const inquiryEmployeeStuff =
-        await employeesRepository.getInquiryEmployeeStuff({
-          employeeID: data.loggedInUser.id,
-        });
-      if (inquiryEmployeeStuff) {
-        orderType = inquiryEmployeeStuff.orderType || data.filters.orderType;
-
-        inquiryStatuses =
-          inquiryEmployeeStuff.inquiryStatuses &&
-          inquiryEmployeeStuff.inquiryStatuses.length > 0
-            ? inquiryEmployeeStuff.inquiryStatuses
-            : undefined;
-        inquiryGovernorates =
-          inquiryEmployeeStuff.inquiryGovernorates &&
-          inquiryEmployeeStuff.inquiryGovernorates.length > 0
-            ? inquiryEmployeeStuff.inquiryGovernorates
-            : undefined;
-        inquiryLocationsIDs =
-          inquiryEmployeeStuff.inquiryLocations &&
-          inquiryEmployeeStuff.inquiryLocations.length > 0
-            ? inquiryEmployeeStuff.inquiryLocations
-            : undefined;
-        inquiryBranchesIDs =
-          inquiryEmployeeStuff.inquiryBranches &&
-          inquiryEmployeeStuff.inquiryBranches.length > 0
-            ? inquiryEmployeeStuff.inquiryBranches
-            : undefined;
-        inquiryStoresIDs =
-          inquiryEmployeeStuff.inquiryStores &&
-          inquiryEmployeeStuff.inquiryStores.length > 0
-            ? inquiryEmployeeStuff.inquiryStores
-            : undefined;
-        inquiryCompaniesIDs =
-          inquiryEmployeeStuff.inquiryCompanies &&
-          inquiryEmployeeStuff.inquiryCompanies.length > 0
-            ? inquiryEmployeeStuff.inquiryCompanies
-            : undefined;
-        inquiryDeliveryAgentsIDs =
-          inquiryEmployeeStuff.inquiryDeliveryAgents &&
-          inquiryEmployeeStuff.inquiryDeliveryAgents.length > 0
-            ? inquiryEmployeeStuff.inquiryDeliveryAgents
-            : undefined;
-      }
-    }
-    if (data.loggedInUser.role === "RECEIVING_AGENT") {
-      const inquiryEmployeeStuff =
-        await employeesRepository.getInquiryEmployeeStuff({
-          employeeID: data.loggedInUser.id,
-        });
-
-      inquiryClientsIDs =
-        inquiryEmployeeStuff.inquiryClients &&
-        inquiryEmployeeStuff.inquiryClients.length > 0
-          ? inquiryEmployeeStuff.inquiryClients
-          : undefined;
-    }
-    if (data.loggedInUser.role === "CLIENT_ASSISTANT") {
-      const employee = await prisma.employee.findUnique({
-        where: {
-          id: data.loggedInUser.id,
-        },
-        select: {
-          inquiryStores: true,
-        },
-      });
-      inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
-    }
-    if (data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT") {
-      const employee = await prisma.employee.findUnique({
-        where: {
-          id: data.loggedInUser.id,
-        },
-        select: {
-          inquiryStores: true,
-        },
-      });
-      inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
-    }
-    // show orders/statistics without client reports to the client unless he searches for them
-    let clientReport = data.filters.clientReport;
-    if (
-      data.loggedInUser.role === "CLIENT" &&
-      data.filters.clientReport !== true
-    ) {
-      clientReport = false;
-    }
-
-    let statistics = await ordersRepository.getOrdersStatistics({
-      filters: {
-        ...data.filters,
-        clientID,
-        deliveryAgentID,
-        companyID,
-        clientReport,
-        inquiryStatuses,
-        inquiryGovernorates,
-        inquiryLocationsIDs,
-        inquiryBranchesIDs,
-        inquiryStoresIDs,
-        inquiryCompaniesIDs,
-        inquiryClientsIDs,
-        inquiryDeliveryAgentsIDs,
-        orderType,
-      },
-      loggedInUser: data.loggedInUser,
-    });
-
-    if (data.loggedInUser.role === "RECEIVING_AGENT") {
-      const ordersStatisticsByStatus = await prisma.order.groupBy({
-        by: ["status"],
-        _sum: {
-          totalCost: true,
-        },
-        _count: {
-          id: true,
-        },
-        where: {
-          status: {in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"]},
-          clientReport: {
-            some: {
-              receivingAgentId: data.loggedInUser.id,
-              report: {
-                confirmed: false,
-                deleted: false,
-              },
-            },
-          },
-        },
-      });
-
-      let total = 0;
-      let count = 0;
-      ordersStatisticsByStatus.map((s) => {
-        total += s._sum.totalCost || 0;
-        count += s._count.id;
-      });
-      return {
-        ...statistics,
-        allOrdersStatistics: {
-          totalCost: 0,
-          count: 0,
-        },
-        ordersStatisticsByStatus: [
-          ...statistics.ordersStatisticsByStatus.filter(
-            (status) =>
-              status.status === "READY_TO_SEND" ||
-              status.status === "WITH_RECEIVING_AGENT",
-          ),
-          {
-            status: "RETURNED",
-            totalCost: total,
-            count: count,
-            name: "الرواجع",
-            icon: OrderStatusData["RETURNED"].icon,
-          },
-        ],
-      };
-    }
-
-    if (data.loggedInUser.role === "INQUIRY_EMPLOYEE") {
-      const employee = await prisma.employee.findUnique({
-        where: {
-          id: data.loggedInUser.id,
-        },
-        select: {
-          inquiryStatuses: true,
-        },
-      });
-      const newStatistics = statistics.ordersStatisticsByStatus.filter(
-        (status) => employee?.inquiryStatuses.includes(status.status),
-      );
-
-      return {
-        ...statistics,
-        allOrdersStatistics: {
-          totalCost: 0,
-          count: 0,
-        },
-        ordersStatisticsByStatus: employee?.inquiryStatuses?.length
-          ? newStatistics
-          : [],
-      };
-    }
-
-    if (
-      data.loggedInUser.role === "CLIENT_ASSISTANT" ||
-      data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT"
-    ) {
-      const employee = await prisma.employee.findUnique({
-        where: {
-          id: data.loggedInUser.id,
-        },
-        select: {
-          orderStatus: true,
-        },
-      });
-
-      const newStatistics = statistics.ordersStatisticsByStatus.filter(
-        (status) => employee?.orderStatus.includes(status.status),
-      );
-      return {
-        ...statistics,
-        ordersStatisticsByStatus: employee?.orderStatus ? newStatistics : [],
-      };
-    }
-
-    if (data.loggedInUser.role === "DELIVERY_AGENT") {
-      const ordersStatisticsByStatus =
-        statistics.ordersStatisticsByStatus.filter(
-          (status) =>
-            status.status !== "REGISTERED" &&
-            status.status !== "IN_GOV_REPOSITORY" &&
-            status.status !== "IN_MAIN_REPOSITORY" &&
-            status.status !== "WITH_RECEIVING_AGENT" &&
-            status.status !== "READY_TO_SEND",
-        );
-      return {
-        ...statistics,
-        allOrdersStatistics: {
-          totalCost: 0,
-          count: 0,
-        },
-        ordersStatisticsByStatus: ordersStatisticsByStatus,
-        allOrdersStatisticsWithoutClientReport:
-          statistics.allOrdersStatisticsWithoutDeliveryReport,
-      };
-    }
-
-    if (data.loggedInUser.role === "BRANCH_MANAGER") {
-      const ordersStatisticsByStatus =
-        statistics.ordersStatisticsByStatus.filter(
-          (status) =>
-            status.status !== "REGISTERED" && status.status !== "READY_TO_SEND",
-        );
-      return {
-        ...statistics,
-        ordersStatisticsByStatus: ordersStatisticsByStatus,
-        allOrdersStatistics: {
-          totalCost: 0,
-          count: 0,
-        },
-        allOrdersStatisticsWithoutClientReport:
-          statistics.allOrdersStatisticsWithoutDeliveryReport,
-      };
-    }
-
-    if (data.loggedInUser.role === "REPOSITORIY_EMPLOYEE") {
-      const withReceingAgent = statistics.ordersStatisticsByStatus.find(
-        (s) => s.status === "WITH_RECEIVING_AGENT",
-      );
-      const inRepo = await this.getRepositoryOrderCount({
-        loggedInUser: data.loggedInUser,
-        secondaryStatus: "IN_REPOSITORY",
-      });
-
-      const forwarded = await this.getRepositoryOrderCount({
-        loggedInUser: data.loggedInUser,
-        secondaryStatus: "IN_CAR",
-      });
-
-      const incomming = await this.getRepositoryOrderCount({
-        loggedInUser: data.loggedInUser,
-        repository_id: data.loggedInUser.repositoryId + "",
-        secondaryStatus: "IN_CAR",
-        getIncoming: "true",
-      });
-
-      return {
-        ...statistics,
-        ordersStatisticsByStatus: [
-          withReceingAgent,
-          {
-            status: "inrepo",
-            totalCost: 0,
-            count: inRepo,
-            name: "في المخزن",
-            icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/delivered.png",
-            inside: false,
-          },
-          {
-            status: "forwarded",
-            totalCost: 0,
-            count: forwarded,
-            name: data.loggedInUser.mainRepository
-              ? "المرسله إلي الافرع"
-              : "المرسله إلي الرئيسي",
-            icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/receiving.png",
-            inside: false,
-          },
-          {
-            status: "incomming",
-            totalCost: 0,
-            count: incomming,
-            name: data.loggedInUser.mainRepository
-              ? "المرسله من الافرع"
-              : "المرسله من الرئيسي",
-            icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/receiving.png",
-            inside: false,
-          },
-        ],
-      };
-    }
-
-    if (data.loggedInUser.role === "CLIENT") {
-      let newStatusStatistics = statistics.ordersStatisticsByStatus;
-
-      let deliveredOrders = {
-        status: "DELIVERED" as OrderStatus,
-        count: 0,
-        totalCost: 0,
-        name: "تم التوصيل",
-        icon: "https://albarq-bucket.fra1.digitaloceanspaces.com/icons/delivered.png",
-        inside: true,
-      };
-
-      const pReturedOrders = newStatusStatistics.find(
-        (status) => status.status === "PARTIALLY_RETURNED",
-      );
-
-      const deOrders = newStatusStatistics.find(
-        (status) => status.status === "DELIVERED",
-      );
-
-      const replacedOrders = newStatusStatistics.find(
-        (status) => status.status === "REPLACED",
-      );
-
-      deliveredOrders.count += pReturedOrders?.count
-        ? pReturedOrders?.count
-        : 0;
-      deliveredOrders.totalCost += pReturedOrders?.totalCost
-        ? pReturedOrders?.totalCost
-        : 0;
-
-      deliveredOrders.count += replacedOrders?.count
-        ? replacedOrders?.count
-        : 0;
-      deliveredOrders.totalCost += replacedOrders?.totalCost
-        ? replacedOrders?.totalCost
-        : 0;
-
-      deliveredOrders.count += deOrders?.count ? deOrders?.count : 0;
-      deliveredOrders.totalCost += deOrders?.totalCost
-        ? deOrders?.totalCost
-        : 0;
-
-      let reg = newStatusStatistics.find(
-        (status) => status.status === "REGISTERED",
-      );
-      let ready = newStatusStatistics.find(
-        (status) => status.status === "READY_TO_SEND",
-      );
-
-      let withR = newStatusStatistics.find(
-        (status) => status.status === "WITH_RECEIVING_AGENT",
-      );
-
-      let inGov = newStatusStatistics.find(
-        (status) => status.status === "IN_GOV_REPOSITORY",
-      );
-
-      let inMain = newStatusStatistics.find(
-        (status) => status.status === "IN_MAIN_REPOSITORY",
-      );
-
-      let rCount = 0,
-        rTotal = 0,
-        dCount = 0,
-        dtotal = 0;
-
-      rCount += reg?.count ? reg.count : 0;
-      rCount += ready?.count ? ready.count : 0;
-      rTotal += reg?.totalCost ? reg.totalCost : 0;
-      rTotal += ready?.totalCost ? ready.totalCost : 0;
-      dCount += withR?.count ? withR.count : 0;
-      dCount += inGov?.count ? inGov.count : 0;
-      dCount += inMain?.count ? inMain.count : 0;
-      dtotal += withR?.totalCost ? withR.totalCost : 0;
-      dtotal += inGov?.totalCost ? inGov.totalCost : 0;
-      dtotal += inMain?.totalCost ? inMain.totalCost : 0;
-
-      let updatedStatusStatistics = newStatusStatistics.filter(
-        (status) =>
-          status.status !== "REGISTERED" &&
-          status.status !== "READY_TO_SEND" &&
-          status.status !== "WITH_RECEIVING_AGENT" &&
-          status.status !== "DELIVERED" &&
-          status.status !== "PARTIALLY_RETURNED" &&
-          status.status !== "REPLACED" &&
-          status.status !== "IN_GOV_REPOSITORY" &&
-          status.status !== "IN_MAIN_REPOSITORY",
-      );
-
-      updatedStatusStatistics.unshift(deliveredOrders);
-
-      updatedStatusStatistics.unshift({
-        name: "قيد التوصيل",
-        status: "WITH_RECEIVING_AGENT",
-        icon:
-          newStatusStatistics.find(
-            (status) => status.status === "WITH_RECEIVING_AGENT",
-          )?.icon || "",
-        count: dCount,
-        totalCost: dtotal,
-        inside: true,
-      });
-
-      updatedStatusStatistics.unshift({
-        name: "قيد الارسال",
-        status: "REGISTERED",
-        icon:
-          newStatusStatistics.find((status) => status.status === "REGISTERED")
-            ?.icon || "",
-        count: rCount,
-        totalCost: rTotal,
-        inside: true,
-      });
-
-      return {
-        ...statistics,
-        ordersStatisticsByStatus: updatedStatusStatistics,
-        allOrdersStatistics: {
-          totalCost: 0,
-          count: 0,
-        },
-      };
-    }
-
-    return {
-      ...statistics,
-      allOrdersStatistics: {
-        totalCost: 0,
-        count: 0,
-      },
-    };
-  };
-
   getOrdersStatisticV2 = async (data: {
     filters: OrdersStatisticsFiltersType;
     loggedInUser: loggedInUserType;
@@ -2607,6 +2139,363 @@ export class OrdersService {
         ...statistics,
         ordersStatisticsByStatus: updatedStatusStatistics,
       };
+    }
+
+    return statistics;
+  };
+
+  getOrdersStatistic = async (data: {
+    filters: OrdersStatisticsFiltersType;
+    loggedInUser: loggedInUserType;
+  }) => {
+    const clientID =
+      data.loggedInUser.role === "CLIENT"
+        ? data.loggedInUser.id
+        : data.loggedInUser.role === "CLIENT_ASSISTANT"
+          ? data.loggedInUser.clientId
+          : data.filters.clientID;
+    const deliveryAgentID =
+      data.loggedInUser.role === EmployeeRole.DELIVERY_AGENT
+        ? data.loggedInUser.id
+        : data.filters.deliveryAgentID;
+
+    const companyID = data.filters.companyID
+      ? data.filters.companyID
+      : data.loggedInUser.companyID || undefined;
+
+    // Inquiry Employee Filters
+    let inquiryStatuses: OrderStatus[] | undefined = undefined;
+    let inquiryGovernorates: Governorate[] | undefined = undefined;
+    let inquiryLocationsIDs: number[] | undefined = undefined;
+    let inquiryBranchesIDs: number[] | undefined = undefined;
+    let inquiryStoresIDs: number[] | undefined = undefined;
+    let inquiryCompaniesIDs: number[] | undefined = undefined;
+    let inquiryClientsIDs: number[] | undefined = undefined;
+    let inquiryDeliveryAgentsIDs: number[] | undefined = undefined;
+    let orderType: string | undefined = data.filters.orderType;
+
+    if (data.loggedInUser.role === "INQUIRY_EMPLOYEE") {
+      const inquiryEmployeeStuff =
+        await employeesRepository.getInquiryEmployeeStuff({
+          employeeID: data.loggedInUser.id,
+        });
+      if (inquiryEmployeeStuff) {
+        orderType = inquiryEmployeeStuff.orderType || data.filters.orderType;
+
+        inquiryStatuses =
+          inquiryEmployeeStuff.inquiryStatuses &&
+          inquiryEmployeeStuff.inquiryStatuses.length > 0
+            ? inquiryEmployeeStuff.inquiryStatuses
+            : undefined;
+        inquiryGovernorates =
+          inquiryEmployeeStuff.inquiryGovernorates &&
+          inquiryEmployeeStuff.inquiryGovernorates.length > 0
+            ? inquiryEmployeeStuff.inquiryGovernorates
+            : undefined;
+        inquiryLocationsIDs =
+          inquiryEmployeeStuff.inquiryLocations &&
+          inquiryEmployeeStuff.inquiryLocations.length > 0
+            ? inquiryEmployeeStuff.inquiryLocations
+            : undefined;
+        inquiryBranchesIDs =
+          inquiryEmployeeStuff.inquiryBranches &&
+          inquiryEmployeeStuff.inquiryBranches.length > 0
+            ? inquiryEmployeeStuff.inquiryBranches
+            : undefined;
+        inquiryStoresIDs =
+          inquiryEmployeeStuff.inquiryStores &&
+          inquiryEmployeeStuff.inquiryStores.length > 0
+            ? inquiryEmployeeStuff.inquiryStores
+            : undefined;
+        inquiryCompaniesIDs =
+          inquiryEmployeeStuff.inquiryCompanies &&
+          inquiryEmployeeStuff.inquiryCompanies.length > 0
+            ? inquiryEmployeeStuff.inquiryCompanies
+            : undefined;
+        inquiryDeliveryAgentsIDs =
+          inquiryEmployeeStuff.inquiryDeliveryAgents &&
+          inquiryEmployeeStuff.inquiryDeliveryAgents.length > 0
+            ? inquiryEmployeeStuff.inquiryDeliveryAgents
+            : undefined;
+      }
+    }
+    if (data.loggedInUser.role === "RECEIVING_AGENT") {
+      const inquiryEmployeeStuff =
+        await employeesRepository.getInquiryEmployeeStuff({
+          employeeID: data.loggedInUser.id,
+        });
+
+      inquiryClientsIDs =
+        inquiryEmployeeStuff.inquiryClients &&
+        inquiryEmployeeStuff.inquiryClients.length > 0
+          ? inquiryEmployeeStuff.inquiryClients
+          : undefined;
+    }
+    if (data.loggedInUser.role === "CLIENT_ASSISTANT") {
+      const employee = await prisma.employee.findUnique({
+        where: {
+          id: data.loggedInUser.id,
+        },
+        select: {
+          inquiryStores: true,
+        },
+      });
+      inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
+    }
+    if (data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT") {
+      const employee = await prisma.employee.findUnique({
+        where: {
+          id: data.loggedInUser.id,
+        },
+        select: {
+          inquiryStores: true,
+        },
+      });
+      inquiryStoresIDs = employee?.inquiryStores.map((s) => s.storeId);
+    }
+    // show orders/statistics without client reports to the client unless he searches for them
+    let clientReport = data.filters.clientReport;
+    if (
+      data.loggedInUser.role === "CLIENT" &&
+      data.filters.clientReport !== true
+    ) {
+      clientReport = false;
+    }
+
+    let statistics = await ordersRepository.getOrdersStatisticsV2({
+      filters: {
+        ...data.filters,
+        clientID,
+        deliveryAgentID,
+        companyID,
+        clientReport,
+        inquiryStatuses,
+        inquiryGovernorates,
+        inquiryLocationsIDs,
+        inquiryBranchesIDs,
+        inquiryStoresIDs,
+        inquiryCompaniesIDs,
+        inquiryClientsIDs,
+        inquiryDeliveryAgentsIDs,
+        orderType,
+      },
+      loggedInUser: data.loggedInUser,
+    });
+
+    if (data.loggedInUser.role === "RECEIVING_AGENT") {
+      const ordersStatisticsByStatus = await prisma.order.groupBy({
+        by: ["status"],
+        _sum: {
+          totalCost: true,
+        },
+        _count: {
+          id: true,
+        },
+        where: {
+          status: {in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"]},
+          clientReport: {
+            some: {
+              receivingAgentId: data.loggedInUser.id,
+              report: {
+                confirmed: false,
+                deleted: false,
+              },
+            },
+          },
+        },
+      });
+
+      let total = 0;
+      let count = 0;
+      ordersStatisticsByStatus.map((s) => {
+        total += s._sum.totalCost || 0;
+        count += s._count.id;
+      });
+      return {
+        ...statistics,
+        ordersStatisticsByStatus: [
+          ...statistics.ordersStatisticsByStatus.filter(
+            (status) =>
+              status.status === "READY_TO_SEND" ||
+              status.status === "WITH_RECEIVING_AGENT",
+          ),
+          {
+            status: "RETURNED",
+            totalCost: total,
+            count: count,
+            name: "الرواجع",
+          },
+        ],
+      };
+    }
+
+    if (data.loggedInUser.role === "INQUIRY_EMPLOYEE") {
+      const employee = await prisma.employee.findUnique({
+        where: {
+          id: data.loggedInUser.id,
+        },
+        select: {
+          inquiryStatuses: true,
+        },
+      });
+      const newStatistics = statistics.ordersStatisticsByStatus.filter(
+        (status) => employee?.inquiryStatuses.includes(status.status),
+      );
+
+      return {
+        ...statistics,
+        ordersStatisticsByStatus: employee?.inquiryStatuses?.length
+          ? newStatistics
+          : [],
+      };
+    }
+
+    if (
+      data.loggedInUser.role === "CLIENT_ASSISTANT" ||
+      data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT"
+    ) {
+      const employee = await prisma.employee.findUnique({
+        where: {
+          id: data.loggedInUser.id,
+        },
+        select: {
+          orderStatus: true,
+          inquiryStores: true,
+        },
+      });
+      const readyToPrint = await prisma.order.count({
+        where: {
+          storeId: {in: employee?.inquiryStores.map((s) => s.storeId)},
+          status: "REGISTERED",
+          printed: false,
+          deleted: false,
+        },
+      });
+      const readyToShip = await prisma.order.count({
+        where: {
+          storeId: {in: employee?.inquiryStores.map((s) => s.storeId)},
+          status: "REGISTERED",
+          printed: true,
+          deleted: false,
+        },
+      });
+
+      const newStatistics = statistics.ordersStatisticsByStatus.filter(
+        (status) => employee?.orderStatus.includes(status.status),
+      );
+      return {
+        ...statistics,
+        ordersStatisticsByStatus: employee?.orderStatus ? newStatistics : [],
+        readyToPrint,
+        readyToShip,
+      };
+    }
+
+    if (data.loggedInUser.role === "DELIVERY_AGENT") {
+      const ordersStatisticsByStatus =
+        statistics.ordersStatisticsByStatus.filter(
+          (status) =>
+            status.status !== "REGISTERED" &&
+            status.status !== "IN_GOV_REPOSITORY" &&
+            status.status !== "IN_MAIN_REPOSITORY" &&
+            status.status !== "WITH_RECEIVING_AGENT" &&
+            status.status !== "READY_TO_SEND",
+        );
+      return {
+        ...statistics,
+        ordersStatisticsByStatus: ordersStatisticsByStatus,
+        allOrdersStatisticsWithoutClientReport:
+          statistics.allOrdersStatisticsWithoutDeliveryReport,
+      };
+    }
+
+    if (data.loggedInUser.role === "BRANCH_MANAGER") {
+      const ordersStatisticsByStatus =
+        statistics.ordersStatisticsByStatus.filter(
+          (status) =>
+            status.status !== "REGISTERED" && status.status !== "READY_TO_SEND",
+        );
+      return {
+        ...statistics,
+        ordersStatisticsByStatus: ordersStatisticsByStatus,
+        allOrdersStatisticsWithoutClientReport:
+          statistics.allOrdersStatisticsWithoutDeliveryReport,
+      };
+    }
+
+    if (data.loggedInUser.role === "REPOSITORIY_EMPLOYEE") {
+      const withReceingAgent = statistics.ordersStatisticsByStatus.find(
+        (s) => s.status === "WITH_RECEIVING_AGENT",
+      );
+      const inRepo = await this.getRepositoryOrderCount({
+        loggedInUser: data.loggedInUser,
+        secondaryStatus: "IN_REPOSITORY",
+      });
+
+      const forwarded = await this.getRepositoryOrderCount({
+        loggedInUser: data.loggedInUser,
+        secondaryStatus: "IN_CAR",
+      });
+
+      const incomming = await this.getRepositoryOrderCount({
+        loggedInUser: data.loggedInUser,
+        repository_id: data.loggedInUser.repositoryId + "",
+        secondaryStatus: "IN_CAR",
+        getIncoming: "true",
+      });
+
+      return {
+        ...statistics,
+        ordersStatisticsByStatus: [
+          withReceingAgent,
+          {
+            status: "inrepo",
+            totalCost: 0,
+            count: inRepo,
+            name: "في المخزن",
+            inside: false,
+          },
+          {
+            status: "forwarded",
+            totalCost: 0,
+            count: forwarded,
+            name: data.loggedInUser.mainRepository
+              ? "المرسله إلي الافرع"
+              : "المرسله إلي الرئيسي",
+            inside: false,
+          },
+          {
+            status: "incomming",
+            totalCost: 0,
+            count: incomming,
+            name: data.loggedInUser.mainRepository
+              ? "المرسله من الافرع"
+              : "المرسله من الرئيسي",
+            inside: false,
+          },
+        ],
+      };
+    }
+
+    if (data.loggedInUser.role === "CLIENT") {
+      const readyToPrint = await prisma.order.count({
+        where: {
+          clientId: data.loggedInUser.id,
+          status: "REGISTERED",
+          printed: false,
+          deleted: false,
+        },
+      });
+
+      const readyToShip = await prisma.order.count({
+        where: {
+          clientId: data.loggedInUser.id,
+          status: "REGISTERED",
+          printed: true,
+          deleted: false,
+        },
+      });
+      return {...statistics, readyToPrint, readyToShip};
     }
 
     return statistics;
