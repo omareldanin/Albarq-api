@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.orderTimelineReform = exports.orderTimelineSelect = exports.statisticsReformed = exports.minifiedOrderReform = exports.mobileOrderReform = exports.orderReformApiKey = exports.orderReform = exports.minifiedOrderSelect = exports.orderSelectApiKey = exports.orderSelect = exports.orderStatusArabicNames = exports.orderSecondaryStatusArabicNames = exports.getStatusIcon = exports.OrderStatusData = void 0;
+exports.orderTimelineReform = exports.orderTimelineSelect = exports.statisticsReformedV2 = exports.statisticsReformed = exports.minifiedOrderReform = exports.mobileOrderReform = exports.orderReformApiKey = exports.orderReform = exports.minifiedOrderSelect = exports.orderSelectApiKey = exports.orderSelect = exports.orderStatusArabicNames = exports.orderSecondaryStatusArabicNames = exports.getStatusIcon = exports.OrderStatusData = void 0;
 exports.getRoleBasedOrCondition = getRoleBasedOrCondition;
 const client_1 = require("@prisma/client");
 exports.OrderStatusData = {
@@ -772,6 +772,85 @@ const statisticsReformed = (statistics) => {
     return statisticsReformed;
 };
 exports.statisticsReformed = statisticsReformed;
+const statisticsReformedV2 = (companyId, statistics) => {
+    const sortingOrder = [
+        "REGISTERED",
+        "READY_TO_SEND",
+        "DELIVERED",
+        "WITH_RECEIVING_AGENT",
+        "WITH_DELIVERY_AGENT",
+        "POSTPONED",
+        "RESEND",
+        "PROCESSING",
+        "PARTIALLY_RETURNED",
+        "REPLACED",
+        "CHANGE_ADDRESS",
+        "RETURNED",
+        "IN_MAIN_REPOSITORY",
+        "IN_GOV_REPOSITORY",
+    ];
+    const statisticsReformed = {
+        ordersStatisticsByStatus: Object.keys(client_1.OrderStatus)
+            .map((status) => {
+            const statusCount = statistics.ordersStatisticsByStatus.find((orderStatus) => {
+                return orderStatus.status === status;
+            });
+            return {
+                status: status,
+                totalCost: statusCount?._sum.totalCost || 0,
+                count: statusCount?._count.id || 0,
+                name: exports.OrderStatusData[status].name,
+                icon: (0, exports.getStatusIcon)(companyId, exports.OrderStatusData[status].icon),
+                inside: false,
+            };
+        })
+            .sort((a, b) => {
+            return sortingOrder.indexOf(a.status) - sortingOrder.indexOf(b.status);
+        }),
+        ordersStatisticsByGovernorate: Object.keys(client_1.Governorate).map((governorate) => {
+            const governorateCount = statistics.ordersStatisticsByGovernorate.find((orderStatus) => {
+                return orderStatus.governorate === governorate;
+            });
+            return {
+                governorate: governorate,
+                totalCost: governorateCount?._sum.totalCost || 0,
+                count: governorateCount?._count.id || 0,
+            };
+        }),
+        allOrdersStatisticsWithoutClientReport: {
+            totalCost: (statistics.allOrdersStatisticsWithoutClientReport._sum?.paidAmount ??
+                0) -
+                (statistics.allOrdersStatisticsWithoutClientReport._sum?.deliveryCost ??
+                    0),
+            deliveryCost: statistics.allOrdersStatisticsWithoutClientReport._sum.deliveryCost ||
+                0,
+            count: statistics.allOrdersStatisticsWithoutClientReport._count.id,
+        },
+        allOrdersStatisticsWithoutDeliveryReport: {
+            totalCost: statistics.allOrdersStatisticsWithoutDeliveryReport._sum.paidAmount ||
+                0,
+            deliveryCost: statistics.allOrdersStatisticsWithoutDeliveryReport._sum
+                .deliveryAgentNet || 0,
+            count: statistics.allOrdersStatisticsWithoutDeliveryReport._count.id,
+        },
+        allOrdersStatisticsWithoutBranchReport: {
+            totalCost: statistics.allOrdersStatisticsWithoutDeliveryReport._sum.paidAmount ||
+                0,
+            count: statistics.allOrdersStatisticsWithoutDeliveryReport._count.id,
+        },
+        allOrdersStatisticsWithoutCompanyReport: {
+            totalCost: statistics.allOrdersStatisticsWithoutDeliveryReport._sum.paidAmount ||
+                0,
+            count: statistics.allOrdersStatisticsWithoutDeliveryReport._count.id,
+        },
+        todayOrdersStatistics: {
+            totalCost: statistics.todayOrdersStatistics._sum.totalCost || 0,
+            count: statistics.todayOrdersStatistics._count.id,
+        },
+    };
+    return statisticsReformed;
+};
+exports.statisticsReformedV2 = statisticsReformedV2;
 exports.orderTimelineSelect = {
     id: true,
     type: true,

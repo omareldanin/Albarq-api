@@ -877,6 +877,157 @@ export const statisticsReformed = (statistics: {
   return statisticsReformed;
 };
 
+export const statisticsReformedV2 = (
+  companyId: number,
+  statistics: {
+    ordersStatisticsByStatus: (Prisma.PickEnumerable<
+      Prisma.OrderGroupByOutputType,
+      "status"[]
+    > & {
+      _count: {
+        id: number;
+      };
+      _sum: {
+        totalCost: number | null;
+      };
+    })[];
+
+    ordersStatisticsByGovernorate: (Prisma.PickEnumerable<
+      Prisma.OrderGroupByOutputType,
+      "governorate"[]
+    > & {
+      _count: {
+        id: number;
+      };
+      _sum: {
+        totalCost: number | null;
+      };
+    })[];
+
+    allOrdersStatisticsWithoutClientReport: {
+      _count: {
+        id: number;
+      };
+      _sum: {
+        paidAmount: number | null;
+        deliveryCost: number | null;
+      };
+    };
+    allOrdersStatisticsWithoutDeliveryReport: {
+      _count: {
+        id: number;
+      };
+      _sum: {
+        paidAmount: number | null;
+        deliveryAgentNet: number | null;
+      };
+    };
+    todayOrdersStatistics: {
+      _count: {
+        id: number;
+      };
+      _sum: {
+        totalCost: number | null;
+      };
+    };
+  },
+) => {
+  const sortingOrder = [
+    "REGISTERED",
+    "READY_TO_SEND",
+    "DELIVERED",
+    "WITH_RECEIVING_AGENT",
+    "WITH_DELIVERY_AGENT",
+    "POSTPONED",
+    "RESEND",
+    "PROCESSING",
+    "PARTIALLY_RETURNED",
+    "REPLACED",
+    "CHANGE_ADDRESS",
+    "RETURNED",
+    "IN_MAIN_REPOSITORY",
+    "IN_GOV_REPOSITORY",
+  ];
+
+  const statisticsReformed = {
+    ordersStatisticsByStatus: (
+      Object.keys(OrderStatus) as Array<keyof typeof OrderStatus>
+    )
+      .map((status) => {
+        const statusCount = statistics.ordersStatisticsByStatus.find(
+          (orderStatus: {status: string}) => {
+            return orderStatus.status === status;
+          },
+        );
+        return {
+          status: status,
+          totalCost: statusCount?._sum.totalCost || 0,
+          count: statusCount?._count.id || 0,
+          name: OrderStatusData[status].name,
+          icon: getStatusIcon(companyId, OrderStatusData[status].icon),
+          inside: false,
+        };
+      })
+      .sort((a, b) => {
+        return sortingOrder.indexOf(a.status) - sortingOrder.indexOf(b.status);
+      }),
+
+    ordersStatisticsByGovernorate: (
+      Object.keys(Governorate) as Array<keyof typeof Governorate>
+    ).map((governorate) => {
+      const governorateCount = statistics.ordersStatisticsByGovernorate.find(
+        (orderStatus: {governorate: string}) => {
+          return orderStatus.governorate === governorate;
+        },
+      );
+      return {
+        governorate: governorate,
+        totalCost: governorateCount?._sum.totalCost || 0,
+        count: governorateCount?._count.id || 0,
+      };
+    }),
+    allOrdersStatisticsWithoutClientReport: {
+      totalCost:
+        (statistics.allOrdersStatisticsWithoutClientReport._sum?.paidAmount ??
+          0) -
+        (statistics.allOrdersStatisticsWithoutClientReport._sum?.deliveryCost ??
+          0),
+      deliveryCost:
+        statistics.allOrdersStatisticsWithoutClientReport._sum.deliveryCost ||
+        0,
+      count: statistics.allOrdersStatisticsWithoutClientReport._count.id,
+    },
+
+    allOrdersStatisticsWithoutDeliveryReport: {
+      totalCost:
+        statistics.allOrdersStatisticsWithoutDeliveryReport._sum.paidAmount ||
+        0,
+      deliveryCost:
+        statistics.allOrdersStatisticsWithoutDeliveryReport._sum
+          .deliveryAgentNet || 0,
+      count: statistics.allOrdersStatisticsWithoutDeliveryReport._count.id,
+    },
+    allOrdersStatisticsWithoutBranchReport: {
+      totalCost:
+        statistics.allOrdersStatisticsWithoutDeliveryReport._sum.paidAmount ||
+        0,
+      count: statistics.allOrdersStatisticsWithoutDeliveryReport._count.id,
+    },
+    allOrdersStatisticsWithoutCompanyReport: {
+      totalCost:
+        statistics.allOrdersStatisticsWithoutDeliveryReport._sum.paidAmount ||
+        0,
+      count: statistics.allOrdersStatisticsWithoutDeliveryReport._count.id,
+    },
+    todayOrdersStatistics: {
+      totalCost: statistics.todayOrdersStatistics._sum.totalCost || 0,
+      count: statistics.todayOrdersStatistics._count.id,
+    },
+  };
+
+  return statisticsReformed;
+};
+
 export const orderTimelineSelect = {
   id: true,
   type: true,

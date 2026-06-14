@@ -2272,7 +2272,7 @@ export class OrdersService {
       clientReport = false;
     }
 
-    let statistics = await ordersRepository.getOrdersStatistics({
+    let statistics = await ordersRepository.getOrdersStatisticsV2({
       filters: {
         ...data.filters,
         clientID,

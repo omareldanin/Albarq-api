@@ -1804,7 +1804,7 @@ class OrdersService {
             data.filters.clientReport !== true) {
             clientReport = false;
         }
-        let statistics = await ordersRepository.getOrdersStatistics({
+        let statistics = await ordersRepository.getOrdersStatisticsV2({
             filters: {
                 ...data.filters,
                 clientID,

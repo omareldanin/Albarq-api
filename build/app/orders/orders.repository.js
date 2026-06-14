@@ -3389,6 +3389,453 @@ class OrdersRepository {
                 : result.todayOrdersStatistics,
         };
     }
+    async getOrdersStatisticsV2(data) {
+        const cacheKey = `orders:stats:u:${data.loggedInUser.id}:r:${data.loggedInUser.role}:f:${this.hashFilters(data.filters)}`;
+        const cached = await redis_1.redis.get(cacheKey);
+        if (cached) {
+            return JSON.parse(cached);
+        }
+        const now = new Date();
+        const start = new Date(now);
+        start.setHours(23, 0, 0, 0);
+        // if current time is before 11 PM, today's business day started yesterday 11 PM
+        if (now < start) {
+            start.setDate(start.getDate() - 1);
+        }
+        const end = new Date(start);
+        end.setDate(end.getDate() + 1);
+        const filtersReformed = data.loggedInUser.role === "INQUIRY_EMPLOYEE"
+            ? {
+                AND: [
+                    {
+                        status: data.filters.inquiryStatuses
+                            ? {
+                                in: data.filters.inquiryStatuses,
+                            }
+                            : undefined,
+                    },
+                    {
+                        deleted: false,
+                    },
+                    {
+                        governorate: data.filters.inquiryGovernorates
+                            ? {
+                                in: data.filters.inquiryGovernorates,
+                            }
+                            : undefined,
+                    },
+                    {
+                        deliveryAgentId: data.filters.inquiryDeliveryAgentsIDs
+                            ? {
+                                in: data.filters.inquiryDeliveryAgentsIDs,
+                            }
+                            : undefined,
+                    },
+                    {
+                        storeId: data.filters.inquiryStoresIDs
+                            ? {
+                                in: data.filters.inquiryStoresIDs,
+                            }
+                            : undefined,
+                    },
+                    {
+                        OR: [
+                            {
+                                companyId: data.filters.companyID,
+                            },
+                            {
+                                forwardedFromId: data.filters.inquiryCompaniesIDs
+                                    ? {
+                                        in: [
+                                            ...data.filters.inquiryCompaniesIDs,
+                                            //   data.filters.companyID as number
+                                        ],
+                                    }
+                                    : data.filters.companyID,
+                            },
+                        ],
+                    },
+                    {
+                        locationId: data.filters.inquiryLocationsIDs
+                            ? {
+                                in: data.filters.inquiryLocationsIDs,
+                            }
+                            : undefined,
+                    },
+                    {
+                        OR: !data.filters.orderType &&
+                            data.loggedInUser.mainRepository &&
+                            data.filters.inquiryBranchesIDs?.length
+                            ? [
+                                {
+                                    branchId: { in: data.filters.inquiryBranchesIDs },
+                                },
+                                {
+                                    client: {
+                                        branchId: { in: data.filters.inquiryBranchesIDs },
+                                    },
+                                },
+                            ]
+                            : data.filters.orderType === "receiving" &&
+                                data.loggedInUser.mainRepository &&
+                                data.filters.inquiryBranchesIDs?.length
+                                ? [
+                                    {
+                                        branchId: { in: data.filters.inquiryBranchesIDs },
+                                    },
+                                ]
+                                : data.filters.orderType === "forwarded" &&
+                                    data.loggedInUser.mainRepository &&
+                                    data.filters.inquiryBranchesIDs?.length
+                                    ? [
+                                        {
+                                            client: {
+                                                branchId: {
+                                                    in: data.filters.inquiryBranchesIDs,
+                                                },
+                                            },
+                                        },
+                                    ]
+                                    : [
+                                        {
+                                            branchId: data.loggedInUser.branchId,
+                                        },
+                                        {
+                                            client: {
+                                                branchId: data.loggedInUser.branchId,
+                                            },
+                                        },
+                                    ],
+                    },
+                ],
+            }
+            : {
+                AND: [
+                    {
+                        OR: [
+                            {
+                                companyId: data.filters.companyID,
+                            },
+                            {
+                                forwardedFromId: data.filters.inquiryCompaniesIDs
+                                    ? {
+                                        in: [
+                                            ...data.filters.inquiryCompaniesIDs,
+                                            //   data.filters.companyID as number
+                                        ],
+                                    }
+                                    : data.filters.companyID,
+                            },
+                        ],
+                    },
+                    {
+                        branchId: data.filters.inquiryBranchesIDs
+                            ? {
+                                in: data.filters.inquiryBranchesIDs,
+                            }
+                            : undefined,
+                    },
+                    {
+                        storeId: data.loggedInUser.role === "CLIENT_ASSISTANT" ||
+                            data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT"
+                            ? { in: data.filters.inquiryStoresIDs }
+                            : data.filters.storeID,
+                    },
+                    {
+                        governorateReport: data.filters.governorateReport
+                            ? { isNot: null }
+                            : data.filters.governorateReport
+                                ? { is: null }
+                                : undefined,
+                    },
+                    {
+                        deliveryAgentReport: data.filters.deliveryAgentReport
+                            ? { isNot: null }
+                            : data.filters.deliveryAgentReport
+                                ? { is: null }
+                                : undefined,
+                    },
+                    {
+                        governorate: data.filters.governorate,
+                    },
+                    {
+                        createdAt: {
+                            gte: data.filters.startDate,
+                        },
+                    },
+                    {
+                        createdAt: {
+                            lte: data.filters.endDate,
+                        },
+                    },
+                    {
+                        clientId: data.filters.inquiryClientsIDs
+                            ? {
+                                in: [
+                                    ...data.filters.inquiryClientsIDs,
+                                    //   data.filters.companyID as number
+                                ],
+                            }
+                            : data.filters.clientID,
+                    },
+                    {
+                        deliveryType: data.filters.deliveryType,
+                    },
+                    {
+                        locationId: data.filters.locationID,
+                    },
+                    {
+                        deliveryAgentId: data.filters.deliveryAgentID,
+                    },
+                    {
+                        deleted: false,
+                    },
+                    {
+                        forwardedBranchId: data.filters.orderType === "forwardedAll" &&
+                            (data.loggedInUser?.role === "COMPANY_MANAGER" ||
+                                data.loggedInUser?.mainRepository) &&
+                            data.filters.branchID
+                            ? data.filters.branchID
+                            : data.filters.orderType === "forwardedAll" &&
+                                (data.loggedInUser?.role === "COMPANY_MANAGER" ||
+                                    data.loggedInUser?.mainRepository)
+                                ? {
+                                    not: null,
+                                }
+                                : data.filters.orderType === "forwardedAll"
+                                    ? data.loggedInUser?.branchId
+                                    : data.filters.orderType === "receivedAll" &&
+                                        data.filters.branchID &&
+                                        data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                                        !data.loggedInUser?.mainCompany
+                                        ? data.filters.branchID
+                                        : undefined,
+                    },
+                    {
+                        receivedBranchId: data.filters.orderType === "receivedAll" &&
+                            (data.loggedInUser?.role === "COMPANY_MANAGER" ||
+                                data.loggedInUser?.mainRepository) &&
+                            data.filters.branchID
+                            ? data.filters.branchID
+                            : data.filters.orderType === "receivedAll" &&
+                                (data.loggedInUser?.role === "COMPANY_MANAGER" ||
+                                    data.loggedInUser?.mainRepository)
+                                ? {
+                                    not: null,
+                                }
+                                : data.filters.orderType === "forwardedAll" &&
+                                    data.filters.branchID &&
+                                    data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                                    !data.loggedInUser?.mainCompany
+                                    ? data.filters.branchID
+                                    : data.filters.orderType === "receivedAll"
+                                        ? data.loggedInUser?.branchId
+                                        : undefined,
+                    },
+                ],
+            };
+        const [ordersStatisticsByStatus, ordersStatisticsByGovernorate, allOrdersStatisticsWithoutClientReport, allOrdersStatisticsWithoutDeliveryReport, todayOrdersStatistics,] = await Promise.all([
+            db_1.prisma.order.groupBy({
+                by: ["status"],
+                _sum: {
+                    totalCost: true,
+                },
+                _count: {
+                    id: true,
+                },
+                where: {
+                    ...filtersReformed,
+                    OR: data.loggedInUser.role === "CLIENT" ||
+                        data.loggedInUser.role === "INQUIRY_EMPLOYEE" ||
+                        data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT" ||
+                        data.loggedInUser.role === "CLIENT_ASSISTANT"
+                        ? [
+                            {
+                                clientReport: {
+                                    none: {
+                                        secondaryType: "DELIVERED",
+                                        report: {
+                                            deleted: false,
+                                        },
+                                    },
+                                },
+                                status: {
+                                    not: "RETURNED",
+                                },
+                            },
+                            {
+                                clientReport: {
+                                    none: {
+                                        secondaryType: "RETURNED",
+                                        report: {
+                                            deleted: false,
+                                        },
+                                    },
+                                },
+                                status: {
+                                    in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
+                                },
+                            },
+                        ]
+                        : data.loggedInUser.role === "DELIVERY_AGENT"
+                            ? [
+                                {
+                                    OR: [
+                                        {
+                                            deliveryAgentReport: {
+                                                is: null,
+                                            },
+                                        },
+                                        {
+                                            deliveryAgentReport: {
+                                                report: {
+                                                    deleted: true,
+                                                },
+                                            },
+                                        },
+                                    ],
+                                    status: {
+                                        notIn: ["RETURNED"],
+                                    },
+                                },
+                                {
+                                    secondaryStatus: "WITH_AGENT",
+                                    status: {
+                                        in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
+                                    },
+                                },
+                            ]
+                            : data.loggedInUser.role === "REPOSITORIY_EMPLOYEE" ||
+                                data.loggedInUser.role === "BRANCH_MANAGER"
+                                ? [
+                                    {
+                                        branch: {
+                                            id: data.loggedInUser.branchId,
+                                        },
+                                        status: { not: "WITH_RECEIVING_AGENT" },
+                                    },
+                                    {
+                                        client: {
+                                            branchId: data.loggedInUser?.branchId,
+                                        },
+                                        status: { not: "WITH_RECEIVING_AGENT" },
+                                    },
+                                    {
+                                        status: "WITH_RECEIVING_AGENT",
+                                        deliveryAgent: {
+                                            branchId: data.loggedInUser.branchId,
+                                        },
+                                    },
+                                ]
+                                : data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                                    data.loggedInUser?.role !== "RECEIVING_AGENT"
+                                    ? [
+                                        {
+                                            branch: {
+                                                id: data.loggedInUser?.branchId,
+                                            },
+                                        },
+                                    ]
+                                    : undefined,
+                },
+            }),
+            db_1.prisma.order.groupBy({
+                by: ["governorate"],
+                _sum: {
+                    totalCost: true,
+                },
+                _count: {
+                    id: true,
+                },
+                where: {
+                    ...filtersReformed,
+                },
+            }),
+            db_1.prisma.order.aggregate({
+                _sum: {
+                    paidAmount: true,
+                    deliveryCost: true,
+                },
+                _count: {
+                    id: true,
+                },
+                where: {
+                    ...filtersReformed,
+                    OR: [
+                        {
+                            clientReport: {
+                                none: {
+                                    secondaryType: "DELIVERED",
+                                    report: {
+                                        deleted: false,
+                                    },
+                                },
+                            },
+                            status: {
+                                in: ["DELIVERED", "REPLACED", "PARTIALLY_RETURNED"],
+                            },
+                        },
+                    ],
+                    status: {
+                        in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
+                    },
+                },
+            }),
+            db_1.prisma.order.aggregate({
+                _sum: {
+                    paidAmount: true,
+                    deliveryAgentNet: true,
+                },
+                _count: {
+                    id: true,
+                },
+                where: {
+                    ...filtersReformed,
+                    OR: [
+                        { deliveryAgentReport: { is: null } },
+                        { deliveryAgentReport: { report: { deleted: true } } },
+                    ],
+                    status: {
+                        in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
+                    },
+                },
+            }),
+            db_1.prisma.order.aggregate({
+                _sum: { totalCost: true },
+                _count: { id: true },
+                where: {
+                    ...filtersReformed,
+                    deleted: false,
+                    deliveryDate: data.loggedInUser.role === "DELIVERY_AGENT"
+                        ? { gte: new Date(Date.now() - 22 * 60 * 60 * 1000) }
+                        : undefined,
+                    receivedAt: data.loggedInUser.role !== "DELIVERY_AGENT"
+                        ? {
+                            gte: start,
+                            lt: end,
+                        }
+                        : undefined,
+                },
+            }),
+        ]);
+        const result = (0, orders_responses_1.statisticsReformedV2)(data.loggedInUser.companyID, {
+            ordersStatisticsByStatus,
+            ordersStatisticsByGovernorate,
+            allOrdersStatisticsWithoutClientReport,
+            allOrdersStatisticsWithoutDeliveryReport,
+            todayOrdersStatistics,
+        });
+        await redis_1.redis.set(cacheKey, JSON.stringify(result), "EX", 60);
+        return {
+            ...result,
+            todayOrdersStatistics: !data.filters.orderType && data.loggedInUser.role === "BRANCH_MANAGER"
+                ? {
+                    totalCost: 0,
+                    count: 0,
+                }
+                : result.todayOrdersStatistics,
+        };
+    }
     async getOrderTimeline(data) {
         if (!data.params.orderID)
             return [];
