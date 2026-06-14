@@ -1925,6 +1925,138 @@ class OrdersController {
             });
         }
     });
+    getStatusOrdersStatisticsV2 = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const loggedInUser = res.locals.user;
+        const status = req.query.status;
+        if (status === "REGISTERED") {
+            const ordersStatisticsByStatus = await db_1.prisma.order.groupBy({
+                by: ["status"],
+                _count: {
+                    id: true,
+                },
+                _sum: {
+                    totalCost: true,
+                },
+                where: {
+                    clientId: loggedInUser.id,
+                    deleted: false,
+                    status: { in: ["REGISTERED", "READY_TO_SEND"] },
+                },
+            });
+            const statuses = ["REGISTERED", "READY_TO_SEND"];
+            res.status(200).json({
+                status: "success",
+                data: statuses.map((status) => {
+                    const statuscount = ordersStatisticsByStatus.find((s) => s.status === status);
+                    return {
+                        status: status,
+                        count: statuscount?._count.id || 0,
+                        totalCost: statuscount?._sum.totalCost || 0,
+                        name: orders_responses_1.OrderStatusData[status].name,
+                        icon: (0, orders_responses_1.getStatusIcon)(loggedInUser.companyID, orders_responses_1.OrderStatusData[status].icon),
+                    };
+                }),
+            });
+        }
+        else if (status === "WITH_RECEIVING_AGENT") {
+            const ordersStatisticsByStatus = await db_1.prisma.order.groupBy({
+                by: ["status"],
+                _count: {
+                    id: true,
+                },
+                _sum: {
+                    totalCost: true,
+                },
+                where: {
+                    clientId: loggedInUser.id,
+                    deleted: false,
+                    status: {
+                        in: [
+                            "WITH_RECEIVING_AGENT",
+                            "IN_MAIN_REPOSITORY",
+                            "IN_GOV_REPOSITORY",
+                        ],
+                    },
+                },
+            });
+            const statuses = [
+                "WITH_RECEIVING_AGENT",
+                "IN_MAIN_REPOSITORY",
+                "IN_GOV_REPOSITORY",
+            ];
+            res.status(200).json({
+                status: "success",
+                data: statuses.map((status) => {
+                    const statuscount = ordersStatisticsByStatus.find((s) => s.status === status);
+                    return {
+                        status: status,
+                        count: statuscount?._count.id || 0,
+                        totalCost: statuscount?._sum.totalCost || 0,
+                        name: orders_responses_1.OrderStatusData[status].name,
+                        icon: (0, orders_responses_1.getStatusIcon)(loggedInUser.companyID, orders_responses_1.OrderStatusData[status].icon),
+                    };
+                }),
+            });
+        }
+        else if (status === "DELIVERED") {
+            const ordersStatisticsByStatus = await db_1.prisma.order.groupBy({
+                by: ["status"],
+                _count: {
+                    id: true,
+                },
+                _sum: {
+                    totalCost: true,
+                },
+                where: {
+                    clientId: loggedInUser.id,
+                    deleted: false,
+                    status: {
+                        in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
+                    },
+                    OR: [
+                        {
+                            clientReport: {
+                                none: {
+                                    secondaryType: "DELIVERED",
+                                },
+                            },
+                            status: {
+                                notIn: ["RETURNED"],
+                            },
+                        },
+                        {
+                            clientReport: {
+                                none: {
+                                    secondaryType: "RETURNED",
+                                },
+                            },
+                            status: {
+                                in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
+                            },
+                        },
+                    ],
+                },
+            });
+            const statuses = [
+                "DELIVERED",
+                "PARTIALLY_RETURNED",
+                "REPLACED",
+            ];
+            res.status(200).json({
+                status: "success",
+                data: statuses.map((status) => {
+                    const statuscount = ordersStatisticsByStatus.find((s) => s.status === status);
+                    return {
+                        status: status,
+                        count: statuscount?._count.id || 0,
+                        totalCost: statuscount?._sum.totalCost || 0,
+                        name: orders_responses_1.OrderStatusData[status].name,
+                        icon: (0, orders_responses_1.getStatusIcon)(loggedInUser.companyID, orders_responses_1.OrderStatusData[status].icon),
+                    };
+                }),
+            });
+        }
+    });
     getOrderTimeline = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const params = {
             orderID: req.params.orderID,

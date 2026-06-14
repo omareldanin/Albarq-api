@@ -22,6 +22,7 @@ import {
   SecondaryStatus,
 } from "@prisma/client";
 import {
+  getStatusIcon,
   orderReform,
   orderSelect,
   orderStatusArabicNames,
@@ -2200,6 +2201,157 @@ export class OrdersController {
             totalCost: statuscount?._sum.totalCost || 0,
             name: OrderStatusData[status].name,
             icon: OrderStatusData[status].icon,
+          };
+        }),
+      });
+    }
+  });
+
+  getStatusOrdersStatisticsV2 = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+    const status = req.query.status as OrderStatus;
+
+    if (status === "REGISTERED") {
+      const ordersStatisticsByStatus = await prisma.order.groupBy({
+        by: ["status"],
+        _count: {
+          id: true,
+        },
+        _sum: {
+          totalCost: true,
+        },
+        where: {
+          clientId: loggedInUser.id,
+          deleted: false,
+          status: {in: ["REGISTERED", "READY_TO_SEND"]},
+        },
+      });
+
+      const statuses: OrderStatus[] = ["REGISTERED", "READY_TO_SEND"];
+      res.status(200).json({
+        status: "success",
+        data: statuses.map((status) => {
+          const statuscount = ordersStatisticsByStatus.find(
+            (s) => s.status === status,
+          );
+
+          return {
+            status: status,
+            count: statuscount?._count.id || 0,
+            totalCost: statuscount?._sum.totalCost || 0,
+            name: OrderStatusData[status].name,
+            icon: getStatusIcon(
+              loggedInUser.companyID!!,
+              OrderStatusData[status].icon,
+            ),
+          };
+        }),
+      });
+    } else if (status === "WITH_RECEIVING_AGENT") {
+      const ordersStatisticsByStatus = await prisma.order.groupBy({
+        by: ["status"],
+        _count: {
+          id: true,
+        },
+        _sum: {
+          totalCost: true,
+        },
+        where: {
+          clientId: loggedInUser.id,
+          deleted: false,
+          status: {
+            in: [
+              "WITH_RECEIVING_AGENT",
+              "IN_MAIN_REPOSITORY",
+              "IN_GOV_REPOSITORY",
+            ],
+          },
+        },
+      });
+      const statuses: OrderStatus[] = [
+        "WITH_RECEIVING_AGENT",
+        "IN_MAIN_REPOSITORY",
+        "IN_GOV_REPOSITORY",
+      ];
+      res.status(200).json({
+        status: "success",
+        data: statuses.map((status) => {
+          const statuscount = ordersStatisticsByStatus.find(
+            (s) => s.status === status,
+          );
+
+          return {
+            status: status,
+            count: statuscount?._count.id || 0,
+            totalCost: statuscount?._sum.totalCost || 0,
+            name: OrderStatusData[status].name,
+            icon: getStatusIcon(
+              loggedInUser.companyID!!,
+              OrderStatusData[status].icon,
+            ),
+          };
+        }),
+      });
+    } else if (status === "DELIVERED") {
+      const ordersStatisticsByStatus = await prisma.order.groupBy({
+        by: ["status"],
+        _count: {
+          id: true,
+        },
+        _sum: {
+          totalCost: true,
+        },
+        where: {
+          clientId: loggedInUser.id,
+          deleted: false,
+          status: {
+            in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
+          },
+          OR: [
+            {
+              clientReport: {
+                none: {
+                  secondaryType: "DELIVERED",
+                },
+              },
+              status: {
+                notIn: ["RETURNED"],
+              },
+            },
+            {
+              clientReport: {
+                none: {
+                  secondaryType: "RETURNED",
+                },
+              },
+              status: {
+                in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
+              },
+            },
+          ],
+        },
+      });
+      const statuses: OrderStatus[] = [
+        "DELIVERED",
+        "PARTIALLY_RETURNED",
+        "REPLACED",
+      ];
+      res.status(200).json({
+        status: "success",
+        data: statuses.map((status) => {
+          const statuscount = ordersStatisticsByStatus.find(
+            (s) => s.status === status,
+          );
+
+          return {
+            status: status,
+            count: statuscount?._count.id || 0,
+            totalCost: statuscount?._sum.totalCost || 0,
+            name: OrderStatusData[status].name,
+            icon: getStatusIcon(
+              loggedInUser.companyID!!,
+              OrderStatusData[status].icon,
+            ),
           };
         }),
       });

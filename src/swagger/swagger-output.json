@@ -1615,6 +1615,25 @@
         }
       }
     },
+    "/api/v1/orders/v2/statusStatistics": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/v1/orders/repositoryStatusStatistics": {
       "get": {
         "description": "",

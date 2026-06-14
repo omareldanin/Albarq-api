@@ -276,6 +276,21 @@ router.route("/orders/statusStatistics").get(
   ordersController.getStatusOrdersStatistics,
 );
 
+router.route("/orders/v2/statusStatistics").get(
+  isLoggedIn,
+  isAutherized([
+    AdminRole.ADMIN,
+    AdminRole.ADMIN_ASSISTANT,
+    EmployeeRole.COMPANY_MANAGER,
+    ClientRole.CLIENT,
+    EmployeeRole.CLIENT_ASSISTANT,
+    // TODO: Remove later
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  ordersController.getStatusOrdersStatisticsV2,
+);
+
 router.route("/orders/repositoryStatusStatistics").get(
   isLoggedIn,
   isAutherized([
