@@ -66,7 +66,7 @@ router.route("/orders/statistics").get(isLoggedIn_1.isLoggedIn, (0, isAutherized
     // TODO: Remove later
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
-]), ordersController.getOrdersStatistics);
+]), ordersController.getOrdersStatisticsV2);
 router.route("/orders/v2/statistics").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
