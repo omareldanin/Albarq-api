@@ -7,6 +7,38 @@ export const BranchCreateSchema = z.object({
   name: z.string().min(3),
   parentBranchId: z.number().optional(),
   governorate: z.nativeEnum(Governorate),
+  forwardedDeliveryCosts: z
+    .preprocess(
+      (data) => {
+        if (typeof data === "string") {
+          return JSON.parse(data);
+        }
+        return data;
+      },
+      z.array(
+        z.object({
+          governorate: z.nativeEnum(Governorate),
+          cost: z.coerce.number().max(100000).default(0),
+        }),
+      ),
+    )
+    .optional(),
+  receivingDeliveryCosts: z
+    .preprocess(
+      (data) => {
+        if (typeof data === "string") {
+          return JSON.parse(data);
+        }
+        return data;
+      },
+      z.array(
+        z.object({
+          governorate: z.nativeEnum(Governorate),
+          cost: z.coerce.number().max(100000).default(0),
+        }),
+      ),
+    )
+    .optional(),
 });
 
 export type BranchCreateType = z.infer<typeof BranchCreateSchema>;

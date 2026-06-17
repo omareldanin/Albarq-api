@@ -27,6 +27,8 @@ class BranchesRepository {
             data: {
                 name: data.name,
                 governorate: data.governorate,
+                receivingDeliveryCosts: data.receivingDeliveryCosts,
+                forwardedDeliveryCosts: data.forwardedDeliveryCosts,
                 parentBranch: data.parentBranchId
                     ? {
                         connect: {
@@ -171,6 +173,8 @@ class BranchesRepository {
             data: {
                 name: data.branchData.name,
                 governorate: data.branchData.governorate,
+                receivingDeliveryCosts: data.branchData.receivingDeliveryCosts,
+                forwardedDeliveryCosts: data.branchData.forwardedDeliveryCosts,
                 parentBranch: data.branchData.parentBranchId
                     ? {
                         connect: {

@@ -5,6 +5,8 @@ exports.branchSelect = {
     id: true,
     name: true,
     governorate: true,
+    forwardedDeliveryCosts: true,
+    receivingDeliveryCosts: true,
     parentBranch: {
         select: {
             id: true,

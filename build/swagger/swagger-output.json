@@ -6511,6 +6511,102 @@
                             "SULAYMANIYAH",
                             "WASIT"
                         ]
+                    },
+                    "forwardedDeliveryCosts": {
+                        "type": [
+                            "array"
+                        ],
+                        "items": {
+                            "type": [
+                                "object"
+                            ],
+                            "properties": {
+                                "governorate": {
+                                    "type": [
+                                        "string"
+                                    ],
+                                    "enum": [
+                                        "AL_ANBAR",
+                                        "BABIL",
+                                        "BABIL_COMPANIES",
+                                        "BAGHDAD",
+                                        "BASRA",
+                                        "DHI_QAR",
+                                        "AL_QADISIYYAH",
+                                        "DIYALA",
+                                        "DUHOK",
+                                        "ERBIL",
+                                        "KARBALA",
+                                        "KIRKUK",
+                                        "MAYSAN",
+                                        "MUTHANNA",
+                                        "NAJAF",
+                                        "NINAWA",
+                                        "SALAH_AL_DIN",
+                                        "SULAYMANIYAH",
+                                        "WASIT"
+                                    ]
+                                },
+                                "cost": {
+                                    "default": 0,
+                                    "type": [
+                                        "number"
+                                    ],
+                                    "maximum": 100000
+                                }
+                            },
+                            "required": [
+                                "governorate"
+                            ]
+                        }
+                    },
+                    "receivingDeliveryCosts": {
+                        "type": [
+                            "array"
+                        ],
+                        "items": {
+                            "type": [
+                                "object"
+                            ],
+                            "properties": {
+                                "governorate": {
+                                    "type": [
+                                        "string"
+                                    ],
+                                    "enum": [
+                                        "AL_ANBAR",
+                                        "BABIL",
+                                        "BABIL_COMPANIES",
+                                        "BAGHDAD",
+                                        "BASRA",
+                                        "DHI_QAR",
+                                        "AL_QADISIYYAH",
+                                        "DIYALA",
+                                        "DUHOK",
+                                        "ERBIL",
+                                        "KARBALA",
+                                        "KIRKUK",
+                                        "MAYSAN",
+                                        "MUTHANNA",
+                                        "NAJAF",
+                                        "NINAWA",
+                                        "SALAH_AL_DIN",
+                                        "SULAYMANIYAH",
+                                        "WASIT"
+                                    ]
+                                },
+                                "cost": {
+                                    "default": 0,
+                                    "type": [
+                                        "number"
+                                    ],
+                                    "maximum": 100000
+                                }
+                            },
+                            "required": [
+                                "governorate"
+                            ]
+                        }
                     }
                 },
                 "required": [
@@ -6559,6 +6655,102 @@
                             "SULAYMANIYAH",
                             "WASIT"
                         ]
+                    },
+                    "forwardedDeliveryCosts": {
+                        "type": [
+                            "array"
+                        ],
+                        "items": {
+                            "type": [
+                                "object"
+                            ],
+                            "properties": {
+                                "governorate": {
+                                    "type": [
+                                        "string"
+                                    ],
+                                    "enum": [
+                                        "AL_ANBAR",
+                                        "BABIL",
+                                        "BABIL_COMPANIES",
+                                        "BAGHDAD",
+                                        "BASRA",
+                                        "DHI_QAR",
+                                        "AL_QADISIYYAH",
+                                        "DIYALA",
+                                        "DUHOK",
+                                        "ERBIL",
+                                        "KARBALA",
+                                        "KIRKUK",
+                                        "MAYSAN",
+                                        "MUTHANNA",
+                                        "NAJAF",
+                                        "NINAWA",
+                                        "SALAH_AL_DIN",
+                                        "SULAYMANIYAH",
+                                        "WASIT"
+                                    ]
+                                },
+                                "cost": {
+                                    "default": 0,
+                                    "type": [
+                                        "number"
+                                    ],
+                                    "maximum": 100000
+                                }
+                            },
+                            "required": [
+                                "governorate"
+                            ]
+                        }
+                    },
+                    "receivingDeliveryCosts": {
+                        "type": [
+                            "array"
+                        ],
+                        "items": {
+                            "type": [
+                                "object"
+                            ],
+                            "properties": {
+                                "governorate": {
+                                    "type": [
+                                        "string"
+                                    ],
+                                    "enum": [
+                                        "AL_ANBAR",
+                                        "BABIL",
+                                        "BABIL_COMPANIES",
+                                        "BAGHDAD",
+                                        "BASRA",
+                                        "DHI_QAR",
+                                        "AL_QADISIYYAH",
+                                        "DIYALA",
+                                        "DUHOK",
+                                        "ERBIL",
+                                        "KARBALA",
+                                        "KIRKUK",
+                                        "MAYSAN",
+                                        "MUTHANNA",
+                                        "NAJAF",
+                                        "NINAWA",
+                                        "SALAH_AL_DIN",
+                                        "SULAYMANIYAH",
+                                        "WASIT"
+                                    ]
+                                },
+                                "cost": {
+                                    "default": 0,
+                                    "type": [
+                                        "number"
+                                    ],
+                                    "maximum": 100000
+                                }
+                            },
+                            "required": [
+                                "governorate"
+                            ]
+                        }
                     }
                 }
             },
