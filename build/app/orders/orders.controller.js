@@ -336,12 +336,14 @@ class OrdersController {
         const params = {
             orderID: req.params.orderID,
         };
+        const loggedInUser = res.locals.user;
         const order = await ordersService.getOrder({
             params: params,
         });
         const orderTimeline = await ordersService.getOrderTimeline({
             params: { orderID: params.orderID },
             filters: {},
+            loggedInUser,
         });
         const orderInquiryEmployees = await ordersService.getOrderInquiryEmployees({
             params: params,
@@ -357,12 +359,14 @@ class OrdersController {
         const params = {
             orderID: req.params.orderID,
         };
+        const loggedInUser = res.locals.user;
         const order = await ordersService.getOrderById({
             params: params,
         });
         const orderTimeline = await ordersService.getOrderTimeline({
             params: { orderID: params.orderID },
             filters: {},
+            loggedInUser,
         });
         const orderInquiryEmployees = await ordersService.getOrderInquiryEmployees({
             params: params,
@@ -378,12 +382,14 @@ class OrdersController {
         const params = {
             orderID: req.params.orderID,
         };
+        const loggedInUser = res.locals.user;
         const order = await ordersService.getOrderByIdApiKey({
             params: params,
         });
         const orderTimeline = await ordersService.getOrderTimeline({
             params: { orderID: params.orderID },
             filters: {},
+            loggedInUser,
         });
         res.status(200).json({
             status: "success",
@@ -2061,6 +2067,7 @@ class OrdersController {
         const params = {
             orderID: req.params.orderID,
         };
+        const loggedInUser = res.locals.user;
         const filters = orders_dto_1.OrderTimelineFiltersSchema.parse({
             type: req.query.type,
             types: req.query.types,
@@ -2068,6 +2075,7 @@ class OrdersController {
         const orderTimeline = await ordersService.getOrderTimeline({
             params: params,
             filters: filters,
+            loggedInUser,
         });
         res.status(200).json({
             status: "success",

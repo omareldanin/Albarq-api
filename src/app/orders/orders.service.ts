@@ -2506,10 +2506,12 @@ export class OrdersService {
       orderID: string;
     };
     filters: OrderTimelineFiltersType;
+    loggedInUser: loggedInUserType;
   }) => {
     const orderTimeline = await ordersRepository.getOrderTimeline({
       params: data.params,
       filters: data.filters,
+      loggedInUser: data.loggedInUser,
     });
     return orderTimeline;
   };

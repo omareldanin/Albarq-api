@@ -4394,15 +4394,20 @@ export class OrdersRepository {
   async getOrderTimeline(data: {
     params: {orderID: string | undefined};
     filters: OrderTimelineFiltersType;
+    loggedInUser: loggedInUserType;
   }) {
-    if (!data.params.orderID) return [];
-
     const orderTimeline = await prisma.orderTimeline.findMany({
       where: {
-        orderId: data.params.orderID,
-        type: data.filters.types?.length
-          ? {in: data.filters.types}
-          : data.filters.type || undefined,
+        order: {
+          id: data.params.orderID,
+        },
+        type:
+          data.loggedInUser.role === "CLIENT" ||
+          data.loggedInUser.role === "CLIENT_ASSISTANT"
+            ? {notIn: ["COMPANY_CHANGE"]}
+            : data.filters.types
+              ? {in: data.filters.types}
+              : data.filters.type,
       },
       select: orderTimelineSelect,
       orderBy: {
@@ -4411,7 +4416,6 @@ export class OrdersRepository {
     });
     return orderTimeline.map(orderTimelineReform);
   }
-
   async updateManyOrderTimeline(data: {
     orderIDs: string[];
     data: OrderTimelinePieceType;

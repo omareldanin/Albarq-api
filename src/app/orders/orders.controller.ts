@@ -385,6 +385,7 @@ export class OrdersController {
     const params = {
       orderID: req.params.orderID,
     };
+    const loggedInUser = res.locals.user as loggedInUserType;
 
     const order = await ordersService.getOrder({
       params: params,
@@ -392,6 +393,7 @@ export class OrdersController {
     const orderTimeline = await ordersService.getOrderTimeline({
       params: {orderID: params.orderID},
       filters: {},
+      loggedInUser,
     });
     const orderInquiryEmployees = await ordersService.getOrderInquiryEmployees({
       params: params,
@@ -409,6 +411,7 @@ export class OrdersController {
     const params = {
       orderID: req.params.orderID,
     };
+    const loggedInUser = res.locals.user as loggedInUserType;
 
     const order = await ordersService.getOrderById({
       params: params,
@@ -416,6 +419,7 @@ export class OrdersController {
     const orderTimeline = await ordersService.getOrderTimeline({
       params: {orderID: params.orderID},
       filters: {},
+      loggedInUser,
     });
     const orderInquiryEmployees = await ordersService.getOrderInquiryEmployees({
       params: params,
@@ -433,6 +437,7 @@ export class OrdersController {
     const params = {
       orderID: req.params.orderID,
     };
+    const loggedInUser = res.locals.user as loggedInUserType;
 
     const order = await ordersService.getOrderByIdApiKey({
       params: params,
@@ -441,6 +446,7 @@ export class OrdersController {
     const orderTimeline = await ordersService.getOrderTimeline({
       params: {orderID: params.orderID},
       filters: {},
+      loggedInUser,
     });
 
     res.status(200).json({
@@ -2362,6 +2368,7 @@ export class OrdersController {
     const params = {
       orderID: req.params.orderID,
     };
+    const loggedInUser = res.locals.user as loggedInUserType;
 
     const filters = OrderTimelineFiltersSchema.parse({
       type: req.query.type,
@@ -2371,6 +2378,7 @@ export class OrdersController {
     const orderTimeline = await ordersService.getOrderTimeline({
       params: params,
       filters: filters,
+      loggedInUser,
     });
 
     res.status(200).json({

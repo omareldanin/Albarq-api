@@ -1983,6 +1983,7 @@ class OrdersService {
         const orderTimeline = await ordersRepository.getOrderTimeline({
             params: data.params,
             filters: data.filters,
+            loggedInUser: data.loggedInUser,
         });
         return orderTimeline;
     };
