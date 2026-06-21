@@ -1987,7 +1987,14 @@ export class OrdersController {
             confirmed: true,
           },
           {
-            companyId: loggedInUser.companyID!!,
+            OR: [
+              {
+                companyId: loggedInUser.companyID!!,
+              },
+              {
+                forwardedFromId: loggedInUser.companyID!!,
+              },
+            ],
           },
           {
             clientReport: {
