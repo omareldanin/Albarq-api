@@ -82,12 +82,7 @@
                 {{location.name}}</td>
               <td>{{currency totalCost}}</td>
               <td>{{currency paidAmount}}</td>
-              <td>{{isBaghdad
-                  governorate
-                  deliveryCost
-                  @root.reportData.companyReport.baghdadDeliveryCost
-                  @root.reportData.companyReport.governoratesDeliveryCost
-                }}</td>
+              <td>{{isBaghdad paidAmount companyNet}}</td>
               <td>{{currency companyNet}}</td>
               <td class="{{colorizeRow status}}">{{localizeOrderStatus
                   status

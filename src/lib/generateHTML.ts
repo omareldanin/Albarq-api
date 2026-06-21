@@ -15,16 +15,20 @@ export const generateHTML = async (template: string, data: object) => {
     hb.registerHelper("date", (date) =>
       new Date(date).toLocaleDateString("en-GB"),
     );
+
     hb.registerHelper("mapPhones", (phones) => {
       if (!phones) return "";
       if (typeof phones === "string") return phones;
       return phones.join("\n");
     });
+
     hb.registerHelper("inc", (value) => Number.parseInt(value) + 1);
+
     hb.registerHelper(
       "add",
       (v1, v2) => (Number.parseInt(v1) || 0) + (Number.parseInt(v2) || 0),
     );
+
     hb.registerHelper("currency", (value) => {
       return Number(value || 0).toLocaleString("en-GB");
     });
@@ -39,9 +43,11 @@ export const generateHTML = async (template: string, data: object) => {
       }
       return "";
     });
+
     hb.registerHelper("isBaghdad", (paidAmount, branchNet) => {
       return Number(paidAmount - branchNet).toLocaleString("en-GB");
     });
+
     hb.registerHelper("colorizeRow2", (secondaryReportType, status) => {
       if (secondaryReportType === SecondaryReportType.RETURNED) {
         return "";
