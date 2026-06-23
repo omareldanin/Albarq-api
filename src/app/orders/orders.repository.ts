@@ -1476,14 +1476,12 @@ export class OrdersRepository {
                         ? [
                             {
                               companyReport: {
-                                none: {},
-                              },
-                            },
-                            {
-                              companyReport: {
-                                some: {
+                                none: {
+                                  secondaryType: data.filters.delivered
+                                    ? "DELIVERED"
+                                    : undefined,
                                   report: {
-                                    deleted: true,
+                                    deleted: false,
                                   },
                                 },
                               },
