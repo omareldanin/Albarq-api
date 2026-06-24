@@ -951,6 +951,9 @@ class OrdersService {
         }
         else {
             let oldOrder = checkOrders[0];
+            if (oldOrder.forwarded && oldOrder.company.id === data.companyId) {
+                throw new AppError_1.AppError("تم احالة الطلب مسبقا", 400);
+            }
             const updatedOrder = await db_1.prisma.order.update({
                 where: {
                     id: oldOrder.id,
@@ -1004,6 +1007,7 @@ class OrdersService {
         const updatedOrders = await db_1.prisma.order.updateMany({
             where: {
                 id: { in: data.orderIds },
+                forwarded: false,
             },
             data: {
                 companyId: data.companyId,

@@ -73,7 +73,9 @@ class CustomerOutputController {
             if (order.secondaryStatus !== "IN_REPOSITORY") {
                 throw new AppError_1.AppError("قم بإدخال الطلب للمخزن اولا!", 404);
             }
-            if (type === "company" && +companyId !== +order.company.id) {
+            if (type === "company" &&
+                order.forwardedFromId &&
+                +companyId !== +order.forwardedFromId) {
                 throw new AppError_1.AppError("هذا الطلب غير تابع لهذه الشركه", 404);
             }
             if (type === "client" && +storeId !== +order.store.id) {
@@ -157,7 +159,7 @@ class CustomerOutputController {
                         id: order.id,
                     },
                     data: {
-                        secondaryStatus: "WITH_AGENT",
+                        secondaryStatus: "SEND_TO_COMPANY",
                         repositoryId: null,
                         forwardedRepo: returnsRepo.id,
                     },
