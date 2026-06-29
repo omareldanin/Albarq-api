@@ -1,9 +1,9 @@
-import { OrdersController } from "./orders.controller";
+import {OrdersController} from "./orders.controller";
 
-import { Router } from "express";
-import { preventDuplicateRequests } from "../../middlewares/preventDuplicateRequests";
+import {Router} from "express";
+import {preventDuplicateRequests} from "../../middlewares/preventDuplicateRequests";
 
-import { isApiCompany } from "../../middlewares/isApiCompany";
+import {isApiCompany} from "../../middlewares/isApiCompany";
 const router = Router();
 
 const ordersController = new OrdersController();
@@ -11,6 +11,10 @@ const ordersController = new OrdersController();
 router
   .route("/company/forward-orders")
   .post(isApiCompany, preventDuplicateRequests, ordersController.createOrder);
+
+router
+  .route("/shipments/create")
+  .post(isApiCompany, preventDuplicateRequests, ordersController.createOrderV2);
 
 router
   .route("/company/forward-orders")

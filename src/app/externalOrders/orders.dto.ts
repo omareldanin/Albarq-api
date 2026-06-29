@@ -1,17 +1,17 @@
-import { Governorate, OrderStatus } from "@prisma/client";
-import { z } from "zod";
+import {Governorate, OrderStatus} from "@prisma/client";
+import {z} from "zod";
 
 export const OrderCreateSchema = z.object({
   receiptNumber: z.string().optional(),
   clientName: z
     .string()
-    .min(5, { message: "يجب إدخال اسم العميل اكثر من 5 حروف" }),
+    .min(5, {message: "يجب إدخال اسم العميل اكثر من 5 حروف"}),
   storeName: z
     .string()
-    .min(4, { message: "يجب إدخال اسم المتجر اكثر من 4 حروف" }),
+    .min(4, {message: "يجب إدخال اسم المتجر اكثر من 4 حروف"}),
   clientPhone: z
     .string()
-    .min(11, { message: "يجب إدخال رقم هاتف العميل من 11 رقم" }),
+    .min(11, {message: "يجب إدخال رقم هاتف العميل من 11 رقم"}),
   recipientName: z.string().optional().default("غير معرف"),
   confirmed: z.coerce.boolean().optional(),
   status: z.nativeEnum(OrderStatus).default(OrderStatus.REGISTERED),
@@ -27,3 +27,31 @@ export const OrderCreateSchema = z.object({
 });
 
 export type OrderCreateType = z.infer<typeof OrderCreateSchema>;
+
+export const ShipmentSchema = z.object({
+  shipment_id: z.number(),
+  shipment_number: z.string(),
+  receiver_name: z.string().min(1),
+  receiver_phone_1: z.string().min(11, {
+    message: "يجب إدخال رقم هاتف المستلم من 11 رقم",
+  }),
+  governorate_code: z.string(),
+  city_name: z.string(),
+  city: z.string(),
+  address: z.string(),
+  amount_iqd: z.number(),
+  quantity: z.number().default(1),
+  note: z.string().optional(),
+  sender_name: z.string(),
+  sender_phone: z.string(),
+  is_proof_of_delivery: z.coerce.boolean().default(false),
+  is_fragile: z.coerce.boolean().default(false),
+});
+
+export const CreateShipmentsSchema = z.object({
+  system_code: z.string(),
+  shipments: z.array(ShipmentSchema),
+});
+
+export type ShipmentType = z.infer<typeof ShipmentSchema>;
+export type CreateShipmentsType = z.infer<typeof CreateShipmentsSchema>;

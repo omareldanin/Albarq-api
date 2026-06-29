@@ -55,29 +55,17 @@ class OrdersRepository {
             select: {
                 governoratesDeliveryCosts: true,
                 branchId: true,
-                activeProfit: true,
-                mainBranchProfit: true,
-                deliveryAgentProfit: true,
-                forwardedBranchProfit: true,
-                receivingBranchProfit: true,
             },
         });
         if (!client) {
             throw new AppError_1.AppError("العميل غير موجود", 400);
         }
         const governoratesDeliveryCosts = client.governoratesDeliveryCosts;
-        if (governoratesDeliveryCosts && client.activeProfit === false) {
+        if (governoratesDeliveryCosts) {
             deliveryCost =
                 governoratesDeliveryCosts.find((governorateDeliveryCost) => {
                     return governorateDeliveryCost.governorate === governorate;
                 })?.cost || 0;
-        }
-        else {
-            deliveryCost =
-                client.deliveryAgentProfit +
-                    client.mainBranchProfit +
-                    client.receivingBranchProfit +
-                    client.forwardedBranchProfit;
         }
         return deliveryCost;
     }
@@ -94,11 +82,6 @@ class OrdersRepository {
             select: {
                 governoratesDeliveryCosts: true,
                 branchId: true,
-                activeProfit: true,
-                mainBranchProfit: true,
-                deliveryAgentProfit: true,
-                forwardedBranchProfit: true,
-                receivingBranchProfit: true,
             },
         });
         if (!client) {
@@ -166,18 +149,11 @@ class OrdersRepository {
         // Calculate delivery cost
         let deliveryCost = 0;
         const governoratesDeliveryCosts = client.governoratesDeliveryCosts;
-        if (governoratesDeliveryCosts && client.activeProfit === false) {
+        if (governoratesDeliveryCosts) {
             deliveryCost =
                 governoratesDeliveryCosts.find((governorateDeliveryCost) => {
                     return (governorateDeliveryCost.governorate === data.orderData.governorate);
                 })?.cost || 0;
-        }
-        else {
-            deliveryCost =
-                client.deliveryAgentProfit +
-                    client.mainBranchProfit +
-                    client.receivingBranchProfit +
-                    client.forwardedBranchProfit;
         }
         let randomId = await this.generateUniqueOrderId();
         // Create order
@@ -2556,19 +2532,22 @@ class OrdersRepository {
                 let cost = order?.governorate === client_1.Governorate.BAGHDAD
                     ? data.costs.baghdadDeliveryCost
                     : data.costs.governoratesDeliveryCost;
-                if (order?.client.activeProfit &&
-                    data.branchReportType === "received") {
-                    cost =
-                        order.client.receivingBranchProfit +
-                            order.client.deliveryAgentProfit;
-                }
-                else if (order?.client.activeProfit &&
-                    data.branchReportType === "forwarded") {
-                    cost =
-                        order.client.receivingBranchProfit +
-                            order.client.deliveryAgentProfit +
-                            order.client.mainBranchProfit;
-                }
+                // if (
+                //   order?.client.activeProfit &&
+                //   data.branchReportType === "received"
+                // ) {
+                //   cost =
+                //     order.client.receivingBranchProfit +
+                //     order.client.deliveryAgentProfit!!;
+                // } else if (
+                //   order?.client.activeProfit &&
+                //   data.branchReportType === "forwarded"
+                // ) {
+                //   cost =
+                //     order.client.receivingBranchProfit!! +
+                //     order.client.deliveryAgentProfit!! +
+                //     order.client.mainBranchProfit!!;
+                // }
                 if (!cost)
                     continue;
                 updatedOrders.push({
@@ -2628,10 +2607,10 @@ class OrdersRepository {
             // build response
             for (const order of data.orders) {
                 let deliveryAgentNet = data.costs.deliveryAgentDeliveryCost + (order?.weight || 0) * 250;
-                if (order?.client.deliveryAgentProfit) {
-                    deliveryAgentNet =
-                        order?.client.deliveryAgentProfit + (order?.weight || 0) * 250;
-                }
+                // if (order?.client.deliveryAgentProfit) {
+                //   deliveryAgentNet =
+                //     order?.client.deliveryAgentProfit + (order?.weight || 0) * 250;
+                // }
                 const companyNet = (order?.paidAmount || 0) - deliveryAgentNet;
                 updatedOrders.push({
                     id: order?.id,

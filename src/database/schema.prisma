@@ -114,27 +114,23 @@ model InquiryEmployeesDeliveryAgents {
 }
 
 model Client {
-  id                        Int        @id
-  role                      ClientRole @default(CLIENT)
-  token                     String     @default("")
-  governoratesDeliveryCosts Json       @default("[]")
+  id                        Int                @id
+  role                      ClientRole         @default(CLIENT)
+  token                     String             @default("")
+  governoratesDeliveryCosts Json               @default("[]")
   deletedById               Int?
   createdById               Int?
   repositoryId              Int?
   branchId                  Int?
   companyId                 Int
-  deleted                   Boolean    @default(false)
+  deleted                   Boolean            @default(false)
   deletedAt                 DateTime?
   receivingAgentId          Int?
-  showNumbers               Boolean    @default(false)
-  showDeliveryNumber        Boolean    @default(false)
-  isExternal                Boolean    @default(false)
+  showNumbers               Boolean            @default(false)
+  showDeliveryNumber        Boolean            @default(false)
+  isExternal                Boolean            @default(false)
   apiKeyHash                String?
-  deliveryAgentProfit       Int        @default(0)
-  mainBranchProfit          Int        @default(0)
-  forwardedBranchProfit     Int        @default(0)
-  receivingBranchProfit     Int        @default(0)
-  activeProfit              Boolean    @default(false)
+  branchCosts               ClientBranchCost[]
 
   categories            Category[]
   branch                Branch?                 @relation(fields: [branchId], references: [id])
@@ -156,6 +152,60 @@ model Client {
   tickets               Ticket[]
 
   @@index([companyId])
+  @@index([branchId])
+}
+
+model Branch {
+  id                     Int          @id @default(autoincrement())
+  name                   String
+  governorate            Governorate?
+  companyId              Int
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  branchCLient           Float        @default(1000)
+  branchOrder            Float        @default(1000)
+  parentBranchId         Int?
+  forwardedDeliveryCosts Json         @default("[]")
+  receivingDeliveryCosts Json         @default("[]")
+
+  automaticUpdate     AutomaticUpdate[]
+  company             Company                    @relation(fields: [companyId], references: [id])
+  parentBranch        Branch?                    @relation("BranchHierarchy", fields: [parentBranchId], references: [id])
+  childBranches       Branch[]                   @relation("BranchHierarchy")
+  branchReports       BranchReport[]
+  clients             Client[]
+  clientOrderReceipts ClientOrderReceipt[]
+  closedStatus        ClosedStatus[]
+  employees           Employee[]
+  inquiryEmployees    InquiryEmployeesBranches[]
+  locations           Location[]
+  orders              Order[]
+  repositories        Repository[]
+  transctions         Transaction[]
+  clientCosts         ClientBranchCost[]
+
+  @@unique([name, companyId])
+  @@index([companyId])
+  @@index([governorate])
+}
+
+model ClientBranchCost {
+  id                    Int      @id @default(autoincrement())
+  clientId              Int
+  branchId              Int
+  deliveryAgentProfit   Int      @default(0)
+  mainBranchProfit      Int      @default(0)
+  forwardedBranchProfit Int      @default(0)
+  receivingBranchProfit Int      @default(0)
+  activeProfit          Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id])
+  branch Branch @relation(fields: [branchId], references: [id])
+
+  @@unique([clientId, branchId])
+  @@index([clientId])
   @@index([branchId])
 }
 
@@ -203,39 +253,6 @@ model ReceivingAgentClients {
   client         Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@id([agentId, clientId])
-}
-
-model Branch {
-  id                     Int          @id @default(autoincrement())
-  name                   String
-  governorate            Governorate?
-  companyId              Int
-  createdAt              DateTime     @default(now())
-  updatedAt              DateTime     @updatedAt
-  branchCLient           Float        @default(1000)
-  branchOrder            Float        @default(1000)
-  parentBranchId         Int?
-  forwardedDeliveryCosts Json         @default("[]")
-  receivingDeliveryCosts Json         @default("[]")
-
-  automaticUpdate     AutomaticUpdate[]
-  company             Company                    @relation(fields: [companyId], references: [id])
-  parentBranch        Branch?                    @relation("BranchHierarchy", fields: [parentBranchId], references: [id])
-  childBranches       Branch[]                   @relation("BranchHierarchy")
-  branchReports       BranchReport[]
-  clients             Client[]
-  clientOrderReceipts ClientOrderReceipt[]
-  closedStatus        ClosedStatus[]
-  employees           Employee[]
-  inquiryEmployees    InquiryEmployeesBranches[]
-  locations           Location[]
-  orders              Order[]
-  repositories        Repository[]
-  transctions         Transaction[]
-
-  @@unique([name, companyId])
-  @@index([companyId])
-  @@index([governorate])
 }
 
 model InquiryEmployeesBranches {
@@ -354,6 +371,7 @@ model InquiryEmployeesCompanies {
 model Order {
   id                     String                   @id @default("")
   receiptNumber          String                   @default("")
+  shipment_number        String?
   quantity               Int                      @default(0)
   weight                 Float                    @default(0)
   recipientName          String                   @default("غير معرف")

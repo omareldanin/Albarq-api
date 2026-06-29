@@ -1,10 +1,16 @@
-import { Governorate } from "@prisma/client";
-import { catchAsync } from "../../lib/catchAsync";
-import { loggedInUserType } from "../../types/user";
-import { OrdersFiltersSchema } from "../orders/orders.dto";
-import { OrderCreateSchema, OrderCreateType } from "./orders.dto";
-import { OrdersService } from "./orders.service";
-import { prisma } from "../../database/db";
+import {Governorate} from "@prisma/client";
+import {catchAsync} from "../../lib/catchAsync";
+import {loggedInUserType} from "../../types/user";
+import {OrdersFiltersSchema} from "../orders/orders.dto";
+import {
+  OrderCreateSchema,
+  OrderCreateType,
+  ShipmentSchema,
+  ShipmentType,
+} from "./orders.dto";
+import {OrdersService} from "./orders.service";
+import {prisma} from "../../database/db";
+import z from "zod";
 
 const ordersService = new OrdersService();
 
@@ -26,6 +32,35 @@ export class OrdersController {
     res.status(200).json({
       status: "success",
       data: createdOrderOrOrders,
+    });
+  });
+
+  createOrderV2 = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+    const orders: ShipmentType[] = z
+      .array(ShipmentSchema)
+      .parse(req.body.shipments);
+
+    const {acceptedShipments, rejectedShipments} =
+      await ordersService.createOrderV2({
+        loggedInUser: loggedInUser,
+        orderOrOrdersData: orders,
+      });
+
+    res.status(200).json({
+      success: acceptedShipments.length > 0,
+      message:
+        acceptedShipments.length > 0
+          ? `${acceptedShipments.length} shipment(s) processed successfully`
+          : "All shipments failed to process",
+      timestamp: new Date().toISOString(),
+      accepted_shipments: acceptedShipments,
+      rejected_shipments: rejectedShipments,
+      summary: {
+        total_requested: orders.length,
+        accepted_count: acceptedShipments.length,
+        rejected_count: rejectedShipments.length,
+      },
     });
   });
 
@@ -59,11 +94,10 @@ export class OrdersController {
       printed: req.query.printed,
     });
 
-    const { orders, page, pagesCount, count } =
-      await ordersService.getAllOrders({
-        loggedInUser: loggedInUser,
-        filters: filters,
-      });
+    const {orders, page, pagesCount, count} = await ordersService.getAllOrders({
+      loggedInUser: loggedInUser,
+      filters: filters,
+    });
 
     res.status(200).json({
       status: "success",
@@ -178,25 +212,25 @@ export class OrdersController {
 
   getOrderGovernments = catchAsync(async (_req, res) => {
     const governorates = [
-      { name: "الأنبار", value: "AL_ANBAR" },
-      { name: "بابل", value: "BABIL" },
-      { name: "بغداد", value: "BAGHDAD" },
-      { name: "البصرة", value: "BASRA" },
-      { name: "ذي قار", value: "DHI_QAR" },
-      { name: "القادسية", value: "AL_QADISIYYAH" },
-      { name: "ديالى", value: "DIYALA" },
-      { name: "دهوك", value: "DUHOK" },
-      { name: "أربيل", value: "ERBIL" },
-      { name: "كربلاء", value: "KARBALA" },
-      { name: "كركوك", value: "KIRKUK" },
-      { name: "ميسان", value: "MAYSAN" },
-      { name: "المثنى", value: "MUTHANNA" },
-      { name: "النجف", value: "NAJAF" },
-      { name: "نينوى", value: "NINAWA" },
-      { name: "صلاح الدين", value: "SALAH_AL_DIN" },
-      { name: "السليمانية", value: "SULAYMANIYAH" },
-      { name: "واسط", value: "WASIT" },
-      { name: "شركات بابل", value: "BABIL_COMPANIES" },
+      {name: "الأنبار", value: "AL_ANBAR"},
+      {name: "بابل", value: "BABIL"},
+      {name: "بغداد", value: "BAGHDAD"},
+      {name: "البصرة", value: "BASRA"},
+      {name: "ذي قار", value: "DHI_QAR"},
+      {name: "القادسية", value: "AL_QADISIYYAH"},
+      {name: "ديالى", value: "DIYALA"},
+      {name: "دهوك", value: "DUHOK"},
+      {name: "أربيل", value: "ERBIL"},
+      {name: "كربلاء", value: "KARBALA"},
+      {name: "كركوك", value: "KIRKUK"},
+      {name: "ميسان", value: "MAYSAN"},
+      {name: "المثنى", value: "MUTHANNA"},
+      {name: "النجف", value: "NAJAF"},
+      {name: "نينوى", value: "NINAWA"},
+      {name: "صلاح الدين", value: "SALAH_AL_DIN"},
+      {name: "السليمانية", value: "SULAYMANIYAH"},
+      {name: "واسط", value: "WASIT"},
+      {name: "شركات بابل", value: "BABIL_COMPANIES"},
     ];
 
     res.status(200).json(governorates);

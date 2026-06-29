@@ -19,6 +19,7 @@ const globalErrorHandler_1 = __importDefault(require("./middlewares/globalErrorH
 //   morganMiddlewareImmediate,
 // } from "./middlewares/morgan";
 const routes_1 = __importDefault(require("./routes"));
+const routesV2_1 = __importDefault(require("./routes/routesV2"));
 const swagger_output_json_1 = __importDefault(require("./swagger/swagger-output.json"));
 const app = (0, express_1.default)();
 app.options("*", (0, cors_1.default)()); // include before other routes
@@ -63,6 +64,7 @@ express_1.default.static("logs"));
 // Routes
 app.disable("etag");
 app.use("/api/v1", routes_1.default);
+app.use("v2", routesV2_1.default);
 app.route("/").get((_req, res) => {
     // #swagger.ignore = true
     res.send("<h1>Hello, World! 🌍 [From Root]</h1>");

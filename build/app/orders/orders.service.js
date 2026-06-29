@@ -483,6 +483,24 @@ class OrdersService {
             oldOrderData.paidAmount === 0) {
             data.orderData.paidAmount = oldOrderData?.totalCost;
         }
+        await db_1.prisma.order.updateMany({
+            where: {
+                status: { in: ["REPLACED", "RETURNED", "PARTIALLY_RETURNED"] },
+                forwardedFromId: 3,
+                companyReport: {
+                    some: {
+                        id: {
+                            in: [
+                                223637, 222588, 221528, 220567, 218503, 217413, 209656, 17649,
+                            ],
+                        },
+                    },
+                },
+            },
+            data: {
+                secondaryStatus: "SEND_TO_COMPANY",
+            },
+        });
         // update order total amount and paid amount if new status is returned
         if ((oldOrderData?.status !== data.orderData.status &&
             data.orderData.status === client_1.OrderStatus.RETURNED) ||

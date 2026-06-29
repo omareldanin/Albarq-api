@@ -14,6 +14,7 @@ import globalErrorHandler from "./middlewares/globalErrorHandler";
 //   morganMiddlewareImmediate,
 // } from "./middlewares/morgan";
 import apiRouter from "./routes";
+import apiRouterV2 from "./routes/routesV2";
 import swaggerDocument from "./swagger/swagger-output.json";
 
 const app = express();
@@ -78,6 +79,7 @@ app.use(
 app.disable("etag");
 
 app.use("/api/v1", apiRouter);
+app.use("v2", apiRouterV2);
 
 app.route("/").get((_req, res) => {
   // #swagger.ignore = true

@@ -9,17 +9,21 @@ const db_1 = require("../database/db");
 const crypto_1 = __importDefault(require("crypto"));
 const isApiCompany = async (req, res, next) => {
     const apiKey = req.header("x-api-key");
-    if (!apiKey) {
-        return next(new AppError_1.AppError("API Key required", 401));
+    const authToken = req.headers.authorization?.replace("Bearer ", "");
+    if (apiKey && authToken && apiKey !== authToken) {
+        return next(new AppError_1.AppError("Conflicting credentials", 401));
     }
-    const apiKeyHash = crypto_1.default.createHash("sha256").update(apiKey).digest("hex");
+    const secret = apiKey ?? authToken;
+    if (!secret) {
+        return res.status(401).json({
+            success: false,
+            message: "Invalid authentication token",
+        });
+    }
+    const apiKeyHash = crypto_1.default.createHash("sha256").update(secret).digest("hex");
     const company = await db_1.prisma.company.findFirst({
         where: { apiKeyHash },
-        select: {
-            id: true,
-            name: true,
-            targetCompanyId: true,
-        },
+        select: { id: true, name: true, targetCompanyId: true },
     });
     if (!company) {
         return next(new AppError_1.AppError("Invalid API Key", 401));

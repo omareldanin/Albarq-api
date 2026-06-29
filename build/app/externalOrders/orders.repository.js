@@ -4,6 +4,8 @@ exports.OrdersRepository = void 0;
 const db_1 = require("../../database/db");
 const orders_responses_1 = require("../orders/orders.responses");
 const orders_response_1 = require("./orders.response");
+const governerates_1 = require("../../lib/governerates");
+const AppError_1 = require("../../lib/AppError");
 let counter = 0;
 class OrdersRepository {
     generateRandomId() {
@@ -97,6 +99,105 @@ class OrdersRepository {
                 },
                 confirmed: true,
                 receivedAt: data.orderData.confirmed ? new Date() : undefined,
+                secondaryStatus: "SEND_TO_COMPANY",
+                forwardedAt: new Date(),
+                status: "IN_MAIN_REPOSITORY",
+                deliveryAgent: undefined,
+                orderProducts: undefined,
+            },
+            select: orders_responses_1.orderSelect,
+        });
+        await db_1.prisma.chat.create({
+            data: {
+                orderId: createdOrder.id,
+                numberOfMessages: 0,
+            },
+        });
+        await this.updateOrderTimeline({
+            orderID: createdOrder.id,
+            data: {
+                type: "COMPANY_CHANGE",
+                date: new Date(),
+                old: {
+                    id: createdOrder.forwardedFrom?.id,
+                    name: createdOrder.forwardedFrom?.name,
+                },
+                new: {
+                    id: createdOrder.company?.id,
+                    name: createdOrder.company?.name,
+                },
+                by: { id: data.loggedInUser.id, name: data.loggedInUser.name },
+                message: `تم احاله الطلب من  ${createdOrder.forwardedFrom?.name} إلي ${createdOrder.company.name}`,
+            },
+        });
+        return createdOrder;
+    }
+    async createOrderv2(data) {
+        // Add Additional costs
+        let randomId = await this.generateUniqueOrderId();
+        const governorate = (0, governerates_1.fromExternalCode)(data.orderData.governorate_code);
+        if (!governorate) {
+            throw new AppError_1.AppError(`كود المحافظة غير صالح: ${data.orderData.governorate_code}`, 400);
+        }
+        // Create order
+        const createdOrder = await db_1.prisma.order.create({
+            data: {
+                id: randomId,
+                totalCost: data.orderData.amount_iqd,
+                deliveryCost: data.deliveryCost,
+                quantity: data.orderData.quantity,
+                weight: 0,
+                recipientName: data.orderData.receiver_name,
+                recipientPhones: [data.orderData.receiver_phone_1],
+                receiptNumber: data.orderData.shipment_id + "",
+                shipment_number: data.orderData.shipment_number,
+                recipientAddress: data.orderData.address,
+                clientNotes: data.orderData.note,
+                details: data.orderData.note,
+                deliveryType: "NORMAL",
+                printed: true,
+                governorate: governorate,
+                branch: data.branchID
+                    ? {
+                        connect: {
+                            id: data.branchID,
+                        },
+                    }
+                    : undefined,
+                repository: data.repositoryID
+                    ? {
+                        connect: {
+                            id: data.repositoryID,
+                        },
+                    }
+                    : undefined,
+                location: {
+                    connect: {
+                        id: data.locationID,
+                    },
+                },
+                store: {
+                    connect: {
+                        id: data.storeID,
+                    },
+                },
+                company: {
+                    connect: {
+                        id: data.loggedInUser.companyID,
+                    },
+                },
+                forwardedFrom: {
+                    connect: {
+                        id: data.loggedInUser.id,
+                    },
+                },
+                forwarded: true,
+                client: {
+                    connect: {
+                        id: data.clientID,
+                    },
+                },
+                confirmed: true,
                 secondaryStatus: "SEND_TO_COMPANY",
                 forwardedAt: new Date(),
                 status: "IN_MAIN_REPOSITORY",

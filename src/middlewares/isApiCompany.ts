@@ -1,7 +1,7 @@
-import type { NextFunction, Request, Response } from "express";
-import { AppError } from "../lib/AppError";
-import type { loggedInUserType } from "../types/user";
-import { prisma } from "../database/db";
+import type {NextFunction, Request, Response} from "express";
+import {AppError} from "../lib/AppError";
+import type {loggedInUserType} from "../types/user";
+import {prisma} from "../database/db";
 import crypto from "crypto";
 
 export const isApiCompany = async (
@@ -10,20 +10,26 @@ export const isApiCompany = async (
   next: NextFunction,
 ) => {
   const apiKey = req.header("x-api-key");
+  const authToken = req.headers.authorization?.replace("Bearer ", "");
 
-  if (!apiKey) {
-    return next(new AppError("API Key required", 401));
+  if (apiKey && authToken && apiKey !== authToken) {
+    return next(new AppError("Conflicting credentials", 401));
   }
 
-  const apiKeyHash = crypto.createHash("sha256").update(apiKey).digest("hex");
+  const secret = apiKey ?? authToken;
+
+  if (!secret) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid authentication token",
+    });
+  }
+
+  const apiKeyHash = crypto.createHash("sha256").update(secret).digest("hex");
 
   const company = await prisma.company.findFirst({
-    where: { apiKeyHash },
-    select: {
-      id: true,
-      name: true,
-      targetCompanyId: true,
-    },
+    where: {apiKeyHash},
+    select: {id: true, name: true, targetCompanyId: true},
   });
 
   if (!company) {

@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrdersController = void 0;
 const catchAsync_1 = require("../../lib/catchAsync");
@@ -6,6 +9,7 @@ const orders_dto_1 = require("../orders/orders.dto");
 const orders_dto_2 = require("./orders.dto");
 const orders_service_1 = require("./orders.service");
 const db_1 = require("../../database/db");
+const zod_1 = __importDefault(require("zod"));
 const ordersService = new orders_service_1.OrdersService();
 class OrdersController {
     createOrder = (0, catchAsync_1.catchAsync)(async (req, res) => {
@@ -24,6 +28,30 @@ class OrdersController {
         res.status(200).json({
             status: "success",
             data: createdOrderOrOrders,
+        });
+    });
+    createOrderV2 = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const loggedInUser = res.locals.user;
+        const orders = zod_1.default
+            .array(orders_dto_2.ShipmentSchema)
+            .parse(req.body.shipments);
+        const { acceptedShipments, rejectedShipments } = await ordersService.createOrderV2({
+            loggedInUser: loggedInUser,
+            orderOrOrdersData: orders,
+        });
+        res.status(200).json({
+            success: acceptedShipments.length > 0,
+            message: acceptedShipments.length > 0
+                ? `${acceptedShipments.length} shipment(s) processed successfully`
+                : "All shipments failed to process",
+            timestamp: new Date().toISOString(),
+            accepted_shipments: acceptedShipments,
+            rejected_shipments: rejectedShipments,
+            summary: {
+                total_requested: orders.length,
+                accepted_count: acceptedShipments.length,
+                rejected_count: rejectedShipments.length,
+            },
         });
     });
     getAllOrdersApiKey = (0, catchAsync_1.catchAsync)(async (req, res) => {

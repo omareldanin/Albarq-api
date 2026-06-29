@@ -1,20 +1,19 @@
-import { Prisma } from "@prisma/client";
-import { prisma } from "../../database/db";
-import { loggedInUserType } from "../../types/user";
-import {
-  OrdersFiltersType,
-  OrderTimelinePieceType,
-} from "../orders/orders.dto";
-import { orderSelect } from "../orders/orders.responses";
-import { OrderCreateType } from "./orders.dto";
-import { orderSelectApiKey } from "./orders.response";
+import {Prisma} from "@prisma/client";
+import {prisma} from "../../database/db";
+import {loggedInUserType} from "../../types/user";
+import {OrdersFiltersType, OrderTimelinePieceType} from "../orders/orders.dto";
+import {orderSelect} from "../orders/orders.responses";
+import {OrderCreateType, ShipmentType} from "./orders.dto";
+import {orderSelectApiKey} from "./orders.response";
+import {fromExternalCode} from "../../lib/governerates";
+import {AppError} from "../../lib/AppError";
 
 let counter = 0;
 
 export class OrdersRepository {
   generateRandomId() {
     const now = new Date(
-      new Date().toLocaleString("en-US", { timeZone: "Asia/Baghdad" }),
+      new Date().toLocaleString("en-US", {timeZone: "Asia/Baghdad"}),
     );
 
     const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -38,7 +37,7 @@ export class OrdersRepository {
       const id = this.generateRandomId();
 
       const exists = await prisma.order.findUnique({
-        where: { id },
+        where: {id},
       });
 
       if (!exists) return id;
@@ -152,7 +151,124 @@ export class OrdersRepository {
           id: createdOrder.company?.id!!,
           name: createdOrder.company?.name!!,
         },
-        by: { id: data.loggedInUser.id, name: data.loggedInUser.name },
+        by: {id: data.loggedInUser.id, name: data.loggedInUser.name},
+        message: `تم احاله الطلب من  ${createdOrder.forwardedFrom?.name} إلي ${createdOrder.company.name}`,
+      },
+    });
+
+    return createdOrder;
+  }
+
+  async createOrderv2(data: {
+    clientID: number;
+    loggedInUser: loggedInUserType;
+    orderData: ShipmentType;
+    deliveryCost: number;
+    branchID: number;
+    repositoryID?: number;
+    locationID: number;
+    storeID: number;
+  }) {
+    // Add Additional costs
+
+    let randomId = await this.generateUniqueOrderId();
+
+    const governorate = fromExternalCode(data.orderData.governorate_code);
+    if (!governorate) {
+      throw new AppError(
+        `كود المحافظة غير صالح: ${data.orderData.governorate_code}`,
+        400,
+      );
+    }
+    // Create order
+    const createdOrder = await prisma.order.create({
+      data: {
+        id: randomId,
+        totalCost: data.orderData.amount_iqd,
+        deliveryCost: data.deliveryCost,
+        quantity: data.orderData.quantity,
+        weight: 0,
+        recipientName: data.orderData.receiver_name,
+        recipientPhones: [data.orderData.receiver_phone_1],
+        receiptNumber: data.orderData.shipment_id + "",
+        shipment_number: data.orderData.shipment_number,
+        recipientAddress: data.orderData.address,
+        clientNotes: data.orderData.note,
+        details: data.orderData.note,
+        deliveryType: "NORMAL",
+        printed: true,
+        governorate: governorate,
+        branch: data.branchID
+          ? {
+              connect: {
+                id: data.branchID,
+              },
+            }
+          : undefined,
+        repository: data.repositoryID
+          ? {
+              connect: {
+                id: data.repositoryID,
+              },
+            }
+          : undefined,
+        location: {
+          connect: {
+            id: data.locationID,
+          },
+        },
+        store: {
+          connect: {
+            id: data.storeID,
+          },
+        },
+        company: {
+          connect: {
+            id: data.loggedInUser.companyID!!,
+          },
+        },
+        forwardedFrom: {
+          connect: {
+            id: data.loggedInUser.id!!,
+          },
+        },
+        forwarded: true,
+        client: {
+          connect: {
+            id: data.clientID,
+          },
+        },
+        confirmed: true,
+        secondaryStatus: "SEND_TO_COMPANY",
+        forwardedAt: new Date(),
+        status: "IN_MAIN_REPOSITORY",
+        deliveryAgent: undefined,
+        orderProducts: undefined,
+      },
+      select: orderSelect,
+    });
+
+    await prisma.chat.create({
+      data: {
+        orderId: createdOrder.id,
+        numberOfMessages: 0,
+      },
+    });
+
+    await this.updateOrderTimeline({
+      orderID: createdOrder.id,
+      data: {
+        type: "COMPANY_CHANGE",
+        date: new Date(),
+        old: {
+          id: createdOrder.forwardedFrom?.id!!,
+          name: createdOrder.forwardedFrom?.name!!,
+        },
+        new: {
+          id: createdOrder.company?.id!!,
+          name: createdOrder.company?.name!!,
+        },
+        by: {id: data.loggedInUser.id, name: data.loggedInUser.name},
         message: `تم احاله الطلب من  ${createdOrder.forwardedFrom?.name} إلي ${createdOrder.company.name}`,
       },
     });
@@ -307,7 +423,7 @@ export class OrdersRepository {
         },
         {
           receiptNumber: data.filters.receiptNumbers
-            ? { in: data.filters.receiptNumbers }
+            ? {in: data.filters.receiptNumbers}
             : undefined,
         },
         // Filter by recipientName
@@ -395,7 +511,7 @@ export class OrdersRepository {
     });
   }
 
-  async getOrderByIdApiKey(data: { orderID: string; forwardedFrom: number }) {
+  async getOrderByIdApiKey(data: {orderID: string; forwardedFrom: number}) {
     const order = await prisma.order.findUnique({
       where: {
         forwardedFromId: data.forwardedFrom,
