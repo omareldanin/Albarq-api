@@ -64,7 +64,7 @@ express_1.default.static("logs"));
 // Routes
 app.disable("etag");
 app.use("/api/v1", routes_1.default);
-app.use("v2", routesV2_1.default);
+app.use("/v2", routesV2_1.default);
 app.route("/").get((_req, res) => {
     // #swagger.ignore = true
     res.send("<h1>Hello, World! 🌍 [From Root]</h1>");

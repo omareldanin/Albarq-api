@@ -5410,7 +5410,7 @@
         }
       }
     },
-    "v2/company/forward-orders": {
+    "/v2/company/forward-orders": {
       "post": {
         "description": "",
         "parameters": [
@@ -5466,7 +5466,7 @@
         }
       }
     },
-    "v2/shipments/create": {
+    "/v2/shipments/create": {
       "post": {
         "description": "",
         "parameters": [
@@ -5495,7 +5495,7 @@
         }
       }
     },
-    "v2/company/locations": {
+    "/v2/company/locations": {
       "get": {
         "description": "",
         "parameters": [
@@ -5524,7 +5524,7 @@
         }
       }
     },
-    "v2/company/statues": {
+    "/v2/company/statues": {
       "get": {
         "description": "",
         "responses": {
@@ -5534,7 +5534,7 @@
         }
       }
     },
-    "v2/company/governorates": {
+    "/v2/company/governorates": {
       "get": {
         "description": "",
         "responses": {
@@ -5544,7 +5544,7 @@
         }
       }
     },
-    "v2/company/forward-orders/{orderID}": {
+    "/v2/company/forward-orders/{orderID}": {
       "get": {
         "description": "",
         "parameters": [

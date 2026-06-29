@@ -79,7 +79,7 @@ app.use(
 app.disable("etag");
 
 app.use("/api/v1", apiRouter);
-app.use("v2", apiRouterV2);
+app.use("/v2", apiRouterV2);
 
 app.route("/").get((_req, res) => {
   // #swagger.ignore = true
