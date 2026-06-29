@@ -2861,30 +2861,12 @@ export class OrdersRepository {
             o."paidAmount" -
             (
               CASE
-                WHEN ${data.branchReportType} = 'received'
-                    AND c."activeProfit" = true
-                THEN
-                  COALESCE(c."receivingBranchProfit", 0) +
-                  COALESCE(c."deliveryAgentProfit", 0)
-
-                WHEN ${data.branchReportType} = 'forwarded'
-                    AND c."activeProfit" = true
-                THEN
-                  COALESCE(c."receivingBranchProfit", 0) +
-                  COALESCE(c."deliveryAgentProfit", 0) +
-                  COALESCE(c."mainBranchProfit", 0)
-
-                ELSE
-                  CASE
-                    WHEN o."governorate" = 'BAGHDAD'
-                      THEN ${data.costs.baghdadDeliveryCost}
-                    ELSE ${data.costs.governoratesDeliveryCost}
-                  END
+                WHEN o."governorate" = 'BAGHDAD'
+                  THEN ${data.costs.baghdadDeliveryCost}
+                ELSE ${data.costs.governoratesDeliveryCost}
               END
             )
-        FROM "Client" c
-        WHERE o."clientId" = c."id"
-          AND o."id" = ANY(${data.ordersIDs});
+        WHERE id = ANY(${data.ordersIDs});
       `;
     }
 
@@ -2927,33 +2909,21 @@ export class OrdersRepository {
 
       // single DB update
       await prisma.$executeRaw`
-            UPDATE "Order" o
-            SET
-              "deliveryAgentNet" =
-                (
-                  CASE
-                    WHEN c."activeProfit" = true
-                    THEN c."deliveryAgentProfit"
-                    ELSE ${data.costs.deliveryAgentDeliveryCost}
-                  END
-                ) + COALESCE(o."weight", 0) * 250,
+        UPDATE "Order" o
+        SET
+          "deliveryAgentNet" =
+            ${data.costs.deliveryAgentDeliveryCost}
+            + COALESCE(o."weight", 0) * 250,
 
-              "companyNet" =
-                o."paidAmount" -
-                (
-                  (
-                    CASE
-                      WHEN c."activeProfit" = true
-                      THEN c."deliveryAgentProfit"
-                      ELSE ${data.costs.deliveryAgentDeliveryCost}
-                    END
-                  ) + COALESCE(o."weight", 0) * 250
-                )
+          "companyNet" =
+            o."paidAmount" -
+            (
+              ${data.costs.deliveryAgentDeliveryCost}
+              + COALESCE(o."weight", 0) * 250
+            )
 
-            FROM "Client" c
-            WHERE o."clientId" = c."id"
-              AND o."id" = ANY(${data.ordersIDs});
-          `;
+        WHERE o."id" = ANY(${data.ordersIDs});
+      `;
     }
     /* ===============================
        COMPANY REPORT
