@@ -81,7 +81,6 @@ const automaticUpdatesTask = async () => {
                     const updateHour = automaticUpdate.updateAt === 24 ? 0 : automaticUpdate.updateAt; // handle midnight
                     const currentHour = currentDate.getHours();
                     const currentMinutes = currentDate.getMinutes();
-                    console.log("currentHour", currentHour);
                     if (automaticUpdate.checkAfter &&
                         hoursDifference < automaticUpdate.checkAfter)
                         continue;

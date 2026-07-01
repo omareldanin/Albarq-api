@@ -3691,9 +3691,6 @@
         },
         "/api/v1/reports": {
             "post": {
-                "tags": [
-                    "Reports Routes"
-                ],
                 "description": "",
                 "parameters": [
                     {
@@ -3707,21 +3704,6 @@
                 "responses": {
                     "default": {
                         "description": ""
-                    }
-                },
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ReportCreateSchema"
-                            },
-                            "examples": {
-                                "ReportCreateExample": {
-                                    "$ref": "#/components/examples/ReportCreateExample"
-                                }
-                            }
-                        }
                     }
                 }
             },

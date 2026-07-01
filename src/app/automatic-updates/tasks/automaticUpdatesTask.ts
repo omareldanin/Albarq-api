@@ -88,7 +88,6 @@ export const automaticUpdatesTask = async () => {
           const currentHour = currentDate.getHours();
           const currentMinutes = currentDate.getMinutes();
 
-          console.log("currentHour", currentHour);
           if (
             automaticUpdate.checkAfter &&
             hoursDifference < automaticUpdate.checkAfter

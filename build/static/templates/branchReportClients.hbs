@@ -1,0 +1,68 @@
+<html lang="ar" dir="rtl">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>تقرير كشوفات عميل</title>
+  </head>
+
+  <body class="px-20">
+    <header>
+      <table>
+        <tr>
+          <td style="width: 25%">رقم الكشف: <span>{{reportData.id}}</span></td>
+          <td style="width: 25%" class="title blue">كشف فرع</td>
+          <td style="width: 25%">عدد الطلبيات:
+            <span>{{add
+                reportData.baghdadOrdersCount
+                reportData.governoratesOrdersCount
+              }}</span></td>
+          <td style="width: 25%" rowspan="3"><img
+              src="{{reportData.company.logo}}"
+            /></td>
+        </tr>
+        <tr>
+          <td style="width: 25%">التاريخ:
+            <span>{{date reportData.createdAt}}</span></td>
+
+          <td style="width: 25%">الفرع:
+            <span>{{reportData.branchReport.branch.name}}</span></td>
+          <td style="width: 25%">عدد طلبيات بغداد:
+            <span>{{reportData.baghdadOrdersCount}}</span></td>
+          <td style="width: 25%"></td>
+        </tr>
+        <tr>
+          <td style="width: 25%">إجمالي المبلغ المستحق :
+            <span>{{currency reportData.branchNet}}</span></td>
+          <td style="width: 25%">عدد طلبيات المحافظات:
+            <span>{{reportData.governoratesOrdersCount}}</span></td>
+          <td style="width: 25%"></td>
+        </tr>
+      </table>
+    </header>
+    <main>
+      <table>
+        <thead>
+          <tr class="bg-green">
+            <th>#</th>
+            <th>العميل</th>
+            <th>عددالطلبات</th>
+            <th>صافي العميل</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each clients}}
+            <tr>
+              <td class="nowrap">{{inc @index}}</td>
+              <td>{{name}}</td>
+              <td>{{count}}</td>
+              <td>{{clientNet}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </main>
+    {{!-- <section class="watermark">{{reportsData.company.name}}</section> --}}
+  </body>
+
+</html>

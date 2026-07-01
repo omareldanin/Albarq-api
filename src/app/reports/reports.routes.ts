@@ -10,41 +10,28 @@ import {ReportController} from "./reports.controller";
 const router = Router();
 const reportController = new ReportController();
 
-router.route("/reports").post(
-  isLoggedIn,
-  isAutherized(
-    [
-      EmployeeRole.COMPANY_MANAGER,
-      EmployeeRole.REPOSITORIY_EMPLOYEE,
-      EmployeeRole.ACCOUNTANT,
-      EmployeeRole.BRANCH_MANAGER,
-    ],
-    [
-      Permission.CREATE_BRANCH_REPORT,
-      Permission.CREATE_REPOSITORY_REPORT,
-      Permission.CREATE_COMPANY_REPORT,
-      Permission.CREATE_DELIVERY_AGENT_REPORT,
-      Permission.CREATE_CLIENT_REPORT,
-      Permission.CREATE_GOVERNMENT_REPORT,
-    ],
-  ),
-  reportController.createReport,
-  /*
-        #swagger.tags = ['Reports Routes']
-
-        #swagger.requestBody = {
-            required: true,
-            content: {
-                "application/json": {
-                    "schema": { $ref: "#/components/schemas/ReportCreateSchema" },
-                    "examples": {
-                        "ReportCreateExample": { $ref: "#/components/examples/ReportCreateExample" }
-                    }
-                }
-            }
-        }
-    */
-);
+router
+  .route("/reports")
+  .post(
+    isLoggedIn,
+    isAutherized(
+      [
+        EmployeeRole.COMPANY_MANAGER,
+        EmployeeRole.REPOSITORIY_EMPLOYEE,
+        EmployeeRole.ACCOUNTANT,
+        EmployeeRole.BRANCH_MANAGER,
+      ],
+      [
+        Permission.CREATE_BRANCH_REPORT,
+        Permission.CREATE_REPOSITORY_REPORT,
+        Permission.CREATE_COMPANY_REPORT,
+        Permission.CREATE_DELIVERY_AGENT_REPORT,
+        Permission.CREATE_CLIENT_REPORT,
+        Permission.CREATE_GOVERNMENT_REPORT,
+      ],
+    ),
+    reportController.createReport,
+  );
 
 router.route("/reports").get(
   isLoggedIn,

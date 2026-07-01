@@ -9,7 +9,9 @@ const isLoggedIn_1 = require("../../middlewares/isLoggedIn");
 const reports_controller_1 = require("./reports.controller");
 const router = (0, express_1.Router)();
 const reportController = new reports_controller_1.ReportController();
-router.route("/reports").post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
+router
+    .route("/reports")
+    .post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.EmployeeRole.REPOSITORIY_EMPLOYEE,
     client_1.EmployeeRole.ACCOUNTANT,
