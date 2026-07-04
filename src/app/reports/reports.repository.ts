@@ -219,6 +219,7 @@ export class ReportsRepository {
             {
               clientReport: data.filters.branch
                 ? {
+                    secondaryType: data.filters.secondaryType,
                     client: {
                       branch: {
                         id: data.filters.branch,
@@ -372,6 +373,9 @@ export class ReportsRepository {
               company: {
                 id: data.filters.company,
               },
+              clientReport: {
+                secondaryType: data.filters.secondaryType,
+              },
             },
             {
               companyReport: {
@@ -388,7 +392,6 @@ export class ReportsRepository {
         },
       ],
     } satisfies Prisma.ReportWhereInput;
-    console.log(data.filters);
 
     if (data.filters.minified === true) {
       const paginatedReports = await prisma.report.findManyPaginated(
