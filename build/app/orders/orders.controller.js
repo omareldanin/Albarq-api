@@ -762,18 +762,33 @@ class OrdersController {
         }
         const checkOrders = await db_1.prisma.order.findMany({
             where: {
-                OR: [
+                AND: [
                     {
-                        receiptNumber: params.orderReceiptNumber,
+                        OR: [
+                            {
+                                receiptNumber: params.orderReceiptNumber,
+                            },
+                            {
+                                id: params.orderReceiptNumber,
+                            },
+                        ],
                     },
                     {
-                        id: params.orderReceiptNumber,
+                        status: { in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"] },
                     },
+                    {
+                        OR: [
+                            {
+                                companyId: loggedInUser.companyID,
+                            },
+                            {
+                                forwardedFromId: loggedInUser.companyID,
+                            },
+                        ],
+                    },
+                    { confirmed: true },
+                    { deleted: false },
                 ],
-                status: { in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"] },
-                companyId: loggedInUser.companyID,
-                confirmed: true,
-                deleted: false,
             },
             select: orders_responses_1.orderSelect,
         });
