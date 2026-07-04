@@ -23,6 +23,16 @@ exports.reportsOrderSelect = {
     client: {
         select: {
             branchId: true,
+            activeProfit: true,
+            branchCosts: {
+                select: {
+                    branchId: true,
+                    deliveryAgentProfit: true,
+                    mainBranchProfit: true,
+                    forwardedBranchProfit: true,
+                    receivingBranchProfit: true,
+                },
+            },
             user: {
                 select: {
                     id: true,
@@ -160,6 +170,8 @@ const reportsOrderReform = (order) => {
             name: order.client.user.name,
             phone: order.client.user.phone,
             branchId: order.client.branchId,
+            activeProfit: order.client.activeProfit,
+            branchCosts: order.client.branchCosts,
         },
         deliveryAgent: order.deliveryAgent && {
             id: order.deliveryAgent.user.id,

@@ -131,6 +131,7 @@ model Client {
   isExternal                Boolean            @default(false)
   apiKeyHash                String?
   branchCosts               ClientBranchCost[]
+  activeProfit              Boolean            @default(false)
 
   categories            Category[]
   branch                Branch?                 @relation(fields: [branchId], references: [id])

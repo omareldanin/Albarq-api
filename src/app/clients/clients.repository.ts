@@ -73,6 +73,7 @@ export class ClientsRepository {
         showNumbers: data.showNumbers,
         showDeliveryNumber: data.showDeliveryNumber,
         isExternal: data.isExternal,
+        activeProfit: data.activeProfit,
         branch: data.branchID
           ? {
               connect: {
@@ -266,6 +267,7 @@ export class ClientsRepository {
         showNumbers: data.clientData.showNumbers,
         isExternal: data.clientData.isExternal,
         showDeliveryNumber: data.clientData.showDeliveryNumber,
+        activeProfit: data.clientData.activeProfit,
         branch: data.clientData.branchID
           ? {
               connect: {

@@ -17,6 +17,7 @@ exports.clientSelect = {
     governoratesDeliveryCosts: true,
     isExternal: true,
     branchCosts: true,
+    activeProfit: true,
     createdBy: {
         select: {
             id: true,
@@ -65,6 +66,7 @@ const clientReform = (client) => {
         role: client.role,
         showNumbers: client.showNumbers,
         branchCosts: client.branchCosts,
+        activeProfit: client.activeProfit,
         showDeliveryNumber: client.showDeliveryNumber,
         isExternal: client.isExternal,
         company: client.company,

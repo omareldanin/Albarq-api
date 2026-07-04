@@ -19,8 +19,12 @@ export const ClientCreateSchema = z.object({
     if (val === "false") return false;
     return val;
   }, z.boolean().optional()),
-
   isExternal: z.preprocess((val) => {
+    if (val === "true") return true;
+    if (val === "false") return false;
+    return val;
+  }, z.boolean().optional()),
+  activeProfit: z.preprocess((val) => {
     if (val === "true") return true;
     if (val === "false") return false;
     return val;

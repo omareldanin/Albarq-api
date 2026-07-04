@@ -32,6 +32,13 @@ exports.ClientCreateSchema = zod_1.z.object({
             return false;
         return val;
     }, zod_1.z.boolean().optional()),
+    activeProfit: zod_1.z.preprocess((val) => {
+        if (val === "true")
+            return true;
+        if (val === "false")
+            return false;
+        return val;
+    }, zod_1.z.boolean().optional()),
     password: zod_1.z.string().min(6),
     fcm: zod_1.z.string().optional(),
     branchID: zod_1.z.coerce.number().optional(),

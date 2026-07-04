@@ -46,7 +46,7 @@ class OrdersRepository {
                 return id;
         }
     }
-    async getDeliverCost(clientId, governorate) {
+    async getDeliverCost(clientId, governorate, branchId) {
         let deliveryCost = 0;
         const client = await db_1.prisma.client.findUnique({
             where: {
@@ -55,11 +55,35 @@ class OrdersRepository {
             select: {
                 governoratesDeliveryCosts: true,
                 branchId: true,
+                activeProfit: true,
             },
         });
         if (!client) {
             throw new AppError_1.AppError("العميل غير موجود", 400);
         }
+        // When profit is active, cost = sum of the branch-cost profits for this branch
+        if (client.activeProfit) {
+            const branchCost = await db_1.prisma.clientBranchCost.findUnique({
+                where: {
+                    clientId_branchId: { clientId: clientId, branchId: branchId },
+                },
+                select: {
+                    deliveryAgentProfit: true,
+                    mainBranchProfit: true,
+                    forwardedBranchProfit: true,
+                    receivingBranchProfit: true,
+                },
+            });
+            if (branchCost) {
+                deliveryCost =
+                    branchCost.deliveryAgentProfit +
+                        branchCost.mainBranchProfit +
+                        branchCost.forwardedBranchProfit +
+                        branchCost.receivingBranchProfit;
+            }
+            return deliveryCost;
+        }
+        // Otherwise, fall back to governorate-based cost
         const governoratesDeliveryCosts = client.governoratesDeliveryCosts;
         if (governoratesDeliveryCosts) {
             deliveryCost =
@@ -147,7 +171,7 @@ class OrdersRepository {
             }
         }
         // Calculate delivery cost
-        let deliveryCost = 0;
+        let deliveryCost = await this.getDeliverCost(data.clientID, data.orderData.governorate, data.orderData.branchID);
         const governoratesDeliveryCosts = client.governoratesDeliveryCosts;
         if (governoratesDeliveryCosts) {
             deliveryCost =
@@ -2492,9 +2516,17 @@ class OrdersRepository {
         =============================== */
         if (data.costs.reportType === client_1.ReportType.CLIENT) {
             for (const order of data.orders) {
-                const deliveryCost = order?.governorate === client_1.Governorate.BAGHDAD
+                let deliveryCost = order?.governorate === client_1.Governorate.BAGHDAD
                     ? (data.costs.baghdadDeliveryCost ?? order.deliveryCost)
                     : (data.costs.governoratesDeliveryCost ?? order?.deliveryCost);
+                const cost = order?.client.branchCosts.find((c) => c.branchId === order.branch?.id);
+                if (order?.client.activeProfit && cost) {
+                    deliveryCost =
+                        cost?.deliveryAgentProfit +
+                            cost?.forwardedBranchProfit +
+                            cost?.mainBranchProfit +
+                            cost?.receivingBranchProfit;
+                }
                 const clientNet = (order?.paidAmount || 0) - deliveryCost;
                 updatedOrders.push({
                     id: order?.id,
@@ -2502,26 +2534,24 @@ class OrdersRepository {
                     clientNet,
                 });
             }
-            await db_1.prisma.$executeRaw `
-        UPDATE "Order"
-        SET
-          "deliveryCost" =
-            CASE
-              WHEN "governorate" = 'BAGHDAD'
-                THEN COALESCE(${data.costs.baghdadDeliveryCost}, "deliveryCost")::double precision
-              ELSE COALESCE(${data.costs.governoratesDeliveryCost}, "deliveryCost")::double precision
-            END,
-          "clientNet" =
-            "paidAmount" -
-            (
-              CASE
-                WHEN "governorate" = 'BAGHDAD'
-                  THEN COALESCE(${data.costs.baghdadDeliveryCost}, "deliveryCost")::double precision
-                ELSE COALESCE(${data.costs.governoratesDeliveryCost}, "deliveryCost")::double precision
-              END
-            )
-        WHERE id = ANY(${data.ordersIDs});
-      `;
+            if (updatedOrders.length) {
+                const CHUNK_SIZE = 5000;
+                for (let i = 0; i < updatedOrders.length; i += CHUNK_SIZE) {
+                    const chunk = updatedOrders.slice(i, i + CHUNK_SIZE);
+                    if (chunk.length === 0)
+                        continue;
+                    await db_1.prisma.$executeRaw `
+              UPDATE "Order" o
+              SET
+                "deliveryCost" = v."deliveryCost",
+                "clientNet" = v."clientNet"
+              FROM (
+                VALUES ${client_1.Prisma.join(chunk.map((u) => client_1.Prisma.sql `(${u.id}::text, ${u.deliveryCost}::double precision, ${u.clientNet}::double precision)`))}
+              ) AS v("id", "deliveryCost", "clientNet")
+              WHERE o."id" = v."id";
+            `;
+                }
+            }
         }
         /* ===============================
            BRANCH REPORT
@@ -2532,22 +2562,22 @@ class OrdersRepository {
                 let cost = order?.governorate === client_1.Governorate.BAGHDAD
                     ? data.costs.baghdadDeliveryCost
                     : data.costs.governoratesDeliveryCost;
-                // if (
-                //   order?.client.activeProfit &&
-                //   data.branchReportType === "received"
-                // ) {
-                //   cost =
-                //     order.client.receivingBranchProfit +
-                //     order.client.deliveryAgentProfit!!;
-                // } else if (
-                //   order?.client.activeProfit &&
-                //   data.branchReportType === "forwarded"
-                // ) {
-                //   cost =
-                //     order.client.receivingBranchProfit!! +
-                //     order.client.deliveryAgentProfit!! +
-                //     order.client.mainBranchProfit!!;
-                // }
+                const branchProfit = order?.client.branchCosts.find((c) => c.branchId === order.branch?.id);
+                if (order?.client.activeProfit &&
+                    data.branchReportType === "received" &&
+                    branchProfit) {
+                    cost =
+                        branchProfit.receivingBranchProfit +
+                            branchProfit.deliveryAgentProfit;
+                }
+                else if (order?.client.activeProfit &&
+                    data.branchReportType === "forwarded" &&
+                    branchProfit) {
+                    cost =
+                        branchProfit.receivingBranchProfit +
+                            branchProfit.deliveryAgentProfit +
+                            branchProfit.mainBranchProfit;
+                }
                 if (!cost)
                     continue;
                 updatedOrders.push({
@@ -2555,21 +2585,23 @@ class OrdersRepository {
                     branchNet: order?.paidAmount - cost,
                 });
             }
-            // single DB update
-            await db_1.prisma.$executeRaw `
-        UPDATE "Order" o
-        SET
-          "branchNet" =
-            o."paidAmount" -
-            (
-              CASE
-                WHEN o."governorate" = 'BAGHDAD'
-                  THEN ${data.costs.baghdadDeliveryCost}
-                ELSE ${data.costs.governoratesDeliveryCost}
-              END
-            )
-        WHERE id = ANY(${data.ordersIDs});
-      `;
+            // single DB update driven by the per-order computed values
+            if (updatedOrders.length) {
+                const CHUNK_SIZE = 5000;
+                for (let i = 0; i < updatedOrders.length; i += CHUNK_SIZE) {
+                    const chunk = updatedOrders.slice(i, i + CHUNK_SIZE);
+                    if (chunk.length === 0)
+                        continue;
+                    await db_1.prisma.$executeRaw `
+            UPDATE "Order" o
+            SET "branchNet" = v."branchNet"
+            FROM (
+              VALUES ${client_1.Prisma.join(chunk.map((u) => client_1.Prisma.sql `(${u.id}::text, ${u.branchNet}::double precision)`))}
+            ) AS v("id", "branchNet")
+            WHERE o."id" = v."id";
+          `;
+                }
+            }
         }
         if (data.costs.reportType === client_1.ReportType.BRANCH) {
             if (!data.costs.baghdadDeliveryCost &&
@@ -2589,10 +2621,13 @@ class OrdersRepository {
             // build response
             for (const order of data.orders) {
                 let deliveryAgentNet = data.costs.deliveryAgentDeliveryCost + (order?.weight || 0) * 250;
-                // if (order?.client.deliveryAgentProfit) {
-                //   deliveryAgentNet =
-                //     order?.client.deliveryAgentProfit + (order?.weight || 0) * 250;
-                // }
+                if (order?.client.activeProfit) {
+                    const cost = order.client.branchCosts.find((c) => c.branchId === order.branch?.id);
+                    if (cost) {
+                        deliveryAgentNet =
+                            cost.deliveryAgentProfit + (order?.weight || 0) * 250;
+                    }
+                }
                 const companyNet = (order?.paidAmount || 0) - deliveryAgentNet;
                 updatedOrders.push({
                     id: order?.id,
@@ -2602,21 +2637,15 @@ class OrdersRepository {
             }
             // single DB update
             await db_1.prisma.$executeRaw `
-        UPDATE "Order" o
-        SET
-          "deliveryAgentNet" =
-            ${data.costs.deliveryAgentDeliveryCost}
-            + COALESCE(o."weight", 0) * 250,
-
-          "companyNet" =
-            o."paidAmount" -
-            (
-              ${data.costs.deliveryAgentDeliveryCost}
-              + COALESCE(o."weight", 0) * 250
-            )
-
-        WHERE o."id" = ANY(${data.ordersIDs});
-      `;
+            UPDATE "Order" o
+            SET
+              "deliveryAgentNet" = v."deliveryAgentNet",
+              "companyNet" = v."companyNet"
+            FROM (
+              VALUES ${client_1.Prisma.join(updatedOrders.map((u) => client_1.Prisma.sql `(${u.id}::text, ${u.deliveryAgentNet}::double precision, ${u.companyNet}::double precision)`))}
+            ) AS v("id", "deliveryAgentNet", "companyNet")
+            WHERE o."id" = v."id";
+          `;
         }
         /* ===============================
            COMPANY REPORT
@@ -2666,7 +2695,7 @@ class OrdersRepository {
             data.orderData.status === "DELIVERED" ||
             data.orderData.status === "REPLACED" ||
             data.orderData.status === "PARTIALLY_RETURNED") {
-            newDeliveryCost = await this.getDeliverCost(orderData?.client.id, data.orderData.governorate || orderData.governorate);
+            newDeliveryCost = await this.getDeliverCost(orderData?.client.id, data.orderData.governorate || orderData.governorate, data.orderData.branchID ? data.orderData.branchID : orderData.branchId);
         }
         // if (weight) {
         //   const companyAdditionalPrices = await prisma.company.findUnique({

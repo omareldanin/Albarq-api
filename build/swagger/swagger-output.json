@@ -6544,6 +6544,11 @@
                             "boolean"
                         ]
                     },
+                    "activeProfit": {
+                        "type": [
+                            "boolean"
+                        ]
+                    },
                     "password": {
                         "type": [
                             "string"
@@ -6679,6 +6684,11 @@
                         ]
                     },
                     "isExternal": {
+                        "type": [
+                            "boolean"
+                        ]
+                    },
+                    "activeProfit": {
                         "type": [
                             "boolean"
                         ]
