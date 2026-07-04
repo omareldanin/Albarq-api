@@ -355,6 +355,7 @@ class ReportsRepository {
                 },
             ],
         };
+        console.log(data.filters);
         if (data.filters.minified === true) {
             const paginatedReports = await db_1.prisma.report.findManyPaginated({
                 where: where,
@@ -364,6 +365,7 @@ class ReportsRepository {
             }, {
                 page: data.filters.page,
                 size: data.filters.size,
+                withCount: true,
             });
             return {
                 reports: {
@@ -380,6 +382,7 @@ class ReportsRepository {
             select: reports_responses_1.AllreportSelect,
         }, {
             page: data.filters.page,
+            withCount: true,
             size: data.filters.size,
         });
         const reportsReformed = paginatedReports.data.map((report) => (0, reports_responses_1.AllreportReform)(report));
