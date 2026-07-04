@@ -2695,7 +2695,7 @@ class OrdersRepository {
             data.orderData.status === "DELIVERED" ||
             data.orderData.status === "REPLACED" ||
             data.orderData.status === "PARTIALLY_RETURNED") {
-            newDeliveryCost = await this.getDeliverCost(orderData?.client.id, data.orderData.governorate || orderData.governorate, data.orderData.branchID ? data.orderData.branchID : orderData.branchId);
+            newDeliveryCost = await this.getDeliverCost(orderData?.client.id, data.orderData.governorate || orderData.governorate, data.orderData.branchID ? data.orderData.branchID : orderData.branch.id);
         }
         // if (weight) {
         //   const companyAdditionalPrices = await prisma.company.findUnique({

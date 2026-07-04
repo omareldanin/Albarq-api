@@ -3063,7 +3063,7 @@ export class OrdersRepository {
       newDeliveryCost = await this.getDeliverCost(
         orderData?.client.id!!,
         data.orderData.governorate || orderData.governorate,
-        data.orderData.branchID ? data.orderData.branchID : orderData.branchId,
+        data.orderData.branchID ? data.orderData.branchID : orderData.branch.id,
       );
     }
     // if (weight) {
