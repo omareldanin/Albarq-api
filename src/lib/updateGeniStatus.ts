@@ -110,7 +110,6 @@ export async function sendStatusUpdateToJenni(
       {
         shipment_id: shipmentId,
         action_code: actionCode,
-        timestamp: new Date().toISOString(),
         ...stripEmpty(details),
       },
     ],
