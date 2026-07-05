@@ -94,6 +94,7 @@ exports.orderSelect = {
     totalCost: true,
     paidAmount: true,
     deliveryCost: true,
+    shipment_number: true,
     clientNet: true,
     printed: true,
     deliveryAgentNet: true,

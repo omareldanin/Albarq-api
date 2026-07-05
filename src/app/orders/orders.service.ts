@@ -41,6 +41,10 @@ import {
 import {prisma} from "../../database/db";
 import {governorateArabicNames} from "../locations/locations.repository";
 import axios from "axios";
+import {
+  toPostponedDateId,
+  updateExternalOrderStatus,
+} from "../../lib/updateGeniStatus";
 
 const ordersRepository = new OrdersRepository();
 const employeesRepository = new EmployeesRepository();
@@ -773,6 +777,32 @@ export class OrdersService {
 
       const webhookUrl = oldOrderData.forwardedFrom?.webhookUrl;
 
+      if (oldOrderData.forwardedFromId === 84) {
+        await updateExternalOrderStatus(
+          oldOrderData.shipment_number!!,
+          data.orderData.status ? data.orderData.status : newOrder.status,
+          {
+            return_reason:
+              data.orderData.status === "RETURNED"
+                ? data.orderData.notes
+                : undefined,
+
+            postponed_reason:
+              data.orderData.status === "POSTPONED"
+                ? data.orderData.notes
+                : undefined,
+
+            new_amount_iqd: data.orderData.paidAmount
+              ? data.orderData.paidAmount + ""
+              : undefined,
+
+            postponed_date_id:
+              data.orderData.status === "POSTPONED"
+                ? toPostponedDateId(data.orderData.notes)
+                : undefined,
+          },
+        );
+      }
       if (webhookUrl) {
         const payload: any = {
           id: newOrder.id,
@@ -788,8 +818,6 @@ export class OrdersService {
         ) {
           payload.paidAmount = newOrder.paidAmount;
         }
-
-        console.log("payload", payload);
 
         try {
           await axios.post(webhookUrl, payload, {

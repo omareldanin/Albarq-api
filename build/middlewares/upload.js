@@ -17,8 +17,8 @@ exports.upload = (0, multer_1.default)({
             endpoint: config_1.env.DO_SPACES_ENDPOINT,
             credentials: {
                 accessKeyId: config_1.env.DO_SPACES_KEY,
-                secretAccessKey: config_1.env.DO_SPACES_SECRET
-            }
+                secretAccessKey: config_1.env.DO_SPACES_SECRET,
+            },
         }),
         bucket: config_1.env.DO_SPACES_BUCKET_NAME,
         acl: "public-read",
@@ -28,7 +28,7 @@ exports.upload = (0, multer_1.default)({
         key: (_request, file, cb) => {
             const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
             cb(null, `uploads/${file.fieldname}s/${file.fieldname}-${uniqueSuffix}.${file.mimetype.split("/")[1]}`);
-        }
+        },
     }),
     // multer.diskStorage({
     //     destination: "uploads/images",
@@ -42,12 +42,12 @@ exports.upload = (0, multer_1.default)({
         const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
         const fileExtension = path.extname(file.originalname).toLowerCase();
         const allowedExtensions = [".jpeg", ".jpg", ".png"];
-        console.log(file);
-        if (!allowedTypes.includes(file.mimetype) && !allowedExtensions.includes(fileExtension)) {
+        if (!allowedTypes.includes(file.mimetype) &&
+            !allowedExtensions.includes(fileExtension)) {
             const error = new AppError_1.AppError("نوع الملف غير مدعوم", 400);
             return cb(error);
         }
         cb(null, true);
-    }
+    },
 });
 //# sourceMappingURL=upload.js.map

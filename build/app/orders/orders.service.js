@@ -20,6 +20,7 @@ const orders_responses_1 = require("./orders.responses");
 const db_1 = require("../../database/db");
 const locations_repository_1 = require("../locations/locations.repository");
 const axios_1 = __importDefault(require("axios"));
+const updateGeniStatus_1 = require("../../lib/updateGeniStatus");
 const ordersRepository = new orders_repository_1.OrdersRepository();
 const employeesRepository = new employees_repository_1.EmployeesRepository();
 const clientsRepository = new clients_repository_1.ClientsRepository();
@@ -603,6 +604,22 @@ class OrdersService {
             oldOrderData.forwardedFromId !== oldOrderData.company.id) {
             const companyId = oldOrderData.company.id;
             const webhookUrl = oldOrderData.forwardedFrom?.webhookUrl;
+            if (oldOrderData.forwardedFromId === 84) {
+                await (0, updateGeniStatus_1.updateExternalOrderStatus)(oldOrderData.shipment_number, data.orderData.status ? data.orderData.status : newOrder.status, {
+                    return_reason: data.orderData.status === "RETURNED"
+                        ? data.orderData.notes
+                        : undefined,
+                    postponed_reason: data.orderData.status === "POSTPONED"
+                        ? data.orderData.notes
+                        : undefined,
+                    new_amount_iqd: data.orderData.paidAmount
+                        ? data.orderData.paidAmount + ""
+                        : undefined,
+                    postponed_date_id: data.orderData.status === "POSTPONED"
+                        ? (0, updateGeniStatus_1.toPostponedDateId)(data.orderData.notes)
+                        : undefined,
+                });
+            }
             if (webhookUrl) {
                 const payload = {
                     id: newOrder.id,
@@ -615,7 +632,6 @@ class OrdersService {
                     newOrder.status === "REPLACED") {
                     payload.paidAmount = newOrder.paidAmount;
                 }
-                console.log("payload", payload);
                 try {
                     await axios_1.default.post(webhookUrl, payload, {
                         headers: {
