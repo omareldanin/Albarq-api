@@ -106,6 +106,8 @@ export async function sendStatusUpdateToJenni(
       },
     ],
   };
+  console.log(payload);
+  console.log(authToken);
 
   try {
     const {data} = await axios.post(
@@ -121,6 +123,8 @@ export async function sendStatusUpdateToJenni(
     return data;
   } catch (error: any) {
     // token may have expired mid-flight — retry once after re-login
+    console.log(error);
+
     if (error?.response?.status === 401) {
       await loginToJenni();
       const {data} = await axios.post(
