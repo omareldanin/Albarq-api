@@ -796,6 +796,10 @@ export class OrdersService {
               ? data.orderData.paidAmount + ""
               : undefined,
 
+            treated_message:
+              data.orderData.status === "PROCESSING"
+                ? data.orderData.notes
+                : undefined,
             postponed_date_id:
               data.orderData.status === "POSTPONED"
                 ? toPostponedDateId(data.orderData.notes)

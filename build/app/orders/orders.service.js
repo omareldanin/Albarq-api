@@ -615,6 +615,9 @@ class OrdersService {
                     new_amount_iqd: data.orderData.paidAmount
                         ? data.orderData.paidAmount + ""
                         : undefined,
+                    treated_message: data.orderData.status === "PROCESSING"
+                        ? data.orderData.notes
+                        : undefined,
                     postponed_date_id: data.orderData.status === "POSTPONED"
                         ? (0, updateGeniStatus_1.toPostponedDateId)(data.orderData.notes)
                         : undefined,

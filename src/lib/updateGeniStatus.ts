@@ -17,24 +17,8 @@ const JENNI_SYSTEM_CODE = process.env.JENNI_SYSTEM_CODE ?? "";
  *  - PARTIAL_DELIVERY     -> quantity_delivered / quantity_returned
  *  - SUCCESSFUL_DELIVERY  -> proof_image_url, received_by_name, GPS (optional)
  */
-
-const POSTPONED_DATE_ID_MAP: Record<string, number> = {
-  "مؤجل غدا": 1, // tomorrow
-  "مؤجل ليلا": 1, // tonight → treat as tomorrow (soonest bucket)
-  "مؤجل لأكثر من يوم": 3, // more than a day → 3+ days
-};
-
-export function toPostponedDateId(
-  value: string | undefined,
-): number | undefined {
-  if (!value) return undefined;
-  return POSTPONED_DATE_ID_MAP[value];
-}
-
 export interface StatusUpdateDetails {
-  treated_message?: string;
   note?: string;
-  new_amount_iqd?: string;
   // delivery
   proof_image_url?: string;
   received_by_name?: string;
@@ -42,9 +26,14 @@ export interface StatusUpdateDetails {
   delivery_longitude?: number;
   // postponed
   postponed_reason?: string;
+  postponed_reason_en?: string;
+  postponed_reason_ku?: string;
   postponed_date_id?: number;
   // return
   return_reason?: string;
+  return_reason_en?: string;
+  return_reason_ku?: string;
+  treated_message?: string;
   // partial
   is_partial?: boolean;
   quantity_delivered?: number;
@@ -83,6 +72,26 @@ async function ensureValidToken(): Promise<void> {
   }
 }
 
+const POSTPONED_DATE_ID_MAP: Record<string, number> = {
+  "مؤجل غدا": 1, // tomorrow
+  "مؤجل ليلا": 1, // tonight → treat as tomorrow (soonest bucket)
+  "مؤجل لأكثر من يوم": 3, // more than a day → 3+ days
+};
+
+export function toPostponedDateId(
+  value: string | undefined,
+): number | undefined {
+  if (!value) return undefined;
+  return POSTPONED_DATE_ID_MAP[value];
+}
+
+/** Remove keys whose value is undefined (or null) so they aren't sent in the payload. */
+function stripEmpty<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined && v !== null),
+  ) as Partial<T>;
+}
+
 // ── Core sender ────────────────────────────────────────────────
 /**
  * Send a single status update to Jenni using an already-resolved action code.
@@ -102,12 +111,10 @@ export async function sendStatusUpdateToJenni(
         shipment_id: shipmentId,
         action_code: actionCode,
         timestamp: new Date().toISOString(),
-        ...details,
+        ...stripEmpty(details),
       },
     ],
   };
-  console.log(payload);
-  console.log(authToken);
 
   try {
     const {data} = await axios.post(

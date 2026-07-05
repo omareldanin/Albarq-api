@@ -13,24 +13,6 @@ const JENNI_API_URL = process.env.JENNI_API_URL ?? "https://rover.jenni.systems/
 const JENNI_USERNAME = process.env.JENNI_USERNAME ?? "";
 const JENNI_PASSWORD = process.env.JENNI_PASSWORD ?? "";
 const JENNI_SYSTEM_CODE = process.env.JENNI_SYSTEM_CODE ?? "";
-/**
- * Extra fields sent alongside a status update. Which ones are required
- * depends on the action:
- *  - POSTPONED            -> postponed_date_id is required (1=tomorrow, 2=2 days, 3=3+ days)
- *  - RETURNED_WITH_AGENT  -> return_reason(_en/_ku) recommended
- *  - PARTIAL_DELIVERY     -> quantity_delivered / quantity_returned
- *  - SUCCESSFUL_DELIVERY  -> proof_image_url, received_by_name, GPS (optional)
- */
-const POSTPONED_DATE_ID_MAP = {
-    "مؤجل غدا": 1, // tomorrow
-    "مؤجل ليلا": 1, // tonight → treat as tomorrow (soonest bucket)
-    "مؤجل لأكثر من يوم": 3, // more than a day → 3+ days
-};
-function toPostponedDateId(value) {
-    if (!value)
-        return undefined;
-    return POSTPONED_DATE_ID_MAP[value];
-}
 // ── Token cache ────────────────────────────────────────────────
 let authToken = null;
 let tokenExpiry = 0;
@@ -54,6 +36,20 @@ async function ensureValidToken() {
         await loginToJenni();
     }
 }
+const POSTPONED_DATE_ID_MAP = {
+    "مؤجل غدا": 1, // tomorrow
+    "مؤجل ليلا": 1, // tonight → treat as tomorrow (soonest bucket)
+    "مؤجل لأكثر من يوم": 3, // more than a day → 3+ days
+};
+function toPostponedDateId(value) {
+    if (!value)
+        return undefined;
+    return POSTPONED_DATE_ID_MAP[value];
+}
+/** Remove keys whose value is undefined (or null) so they aren't sent in the payload. */
+function stripEmpty(obj) {
+    return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined && v !== null));
+}
 // ── Core sender ────────────────────────────────────────────────
 /**
  * Send a single status update to Jenni using an already-resolved action code.
@@ -68,12 +64,10 @@ async function sendStatusUpdateToJenni(shipmentId, actionCode, details = {}) {
                 shipment_id: shipmentId,
                 action_code: actionCode,
                 timestamp: new Date().toISOString(),
-                ...details,
+                ...stripEmpty(details),
             },
         ],
     };
-    console.log(payload);
-    console.log(authToken);
     try {
         const { data } = await axios_1.default.post(`${JENNI_API_URL}/v2/push/update-status`, payload, {
             headers: {
