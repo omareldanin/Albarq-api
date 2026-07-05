@@ -37,6 +37,12 @@ export class OrdersController {
 
   createOrderV2 = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
+    console.log("---------------------------------------------//");
+
+    console.log("req.body", req.body);
+
+    console.log("---------------------------------------------//");
+
     const orders: ShipmentType[] = z
       .array(ShipmentSchema)
       .parse(req.body.shipments);

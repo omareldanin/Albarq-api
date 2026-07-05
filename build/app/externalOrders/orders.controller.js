@@ -32,6 +32,9 @@ class OrdersController {
     });
     createOrderV2 = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const loggedInUser = res.locals.user;
+        console.log("---------------------------------------------//");
+        console.log("req.body", req.body);
+        console.log("---------------------------------------------//");
         const orders = zod_1.default
             .array(orders_dto_2.ShipmentSchema)
             .parse(req.body.shipments);
