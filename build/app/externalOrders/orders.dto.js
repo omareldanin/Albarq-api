@@ -30,7 +30,7 @@ exports.OrderCreateSchema = zod_1.z.object({
 exports.ShipmentSchema = zod_1.z.object({
     shipment_id: zod_1.z.number(),
     shipment_number: zod_1.z.string(),
-    receiver_name: zod_1.z.string().min(1),
+    receiver_name: zod_1.z.string().min(1).nullable(),
     receiver_phone_1: zod_1.z.string().min(11, {
         message: "يجب إدخال رقم هاتف المستلم من 11 رقم",
     }),
@@ -40,7 +40,7 @@ exports.ShipmentSchema = zod_1.z.object({
     address: zod_1.z.string(),
     amount_iqd: zod_1.z.number(),
     quantity: zod_1.z.number().default(1),
-    note: zod_1.z.string().optional(),
+    note: zod_1.z.string().nullish(),
     sender_name: zod_1.z.string(),
     sender_phone: zod_1.z.string(),
     is_proof_of_delivery: zod_1.z.coerce.boolean().default(false),

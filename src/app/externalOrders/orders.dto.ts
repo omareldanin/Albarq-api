@@ -31,7 +31,7 @@ export type OrderCreateType = z.infer<typeof OrderCreateSchema>;
 export const ShipmentSchema = z.object({
   shipment_id: z.number(),
   shipment_number: z.string(),
-  receiver_name: z.string().min(1),
+  receiver_name: z.string().min(1).nullable(),
   receiver_phone_1: z.string().min(11, {
     message: "يجب إدخال رقم هاتف المستلم من 11 رقم",
   }),
@@ -41,7 +41,7 @@ export const ShipmentSchema = z.object({
   address: z.string(),
   amount_iqd: z.number(),
   quantity: z.number().default(1),
-  note: z.string().optional(),
+  note: z.string().nullish(),
   sender_name: z.string(),
   sender_phone: z.string(),
   is_proof_of_delivery: z.coerce.boolean().default(false),
