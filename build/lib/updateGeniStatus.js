@@ -71,7 +71,7 @@ async function sendStatusUpdateToJenni(shipmentId, actionCode, details = {}) {
     try {
         const { data } = await axios_1.default.post(`${JENNI_API_URL}/v2/push/update-status`, payload, {
             headers: {
-                Authorization: `Bearer ${authToken}`,
+                Authorization: `${authToken}`,
                 "Content-Type": "application/json",
             },
         });
@@ -84,7 +84,7 @@ async function sendStatusUpdateToJenni(shipmentId, actionCode, details = {}) {
             await loginToJenni();
             const { data } = await axios_1.default.post(`${JENNI_API_URL}/v2/push/update-status`, { ...payload }, {
                 headers: {
-                    Authorization: `Bearer ${authToken}`,
+                    Authorization: `${authToken}`,
                     "Content-Type": "application/json",
                 },
             });

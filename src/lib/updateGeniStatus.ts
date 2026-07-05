@@ -122,7 +122,7 @@ export async function sendStatusUpdateToJenni(
       payload,
       {
         headers: {
-          Authorization: `Bearer ${authToken}`,
+          Authorization: `${authToken}`,
           "Content-Type": "application/json",
         },
       },
@@ -139,7 +139,7 @@ export async function sendStatusUpdateToJenni(
         {...payload},
         {
           headers: {
-            Authorization: `Bearer ${authToken}`,
+            Authorization: `${authToken}`,
             "Content-Type": "application/json",
           },
         },
