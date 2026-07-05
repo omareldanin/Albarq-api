@@ -79,6 +79,7 @@ async function sendStatusUpdateToJenni(shipmentId, actionCode, details = {}) {
     }
     catch (error) {
         // token may have expired mid-flight — retry once after re-login
+        console.log(error);
         if (error?.response?.status === 401) {
             await loginToJenni();
             const { data } = await axios_1.default.post(`${JENNI_API_URL}/v2/push/update-status`, { ...payload }, {

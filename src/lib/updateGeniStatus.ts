@@ -130,6 +130,7 @@ export async function sendStatusUpdateToJenni(
     return data;
   } catch (error: any) {
     // token may have expired mid-flight — retry once after re-login
+    console.log(error);
 
     if (error?.response?.status === 401) {
       await loginToJenni();
