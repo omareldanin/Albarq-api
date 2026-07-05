@@ -79,7 +79,6 @@ async function sendStatusUpdateToJenni(shipmentId, actionCode, details = {}) {
     }
     catch (error) {
         // token may have expired mid-flight — retry once after re-login
-        console.log(error);
         if (error?.response?.status === 401) {
             await loginToJenni();
             const { data } = await axios_1.default.post(`${JENNI_API_URL}/v2/push/update-status`, { ...payload }, {
@@ -107,6 +106,6 @@ async function updateExternalOrderStatus(shipmentId, status, details = {}) {
         // REGISTERED / CHANGE_ADDRESS — nothing to push
         return null;
     }
-    return sendStatusUpdateToJenni(shipmentId, actionCode, details);
+    return sendStatusUpdateToJenni(+shipmentId, actionCode, details);
 }
 //# sourceMappingURL=updateGeniStatus.js.map

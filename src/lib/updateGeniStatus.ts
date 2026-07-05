@@ -98,7 +98,7 @@ function stripEmpty<T extends Record<string, unknown>>(obj: T): Partial<T> {
  * Prefer `updateExternalOrderStatus` which maps from the internal OrderStatus.
  */
 export async function sendStatusUpdateToJenni(
-  shipmentId: number | string,
+  shipmentId: number,
   actionCode: string,
   details: StatusUpdateDetails = {},
 ) {
@@ -130,7 +130,6 @@ export async function sendStatusUpdateToJenni(
     return data;
   } catch (error: any) {
     // token may have expired mid-flight — retry once after re-login
-    console.log(error);
 
     if (error?.response?.status === 401) {
       await loginToJenni();
@@ -173,5 +172,5 @@ export async function updateExternalOrderStatus(
     // REGISTERED / CHANGE_ADDRESS — nothing to push
     return null;
   }
-  return sendStatusUpdateToJenni(shipmentId, actionCode, details);
+  return sendStatusUpdateToJenni(+shipmentId, actionCode, details);
 }
