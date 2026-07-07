@@ -197,7 +197,7 @@ export class OrdersService {
           where: {
             companyId: data.loggedInUser.id,
             user: {
-              name: order.sender_name,
+              name: order.sender_name || "",
               phone: order.sender_phone,
             },
           },
@@ -206,7 +206,7 @@ export class OrdersService {
         if (!checkClient) {
           const createdUser = await prisma.user.create({
             data: {
-              name: order.sender_name,
+              name: order.sender_name || "",
               username: order.sender_phone,
               password: "00000000000",
               phone: order.sender_phone,
@@ -244,14 +244,14 @@ export class OrdersService {
 
         const checkStore = await prisma.store.findFirst({
           where: {
-            name: order.sender_name,
+            name: order.sender_name || "",
             clientId: clientId,
           },
         });
         if (!checkStore) {
           const createStore = await prisma.store.create({
             data: {
-              name: order.sender_name,
+              name: order.sender_name || "",
               clientId: clientId,
               companyId: data.loggedInUser.id,
             },

@@ -32,20 +32,16 @@ export const ShipmentSchema = z.object({
   shipment_id: z.number(),
   shipment_number: z.string(),
   receiver_name: z.string().min(1).nullable(),
-  receiver_phone_1: z.string().min(11, {
-    message: "يجب إدخال رقم هاتف المستلم من 11 رقم",
-  }),
+  receiver_phone_1: z.string(),
   governorate_code: z.string(),
   city_name: z.string(),
   city: z.string(),
   address: z.string(),
-  amount_iqd: z.number(),
+  amount_iqd: z.number().default(0),
   quantity: z.number().default(1),
   note: z.string().nullish(),
-  sender_name: z.string(),
+  sender_name: z.string().nullish(),
   sender_phone: z.string(),
-  is_proof_of_delivery: z.coerce.boolean().default(false),
-  is_fragile: z.coerce.boolean().default(false),
 });
 
 export const CreateShipmentsSchema = z.object({

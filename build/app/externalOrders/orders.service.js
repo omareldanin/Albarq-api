@@ -160,7 +160,7 @@ class OrdersService {
                     where: {
                         companyId: data.loggedInUser.id,
                         user: {
-                            name: order.sender_name,
+                            name: order.sender_name || "",
                             phone: order.sender_phone,
                         },
                     },
@@ -168,7 +168,7 @@ class OrdersService {
                 if (!checkClient) {
                     const createdUser = await db_1.prisma.user.create({
                         data: {
-                            name: order.sender_name,
+                            name: order.sender_name || "",
                             username: order.sender_phone,
                             password: "00000000000",
                             phone: order.sender_phone,
@@ -206,14 +206,14 @@ class OrdersService {
                 }
                 const checkStore = await db_1.prisma.store.findFirst({
                     where: {
-                        name: order.sender_name,
+                        name: order.sender_name || "",
                         clientId: clientId,
                     },
                 });
                 if (!checkStore) {
                     const createStore = await db_1.prisma.store.create({
                         data: {
-                            name: order.sender_name,
+                            name: order.sender_name || "",
                             clientId: clientId,
                             companyId: data.loggedInUser.id,
                         },

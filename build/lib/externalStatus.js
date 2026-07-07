@@ -37,7 +37,7 @@ exports.ORDER_STATUS_TO_EXTERNAL = {
         nameAr: "تسليم جزئي أو استبدال",
     }, // NOTE: verify — same code as REPLACED
     [client_1.OrderStatus.RETURNED]: {
-        code: "RETURN_APPROVED",
+        code: "RETURNED_WITH_AGENT",
         nameEn: "Return confirmed/approved",
         nameAr: "تأكيد الراجع",
     }, // NOTE: verify — could be RETURN_TO_STORE or RETURNED_WITH_AGENT
