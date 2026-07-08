@@ -188,6 +188,7 @@ model Branch {
   @@unique([name, companyId])
   @@index([companyId])
   @@index([governorate])
+  @@index([parentBranchId])
 }
 
 model ClientBranchCost {
@@ -459,6 +460,7 @@ model Order {
   companyReport          CompanyReport[]          @relation("CompanyReportToOrder")
   repositoryReport       RepositoryReport[]       @relation("OrderToRepositoryReport")
 
+  @@index([deleted, confirmed, status, governorate, createdAt])
   @@index([receiptNumber])
   @@index([branchReportId])
   @@index([deliveryAgentReportId])

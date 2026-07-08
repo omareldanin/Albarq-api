@@ -12,7 +12,7 @@
         <tr>
           <td style="width: 25%;">الشركة:
             <span>{{reportsData.company.name}}</span></td>
-          <td style="width: 25%;" class="title">تقرير كشوفات عميل</td>
+          <td style="width: 25%;" class="title">تقرير كشوفات العملاء</td>
           <td style="width: 25%;">عدد الطلبيات:
             <span>{{add
                 reportsData.baghdadOrdersCount
@@ -23,8 +23,7 @@
             /></td>
         </tr>
         <tr>
-          <td style="width: 25%;">صافي الشركة:
-            <span>{{currency reportsData.companyNet}}</span></td>
+          <td style="width: 25%;"></td>
           <td style="width: 25%;">عدد الكشوفات:
             <span>{{reportsData.count}}</span></td>
           <td style="width: 25%;">عدد طلبيات بغداد:
@@ -53,7 +52,6 @@
             <th>رقم الهاتف</th>
             <th>المحاسب</th>
             <th>صافي العميل</th>
-            <th>صافي الشركة</th>
             <th>طلبيات بغداد</th>
             <th>طلبيات المحافظات</th>
             <th>اجور بغداد</th>
@@ -71,7 +69,6 @@
               <td>{{clientReport.client.phone}}</td>
               <td>{{createdBy.name}}</td>
               <td>{{currency clientNet}}</td>
-              <td>{{currency companyNet}}</td>
               <td>{{baghdadOrdersCount}}</td>
               <td>{{governoratesOrdersCount}}</td>
               <td>{{currency clientReport.baghdadDeliveryCost}}</td>
@@ -82,7 +79,6 @@
         </tbody>
       </table>
     </main>
-    <section class="watermark">{{reportsData.company.name}}</section>
   </body>
 
 </html>

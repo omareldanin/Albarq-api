@@ -521,6 +521,7 @@ export class ReportsService {
         reportsMetaData: {},
       };
     }
+
     const {reports, reportsMetaData, pagesCount} =
       await reportsRepository.getAllReportsPaginated({
         filters: {
@@ -835,6 +836,7 @@ export class ReportsService {
           filters: {
             ...data.reportsFilters,
             type: data.reportsData.type,
+            secondaryType: "DELIVERED",
             size: 5000,
           },
         })

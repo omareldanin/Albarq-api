@@ -259,6 +259,13 @@ exports.ReportsFiltersSchema = zod_1.z.object({
             return false;
         return val;
     }, zod_1.z.boolean().optional()),
+    forMainClients: zod_1.z.preprocess((val) => {
+        if (val === "true")
+            return true;
+        if (val === "false")
+            return false;
+        return val;
+    }, zod_1.z.boolean().optional()),
 });
 exports.ReportsFiltersOpenAPISchema = (0, zod_openapi_1.generateSchema)(exports.ReportsFiltersSchema);
 // export const ReportsFiltersMock = generateMock(ReportsFiltersSchema);

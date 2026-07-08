@@ -36,6 +36,7 @@ import crypto from "crypto";
 import {redis} from "../../lib/redis";
 import {calculatePagesCount} from "../../lib/pagination";
 import {reportsOrderReform, reportsOrderSelect} from "./reportsOrders.response";
+import pLimit from "p-limit";
 
 const messageController = new MessagesController();
 
@@ -478,7 +479,6 @@ export class OrdersRepository {
     let startDate = new Date();
     let endDate = new Date();
     let childBranchs: number[] = [];
-
     if (data.filters.startDate) {
       startDate = new Date(data.filters.startDate);
       startDate.setUTCDate(startDate.getUTCDate() - 1);
@@ -2073,13 +2073,186 @@ export class OrdersRepository {
     };
   }
 
+  async getBranchsOrdersCount(data: {
+    filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
+    loggedInUser: loggedInUserType | undefined;
+    forReport?: boolean;
+  }) {
+    let startDate = new Date();
+    let endDate = new Date();
+    let branchsIds: number[] = [];
+    let results: {name: string; forwardedCount: number}[] = [];
+    const limit = pLimit(6);
+
+    if (data.filters.startDate) {
+      startDate = new Date(data.filters.startDate);
+      startDate.setUTCDate(startDate.getUTCDate() - 1);
+      startDate.setHours(21, 0, 0, 0);
+    }
+    if (data.filters.endDate) {
+      endDate = new Date(data.filters.endDate);
+      endDate.setHours(21, 0, 0, 0);
+    }
+
+    const allbranchs = await prisma.branch.findMany({
+      where: {
+        repositories: {
+          none: {
+            mainRepository: true,
+          },
+        },
+        parentBranchId: {equals: null},
+        companyId: data.filters.companyID,
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    branchsIds = allbranchs.map((b) => b.id);
+
+    const allChildBranches = await prisma.branch.findMany({
+      where: {parentBranchId: {in: branchsIds}},
+      select: {id: true, parentBranchId: true},
+    });
+
+    const childMap = new Map<number, number[]>();
+    for (const b of allChildBranches) {
+      const arr = childMap.get(b.parentBranchId!) ?? [];
+      arr.push(b.id);
+      childMap.set(b.parentBranchId!, arr);
+    }
+
+    results = await Promise.all(
+      branchsIds.map((id) =>
+        limit(async () => {
+          const childBranchs = childMap.get(id) ?? [];
+          const forwardedCount = await prisma.order.count({
+            where: {
+              AND: [
+                {
+                  confirmed: true,
+                },
+                {
+                  status: {in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"]},
+                },
+                // Filter by startDate
+                {
+                  createdAt: data.filters.startDate
+                    ? {
+                        gt: startDate,
+                      }
+                    : undefined,
+                },
+                // Filter by endDate
+                {
+                  createdAt: data.filters.endDate
+                    ? {
+                        lt: endDate,
+                      }
+                    : undefined,
+                },
+                // Filter by deleted
+                {
+                  deleted: false,
+                },
+                // Filter by clientReport
+                {
+                  clientReport: {
+                    some: {
+                      secondaryType: "DELIVERED",
+                      report: {
+                        deleted: false,
+                      },
+                    },
+                  },
+                },
+                {
+                  branchReport: {
+                    none: {
+                      // branchId: data.filters.branchID,
+                      type: "forwarded",
+                      report: {
+                        deleted: false,
+                      },
+                    },
+                  },
+                },
+                {
+                  governorate: data.filters.governorate,
+                },
+                {
+                  OR: [
+                    {
+                      AND: [
+                        {
+                          OR: [
+                            {
+                              client: {
+                                branchId: id,
+                              },
+                            },
+                            {
+                              client: {
+                                branch: {
+                                  parentBranchId: id,
+                                },
+                              },
+                            },
+                          ],
+                        },
+
+                        {
+                          branch: {
+                            id: {not: id},
+                          },
+                        },
+                        {
+                          branch: {
+                            id: {notIn: childBranchs},
+                          },
+                        },
+                      ],
+                    },
+                    {
+                      AND: [
+                        {
+                          branch: {
+                            id: id,
+                            governorate: "BAGHDAD",
+                            parentBranchId: {equals: null},
+                          },
+                        },
+                        {
+                          client: {
+                            branchId: id,
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          });
+          return {
+            name: allbranchs.find((b) => b.id === id)?.name || "",
+            forwardedCount,
+          };
+        }),
+      ),
+    );
+
+    return results;
+  }
+
   async getAllOrdersPaginatedApiKey(data: {
     filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
     loggedInUser: loggedInUserType | undefined;
   }) {
     let startDate = new Date();
     let endDate = new Date();
-
     if (data.filters.startDate) {
       startDate = new Date(data.filters.startDate);
       startDate.setUTCDate(startDate.getUTCDate() - 1);

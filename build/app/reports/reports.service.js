@@ -644,6 +644,7 @@ class ReportsService {
                 filters: {
                     ...data.reportsFilters,
                     type: data.reportsData.type,
+                    secondaryType: "DELIVERED",
                     size: 5000,
                 },
             })).reports;

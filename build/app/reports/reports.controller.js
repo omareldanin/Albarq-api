@@ -76,6 +76,7 @@ class ReportController {
             createdByID: req.query.created_by_id,
             deleted: req.query.deleted,
             minified: req.query.minified,
+            forMainClients: req.query.forMainClients,
             secondaryType: req.query.secondaryReportType,
             exported_repository_id: req.query.exported_repository_id,
             target_repository_id: req.query.target_repository_id,
@@ -202,6 +203,7 @@ class ReportController {
             createdByID: req.query.created_by_id,
             deleted: req.query.deleted,
             minified: false,
+            forMainClients: req.query.forMainClients,
         });
         const pdf = await reportsService.getReportsReportPDF({
             reportsData: reportsData,

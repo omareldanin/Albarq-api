@@ -321,6 +321,11 @@ export const ReportsFiltersSchema = z.object({
     if (val === "false") return false;
     return val;
   }, z.boolean().optional()),
+  forMainClients: z.preprocess((val) => {
+    if (val === "true") return true;
+    if (val === "false") return false;
+    return val;
+  }, z.boolean().optional()),
 });
 
 export type ReportsFiltersType = z.infer<typeof ReportsFiltersSchema>;
