@@ -2080,9 +2080,6 @@ export class OrdersRepository {
   }) {
     let startDate = new Date();
     let endDate = new Date();
-    let branchsIds: number[] = [];
-    let results: {name: string; forwardedCount: number}[] = [];
-    const limit = pLimit(6);
 
     if (data.filters.startDate) {
       startDate = new Date(data.filters.startDate);
@@ -2094,6 +2091,9 @@ export class OrdersRepository {
       endDate.setHours(21, 0, 0, 0);
     }
 
+    const limit = pLimit(6);
+
+    // ── Top-level branches (no main repository, no parent) ──────────
     const allbranchs = await prisma.branch.findMany({
       where: {
         repositories: {
@@ -2110,8 +2110,9 @@ export class OrdersRepository {
       },
     });
 
-    branchsIds = allbranchs.map((b) => b.id);
+    const branchsIds = allbranchs.map((b) => b.id);
 
+    // ── Child branches, fetched once and grouped in memory ──────────
     const allChildBranches = await prisma.branch.findMany({
       where: {parentBranchId: {in: branchsIds}},
       select: {id: true, parentBranchId: true},
@@ -2124,125 +2125,150 @@ export class OrdersRepository {
       childMap.set(b.parentBranchId!, arr);
     }
 
-    results = await Promise.all(
-      branchsIds.map((id) =>
-        limit(async () => {
-          const childBranchs = childMap.get(id) ?? [];
-          const forwardedCount = await prisma.order.count({
-            where: {
-              AND: [
-                {
-                  confirmed: true,
-                },
-                {
-                  status: {in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"]},
-                },
-                // Filter by startDate
-                {
-                  createdAt: data.filters.startDate
-                    ? {
-                        gt: startDate,
-                      }
-                    : undefined,
-                },
-                // Filter by endDate
-                {
-                  createdAt: data.filters.endDate
-                    ? {
-                        lt: endDate,
-                      }
-                    : undefined,
-                },
-                // Filter by deleted
-                {
-                  deleted: false,
-                },
-                // Filter by clientReport
-                {
-                  clientReport: {
-                    some: {
-                      secondaryType: "DELIVERED",
-                      report: {
-                        deleted: false,
-                      },
-                    },
-                  },
-                },
-                {
-                  branchReport: {
-                    none: {
-                      // branchId: data.filters.branchID,
-                      type: "forwarded",
-                      report: {
-                        deleted: false,
-                      },
-                    },
-                  },
-                },
-                {
-                  governorate: data.filters.governorate,
-                },
-                {
-                  OR: [
-                    {
-                      AND: [
-                        {
-                          OR: [
-                            {
-                              client: {
-                                branchId: id,
-                              },
-                            },
-                            {
-                              client: {
-                                branch: {
-                                  parentBranchId: id,
-                                },
-                              },
-                            },
-                          ],
-                        },
+    // ── Shared date filters (avoids repeating the ternaries) ────────
+    const createdAtStartFilter = data.filters.startDate
+      ? {createdAt: {gt: startDate}}
+      : {};
+    const createdAtEndFilter = data.filters.endDate
+      ? {createdAt: {lt: endDate}}
+      : {};
 
-                        {
-                          branch: {
-                            id: {not: id},
-                          },
-                        },
-                        {
-                          branch: {
-                            id: {notIn: childBranchs},
-                          },
-                        },
-                      ],
-                    },
+    // ── Count helpers ───────────────────────────────────────────────
+    const countForwarded = (id: number) => {
+      const childBranchs = childMap.get(id) ?? [];
+      return prisma.order.count({
+        where: {
+          AND: [
+            {confirmed: true},
+            {status: {in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"]}},
+            createdAtStartFilter,
+            createdAtEndFilter,
+            {deleted: false},
+            {
+              clientReport: {
+                some: {
+                  secondaryType: "DELIVERED",
+                  report: {deleted: false},
+                },
+              },
+            },
+            {
+              branchReport: {
+                none: {
+                  type: "forwarded",
+                  report: {deleted: false},
+                },
+              },
+            },
+            {governorate: data.filters.governorate},
+            {
+              OR: [
+                {
+                  AND: [
                     {
-                      AND: [
-                        {
-                          branch: {
-                            id: id,
-                            governorate: "BAGHDAD",
-                            parentBranchId: {equals: null},
-                          },
-                        },
-                        {
-                          client: {
-                            branchId: id,
-                          },
-                        },
+                      OR: [
+                        {client: {branchId: id}},
+                        {client: {branch: {parentBranchId: id}}},
                       ],
                     },
+                    {branch: {id: {not: id}}},
+                    {branch: {id: {notIn: childBranchs}}},
+                  ],
+                },
+                {
+                  AND: [
+                    {
+                      branch: {
+                        id: id,
+                        governorate: "BAGHDAD",
+                        parentBranchId: {equals: null},
+                      },
+                    },
+                    {client: {branchId: id}},
                   ],
                 },
               ],
             },
-          });
-          return {
-            name: allbranchs.find((b) => b.id === id)?.name || "",
-            forwardedCount,
-          };
-        }),
+          ],
+        },
+      });
+    };
+
+    const countReceived = (id: number) => {
+      const childBranchs = childMap.get(id) ?? [];
+      return prisma.order.count({
+        where: {
+          AND: [
+            {confirmed: true},
+            {status: {in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"]}},
+            createdAtStartFilter,
+            createdAtEndFilter,
+            {deleted: false},
+            {
+              branchReport: {
+                none: {
+                  type: "received",
+                  report: {deleted: false},
+                },
+              },
+            },
+            {governorate: data.filters.governorate},
+            {
+              OR: [
+                {
+                  AND: [
+                    {client: {branchId: {not: id}}},
+                    {client: {branchId: {notIn: childBranchs}}},
+                    {
+                      OR: [{branchId: id}, {branchId: {in: childBranchs}}],
+                    },
+                  ],
+                },
+                {
+                  AND: [
+                    {
+                      branch: {
+                        id: id,
+                        governorate: "BAGHDAD",
+                        parentBranchId: {equals: null},
+                      },
+                    },
+                    {client: {branchId: id}},
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      });
+    };
+
+    // ── Run both phases overlapped, capped at 6 concurrent total ────
+    const [forwaredResults, receivedResults] = await Promise.all([
+      Promise.all(
+        branchsIds.map((id) =>
+          limit(async () => ({id, count: await countForwarded(id)})),
+        ),
       ),
-    );
+      Promise.all(
+        branchsIds.map((id) =>
+          limit(async () => ({id, count: await countReceived(id)})),
+        ),
+      ),
+    ]);
+
+    // ── Merge by branch id and drop branches that are 0 in both ─────
+    const forwardedMap = new Map(forwaredResults.map((r) => [r.id, r.count]));
+    const receivedMap = new Map(receivedResults.map((r) => [r.id, r.count]));
+
+    const results = allbranchs
+      .map((b) => ({
+        id: b.id,
+        name: b.name,
+        forwardedCount: forwardedMap.get(b.id) ?? 0,
+        receivedCount: receivedMap.get(b.id) ?? 0,
+      }))
+      .filter((r) => r.forwardedCount !== 0 || r.receivedCount !== 0);
 
     return results;
   }

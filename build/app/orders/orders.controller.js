@@ -147,19 +147,87 @@ class OrdersController {
             createdBy: req.query.created_by,
             forwarededForReport: req.query.forwarededForReport,
         });
-        const { orders, ordersMetaData, page, pagesCount, where } = await ordersService.getAllOrders({
+        const { orders, ordersMetaData, page, pagesCount } = await ordersService.getAllOrders({
             loggedInUser: loggedInUser,
             filters: filters,
         });
         res.status(200).json({
             status: "success",
             page: page,
-            where,
             pagesCount: pagesCount,
             data: {
                 ordersMetaData: ordersMetaData,
                 orders: orders,
             },
+        });
+    });
+    getBranchsOrdersCount = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const loggedInUser = res.locals.user;
+        const filters = orders_dto_1.OrdersFiltersSchema.parse({
+            clientID: req.query.client_id,
+            deliveryAgentID: req.query.delivery_agent_id,
+            companyID: req.query.company_id,
+            automaticUpdateID: req.query.automatic_update_id,
+            search: req.query.search,
+            sort: req.query.sort,
+            page: req.query.page,
+            size: req.query.size,
+            confirmed: req.query.confirmed,
+            startDate: req.query.start_date,
+            endDate: req.query.end_date,
+            startDeliveryDate: req.query.delivery_start_date,
+            endDeliveryDate: req.query.delivery_end_date,
+            deliveryDate: req.query.delivery_date,
+            governorate: req.query.governorate,
+            statuses: req.query.statuses,
+            status: req.query.status,
+            deliveryType: req.query.delivery_type,
+            storeID: req.query.store_id,
+            repositoryID: req.query.repository_id,
+            branchID: req.query.branch_id,
+            productID: req.query.product_id,
+            locationID: req.query.location_id,
+            receiptNumber: req.query.receipt_number,
+            receiptNumbers: req.query.receipt_numbers,
+            recipientName: req.query.recipient_name,
+            recipientPhone: req.query.recipient_phone,
+            recipientAddress: req.query.recipient_address,
+            clientReport: req.query.client_report,
+            repositoryReport: req.query.repository_report,
+            branchReport: req.query.branch_report,
+            deliveryAgentReport: req.query.delivery_agent_report,
+            governorateReport: req.query.governorate_report,
+            companyReport: req.query.company_report,
+            notes: req.query.notes,
+            deleted: req.query.deleted,
+            notForwared: req.query.notForwared,
+            forwarededTo: req.query.forwarededTo,
+            orderID: req.query.order_id,
+            minified: req.query.minified,
+            forChilds: req.query.forChilds,
+            forMobile: req.query.for_mobile,
+            forwarded: req.query.forwarded,
+            forwardedByID: req.query.forwarded_by_id,
+            forwardedFromID: req.query.forwarded_from_id,
+            processed: req.query.processed,
+            processingStatus: req.query.processingStatus,
+            secondaryStatus: req.query.secondaryStatus,
+            clientOrderReceiptId: req.query.clientOrderReceiptId,
+            printed: req.query.printed,
+            removeRepeated: req.query.removeRepeated,
+            delivered: req.query.delivered,
+            orderType: req.query.orderType,
+            updateBy: req.query.updated_by,
+            createdBy: req.query.created_by,
+            forwarededForReport: req.query.forwarededForReport,
+        });
+        const { results } = await ordersService.getBranchsOrdersCount({
+            loggedInUser: loggedInUser,
+            filters: filters,
+        });
+        res.status(200).json({
+            status: "success",
+            data: results,
         });
     });
     getAllOrdersApiKey = (0, catchAsync_1.catchAsync)(async (req, res) => {

@@ -1529,6 +1529,25 @@
         }
       }
     },
+    "/api/v1/orders/branchCount": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/v1/getGeneralInfo": {
       "get": {
         "description": "",

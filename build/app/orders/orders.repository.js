@@ -1868,9 +1868,6 @@ class OrdersRepository {
     async getBranchsOrdersCount(data) {
         let startDate = new Date();
         let endDate = new Date();
-        let branchsIds = [];
-        let results = [];
-        const limit = (0, p_limit_1.default)(6);
         if (data.filters.startDate) {
             startDate = new Date(data.filters.startDate);
             startDate.setUTCDate(startDate.getUTCDate() - 1);
@@ -1880,6 +1877,8 @@ class OrdersRepository {
             endDate = new Date(data.filters.endDate);
             endDate.setHours(21, 0, 0, 0);
         }
+        const limit = (0, p_limit_1.default)(6);
+        // ── Top-level branches (no main repository, no parent) ──────────
         const allbranchs = await db_1.prisma.branch.findMany({
             where: {
                 repositories: {
@@ -1895,7 +1894,8 @@ class OrdersRepository {
                 name: true,
             },
         });
-        branchsIds = allbranchs.map((b) => b.id);
+        const branchsIds = allbranchs.map((b) => b.id);
+        // ── Child branches, fetched once and grouped in memory ──────────
         const allChildBranches = await db_1.prisma.branch.findMany({
             where: { parentBranchId: { in: branchsIds } },
             select: { id: true, parentBranchId: true },
@@ -1906,91 +1906,100 @@ class OrdersRepository {
             arr.push(b.id);
             childMap.set(b.parentBranchId, arr);
         }
-        results = await Promise.all(branchsIds.map((id) => limit(async () => {
+        // ── Shared date filters (avoids repeating the ternaries) ────────
+        const createdAtStartFilter = data.filters.startDate
+            ? { createdAt: { gt: startDate } }
+            : {};
+        const createdAtEndFilter = data.filters.endDate
+            ? { createdAt: { lt: endDate } }
+            : {};
+        // ── Count helpers ───────────────────────────────────────────────
+        const countForwarded = (id) => {
             const childBranchs = childMap.get(id) ?? [];
-            const forwardedCount = await db_1.prisma.order.count({
+            return db_1.prisma.order.count({
                 where: {
                     AND: [
-                        {
-                            confirmed: true,
-                        },
-                        {
-                            status: { in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"] },
-                        },
-                        // Filter by startDate
-                        {
-                            createdAt: data.filters.startDate
-                                ? {
-                                    gt: startDate,
-                                }
-                                : undefined,
-                        },
-                        // Filter by endDate
-                        {
-                            createdAt: data.filters.endDate
-                                ? {
-                                    lt: endDate,
-                                }
-                                : undefined,
-                        },
-                        // Filter by deleted
-                        {
-                            deleted: false,
-                        },
-                        // Filter by clientReport
+                        { confirmed: true },
+                        { status: { in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"] } },
+                        createdAtStartFilter,
+                        createdAtEndFilter,
+                        { deleted: false },
                         {
                             clientReport: {
                                 some: {
                                     secondaryType: "DELIVERED",
-                                    report: {
-                                        deleted: false,
-                                    },
+                                    report: { deleted: false },
                                 },
                             },
                         },
                         {
                             branchReport: {
                                 none: {
-                                    // branchId: data.filters.branchID,
                                     type: "forwarded",
-                                    report: {
-                                        deleted: false,
-                                    },
+                                    report: { deleted: false },
                                 },
                             },
                         },
-                        {
-                            governorate: data.filters.governorate,
-                        },
+                        { governorate: data.filters.governorate },
                         {
                             OR: [
                                 {
                                     AND: [
                                         {
                                             OR: [
-                                                {
-                                                    client: {
-                                                        branchId: id,
-                                                    },
-                                                },
-                                                {
-                                                    client: {
-                                                        branch: {
-                                                            parentBranchId: id,
-                                                        },
-                                                    },
-                                                },
+                                                { client: { branchId: id } },
+                                                { client: { branch: { parentBranchId: id } } },
                                             ],
                                         },
+                                        { branch: { id: { not: id } } },
+                                        { branch: { id: { notIn: childBranchs } } },
+                                    ],
+                                },
+                                {
+                                    AND: [
                                         {
                                             branch: {
-                                                id: { not: id },
+                                                id: id,
+                                                governorate: "BAGHDAD",
+                                                parentBranchId: { equals: null },
                                             },
                                         },
+                                        { client: { branchId: id } },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            });
+        };
+        const countReceived = (id) => {
+            const childBranchs = childMap.get(id) ?? [];
+            return db_1.prisma.order.count({
+                where: {
+                    AND: [
+                        { confirmed: true },
+                        { status: { in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"] } },
+                        createdAtStartFilter,
+                        createdAtEndFilter,
+                        { deleted: false },
+                        {
+                            branchReport: {
+                                none: {
+                                    type: "received",
+                                    report: { deleted: false },
+                                },
+                            },
+                        },
+                        { governorate: data.filters.governorate },
+                        {
+                            OR: [
+                                {
+                                    AND: [
+                                        { client: { branchId: { not: id } } },
+                                        { client: { branchId: { notIn: childBranchs } } },
                                         {
-                                            branch: {
-                                                id: { notIn: childBranchs },
-                                            },
+                                            OR: [{ branchId: id }, { branchId: { in: childBranchs } }],
                                         },
                                     ],
                                 },
@@ -2003,11 +2012,7 @@ class OrdersRepository {
                                                 parentBranchId: { equals: null },
                                             },
                                         },
-                                        {
-                                            client: {
-                                                branchId: id,
-                                            },
-                                        },
+                                        { client: { branchId: id } },
                                     ],
                                 },
                             ],
@@ -2015,11 +2020,23 @@ class OrdersRepository {
                     ],
                 },
             });
-            return {
-                name: allbranchs.find((b) => b.id === id)?.name || "",
-                forwardedCount,
-            };
-        })));
+        };
+        // ── Run both phases overlapped, capped at 6 concurrent total ────
+        const [forwaredResults, receivedResults] = await Promise.all([
+            Promise.all(branchsIds.map((id) => limit(async () => ({ id, count: await countForwarded(id) })))),
+            Promise.all(branchsIds.map((id) => limit(async () => ({ id, count: await countReceived(id) })))),
+        ]);
+        // ── Merge by branch id and drop branches that are 0 in both ─────
+        const forwardedMap = new Map(forwaredResults.map((r) => [r.id, r.count]));
+        const receivedMap = new Map(receivedResults.map((r) => [r.id, r.count]));
+        const results = allbranchs
+            .map((b) => ({
+            id: b.id,
+            name: b.name,
+            forwardedCount: forwardedMap.get(b.id) ?? 0,
+            receivedCount: receivedMap.get(b.id) ?? 0,
+        }))
+            .filter((r) => r.forwardedCount !== 0 || r.receivedCount !== 0);
         return results;
     }
     async getAllOrdersPaginatedApiKey(data) {

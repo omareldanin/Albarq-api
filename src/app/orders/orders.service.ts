@@ -490,6 +490,27 @@ export class OrdersService {
     };
   };
 
+  getBranchsOrdersCount = async (data: {
+    filters: OrdersFiltersType;
+    loggedInUser: loggedInUserType;
+  }) => {
+    const companyID = data.filters.companyID
+      ? data.filters.companyID
+      : data.loggedInUser.companyID || undefined;
+    let governorate: Governorate | undefined = data.filters.governorate;
+
+    const results = await ordersRepository.getBranchsOrdersCount({
+      filters: {
+        ...data.filters,
+        companyID,
+        governorate,
+      },
+      loggedInUser: data.loggedInUser,
+    });
+
+    return {results};
+  };
+
   getAllOrdersApiKey = async (data: {
     filters: OrdersFiltersType;
     loggedInUser: loggedInUserType;

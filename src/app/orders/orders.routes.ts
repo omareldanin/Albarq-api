@@ -214,6 +214,14 @@ router
     ordersController.getAllOrdersApiKey,
   );
 
+router
+  .route("/orders/branchCount")
+  .get(
+    isLoggedIn,
+    isAutherized([...Object.values(AdminRole), ...Object.values(EmployeeRole)]),
+    ordersController.getBranchsOrdersCount,
+  );
+
 router.route("/getGeneralInfo").get(ordersController.getGeneralInfo);
 
 router.route("/orders/statistics").get(

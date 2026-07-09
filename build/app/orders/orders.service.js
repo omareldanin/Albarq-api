@@ -406,6 +406,21 @@ class OrdersService {
             ordersMetaData: ordersMetaData,
         };
     };
+    getBranchsOrdersCount = async (data) => {
+        const companyID = data.filters.companyID
+            ? data.filters.companyID
+            : data.loggedInUser.companyID || undefined;
+        let governorate = data.filters.governorate;
+        const results = await ordersRepository.getBranchsOrdersCount({
+            filters: {
+                ...data.filters,
+                companyID,
+                governorate,
+            },
+            loggedInUser: data.loggedInUser,
+        });
+        return { results };
+    };
     getAllOrdersApiKey = async (data) => {
         const clientID = data.loggedInUser.clientId;
         // Show only orders of the same governorate as the branch to the branch manager
