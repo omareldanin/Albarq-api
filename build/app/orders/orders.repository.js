@@ -2795,12 +2795,14 @@ class OrdersRepository {
         if (data.costs.deliveryAgentDeliveryCost) {
             // build response
             for (const order of data.orders) {
-                let deliveryAgentNet = data.costs.deliveryAgentDeliveryCost + (order?.weight || 0) * 250;
+                let deliveryAgentNet = data.costs.deliveryAgentDeliveryCost;
                 if (order?.client.activeProfit) {
                     const cost = order.client.branchCosts.find((c) => c.branchId === order.branch?.id);
                     if (cost) {
                         deliveryAgentNet =
-                            cost.deliveryAgentProfit + (order?.weight || 0) * 250;
+                            data.costs.deliveryAgentDeliveryCost > cost.receivingBranchProfit
+                                ? cost.receivingBranchProfit - 250
+                                : data.costs.deliveryAgentDeliveryCost - 250;
                     }
                 }
                 const companyNet = (order?.paidAmount || 0) - deliveryAgentNet;

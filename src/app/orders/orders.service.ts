@@ -78,9 +78,13 @@ export class OrdersService {
         if (!clientID) {
           throw new AppError("حصل حطأ في ايجاد صاحب المتجر", 500);
         }
-        // const deliveryAgentID = await employeesRepository.getDeliveryAgentIDByLocationID({
-        //     locationID: order.locationID
-        // });
+        if (
+          data.loggedInUser.role !== "COMPANY_MANAGER" &&
+          !data.loggedInUser.mainRepository &&
+          order.totalCost < 0
+        ) {
+          throw new AppError("غير مصرح لك إضافه طلبات بالسالب", 400);
+        }
         let branchID = undefined;
         const branch = await branchesRepository.getBranchByLocation({
           locationID: order.locationID,
@@ -129,6 +133,14 @@ export class OrdersService {
         }
       }
       return createdOrders;
+    }
+
+    if (
+      data.loggedInUser.role !== "COMPANY_MANAGER" &&
+      !data.loggedInUser.mainRepository &&
+      data.orderOrOrdersData.totalCost < 0
+    ) {
+      throw new AppError("غير مصرح لك إضافه طلبات بالسالب", 400);
     }
 
     const clientID = await clientsRepository.getClientIDByStoreID({
@@ -612,6 +624,15 @@ export class OrdersService {
     let oldOrderData = await ordersRepository.getOrderById({
       orderID: data.params.orderID,
     });
+
+    if (
+      data.loggedInUser.role !== "COMPANY_MANAGER" &&
+      !data.loggedInUser.mainRepository &&
+      ((data.orderData.totalCost && data.orderData.totalCost < 0) ||
+        (data.orderData.paidAmount && data.orderData.paidAmount < 0))
+    ) {
+      throw new AppError("غير مصرح لك تعديل طلبات بالسالب", 400);
+    }
 
     if (!oldOrderData) {
       oldOrderData = await ordersRepository.getOrderByReceiptNumber({
