@@ -461,7 +461,6 @@ model Order {
   repositoryReport       RepositoryReport[]       @relation("OrderToRepositoryReport")
 
   @@index([deleted, confirmed, status, governorate, createdAt])
-  @@index([receiptNumber])
   @@index([branchReportId])
   @@index([deliveryAgentReportId])
   @@index([governorateReportId])
