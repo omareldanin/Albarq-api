@@ -12,7 +12,6 @@ const isLoggedIn = async (req, res, next) => {
     try {
         let token;
         // IS USER LOGGED IN
-        console.log(req.headers.authorization);
         if (req.headers.authorization?.startsWith("Bearer")) {
             token = req.headers.authorization.split(" ")[1];
         }
