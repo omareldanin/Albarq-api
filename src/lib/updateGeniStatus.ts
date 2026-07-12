@@ -99,6 +99,7 @@ function stripEmpty<T extends Record<string, unknown>>(obj: T): Partial<T> {
  */
 export async function sendStatusUpdateToJenni(
   shipmentId: number,
+  url: string,
   actionCode: string,
   details: StatusUpdateDetails = {},
 ) {
@@ -116,16 +117,12 @@ export async function sendStatusUpdateToJenni(
   };
 
   try {
-    const {data} = await axios.post(
-      `${JENNI_API_URL}/v2/push/update-status`,
-      payload,
-      {
-        headers: {
-          Authorization: `${authToken}`,
-          "Content-Type": "application/json",
-        },
+    const {data} = await axios.post(`${url}/v2/push/update-status`, payload, {
+      headers: {
+        Authorization: `${authToken}`,
+        "Content-Type": "application/json",
       },
-    );
+    });
     return data;
   } catch (error: any) {
     // token may have expired mid-flight — retry once after re-login
@@ -164,6 +161,7 @@ export async function sendStatusUpdateToJenni(
  */
 export async function updateExternalOrderStatus(
   shipmentId: number | string,
+  url: string,
   status: OrderStatus,
   details: StatusUpdateDetails = {},
 ) {
@@ -172,5 +170,5 @@ export async function updateExternalOrderStatus(
     // REGISTERED / CHANGE_ADDRESS — nothing to push
     return null;
   }
-  return sendStatusUpdateToJenni(+shipmentId, actionCode, details);
+  return sendStatusUpdateToJenni(+shipmentId, url, actionCode, details);
 }

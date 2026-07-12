@@ -807,6 +807,7 @@ export class OrdersService {
       ) {
         await updateExternalOrderStatus(
           oldOrderData.shipment_number!!,
+          webhookUrl!!,
           data.orderData.status ? data.orderData.status : newOrder.status,
           {
             return_reason:

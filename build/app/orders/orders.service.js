@@ -616,7 +616,7 @@ class OrdersService {
             const webhookUrl = oldOrderData.forwardedFrom?.webhookUrl;
             if (oldOrderData.forwardedFromId === 84 ||
                 oldOrderData.forwardedFromId === 87) {
-                await (0, updateGeniStatus_1.updateExternalOrderStatus)(oldOrderData.shipment_number, data.orderData.status ? data.orderData.status : newOrder.status, {
+                await (0, updateGeniStatus_1.updateExternalOrderStatus)(oldOrderData.shipment_number, webhookUrl, data.orderData.status ? data.orderData.status : newOrder.status, {
                     return_reason: data.orderData.status === "RETURNED"
                         ? data.orderData.notes
                         : undefined,

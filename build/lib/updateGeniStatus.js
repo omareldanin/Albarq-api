@@ -55,7 +55,7 @@ function stripEmpty(obj) {
  * Send a single status update to Jenni using an already-resolved action code.
  * Prefer `updateExternalOrderStatus` which maps from the internal OrderStatus.
  */
-async function sendStatusUpdateToJenni(shipmentId, actionCode, details = {}) {
+async function sendStatusUpdateToJenni(shipmentId, url, actionCode, details = {}) {
     await ensureValidToken();
     const payload = {
         system_code: JENNI_SYSTEM_CODE,
@@ -68,7 +68,7 @@ async function sendStatusUpdateToJenni(shipmentId, actionCode, details = {}) {
         ],
     };
     try {
-        const { data } = await axios_1.default.post(`${JENNI_API_URL}/v2/push/update-status`, payload, {
+        const { data } = await axios_1.default.post(`${url}/v2/push/update-status`, payload, {
             headers: {
                 Authorization: `${authToken}`,
                 "Content-Type": "application/json",
@@ -100,12 +100,12 @@ async function sendStatusUpdateToJenni(shipmentId, actionCode, details = {}) {
  * @param details     extra fields required by some actions
  * @returns the external response, or null if this status has no external action
  */
-async function updateExternalOrderStatus(shipmentId, status, details = {}) {
+async function updateExternalOrderStatus(shipmentId, url, status, details = {}) {
     const actionCode = (0, externalStatus_1.toExternalAction)(status);
     if (!actionCode) {
         // REGISTERED / CHANGE_ADDRESS — nothing to push
         return null;
     }
-    return sendStatusUpdateToJenni(+shipmentId, actionCode, details);
+    return sendStatusUpdateToJenni(+shipmentId, url, actionCode, details);
 }
 //# sourceMappingURL=updateGeniStatus.js.map
