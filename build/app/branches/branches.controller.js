@@ -31,7 +31,7 @@ class BranchesController {
             ? req.query.myBranchs === "true"
             : undefined;
         if (Object.keys(client_1.AdminRole).includes(loggedInUser.role)) {
-            companyID = req.query.company_id ? +req.query.company_id : undefined;
+            companyID = req.query.company_id ? +req.query.company_id : 16;
         }
         else if (loggedInUser.companyID) {
             companyID = loggedInUser.companyID;

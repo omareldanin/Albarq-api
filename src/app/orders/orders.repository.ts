@@ -3158,7 +3158,17 @@ export class OrdersRepository {
       for (const order of data.orders) {
         let deliveryAgentNet = data.costs.deliveryAgentDeliveryCost;
 
-        if (order?.client.activeProfit) {
+        if (order?.forwardedFrom.activeProfit) {
+          const cost = order.forwardedFrom.branchCosts?.find(
+            (c) => c.branchId === order.branch?.id,
+          );
+          if (cost) {
+            deliveryAgentNet =
+              data.costs.deliveryAgentDeliveryCost > cost.receivingBranchProfit
+                ? cost.receivingBranchProfit - 250
+                : data.costs.deliveryAgentDeliveryCost - 250;
+          }
+        } else if (order?.client.activeProfit) {
           const cost = order.client.branchCosts.find(
             (c) => c.branchId === order.branch?.id,
           );

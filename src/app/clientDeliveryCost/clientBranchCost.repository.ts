@@ -2,12 +2,11 @@ import {prisma} from "../../database/db";
 import type {ClientBranchCostUpsertType} from "./clientBranchCost.dto";
 
 export class ClientBranchCostRepository {
+  // ---------- CLIENT ----------
   getClientBranchCosts = async ({clientID}: {clientID: number}) => {
     return prisma.clientBranchCost.findMany({
       where: {clientId: clientID},
-      include: {
-        branch: {select: {id: true, name: true}},
-      },
+      include: {branch: {select: {id: true, name: true}}},
     });
   };
 
@@ -34,11 +33,7 @@ export class ClientBranchCostRepository {
     return prisma.clientBranchCost.upsert({
       where: {clientId_branchId: {clientId: clientID, branchId: branchID}},
       update: profits,
-      create: {
-        clientId: clientID,
-        branchId: branchID,
-        ...profits,
-      },
+      create: {clientId: clientID, branchId: branchID, ...profits},
     });
   };
 
@@ -54,8 +49,7 @@ export class ClientBranchCostRepository {
     });
   };
 
-  // Resolve applicable cost: per-branch override (if active) -> client defaults
-  resolveDeliveryCost = async ({
+  resolveClientDeliveryCost = async ({
     clientID,
     branchID,
   }: {
@@ -65,11 +59,75 @@ export class ClientBranchCostRepository {
     const override = await prisma.clientBranchCost.findUnique({
       where: {clientId_branchId: {clientId: clientID, branchId: branchID}},
     });
+    if (!override) return null;
+    return {
+      branchID,
+      deliveryAgentProfit: override.deliveryAgentProfit,
+      mainBranchProfit: override.mainBranchProfit,
+      forwardedBranchProfit: override.forwardedBranchProfit,
+      receivingBranchProfit: override.receivingBranchProfit,
+      activeProfit: override.activeProfit,
+    };
+  };
 
-    if (!override) {
-      return null;
-    }
+  // ---------- COMPANY ----------
+  getCompanyBranchCosts = async ({companyID}: {companyID: number}) => {
+    return prisma.clientBranchCost.findMany({
+      where: {companyId: companyID},
+      include: {branch: {select: {id: true, name: true}}},
+    });
+  };
 
+  getCompanyBranchCost = async ({
+    companyID,
+    branchID,
+  }: {
+    companyID: number;
+    branchID: number;
+  }) => {
+    return prisma.clientBranchCost.findUnique({
+      where: {companyId_branchId: {companyId: companyID, branchId: branchID}},
+    });
+  };
+
+  upsertCompanyBranchCost = async ({
+    companyID,
+    data,
+  }: {
+    companyID: number;
+    data: ClientBranchCostUpsertType;
+  }) => {
+    const {branchID, ...profits} = data;
+    return prisma.clientBranchCost.upsert({
+      where: {companyId_branchId: {companyId: companyID, branchId: branchID}},
+      update: profits,
+      create: {companyId: companyID, branchId: branchID, ...profits},
+    });
+  };
+
+  deleteCompanyBranchCost = async ({
+    companyID,
+    branchID,
+  }: {
+    companyID: number;
+    branchID: number;
+  }) => {
+    return prisma.clientBranchCost.delete({
+      where: {companyId_branchId: {companyId: companyID, branchId: branchID}},
+    });
+  };
+
+  resolveCompanyDeliveryCost = async ({
+    companyID,
+    branchID,
+  }: {
+    companyID: number;
+    branchID: number;
+  }) => {
+    const override = await prisma.clientBranchCost.findUnique({
+      where: {companyId_branchId: {companyId: companyID, branchId: branchID}},
+    });
+    if (!override) return null;
     return {
       branchID,
       deliveryAgentProfit: override.deliveryAgentProfit,

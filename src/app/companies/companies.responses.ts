@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type {Prisma} from "@prisma/client";
 
 export const companySelect = {
   id: true,
@@ -9,4 +9,5 @@ export const companySelect = {
   isExternal: true,
   targetCompanyId: true,
   governoratesDeliveryCosts: true,
+  activeProfit: true,
 } satisfies Prisma.CompanySelect;

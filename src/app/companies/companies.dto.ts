@@ -1,7 +1,7 @@
 // // import { generateMock } from "@anatine/zod-mock";
-import { generateSchema } from "@anatine/zod-openapi";
-import { Governorate } from "@prisma/client";
-import { z } from "zod";
+import {generateSchema} from "@anatine/zod-openapi";
+import {Governorate} from "@prisma/client";
+import {z} from "zod";
 
 /*******************************************************************************
  * Empty string needs to be converted to null
@@ -20,6 +20,11 @@ export const CompanyCreateSchema = z.preprocess(
       name: z.string().min(3),
       phone: z.string().min(6),
       companyID: z.string().optional(),
+      activeProfit: z.preprocess((val) => {
+        if (val === "true") return true;
+        if (val === "false") return false;
+        return val;
+      }, z.boolean().optional()),
       isExternal: z.preprocess((val) => {
         if (val === "true") return true;
         if (val === "false") return false;
@@ -78,6 +83,11 @@ export const CompanyUpdateSchema = z
     registrationText: z.string().optional(),
     password: z.string().min(6).optional(),
     companyID: z.string().optional(),
+    activeProfit: z.preprocess((val) => {
+      if (val === "true") return true;
+      if (val === "false") return false;
+      return val;
+    }, z.boolean().optional()),
     isExternal: z.preprocess((val) => {
       if (val === "true") return true;
       if (val === "false") return false;

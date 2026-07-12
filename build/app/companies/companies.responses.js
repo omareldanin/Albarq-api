@@ -10,5 +10,6 @@ exports.companySelect = {
     isExternal: true,
     targetCompanyId: true,
     governoratesDeliveryCosts: true,
+    activeProfit: true,
 };
 //# sourceMappingURL=companies.responses.js.map

@@ -19,10 +19,40 @@ export const reportsOrderSelect = {
   createdAt: true,
   branchDeliveryCost: true,
   weight: true,
+  forwardedFrom: {
+    select: {
+      id: true,
+      activeProfit: true,
+      clientCosts: {
+        select: {
+          branchId: true,
+          deliveryAgentProfit: true,
+          mainBranchProfit: true,
+          forwardedBranchProfit: true,
+          receivingBranchProfit: true,
+        },
+      },
+    },
+  },
   client: {
     select: {
       branchId: true,
       activeProfit: true,
+      company: {
+        select: {
+          id: true,
+          activeProfit: true,
+          clientCosts: {
+            select: {
+              branchId: true,
+              deliveryAgentProfit: true,
+              mainBranchProfit: true,
+              forwardedBranchProfit: true,
+              receivingBranchProfit: true,
+            },
+          },
+        },
+      },
       branchCosts: {
         select: {
           branchId: true,
@@ -177,6 +207,11 @@ export const reportsOrderReform = (
       branchId: order.client.branchId,
       activeProfit: order.client.activeProfit,
       branchCosts: order.client.branchCosts,
+    },
+    forwardedFrom: {
+      id: order.forwardedFrom?.id,
+      activeProfit: order.forwardedFrom?.activeProfit,
+      branchCosts: order.forwardedFrom?.clientCosts,
     },
     deliveryAgent: order.deliveryAgent && {
       id: order.deliveryAgent.user.id,

@@ -5411,6 +5411,128 @@
                 }
             }
         },
+        "/api/v1/companies/{companyID}/branch-costs": {
+            "get": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "companyID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "companyID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyID}/branch-costs/{branchID}": {
+            "delete": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "companyID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "branchID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/companies/{companyID}/branch-costs/{branchID}/resolve": {
+            "get": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "companyID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "branchID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/v2/company/forward-orders": {
             "post": {
                 "description": "",
@@ -7104,6 +7226,11 @@
                                     "string"
                                 ]
                             },
+                            "activeProfit": {
+                                "type": [
+                                    "boolean"
+                                ]
+                            },
                             "isExternal": {
                                 "type": [
                                     "boolean"
@@ -7262,6 +7389,11 @@
                     "companyID": {
                         "type": [
                             "string"
+                        ]
+                    },
+                    "activeProfit": {
+                        "type": [
+                            "boolean"
                         ]
                     },
                     "isExternal": {

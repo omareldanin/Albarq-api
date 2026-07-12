@@ -193,7 +193,7 @@ model Branch {
 
 model ClientBranchCost {
   id                    Int      @id @default(autoincrement())
-  clientId              Int
+  clientId              Int?
   branchId              Int
   deliveryAgentProfit   Int      @default(0)
   mainBranchProfit      Int      @default(0)
@@ -203,11 +203,15 @@ model ClientBranchCost {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
-  client Client @relation(fields: [clientId], references: [id])
-  branch Branch @relation(fields: [branchId], references: [id])
+  client    Client?  @relation(fields: [clientId], references: [id])
+  branch    Branch   @relation(fields: [branchId], references: [id])
+  company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
 
   @@unique([clientId, branchId])
+  @@unique([companyId, branchId])
   @@index([clientId])
+  @@index([companyId])
   @@index([branchId])
 }
 
@@ -337,6 +341,7 @@ model Company {
   isExternal                Boolean  @default(false)
   governoratesDeliveryCosts Json     @default("[]")
   webhookUrl                String?
+  activeProfit              Boolean  @default(false)
 
   automaticUpdates        AutomaticUpdate[]
   banners                 Banner[]
@@ -358,6 +363,7 @@ model Company {
   stores                  Store[]
   tickets                 Ticket[]
   transactions            Transaction[]
+  clientCosts             ClientBranchCost[]
   usersLoginHistory       UsersLoginHistory[]
 }
 

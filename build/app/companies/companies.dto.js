@@ -20,6 +20,13 @@ exports.CompanyCreateSchema = zod_1.z.preprocess((data) => {
         name: zod_1.z.string().min(3),
         phone: zod_1.z.string().min(6),
         companyID: zod_1.z.string().optional(),
+        activeProfit: zod_1.z.preprocess((val) => {
+            if (val === "true")
+                return true;
+            if (val === "false")
+                return false;
+            return val;
+        }, zod_1.z.boolean().optional()),
         isExternal: zod_1.z.preprocess((val) => {
             if (val === "true")
                 return true;
@@ -65,6 +72,13 @@ exports.CompanyUpdateSchema = zod_1.z
     registrationText: zod_1.z.string().optional(),
     password: zod_1.z.string().min(6).optional(),
     companyID: zod_1.z.string().optional(),
+    activeProfit: zod_1.z.preprocess((val) => {
+        if (val === "true")
+            return true;
+        if (val === "false")
+            return false;
+        return val;
+    }, zod_1.z.boolean().optional()),
     isExternal: zod_1.z.preprocess((val) => {
         if (val === "true")
             return true;
