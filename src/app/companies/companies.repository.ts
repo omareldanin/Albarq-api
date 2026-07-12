@@ -73,7 +73,6 @@ export class CompaniesRepository {
           },
           where: {
             mainCompany: filters.mainCompany,
-            isExternal: loggedInUser.role !== "ADMIN" ? false : undefined,
           },
           orderBy: [
             {
