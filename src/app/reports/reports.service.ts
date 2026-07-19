@@ -947,6 +947,8 @@ export class ReportsService {
       if (
         (report?.type === "CLIENT" &&
           !data.loggedInUser.permissions.includes("DELETE_CLIENT_REPORT")) ||
+        (report?.type === "EMPLOYEE" &&
+          !data.loggedInUser.permissions.includes("DELETE_EMPLOYEE_REPORT")) ||
         (report?.type === "BRANCH" &&
           !data.loggedInUser.permissions.includes("DELETE_BRANCH_REPORT")) ||
         (report?.type === "COMPANY" &&

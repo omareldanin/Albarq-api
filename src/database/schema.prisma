@@ -72,6 +72,7 @@ model Employee {
   mainEmergency           Boolean                          @default(false)
   orderType               String?
   deliveryAgentReports    DeliveryAgentReport[]
+  employeeReports         EmployeeReport[]
   deliveryAgentsLocations DeliveryAgentsLocations[]
   branch                  Branch?                          @relation(fields: [branchId], references: [id])
   Client                  Client?                          @relation(fields: [clientId], references: [id])
@@ -96,21 +97,13 @@ model Employee {
   managedStores           Store[]
   tickets                 Ticket[]
   transactions            Transaction[]
+  clientCommissions       EmployeeClientCommission[]
 
   @@index([companyId])
   @@index([role])
   @@index([permissions])
   @@index([orderStatus])
   @@index([branchId])
-}
-
-model InquiryEmployeesDeliveryAgents {
-  inquiryEmployeeId Int
-  deliveryAgentId   Int
-  deliveryAgent     Employee @relation("inquiryDeliveryAgents", fields: [deliveryAgentId], references: [id], onDelete: Cascade)
-  inquiryEmployee   Employee @relation("inquiryEmployees", fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
-
-  @@id([inquiryEmployeeId, deliveryAgentId])
 }
 
 model Client {
@@ -134,12 +127,12 @@ model Client {
   activeProfit              Boolean            @default(false)
 
   categories            Category[]
-  branch                Branch?                 @relation(fields: [branchId], references: [id])
-  company               Company                 @relation(fields: [companyId], references: [id])
-  createdBy             User?                   @relation("createdBy", fields: [createdById], references: [id])
-  deletedBy             User?                   @relation("deletedBy", fields: [deletedById], references: [id])
-  user                  User                    @relation(fields: [id], references: [id])
-  repository            Repository?             @relation(fields: [repositoryId], references: [id])
+  branch                Branch?                    @relation(fields: [branchId], references: [id])
+  company               Company                    @relation(fields: [companyId], references: [id])
+  createdBy             User?                      @relation("createdBy", fields: [createdById], references: [id])
+  deletedBy             User?                      @relation("deletedBy", fields: [deletedById], references: [id])
+  user                  User                       @relation(fields: [id], references: [id])
+  repository            Repository?                @relation(fields: [repositoryId], references: [id])
   clientReports         ClientReport[]
   colors                Color[]
   CustomerOutput        CustomerOutput[]
@@ -151,9 +144,37 @@ model Client {
   sizes                 Size[]
   stores                Store[]
   tickets               Ticket[]
+  employeeCommissions   EmployeeClientCommission[]
 
   @@index([companyId])
   @@index([branchId])
+}
+
+model EmployeeClientCommission {
+  id               Int      @id @default(autoincrement())
+  employeeId       Int
+  clientId         Int      @unique
+  baghdadOrderCost Float    @default(0)
+  govOrderCost     Float    @default(0)
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+  client   Client   @relation(fields: [clientId], references: [id])
+
+  @@unique([employeeId, clientId])
+  @@index([employeeId])
+  @@index([clientId])
+}
+
+model InquiryEmployeesDeliveryAgents {
+  inquiryEmployeeId Int
+  deliveryAgentId   Int
+  deliveryAgent     Employee @relation("inquiryDeliveryAgents", fields: [deliveryAgentId], references: [id], onDelete: Cascade)
+  inquiryEmployee   Employee @relation("inquiryEmployees", fields: [inquiryEmployeeId], references: [id], onDelete: Cascade)
+
+  @@id([inquiryEmployeeId, deliveryAgentId])
 }
 
 model Branch {
@@ -465,11 +486,14 @@ model Order {
   clientReport           ClientReport[]           @relation("ClientReportToOrder")
   companyReport          CompanyReport[]          @relation("CompanyReportToOrder")
   repositoryReport       RepositoryReport[]       @relation("OrderToRepositoryReport")
+  employeeReport         EmployeeReport?          @relation(fields: [employeeReportId], references: [id])
+  employeeReportId       Int?
 
   @@index([deleted, confirmed, status, governorate, createdAt])
   @@index([branchReportId])
   @@index([deliveryAgentReportId])
   @@index([governorateReportId])
+  @@index([employeeReportId])
   @@index([companyId, deleted, createdAt(sort: Desc)])
   @@index([companyId, status, deleted, createdAt(sort: Desc)])
   @@index([companyId, clientId, deleted, createdAt(sort: Desc)])
@@ -665,6 +689,7 @@ model Report {
   deletedBy               User?                @relation("deletedBy", fields: [deletedById], references: [id])
   createdBy               Employee             @relation(fields: [employeeId], references: [id])
   repositoryReport        RepositoryReport?
+  employeeReport          EmployeeReport?
 
   @@index([type])
   @@index([employeeId])
@@ -732,6 +757,16 @@ model RepositoryReport {
   @@index([repositoryId])
   @@index([secondaryType])
   @@index([repositoryId, secondaryType])
+}
+
+model EmployeeReport {
+  id         Int       @id
+  report     Report    @relation(fields: [id], references: [id], onDelete: Cascade)
+  orders     Order[]
+  employee   Employee? @relation(fields: [employeeId], references: [id])
+  employeeId Int?
+
+  @@index([employeeId])
 }
 
 model BranchReport {
@@ -1017,12 +1052,14 @@ enum Permission {
   CREATE_COMPANY_REPORT
   CREATE_GOVERNMENT_REPORT
   CREATE_BRANCH_REPORT
+  CREATE_EMPLOYEE_REPORT
   DELETE_COMPANY_REPORT
   DELETE_REPOSITORY_REPORT
   DELETE_GOVERNMENT_REPORT
   DELETE_DELIVERY_AGENT_REPORT
   DELETE_CLIENT_REPORT
   DELETE_BRANCH_REPORT
+  DELETE_EMPLOYEE_REPORT
   CHANGE_ORDER_DATA
   CHANGE_ORDER_PAID_AMOUNT
   CHANGE_ORDER_RECEIPT_NUMBER
@@ -1127,6 +1164,7 @@ enum ReportType {
   DELIVERY_AGENT
   BRANCH
   CLIENT
+  EMPLOYEE
 }
 
 enum RepositoryType {

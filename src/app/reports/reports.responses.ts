@@ -29,6 +29,26 @@ export const reportSelect = {
   url: true,
   createdAt: true,
   updatedAt: true,
+  employeeReport: {
+    select: {
+      id: true,
+      employee: {
+        select: {
+          branch: {
+            select: {
+              name: true,
+            },
+          },
+          user: {
+            select: {
+              name: true,
+              phone: true,
+            },
+          },
+        },
+      },
+    },
+  },
   clientReport: {
     select: {
       id: true,
@@ -274,6 +294,26 @@ export const AllreportSelect = {
       },
     },
   },
+  employeeReport: {
+    select: {
+      id: true,
+      employee: {
+        select: {
+          branch: {
+            select: {
+              name: true,
+            },
+          },
+          user: {
+            select: {
+              name: true,
+              phone: true,
+            },
+          },
+        },
+      },
+    },
+  },
   branchReport: {
     select: {
       type: true,
@@ -416,6 +456,12 @@ export const reportReform = (
       deliveryAgentDeliveryCost:
         report.deliveryAgentReport.deliveryAgentDeliveryCost,
     },
+    employeeReport: report.employeeReport && {
+      reportNumber: report.employeeReport.id,
+      employee: report.employeeReport.employee?.user.name,
+      phone: report.employeeReport.employee?.user.phone,
+      branch: report.employeeReport.employee?.branch?.name,
+    },
     companyReport: report.companyReport && {
       reportNumber: report.companyReport.id,
       companyReportOrders: report.companyReport.orders ?? [],
@@ -465,6 +511,12 @@ export const AllreportReform = (
       baghdadDeliveryCost: report.clientReport.baghdadDeliveryCost,
       governoratesDeliveryCost: report.clientReport.governoratesDeliveryCost,
       secondaryType: report.clientReport.secondaryType,
+    },
+    employeeReport: report.employeeReport && {
+      reportNumber: report.employeeReport.id,
+      employee: report.employeeReport.employee?.user.name,
+      phone: report.employeeReport.employee?.user.phone,
+      branch: report.employeeReport.employee?.branch?.name,
     },
     repositoryReport: report.repositoryReport && {
       reportNumber: report.repositoryReport.id,

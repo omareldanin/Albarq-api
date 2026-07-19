@@ -26,6 +26,7 @@ import message from "../app/messages/messages.routes";
 import transactions from "../app/transactions/transactions.routes";
 import externalOrders from "../app/externalOrders/orders.routes";
 import clientDeliveryCost from "../app/clientDeliveryCost/clientBranchCost.routes";
+import employeeCommissions from "../app/employeeCommissions/employeeCommission.routes";
 
 import {catchAsync} from "../lib/catchAsync";
 import {upload} from "../middlewares/upload";
@@ -59,6 +60,7 @@ router.use("/", statusRoutes);
 router.use("/", transactions);
 router.use("/", externalOrders);
 router.use("/", clientDeliveryCost);
+router.use("/", employeeCommissions);
 
 /*******************************************************************************
  * TEST ROUTES

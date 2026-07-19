@@ -313,9 +313,18 @@ class ReportsRepository {
                     },
                 },
                 {
-                    deliveryAgentReport: {
-                        deliveryAgentId: data.filters.deliveryAgentID,
-                    },
+                    deliveryAgentReport: data.filters.type === "DELIVERY_AGENT"
+                        ? {
+                            deliveryAgentId: data.filters.deliveryAgentID,
+                        }
+                        : undefined,
+                },
+                {
+                    employeeReport: data.filters.type === "EMPLOYEE"
+                        ? {
+                            employeeId: data.filters.deliveryAgentID,
+                        }
+                        : undefined,
                 },
                 {
                     governorateReport: {

@@ -5533,6 +5533,145 @@
                 }
             }
         },
+        "/api/v1/employees/{employeeID}/commission": {
+            "post": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "employeeID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            },
+            "get": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "employeeID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/employees/{employeeID}/clients": {
+            "get": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "employeeID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "employeeID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/employees/{employeeID}/clients/{clientID}": {
+            "delete": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "employeeID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "clientID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/v2/company/forward-orders": {
             "post": {
                 "description": "",
@@ -5849,12 +5988,14 @@
                                 "CREATE_COMPANY_REPORT",
                                 "CREATE_GOVERNMENT_REPORT",
                                 "CREATE_BRANCH_REPORT",
+                                "CREATE_EMPLOYEE_REPORT",
                                 "DELETE_COMPANY_REPORT",
                                 "DELETE_REPOSITORY_REPORT",
                                 "DELETE_GOVERNMENT_REPORT",
                                 "DELETE_DELIVERY_AGENT_REPORT",
                                 "DELETE_CLIENT_REPORT",
                                 "DELETE_BRANCH_REPORT",
+                                "DELETE_EMPLOYEE_REPORT",
                                 "CHANGE_ORDER_DATA",
                                 "CHANGE_ORDER_PAID_AMOUNT",
                                 "CHANGE_ORDER_RECEIPT_NUMBER",
@@ -6267,12 +6408,14 @@
                                 "CREATE_COMPANY_REPORT",
                                 "CREATE_GOVERNMENT_REPORT",
                                 "CREATE_BRANCH_REPORT",
+                                "CREATE_EMPLOYEE_REPORT",
                                 "DELETE_COMPANY_REPORT",
                                 "DELETE_REPOSITORY_REPORT",
                                 "DELETE_GOVERNMENT_REPORT",
                                 "DELETE_DELIVERY_AGENT_REPORT",
                                 "DELETE_CLIENT_REPORT",
                                 "DELETE_BRANCH_REPORT",
+                                "DELETE_EMPLOYEE_REPORT",
                                 "CHANGE_ORDER_DATA",
                                 "CHANGE_ORDER_PAID_AMOUNT",
                                 "CHANGE_ORDER_RECEIPT_NUMBER",

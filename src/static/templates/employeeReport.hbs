@@ -1,0 +1,78 @@
+<html lang="ar" dir="rtl">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>تقرير كشوفات عميل</title>
+  </head>
+
+  <body class="px-20">
+    <header>
+      <table>
+        <tr>
+          <td style="width: 25%;">الشركة:
+            <span>{{reportData.company.name}}</span></td>
+          <td style="width: 25%;" class="title">تقرير نسب الموظف</td>
+          <td style="width: 25%;">عدد الطلبيات:
+            <span>{{add
+                reportData.baghdadOrdersCount
+                reportData.governoratesOrdersCount
+              }}</span></td>
+          <td style="width: 25%;" rowspan="3"><img
+              src="{{reportData.company.logo}}"
+            /></td>
+        </tr>
+        <tr>
+          <td style="width: 25%;">صافي الموظف:
+            <span>{{currency reportData.deliveryAgentNet}}</span></td>
+          <td style="width: 25%;">الموظف:
+            <span>{{reportData.employeeReport.employee}}</span></td>
+          <td style="width: 25%;">التاريخ:
+            <span>{{date reportData.createdAt}}</span></td>
+          <td style="width: 25%;"></td>
+        </tr>
+        {{!-- <tr>
+          <td style="width: 25%;">صافي الموظف:
+            <span>{{currency reportData.deliveryAgentNet}}</span></td>
+          <td style="width: 25%;"></td>
+          <td style="width: 25%;">عدد طلبيات بغداد:
+            <span>{{reportData.baghdadOrdersCount}}</span></td>
+          <td style="width: 25%;"></td>
+        </tr> --}}
+      </table>
+    </header>
+    <main>
+      <table>
+        <thead>
+          <tr class="bg-green">
+            <th>#</th>
+            <th>العميل</th>
+            <th>نسبة بغداد</th>
+            <th>عدد طلبات بغداد</th>
+            <th>نسبة المحافظات</th>
+            <th>عدد طلبات المحافظات</th>
+            <th>اجمالي عمولة بغداد</th>
+            <th>اجمالي عمولة المحافظات</th>
+            <th>الاجمالي</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each clients}}
+            <tr>
+              <td class="nowrap">{{inc @index}}</td>
+              <td>{{clientName}}</td>
+              <td>{{currency baghdadOrderCost}}</td>
+              <td>{{currency baghdadCount}}</td>
+              <td>{{currency govOrderCost}}</td>
+              <td>{{currency govCount}}</td>
+              <td>{{currency baghdadTotal}}</td>
+              <td>{{currency govTotal}}</td>
+              <td>{{currency total}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </main>
+  </body>
+
+</html>
