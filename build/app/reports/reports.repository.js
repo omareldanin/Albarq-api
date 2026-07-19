@@ -313,7 +313,7 @@ class ReportsRepository {
                     },
                 },
                 {
-                    deliveryAgentReport: data.filters.type === "DELIVERY_AGENT"
+                    deliveryAgentReport: data.filters.type !== "EMPLOYEE" && data.filters.deliveryAgentID
                         ? {
                             deliveryAgentId: data.filters.deliveryAgentID,
                         }

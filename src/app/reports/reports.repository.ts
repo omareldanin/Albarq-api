@@ -346,7 +346,7 @@ export class ReportsRepository {
         },
         {
           deliveryAgentReport:
-            data.filters.type === "DELIVERY_AGENT"
+            data.filters.type !== "EMPLOYEE" && data.filters.deliveryAgentID
               ? {
                   deliveryAgentId: data.filters.deliveryAgentID,
                 }
