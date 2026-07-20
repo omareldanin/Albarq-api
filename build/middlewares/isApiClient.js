@@ -9,7 +9,7 @@ const db_1 = require("../database/db");
 const crypto_1 = __importDefault(require("crypto"));
 const isApiClient = async (req, res, next) => {
     const apiKey = req.header("x-api-key");
-    const authToken = req.headers.authorization?.replace("Bearer ", "");
+    const authToken = req.headers.authorization?.replace("Api-Key ", "");
     if (apiKey && authToken && apiKey !== authToken) {
         return next(new AppError_1.AppError("Conflicting credentials", 401));
     }

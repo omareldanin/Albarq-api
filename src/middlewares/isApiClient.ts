@@ -10,7 +10,7 @@ export const isApiClient = async (
   next: NextFunction,
 ) => {
   const apiKey = req.header("x-api-key");
-  const authToken = req.headers.authorization?.replace("Bearer ", "");
+  const authToken = req.headers.authorization?.replace("Api-Key ", "");
 
   if (apiKey && authToken && apiKey !== authToken) {
     return next(new AppError("Conflicting credentials", 401));
