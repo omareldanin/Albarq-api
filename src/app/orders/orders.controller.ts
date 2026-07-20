@@ -236,7 +236,6 @@ export class OrdersController {
 
   getAllOrdersApiKey = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
-    console.log(loggedInUser);
 
     const filters = OrdersFiltersSchema.parse({
       search: req.query.search,

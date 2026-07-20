@@ -232,7 +232,6 @@ class OrdersController {
     });
     getAllOrdersApiKey = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const loggedInUser = res.locals.user;
-        console.log(loggedInUser);
         const filters = orders_dto_1.OrdersFiltersSchema.parse({
             search: req.query.search,
             sort: req.query.sort,

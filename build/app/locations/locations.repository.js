@@ -251,6 +251,7 @@ class LocationsRepository {
         const locations = await db_1.prisma.location.findMany({
             where: {
                 governorate: governorate || undefined,
+                companyId: 16,
             },
             select: {
                 id: true,

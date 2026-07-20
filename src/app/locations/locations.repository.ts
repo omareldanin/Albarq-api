@@ -301,6 +301,7 @@ export class LocationsRepository {
     const locations = await prisma.location.findMany({
       where: {
         governorate: governorate || undefined,
+        companyId: 16,
       },
       select: {
         id: true,
