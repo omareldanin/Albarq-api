@@ -1501,9 +1501,19 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "x-api-key",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
+                    "401": {
+                        "description": "Unauthorized"
+                    },
                     "429": {
                         "description": "Too Many Requests"
                     }
@@ -1520,11 +1530,18 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "x-api-key",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
-                    "default": {
-                        "description": ""
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -1900,11 +1917,18 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "x-api-key",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
-                    "default": {
-                        "description": ""
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -2070,11 +2094,18 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "x-api-key",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
-                    "default": {
-                        "description": ""
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -2198,11 +2229,18 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "x-api-key",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
-                    "default": {
-                        "description": ""
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -2336,11 +2374,18 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "x-api-key",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
-                    "default": {
-                        "description": ""
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }
@@ -3362,11 +3407,18 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "x-api-key",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
-                    "default": {
-                        "description": ""
+                    "401": {
+                        "description": "Unauthorized"
                     }
                 }
             }

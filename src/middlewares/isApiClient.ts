@@ -9,15 +9,23 @@ export const isApiClient = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const auth = req.headers.authorization;
+  const apiKey = req.header("x-api-key");
+  const authToken = req.headers.authorization?.replace("Bearer ", "");
 
-  if (!auth || !auth.startsWith("Api-Key ")) {
-    return next(new AppError("API Key required", 401));
+  if (apiKey && authToken && apiKey !== authToken) {
+    return next(new AppError("Conflicting credentials", 401));
   }
 
-  const apiKey = auth.replace("Api-Key ", "").trim();
+  const secret = apiKey ?? authToken;
 
-  const apiKeyHash = crypto.createHash("sha256").update(apiKey).digest("hex");
+  if (!secret) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid authentication token",
+    });
+  }
+
+  const apiKeyHash = crypto.createHash("sha256").update(secret).digest("hex");
 
   const client = await prisma.client.findFirst({
     where: {apiKeyHash},
