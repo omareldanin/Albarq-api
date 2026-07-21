@@ -103,6 +103,7 @@ export class OrdersController {
       governorate: req.query.governorate,
       statuses: req.query.statuses,
       status: req.query.status,
+      reportSecondaryStatus: req.query.reportSecondaryStatus,
       deliveryType: req.query.delivery_type,
       storeID: req.query.store_id,
       repositoryID: req.query.repository_id,

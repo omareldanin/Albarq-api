@@ -7,6 +7,7 @@ import {
   OrderTimelineType,
   ProcessingStatus,
   ReportType,
+  SecondaryReportType,
   SecondaryStatus,
 } from "@prisma/client";
 import {z} from "zod";
@@ -361,6 +362,7 @@ export const OrdersFiltersSchema = z.object({
     z.array(z.nativeEnum(SecondaryStatus)).optional(),
   ),
   secondaryStatus: z.nativeEnum(SecondaryStatus).optional(),
+  reportSecondaryStatus: z.nativeEnum(SecondaryReportType).optional(),
   status: z.nativeEnum(OrderStatus).optional(),
   processingStatus: z.nativeEnum(ProcessingStatus).optional(),
   deliveryType: z.nativeEnum(DeliveryType).optional(),

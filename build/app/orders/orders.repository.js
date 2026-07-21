@@ -1155,7 +1155,7 @@ class OrdersRepository {
                                             secondaryType: data.filters.delivered &&
                                                 data.filters.orderType === "forwarded"
                                                 ? "DELIVERED"
-                                                : undefined,
+                                                : data.filters.reportSecondaryStatus,
                                             report: {
                                                 deleted: false,
                                             },
@@ -1171,7 +1171,7 @@ class OrdersRepository {
                                                 none: {
                                                     secondaryType: data.filters.delivered
                                                         ? "DELIVERED"
-                                                        : undefined,
+                                                        : data.filters.reportSecondaryStatus,
                                                     report: {
                                                         deleted: false,
                                                     },

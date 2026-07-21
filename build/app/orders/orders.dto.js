@@ -299,6 +299,7 @@ exports.OrdersFiltersSchema = zod_1.z.object({
         return val;
     }, zod_1.z.array(zod_1.z.nativeEnum(client_1.SecondaryStatus)).optional()),
     secondaryStatus: zod_1.z.nativeEnum(client_1.SecondaryStatus).optional(),
+    reportSecondaryStatus: zod_1.z.nativeEnum(client_1.SecondaryReportType).optional(),
     status: zod_1.z.nativeEnum(client_1.OrderStatus).optional(),
     processingStatus: zod_1.z.nativeEnum(client_1.ProcessingStatus).optional(),
     deliveryType: zod_1.z.nativeEnum(client_1.DeliveryType).optional(),
