@@ -263,7 +263,8 @@ class ReportsService {
         const reportData = await reportsRepository.getReport({
             reportID: report.id,
         });
-        if (data.reportData.type === client_1.ReportType.CLIENT) {
+        if (data.reportData.type === client_1.ReportType.CLIENT &&
+            data.reportData.secondaryType === "DELIVERED") {
             await transactionsRepository.createTransaction({
                 companyID: reportData?.company.id,
                 createdByID: reportData?.createdBy.id,

@@ -366,7 +366,10 @@ export class ReportsService {
       reportID: report.id,
     });
 
-    if (data.reportData.type === ReportType.CLIENT) {
+    if (
+      data.reportData.type === ReportType.CLIENT &&
+      data.reportData.secondaryType === "DELIVERED"
+    ) {
       await transactionsRepository.createTransaction({
         companyID: reportData?.company.id!!,
         createdByID: reportData?.createdBy.id!!,

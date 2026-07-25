@@ -31,7 +31,9 @@ class TransactionsController {
         else {
             companyID = loggedInUser.companyID;
         }
-        const branchID = req.query.branch_id ? +req.query.branch_id : undefined;
+        const branchID = req.query.branch_id
+            ? +req.query.branch_id
+            : loggedInUser.branchId;
         const employeeID = req.query.employee_id
             ? +req.query.employee_id
             : undefined;

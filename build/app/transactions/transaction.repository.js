@@ -93,7 +93,7 @@ class TransactionsRepository {
                 where: {
                     type: "DEPOSIT",
                     companyId: filters.companyId,
-                    branchId: filters.branchId,
+                    branchId: filters.loggedInUser?.branchId,
                     approved: true,
                     deleted: false,
                 },
@@ -103,7 +103,7 @@ class TransactionsRepository {
                 where: {
                     type: "WITHDRAW",
                     companyId: filters.companyId,
-                    branchId: filters.branchId,
+                    branchId: filters.loggedInUser?.branchId,
                     approved: true,
                     deleted: false,
                 },
@@ -115,7 +115,7 @@ class TransactionsRepository {
                     companyId: filters.companyId,
                     deleted: false,
                     confirmed: true,
-                    branchId: filters.branchId,
+                    branchId: filters.loggedInUser?.branchId,
                     deliveryAgentId: filters.deliveryAgentId,
                     ...(createdAtFilter && { createdAt: createdAtFilter }),
                     OR: [
@@ -314,7 +314,7 @@ class TransactionsRepository {
                 where: {
                     type: "DEPOSIT",
                     companyId: filters.companyId,
-                    branchId: filters.branchId,
+                    branchId: filters.loggedInUser?.branchId,
                     approved: false,
                     deleted: false,
                 },
@@ -324,7 +324,7 @@ class TransactionsRepository {
                 where: {
                     type: "WITHDRAW",
                     companyId: filters.companyId,
-                    branchId: filters.branchId,
+                    branchId: filters.loggedInUser?.branchId,
                     approved: false,
                     deleted: false,
                 },
