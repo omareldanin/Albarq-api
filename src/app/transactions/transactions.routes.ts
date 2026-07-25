@@ -1,156 +1,84 @@
 import {Router} from "express";
-import {AdminRole, ClientRole, EmployeeRole} from "@prisma/client";
-import {isAutherized} from "../../middlewares/isAutherized";
-import {isLoggedIn} from "../../middlewares/isLoggedIn";
+import {EmployeeRole} from "@prisma/client";
 import {TransactionsController} from "./transactions.controller";
+import {isLoggedIn} from "../../middlewares/isLoggedIn";
+import {isAutherized} from "../../middlewares/isAutherized";
 import {upload} from "../../middlewares/upload";
 
 const router = Router();
 const transactionsController = new TransactionsController();
 
-/**
- * @route POST /transactions
- * @desc Create a new transaction
- */
-router.route("/transactions").post(
-  isLoggedIn,
-  isAutherized([
-    EmployeeRole.COMPANY_MANAGER,
-    EmployeeRole.BRANCH_MANAGER,
-    EmployeeRole.ACCOUNTANT,
-    AdminRole.ADMIN,
-  ]),
-  upload.none(),
-
-  transactionsController.createTransaction,
-);
-
-/**
- * @route GET /transactions
- * @desc Get all transactions (paginated)
- */
 router
   .route("/transactions")
   .get(
     isLoggedIn,
-    isAutherized([
-      EmployeeRole.COMPANY_MANAGER,
-      EmployeeRole.ACCOUNTANT,
-      AdminRole.ADMIN,
-      AdminRole.ADMIN_ASSISTANT,
-      ...Object.values(EmployeeRole),
-      ...Object.values(ClientRole),
-    ]),
+    isAutherized([EmployeeRole.COMPANY_MANAGER, EmployeeRole.BRANCH_MANAGER]),
     transactionsController.getAllTransactions,
+  )
+  .post(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER, EmployeeRole.BRANCH_MANAGER]),
+    upload.none(),
+    transactionsController.createTransaction,
   );
+
+// --- specific/static paths BEFORE the :transactionID param route ---
 
 router
   .route("/transactions/statistics")
   .get(
     isLoggedIn,
-    isAutherized([
-      EmployeeRole.COMPANY_MANAGER,
-      EmployeeRole.ACCOUNTANT,
-      AdminRole.ADMIN,
-      AdminRole.ADMIN_ASSISTANT,
-      ...Object.values(EmployeeRole),
-      ...Object.values(ClientRole),
-    ]),
-    transactionsController.getAllStatistics,
+    isAutherized([EmployeeRole.COMPANY_MANAGER, EmployeeRole.BRANCH_MANAGER]),
+    transactionsController.getStatistics,
   );
 
 router
-  .route("/receivingAgent-clients")
+  .route("/transactions/daily-statistics")
   .get(
     isLoggedIn,
-    isAutherized([
-      EmployeeRole.COMPANY_MANAGER,
-      EmployeeRole.ACCOUNTANT,
-      AdminRole.ADMIN,
-      AdminRole.ADMIN_ASSISTANT,
-      ...Object.values(EmployeeRole),
-      ...Object.values(ClientRole),
-    ]),
-    transactionsController.getReceivingAgent,
+    isAutherized([EmployeeRole.COMPANY_MANAGER, EmployeeRole.BRANCH_MANAGER]),
+    transactionsController.getDailyStatistics,
+  );
+router
+  .route("/transactions/approve-all")
+  .patch(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER, EmployeeRole.BRANCH_MANAGER]),
+    upload.none(),
+    transactionsController.approveAllBranchTransactions,
+  );
+
+// --- parameterized routes AFTER ---
+
+router
+  .route("/transactions/:transactionID")
+  .get(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER, EmployeeRole.BRANCH_MANAGER]),
+    transactionsController.getTransaction,
+  )
+  .patch(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER, EmployeeRole.BRANCH_MANAGER]),
+    upload.none(),
+    transactionsController.updateTransaction,
+  )
+  .delete(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER, EmployeeRole.BRANCH_MANAGER]),
+    upload.none(),
+    transactionsController.deleteTransaction,
   );
 
 router
-  .route("/transactions/getWallets")
-  .get(
+  .route("/transactions/:transactionID/approve")
+  .patch(
     isLoggedIn,
-    isAutherized([
-      EmployeeRole.COMPANY_MANAGER,
-      EmployeeRole.ACCOUNTANT,
-      AdminRole.ADMIN,
-      AdminRole.ADMIN_ASSISTANT,
-      ...Object.values(EmployeeRole),
-      ...Object.values(ClientRole),
-    ]),
-    transactionsController.getEmployeesWallet,
+    isAutherized([EmployeeRole.COMPANY_MANAGER, EmployeeRole.BRANCH_MANAGER]),
+    upload.none(),
+    transactionsController.approveAllBranchTransactions === undefined
+      ? transactionsController.approveTransaction
+      : transactionsController.approveTransaction,
   );
-/**
- * @route GET /transactions/:transactionId
- * @desc Get single transaction by ID
- */
-router.route("/transactions/:transactionId").get(
-  isLoggedIn,
-  isAutherized([
-    EmployeeRole.COMPANY_MANAGER,
-    AdminRole.ADMIN,
-    AdminRole.ADMIN_ASSISTANT,
-  ]),
-  transactionsController.getTransaction,
-  /*
-      #swagger.tags = ['Transactions Routes']
-  */
-);
-
-/**
- * @route PATCH /transactions/:transactionId
- * @desc Update a transaction by ID
- */
-router.route("/transactions/:transactionId").patch(
-  isLoggedIn,
-  isAutherized([
-    EmployeeRole.COMPANY_MANAGER,
-    EmployeeRole.ACCOUNTANT,
-    AdminRole.ADMIN,
-    AdminRole.ADMIN_ASSISTANT,
-  ]),
-  transactionsController.updateTransaction,
-  /*
-      #swagger.tags = ['Transactions Routes']
-
-      #swagger.requestBody = {
-          required: true,
-          content: {
-              "application/json": {
-                  schema: { $ref: "#/components/schemas/TransactionUpdateSchema" },
-                  examples: {
-                      TransactionUpdateExample: { $ref: "#/components/examples/TransactionUpdateExample" }
-                  }
-              }
-          }
-      }
-  */
-);
-
-/**
- * @route DELETE /transactions/:transactionId
- * @desc Delete a transaction
- */
-router.route("/transactions/:transactionId").delete(
-  isLoggedIn,
-  isAutherized([
-    EmployeeRole.COMPANY_MANAGER,
-    EmployeeRole.ACCOUNTANT,
-    AdminRole.ADMIN,
-    AdminRole.ADMIN_ASSISTANT,
-  ]),
-  transactionsController.deleteTransaction,
-  /*
-      #swagger.tags = ['Transactions Routes']
-  */
-);
 
 export default router;

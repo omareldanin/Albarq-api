@@ -29,10 +29,13 @@ import {prisma} from "../../database/db";
 import axios from "axios";
 import {generateBranchClientsReport} from "./helpers/generateBranchClientsReport";
 import {reportsOrderReform} from "../orders/reportsOrders.response";
+import {TransactionsRepository} from "../transactions/transaction.repository";
 
 const reportsRepository = new ReportsRepository();
 const ordersRepository = new OrdersRepository();
 const employeesRepository = new EmployeesRepository();
+const transactionsRepository = new TransactionsRepository();
+
 // const clientsRepository = new ClientsRepository();
 type UpdatedOrderCosts = {
   id: string;
@@ -42,6 +45,9 @@ type UpdatedOrderCosts = {
   branchDeliveryCost?: number;
   deliveryAgentNet?: number;
   companyNet?: number;
+  forwardedBranchNet?: number;
+  receivingBranchNet?: number;
+  insideBranchNet?: number;
 };
 
 export class ReportsService {
@@ -75,6 +81,15 @@ export class ReportsService {
       if (u.companyNet !== undefined) {
         (order as any).companyNet = u.companyNet;
       }
+      if (u.insideBranchNet !== undefined) {
+        (order as any).insideBranchNet = u.insideBranchNet;
+      }
+      if (u.receivingBranchNet !== undefined) {
+        (order as any).receivingBranchNet = u.receivingBranchNet;
+      }
+      if (u.forwardedBranchNet !== undefined) {
+        (order as any).forwardedBranchNet = u.forwardedBranchNet;
+      }
     }
 
     return orders; // optional, mutated in place
@@ -104,6 +119,7 @@ export class ReportsService {
         return [];
     }
   }
+
   private async handleNotifications(report: any) {
     switch (report.type) {
       case ReportType.CLIENT:
@@ -126,6 +142,7 @@ export class ReportsService {
         break;
     }
   }
+
   async createReport(data: {
     loggedInUser: loggedInUserType;
     reportData: ReportCreateType;
@@ -285,6 +302,9 @@ export class ReportsService {
       deliveryAgentNet: 0,
       companyNet: 0,
       branchNet: 0,
+      forwardedBranchNet: 0,
+      receivingBranchNet: 0,
+      insideBranchNet: 0,
     };
     let insideOrdersCount = 0;
     let total = 0;
@@ -307,6 +327,12 @@ export class ReportsService {
       reportMetaData.deliveryAgentNet += order.deliveryAgentNet;
       // @ts-expect-error Fix later
       reportMetaData.companyNet += +order.companyNet;
+      // @ts-expect-error Fix later
+      reportMetaData.insideBranchNet += +order.insideBranchNet;
+      // @ts-expect-error Fix later
+      reportMetaData.receivingBranchNet += +order.receivingBranchNet;
+      // @ts-expect-error Fix later
+      reportMetaData.forwardedBranchNet += +order.forwardedBranchNet;
       // @ts-expect-error Fix later
       if (order.governorate === "BAGHDAD") {
         reportMetaData.baghdadOrdersCount++;
@@ -339,6 +365,71 @@ export class ReportsService {
     const reportData = await reportsRepository.getReport({
       reportID: report.id,
     });
+
+    if (data.reportData.type === ReportType.CLIENT) {
+      await transactionsRepository.createTransaction({
+        companyID: reportData?.company.id!!,
+        createdByID: reportData?.createdBy.id!!,
+        data: {
+          type: "WITHDRAW",
+          for: `سحب كشف عميل رقم ${report.id}`,
+          reportID: report.id,
+          branchID: reportData?.clientReport?.branch?.id,
+          paidAmount: reportData?.clientNet || 0,
+          deliveryAgentNet: 0,
+          forwardedBranchNet: 0,
+          receivingBranchNet: 0,
+          insideBranchNet: reportMetaData.insideBranchNet,
+          branchNet: 0,
+          totalPaidAmount: reportData?.clientNet || 0,
+          approved: false,
+          clientNet: reportData?.clientNet || 0,
+        },
+      });
+    } else if (data.reportData.type === ReportType.DELIVERY_AGENT) {
+      await transactionsRepository.createTransaction({
+        companyID: reportData?.company.id!!,
+        createdByID: reportData?.createdBy.id!!,
+        data: {
+          type: "DEPOSIT",
+          for: `سحب كشف مندوب رقم ${report.id}`,
+          reportID: report.id,
+          branchID: data.loggedInUser.branchId,
+          paidAmount: reportMetaData?.companyNet || 0,
+          deliveryAgentNet: reportData?.deliveryAgentNet || 0,
+          forwardedBranchNet: 0,
+          receivingBranchNet: 0,
+          insideBranchNet: 0,
+          branchNet: reportMetaData?.companyNet,
+          totalPaidAmount: reportMetaData?.companyNet || 0,
+          approved: false,
+          clientNet: 0,
+        },
+      });
+    } else if (data.reportData.type === ReportType.BRANCH) {
+      await transactionsRepository.createTransaction({
+        companyID: reportData?.company.id!!,
+        createdByID: reportData?.createdBy.id!!,
+        data: {
+          type:
+            data.ordersFilters.orderType === "received"
+              ? "WITHDRAW"
+              : "DEPOSIT",
+          for: `سحب كشف ${data.ordersFilters.orderType === "received" ? "بريد صادر إلي الفرع" : "بريد وارد من الفرع"} رقم ${report.id}`,
+          reportID: report.id,
+          branchID: reportData?.branchReport?.branch.id,
+          paidAmount: reportMetaData?.branchNet || 0,
+          deliveryAgentNet: 0,
+          forwardedBranchNet: reportMetaData.forwardedBranchNet,
+          receivingBranchNet: reportMetaData.receivingBranchNet,
+          insideBranchNet: 0,
+          branchNet: 0,
+          totalPaidAmount: reportMetaData?.branchNet || 0,
+          approved: false,
+          clientNet: 0,
+        },
+      });
+    }
 
     if (!reportData) {
       throw new AppError("حدث خطأ اثناء عمل الكشف", 500);
@@ -925,6 +1016,7 @@ export class ReportsService {
       reportID: data.params.reportID,
     });
   }
+
   async deactivateReport(data: {
     params: {reportID: number};
     loggedInUser: loggedInUserType;
@@ -996,7 +1088,6 @@ export class ReportsService {
         ),
       );
     }
-
     await this.handleNotifications(deletedReport);
   }
 

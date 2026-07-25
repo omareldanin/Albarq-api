@@ -2705,10 +2705,15 @@ class OrdersRepository {
                             cost?.receivingBranchProfit;
                 }
                 const clientNet = (order?.paidAmount || 0) - deliveryCost;
+                let insideCost = 0;
+                if (order && order.client.branchId === order.branch?.id) {
+                    insideCost = (deliveryCost ?? 0) - (order.deliveryAgentNet ?? 0);
+                }
                 updatedOrders.push({
                     id: order?.id,
                     deliveryCost,
                     clientNet,
+                    insideBranchNet: insideCost,
                 });
             }
             if (updatedOrders.length) {
@@ -2721,10 +2726,11 @@ class OrdersRepository {
               UPDATE "Order" o
               SET
                 "deliveryCost" = v."deliveryCost",
+                "insideBranchNet" = v."insideBranchNet",
                 "clientNet" = v."clientNet"
               FROM (
-                VALUES ${client_1.Prisma.join(chunk.map((u) => client_1.Prisma.sql `(${u.id}::text, ${u.deliveryCost}::double precision, ${u.clientNet}::double precision)`))}
-              ) AS v("id", "deliveryCost", "clientNet")
+                VALUES ${client_1.Prisma.join(chunk.map((u) => client_1.Prisma.sql `(${u.id}::text, ${u.deliveryCost}::double precision, ${u.insideBranchNet}::double precision, ${u.clientNet}::double precision)`))}
+              ) AS v("id", "deliveryCost", "insideBranchNet","clientNet")
               WHERE o."id" = v."id";
             `;
                 }
@@ -2736,6 +2742,8 @@ class OrdersRepository {
         if (data.costs.reportType === client_1.ReportType.BRANCH &&
             (data.costs.baghdadDeliveryCost || data.costs.governoratesDeliveryCost)) {
             for (const order of data.orders) {
+                let forwardedBranchNet = order?.forwardedBranchNet;
+                let receivingBranchNet = order?.receivingBranchNet;
                 let cost = order?.governorate === client_1.Governorate.BAGHDAD
                     ? data.costs.baghdadDeliveryCost
                     : data.costs.governoratesDeliveryCost;
@@ -2757,9 +2765,17 @@ class OrdersRepository {
                 }
                 if (!cost)
                     continue;
+                if (data.branchReportType === "forwarded") {
+                    forwardedBranchNet = order?.paidAmount - cost;
+                }
+                else if (data.branchReportType === "received") {
+                    receivingBranchNet = cost - (order?.deliveryAgentNet ?? 0);
+                }
                 updatedOrders.push({
                     id: order?.id,
                     branchNet: order?.paidAmount - cost,
+                    forwardedBranchNet,
+                    receivingBranchNet,
                 });
             }
             // single DB update driven by the per-order computed values
@@ -2770,13 +2786,21 @@ class OrdersRepository {
                     if (chunk.length === 0)
                         continue;
                     await db_1.prisma.$executeRaw `
-            UPDATE "Order" o
-            SET "branchNet" = v."branchNet"
-            FROM (
-              VALUES ${client_1.Prisma.join(chunk.map((u) => client_1.Prisma.sql `(${u.id}::text, ${u.branchNet}::double precision)`))}
-            ) AS v("id", "branchNet")
-            WHERE o."id" = v."id";
-          `;
+                  UPDATE "Order" o
+                  SET
+                    "branchNet"          = v."branchNet",
+                    "forwardedBranchNet" = v."forwardedBranchNet",
+                    "receivingBranchNet" = v."receivingBranchNet"
+                  FROM (
+                    VALUES ${client_1.Prisma.join(chunk.map((u) => client_1.Prisma.sql `(
+                            ${u.id}::text,
+                            ${u.branchNet}::double precision,
+                            ${u.forwardedBranchNet ?? 0}::double precision,
+                            ${u.receivingBranchNet ?? 0}::double precision
+                          )`))}
+                  ) AS v("id", "branchNet", "forwardedBranchNet", "receivingBranchNet")
+                  WHERE o."id" = v."id";
+                `;
                 }
             }
         }

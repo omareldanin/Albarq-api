@@ -1,66 +1,61 @@
-import {prisma} from "../../database/db";
+import {AdminRole} from "@prisma/client";
+import {AppError} from "../../lib/AppError";
 import {catchAsync} from "../../lib/catchAsync";
 import type {loggedInUserType} from "../../types/user";
-import {EmployeesRepository} from "../employees/employees.repository";
 import {
   TransactionCreateSchema,
   TransactionUpdateSchema,
 } from "./transactions.dto";
-import {TransactionsRepository} from "./transactions.repository";
+import {TransactionsRepository} from "./transaction.repository";
 
 const transactionsRepository = new TransactionsRepository();
-const employeesRepository = new EmployeesRepository();
+
 export class TransactionsController {
   createTransaction = catchAsync(async (req, res) => {
-    const transactionData = TransactionCreateSchema.parse(req.body);
     const loggedInUser = res.locals.user as loggedInUserType;
-    const companyId = loggedInUser.companyID!!;
-    transactionData.createdById = loggedInUser.id;
+    const data = TransactionCreateSchema.parse(req.body);
 
-    const createdTransaction = await transactionsRepository.createTransaction(
-      companyId,
-      loggedInUser.branchId,
-      transactionData,
-    );
+    const companyID = loggedInUser.companyID as number;
+    if (!companyID) {
+      throw new AppError("الشركة غير محددة", 400);
+    }
 
-    res.status(200).json({
-      status: "success",
-      data: createdTransaction,
+    const transaction = await transactionsRepository.createTransaction({
+      companyID,
+      createdByID: loggedInUser.id,
+      data,
     });
-  });
 
-  getEmployeesWallet = catchAsync(async (req, res) => {
-    const loggedInUser = res.locals.user as loggedInUserType;
-    const companyId = loggedInUser.companyID!!;
-
-    let page = req.query.page ? +req.query.page : 1;
-    let size = req.query.size ? +req.query.size : 10;
-
-    const result = await transactionsRepository.getCompanyNetGroupedByCreatedBy(
-      companyId,
-      page,
-      size,
-    );
-
-    res.status(200).json({
-      status: "success",
-      page: result.page,
-      pagesCount: result.pagesCount,
-      totalGroups: result.totalGroups,
-      data: result.data,
-    });
+    res.status(200).json({status: "success", data: transaction});
   });
 
   getAllTransactions = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
 
-    const {type, deliveryAgentId, clientId, start_date, end_date} = req.query;
+    let companyID: number | undefined;
+    if (Object.keys(AdminRole).includes(loggedInUser.role)) {
+      companyID = req.query.company_id ? +req.query.company_id : undefined;
+    } else {
+      companyID = loggedInUser.companyID as number;
+    }
 
-    const companyId = loggedInUser.companyID!!;
+    const branchID = req.query.branch_id ? +req.query.branch_id : undefined;
+    const employeeID = req.query.employee_id
+      ? +req.query.employee_id
+      : undefined;
+    const type = req.query.type as string | undefined;
+    const approved = req.query.approved
+      ? req.query.approved === "true"
+      : undefined;
+    const deleted = req.query.deleted === "true";
+    const startDate = req.query.start_date
+      ? new Date(req.query.start_date as string)
+      : undefined;
+    const endDate = req.query.end_date
+      ? new Date(req.query.end_date as string)
+      : undefined;
 
-    let size = req.query.size ? +req.query.size : 10;
-    if (size > 500) size = 10;
-
+    const size = req.query.size ? +req.query.size : 10;
     let page = 1;
     if (
       req.query.page &&
@@ -70,18 +65,18 @@ export class TransactionsController {
       page = +req.query.page;
     }
 
-    const {transactions, pagesCount, count} =
+    const {transactions, pagesCount} =
       await transactionsRepository.getAllTransactionsPaginated({
         page,
         size,
-        companyId,
-        deliveryAgentId: deliveryAgentId ? +deliveryAgentId : undefined,
-        clientId: clientId ? +clientId : undefined,
-        branchId: loggedInUser.branchId,
-        type: type?.toString(),
-        start_date: start_date?.toString(),
-        end_date: end_date?.toString(),
-        loggedInUser,
+        companyID,
+        branchID,
+        employeeID,
+        type,
+        approved,
+        deleted,
+        startDate,
+        endDate,
       });
 
     res.status(200).json({
@@ -89,413 +84,149 @@ export class TransactionsController {
       page,
       pagesCount,
       data: transactions,
-      count,
     });
   });
 
-  getAllStatistics = catchAsync(async (req, res) => {
-    const loggedInUser = res.locals.user as loggedInUserType;
+  getTransaction = catchAsync(async (req, res) => {
+    const transactionID = +req.params.transactionID;
 
-    const {type, deliveryAgentId, clientId, start_date, end_date} = req.query;
+    const transaction = await transactionsRepository.getTransaction({
+      transactionID,
+    });
 
-    const companyId = loggedInUser.companyID!!;
-
-    let size = req.query.size ? +req.query.size : 10;
-    if (size > 500) size = 10;
-
-    let page = 1;
-    if (
-      req.query.page &&
-      !Number.isNaN(+req.query.page) &&
-      +req.query.page > 0
-    ) {
-      page = +req.query.page;
+    if (!transaction) {
+      throw new AppError("العملية غير موجودة", 404);
     }
 
-    const {
-      totalDepoist,
-      totalWithdraw,
-      receivedFromAgents,
-      notReceived,
-      forClients,
-      paidToClients,
-      agentProfit,
-      branchProfit,
-    } = await transactionsRepository.getStatistics({
-      page,
-      size,
+    res.status(200).json({status: "success", data: transaction});
+  });
+
+  getStatistics = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    // Admins may query any company; everyone else is scoped to their own
+    let companyId: number | undefined;
+    if (Object.keys(AdminRole).includes(loggedInUser.role)) {
+      companyId = req.query.company_id ? +req.query.company_id : undefined;
+    } else {
+      companyId = loggedInUser.companyID as number;
+    }
+
+    const deliveryAgentId = req.query.delivery_agent_id
+      ? +req.query.delivery_agent_id
+      : undefined;
+    const clientId = req.query.client_id ? +req.query.client_id : undefined;
+    const branchId = req.query.branch_id ? +req.query.branch_id : undefined;
+    const type = req.query.type as string | undefined;
+    const start_date = req.query.start_date as string | undefined;
+    const end_date = req.query.end_date as string | undefined;
+
+    const statistics = await transactionsRepository.getStatistics({
       companyId,
-      deliveryAgentId: deliveryAgentId ? +deliveryAgentId : undefined,
-      clientId: clientId ? +clientId : undefined,
-      branchId: loggedInUser.branchId,
-      type: type?.toString(),
-      start_date: start_date?.toString(),
-      end_date: end_date?.toString(),
+      deliveryAgentId,
+      clientId,
+      branchId,
+      type,
+      start_date,
+      end_date,
       loggedInUser,
     });
 
     res.status(200).json({
       status: "success",
-      totalDepoist,
-      totalWithdraw,
-      total: totalDepoist - totalWithdraw,
-      receivedFromAgents,
-      notReceived,
-      forClients,
-      paidToClients,
-      agentProfit,
-      branchProfit,
+      data: statistics,
     });
   });
 
-  getReceivingAgent = catchAsync(async (req, res) => {
-    const {receivingAgentId, start_date, end_date} = req.query;
+  getDailyStatistics = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
 
-    let startDate = new Date();
-    let endDate = new Date();
-
-    const isMainRepository =
-      loggedInUser?.mainRepository || loggedInUser?.role === "COMPANY_MANAGER";
-
-    const mainBranch = await prisma.branch.findFirst({
-      where: {
-        companyId: loggedInUser.companyID!!,
-        repositories: {
-          some: {
-            mainRepository: true,
-          },
-        },
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (start_date) {
-      startDate = new Date(start_date.toString());
-      startDate.setUTCDate(startDate.getUTCDate() - 1);
-      startDate.setHours(21, 0, 0, 0);
-    }
-    if (end_date) {
-      endDate = new Date(end_date.toString());
-      endDate.setHours(21, 0, 0, 0);
+    // Admins may query any company; everyone else is scoped to their own
+    let companyId: number | undefined;
+    if (Object.keys(AdminRole).includes(loggedInUser.role)) {
+      companyId = req.query.company_id ? +req.query.company_id : undefined;
+    } else {
+      companyId = loggedInUser.companyID as number;
     }
 
-    let inquiryClientsIDs: number[] | undefined = [];
+    const deliveryAgentId = req.query.delivery_agent_id
+      ? +req.query.delivery_agent_id
+      : undefined;
+    const clientId = req.query.client_id ? +req.query.client_id : undefined;
+    const branchId = req.query.branch_id ? +req.query.branch_id : undefined;
+    const type = req.query.type as string | undefined;
+    const start_date = req.query.start_date as string | undefined;
+    const end_date = req.query.end_date as string | undefined;
 
-    const inquiryEmployeeStuff =
-      await employeesRepository.getInquiryEmployeeStuff({
-        employeeID: +receivingAgentId!!,
-      });
-
-    inquiryClientsIDs =
-      inquiryEmployeeStuff.inquiryClients &&
-      inquiryEmployeeStuff.inquiryClients.length > 0
-        ? inquiryEmployeeStuff.inquiryClients
-        : [];
-
-    const clients = await prisma.client.findMany({
-      where: {
-        id: {in: inquiryClientsIDs},
-        branchId: loggedInUser.branchId,
-      },
-      select: {
-        id: true,
-        user: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    });
-
-    const ordersCount = await prisma.order.groupBy({
-      by: ["clientId"],
-      _count: {
-        id: true,
-      },
-      where: {
-        AND: [
-          {clientId: {in: inquiryClientsIDs}},
-          {deleted: false},
-          {confirmed: true},
-          // Filter by startDate
-          {
-            createdAt: start_date
-              ? {
-                  gt: startDate,
-                }
-              : undefined,
-          },
-          // Filter by endDate
-          {
-            createdAt: end_date
-              ? {
-                  lt: endDate,
-                }
-              : undefined,
-          },
-        ],
-      },
-    });
-
-    const deliveredOrdersCount = await prisma.order.groupBy({
-      by: ["clientId"],
-      _count: {
-        id: true,
-      },
-      where: {
-        AND: [
-          {clientId: {in: inquiryClientsIDs}},
-          {status: {in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"]}},
-          {deleted: false},
-          {confirmed: true},
-          {
-            createdAt: start_date
-              ? {
-                  gt: startDate,
-                }
-              : undefined,
-          },
-          // Filter by endDate
-          {
-            createdAt: end_date
-              ? {
-                  lt: endDate,
-                }
-              : undefined,
-          },
-        ],
-      },
-    });
-
-    const forwardedReports = await prisma.branchReport.findMany({
-      where: {
-        branchId: isMainRepository ? undefined : loggedInUser.branchId,
-        type: "forwarded",
-      },
-      include: {
-        orders: {
-          where: {
-            AND: [
-              {
-                createdAt: start_date
-                  ? {
-                      gt: startDate,
-                    }
-                  : undefined,
-              },
-              // Filter by endDate
-              {
-                createdAt: end_date
-                  ? {
-                      lt: endDate,
-                    }
-                  : undefined,
-              },
-              {deleted: false},
-              {clientId: {in: inquiryClientsIDs}},
-            ],
-          },
-          select: {
-            governorate: true,
-            deliveryCost: true,
-            clientId: true,
-          },
-        },
-      },
-    });
-
-    const receivedReports = await prisma.branchReport.findMany({
-      where: {
-        branchId: isMainRepository ? undefined : loggedInUser.branchId,
-        type: "received",
-      },
-      include: {
-        orders: {
-          where: {
-            AND: [
-              {
-                createdAt: start_date
-                  ? {
-                      gt: startDate,
-                    }
-                  : undefined,
-              },
-              // Filter by endDate
-              {
-                createdAt: end_date
-                  ? {
-                      lt: endDate,
-                    }
-                  : undefined,
-              },
-              {deleted: false},
-              {clientId: {in: inquiryClientsIDs}},
-            ],
-          },
-          select: {
-            governorate: true,
-            deliveryAgentNet: true,
-            clientId: true,
-            client: {
-              select: {
-                branchId: true,
-              },
-            },
-            deliveryCost: true,
-          },
-        },
-      },
-    });
-
-    const insideOrders = await prisma.order.groupBy({
-      by: ["clientId"],
-      _sum: {
-        companyNet: true,
-        clientNet: true,
-      },
-      where: {
-        AND: [
-          {
-            createdAt: start_date
-              ? {
-                  gt: startDate,
-                }
-              : undefined,
-          },
-          // Filter by endDate
-          {
-            createdAt: end_date
-              ? {
-                  lt: endDate,
-                }
-              : undefined,
-          },
-          {deleted: false},
-          {clientId: {in: inquiryClientsIDs}},
-          {
-            branch: {
-              id: loggedInUser.branchId,
-            },
-          },
-          {
-            OR: [
-              {deliveryAgentReport: {isNot: null}},
-              {
-                deliveryAgentReport: {
-                  report: {deleted: true},
-                },
-              },
-            ],
-          },
-        ],
-      },
+    const statistics = await transactionsRepository.getDailyStatistics({
+      companyId,
+      deliveryAgentId,
+      clientId,
+      branchId,
+      type,
+      start_date,
+      end_date,
+      loggedInUser,
     });
 
     res.status(200).json({
       status: "success",
-      data: clients.map((client) => {
-        const count = ordersCount.find((c) => c.clientId === client.id)?._count
-          .id;
-        const count2 = deliveredOrdersCount.find(
-          (c) => c.clientId === client.id,
-        )?._count.id;
-
-        const profit = insideOrders.find((c) => c.clientId === client.id);
-
-        let branchProfit = 0;
-
-        branchProfit += profit?._sum.companyNet || 0;
-        branchProfit -= profit?._sum.clientNet || 0;
-
-        forwardedReports.forEach((report) => {
-          const clientOrders = report.orders.filter(
-            (o) => o.clientId === client.id,
-          );
-          clientOrders.forEach((order) => {
-            if (order.governorate === "BAGHDAD") {
-              branchProfit += isMainRepository
-                ? report.baghdadDeliveryCost
-                : order.deliveryCost - report.baghdadDeliveryCost;
-            } else {
-              branchProfit += isMainRepository
-                ? report.governoratesDeliveryCost
-                : order.deliveryCost - report.governoratesDeliveryCost;
-            }
-          });
-        });
-
-        receivedReports.forEach((report) => {
-          const clientOrders = report.orders.filter(
-            (o) => o.clientId === client.id,
-          );
-          clientOrders.forEach((order) => {
-            if (order.client.branchId === mainBranch?.id && isMainRepository) {
-              if (order.governorate === "BAGHDAD") {
-                branchProfit += order.deliveryCost - report.baghdadDeliveryCost;
-              } else {
-                branchProfit +=
-                  order.deliveryCost - report.governoratesDeliveryCost;
-              }
-            } else {
-              if (order.governorate === "BAGHDAD") {
-                branchProfit += isMainRepository
-                  ? -report.baghdadDeliveryCost
-                  : report.baghdadDeliveryCost - order.deliveryAgentNet;
-              } else {
-                branchProfit += isMainRepository
-                  ? -report.governoratesDeliveryCost
-                  : report.governoratesDeliveryCost - order.deliveryAgentNet;
-              }
-            }
-          });
-        });
-
-        return {
-          total: count,
-          deliveredTotal: count2,
-          name: client.user.name,
-          branchProfit,
-        };
-      }),
-    });
-  });
-
-  getTransaction = catchAsync(async (req, res) => {
-    const transactionId = +req.params.transactionId;
-    const transaction = await transactionsRepository.getTransaction({
-      transactionId,
-    });
-
-    res.status(200).json({
-      status: "success",
-      data: transaction,
+      data: statistics,
     });
   });
 
   updateTransaction = catchAsync(async (req, res) => {
-    const transactionId = +req.params.transactionId;
-    const transactionData = TransactionUpdateSchema.parse(req.body);
+    const transactionID = +req.params.transactionID;
+    const data = TransactionUpdateSchema.parse(req.body);
 
-    const updatedTransaction = await transactionsRepository.updateTransaction({
-      transactionId,
-      transactionData,
+    const transaction = await transactionsRepository.updateTransaction({
+      transactionID,
+      data,
     });
+
+    res.status(200).json({status: "success", data: transaction});
+  });
+
+  approveTransaction = catchAsync(async (req, res) => {
+    const transactionID = +req.params.transactionID;
+
+    const transaction = await transactionsRepository.approveTransaction({
+      transactionID,
+    });
+
+    res.status(200).json({status: "success", data: transaction});
+  });
+
+  approveAllBranchTransactions = catchAsync(async (_req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    const branchID = loggedInUser.branchId;
+    if (!branchID) {
+      throw new AppError("لا يوجد فرع مرتبط بهذا المستخدم", 400);
+    }
+
+    const companyID = loggedInUser.companyID as number;
+    if (!companyID) {
+      throw new AppError("الشركة غير محددة", 400);
+    }
+
+    const {approvedCount} =
+      await transactionsRepository.approveAllBranchTransactions({
+        branchID,
+        companyID,
+      });
 
     res.status(200).json({
       status: "success",
-      data: updatedTransaction,
+      data: {approvedCount},
     });
   });
 
   deleteTransaction = catchAsync(async (req, res) => {
-    const transactionId = +req.params.transactionId;
-    await transactionsRepository.deleteTransaction({transactionId});
+    const transactionID = +req.params.transactionID;
 
-    res.status(200).json({
-      status: "success",
-    });
+    await transactionsRepository.deleteTransaction({transactionID});
+
+    res.status(200).json({status: "success"});
   });
 }

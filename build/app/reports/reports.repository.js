@@ -37,6 +37,7 @@ class ReportsRepository {
                 deliveryAgentNet: data.reportMetaData.deliveryAgentNet,
                 companyNet: data.reportMetaData.companyNet,
                 branchNet: data.reportMetaData.branchNet,
+                activeProfit: true,
             },
         };
         if (data.reportData.type === client_1.ReportType.CLIENT) {
@@ -612,6 +613,14 @@ class ReportsRepository {
             },
             select: reports_responses_1.reportSelect,
         });
+        await db_1.prisma.transaction.updateMany({
+            where: {
+                reportId: deletedReport.id,
+            },
+            data: {
+                deleted: true,
+            },
+        });
         return (0, reports_responses_1.reportReform)(deletedReport);
     }
     async reactivateReport(data) {
@@ -623,6 +632,14 @@ class ReportsRepository {
                 deleted: false,
             },
             select: reports_responses_1.reportSelect,
+        });
+        await db_1.prisma.transaction.updateMany({
+            where: {
+                reportId: deletedReport.id,
+            },
+            data: {
+                deleted: false,
+            },
         });
         return (0, reports_responses_1.reportReform)(deletedReport);
     }

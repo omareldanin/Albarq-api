@@ -46,7 +46,7 @@ class RepositoriesController {
         const minified = req.query.minified
             ? req.query.minified === "true"
             : undefined;
-        const forBranch = req.query.forBranch
+        let forBranch = req.query.forBranch
             ? req.query.forBranch === "true"
             : undefined;
         const getChildBranchs = req.query.getChildBranchs

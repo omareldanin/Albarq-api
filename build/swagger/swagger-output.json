@@ -4977,7 +4977,7 @@
             }
         },
         "/api/v1/transactions": {
-            "post": {
+            "get": {
                 "description": "",
                 "parameters": [
                     {
@@ -4994,7 +4994,7 @@
                     }
                 }
             },
-            "get": {
+            "post": {
                 "description": "",
                 "parameters": [
                     {
@@ -5031,7 +5031,7 @@
                 }
             }
         },
-        "/api/v1/receivingAgent-clients": {
+        "/api/v1/transactions/daily-statistics": {
             "get": {
                 "description": "",
                 "parameters": [
@@ -5050,8 +5050,8 @@
                 }
             }
         },
-        "/api/v1/transactions/getWallets": {
-            "get": {
+        "/api/v1/transactions/approve-all": {
+            "patch": {
                 "description": "",
                 "parameters": [
                     {
@@ -5069,15 +5069,37 @@
                 }
             }
         },
-        "/api/v1/transactions/{transactionId}": {
+        "/api/v1/transactions/{transactionID}": {
             "get": {
-                "tags": [
-                    "Transactions Routes"
-                ],
                 "description": "",
                 "parameters": [
                     {
-                        "name": "transactionId",
+                        "name": "transactionID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "transactionID",
                         "in": "path",
                         "required": true,
                         "schema": {
@@ -5099,13 +5121,10 @@
                 }
             },
             "patch": {
-                "tags": [
-                    "Transactions Routes"
-                ],
                 "description": "",
                 "parameters": [
                     {
-                        "name": "transactionId",
+                        "name": "transactionID",
                         "in": "path",
                         "required": true,
                         "schema": {
@@ -5124,31 +5143,15 @@
                     "default": {
                         "description": ""
                     }
-                },
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/TransactionUpdateSchema"
-                            },
-                            "examples": {
-                                "TransactionUpdateExample": {
-                                    "$ref": "#/components/examples/TransactionUpdateExample"
-                                }
-                            }
-                        }
-                    }
                 }
-            },
-            "delete": {
-                "tags": [
-                    "Transactions Routes"
-                ],
+            }
+        },
+        "/api/v1/transactions/{transactionID}/approve": {
+            "patch": {
                 "description": "",
                 "parameters": [
                     {
-                        "name": "transactionId",
+                        "name": "transactionID",
                         "in": "path",
                         "required": true,
                         "schema": {

@@ -50,6 +50,9 @@ type UpdatedOrderCosts = {
   branchDeliveryCost?: number;
   deliveryAgentNet?: number;
   companyNet?: number;
+  forwardedBranchNet?: number;
+  receivingBranchNet?: number;
+  insideBranchNet?: number;
 };
 
 export class OrdersRepository {
@@ -3036,10 +3039,17 @@ export class OrdersRepository {
 
         const clientNet = (order?.paidAmount || 0) - deliveryCost!!;
 
+        let insideCost = 0;
+
+        if (order && order.client.branchId === order.branch?.id) {
+          insideCost = (deliveryCost ?? 0) - (order.deliveryAgentNet ?? 0);
+        }
+
         updatedOrders.push({
           id: order?.id!!,
           deliveryCost,
           clientNet,
+          insideBranchNet: insideCost,
         });
       }
 
@@ -3054,15 +3064,16 @@ export class OrdersRepository {
               UPDATE "Order" o
               SET
                 "deliveryCost" = v."deliveryCost",
+                "insideBranchNet" = v."insideBranchNet",
                 "clientNet" = v."clientNet"
               FROM (
                 VALUES ${Prisma.join(
                   chunk.map(
                     (u) =>
-                      Prisma.sql`(${u.id}::text, ${u.deliveryCost}::double precision, ${u.clientNet}::double precision)`,
+                      Prisma.sql`(${u.id}::text, ${u.deliveryCost}::double precision, ${u.insideBranchNet}::double precision, ${u.clientNet}::double precision)`,
                   ),
                 )}
-              ) AS v("id", "deliveryCost", "clientNet")
+              ) AS v("id", "deliveryCost", "insideBranchNet","clientNet")
               WHERE o."id" = v."id";
             `;
         }
@@ -3077,6 +3088,8 @@ export class OrdersRepository {
       (data.costs.baghdadDeliveryCost || data.costs.governoratesDeliveryCost)
     ) {
       for (const order of data.orders) {
+        let forwardedBranchNet = order?.forwardedBranchNet;
+        let receivingBranchNet = order?.receivingBranchNet;
         let cost =
           order?.governorate === Governorate.BAGHDAD
             ? data.costs.baghdadDeliveryCost
@@ -3107,9 +3120,17 @@ export class OrdersRepository {
 
         if (!cost) continue;
 
+        if (data.branchReportType === "forwarded") {
+          forwardedBranchNet = order?.paidAmount!! - cost;
+        } else if (data.branchReportType === "received") {
+          receivingBranchNet = cost - (order?.deliveryAgentNet ?? 0);
+        }
+
         updatedOrders.push({
           id: order?.id!!,
           branchNet: order?.paidAmount!! - cost,
+          forwardedBranchNet,
+          receivingBranchNet,
         });
       }
 
@@ -3122,18 +3143,26 @@ export class OrdersRepository {
           if (chunk.length === 0) continue;
 
           await prisma.$executeRaw`
-            UPDATE "Order" o
-            SET "branchNet" = v."branchNet"
-            FROM (
-              VALUES ${Prisma.join(
-                chunk.map(
-                  (u) =>
-                    Prisma.sql`(${u.id}::text, ${u.branchNet}::double precision)`,
-                ),
-              )}
-            ) AS v("id", "branchNet")
-            WHERE o."id" = v."id";
-          `;
+                  UPDATE "Order" o
+                  SET
+                    "branchNet"          = v."branchNet",
+                    "forwardedBranchNet" = v."forwardedBranchNet",
+                    "receivingBranchNet" = v."receivingBranchNet"
+                  FROM (
+                    VALUES ${Prisma.join(
+                      chunk.map(
+                        (u) =>
+                          Prisma.sql`(
+                            ${u.id}::text,
+                            ${u.branchNet}::double precision,
+                            ${u.forwardedBranchNet ?? 0}::double precision,
+                            ${u.receivingBranchNet ?? 0}::double precision
+                          )`,
+                      ),
+                    )}
+                  ) AS v("id", "branchNet", "forwardedBranchNet", "receivingBranchNet")
+                  WHERE o."id" = v."id";
+                `;
         }
       }
     }

@@ -170,6 +170,7 @@ class ClientsRepository {
             }, {
                 page: filters.page,
                 size: filters.size,
+                withCount: true,
             });
             result = {
                 clients: paginatedClients.data.map(clients_responses_1.clientReform),

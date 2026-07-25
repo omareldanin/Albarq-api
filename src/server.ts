@@ -7,6 +7,7 @@ const address = `http://localhost:${env.PORT}`;
 
 import {Server} from "socket.io";
 import http from "http";
+import {startApproveTransactionsCron} from "./cron-jobs/approveTransactions.job";
 // import {automaticBackUpCronJob} from "./backup";
 const newServer = http.createServer(app);
 
@@ -45,6 +46,8 @@ const server = newServer.listen(env.PORT, () => {
   );
   Logger.debug(`Starting APP On -> ${address}`);
   automaticUpdatesCronJob.start();
+
+  startApproveTransactionsCron();
   // automaticBackUpCronJob.start();
 });
 

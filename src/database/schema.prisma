@@ -417,6 +417,9 @@ model Order {
   deliveryCost           Float                    @default(0)
   clientNet              Float                    @default(0)
   deliveryAgentNet       Float                    @default(0)
+  forwardedBranchNet     Float                    @default(0)
+  receivingBranchNet     Float                    @default(0)
+  insideBranchNet        Float                    @default(0)
   companyNet             Float                    @default(0)
   discount               Float                    @default(0)
   status                 OrderStatus              @default(REGISTERED)
@@ -510,6 +513,9 @@ model Order {
   @@index([forwardedFromId, status, deleted, createdAt(sort: Desc)])
   @@index([deliveryDate])
   @@index([updatedAt])
+  @@index([companyId, deleted, branchId, createdAt])
+  @@index([companyId, deleted, status, branchId, createdAt])
+  @@index([companyId, deleted, deliveryAgentId, createdAt])
 }
 
 model Chat {
@@ -668,6 +674,7 @@ model Report {
   status                  ReportStatus         @default(UNPAID)
   confirmed               Boolean              @default(false)
   deleted                 Boolean              @default(false)
+  activeProfit            Boolean              @default(false)
   deletedAt               DateTime?
   deletedById             Int?
   totalCost               Float                @default(0)
@@ -690,6 +697,7 @@ model Report {
   createdBy               Employee             @relation(fields: [employeeId], references: [id])
   repositoryReport        RepositoryReport?
   employeeReport          EmployeeReport?
+  transaction             Transaction?
 
   @@index([type])
   @@index([employeeId])
@@ -964,20 +972,33 @@ model ClosedStatus {
 }
 
 model Transaction {
-  id          Int             @id @default(autoincrement())
-  type        TransactionType
-  for         String
-  employeeId  Int?
-  createdById Int?
-  companyId   Int
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  paidAmount  Float           @default(0)
-  branchId    Int?
-  branch      Branch?         @relation(fields: [branchId], references: [id])
-  company     Company         @relation(fields: [companyId], references: [id])
-  createdBy   User?           @relation(fields: [createdById], references: [id])
-  employee    Employee?       @relation(fields: [employeeId], references: [id])
+  id                 Int             @id @default(autoincrement())
+  type               TransactionType
+  for                String
+  employeeId         Int?
+  createdById        Int?
+  reportId           Int?            @unique
+  companyId          Int
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  paidAmount         Float           @default(0)
+  branchId           Int?
+  branchNet          Float           @default(0)
+  clientNet          Float           @default(0)
+  totalPaidAmount    Float           @default(0)
+  deliveryAgentNet   Float           @default(0)
+  forwardedBranchNet Float           @default(0)
+  receivingBranchNet Float           @default(0)
+  insideBranchNet    Float           @default(0)
+  deleted            Boolean         @default(false)
+  approved           Boolean         @default(false)
+  branch             Branch?         @relation(fields: [branchId], references: [id])
+  company            Company         @relation(fields: [companyId], references: [id])
+  createdBy          User?           @relation(fields: [createdById], references: [id])
+  employee           Employee?       @relation(fields: [employeeId], references: [id])
+  report             Report?         @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([branchId, deleted, approved, companyId])
 }
 
 model UsersLoginHistory {
@@ -1005,6 +1026,8 @@ enum AdminRole {
 enum TransactionType {
   DEPOSIT
   WITHDRAW
+  WITHDRAW_FROM_MAIN
+  DEPOSIT_FROM_MAIN
 }
 
 enum EmployeeRole {

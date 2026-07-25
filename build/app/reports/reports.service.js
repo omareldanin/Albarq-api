@@ -18,9 +18,11 @@ const reports_repository_1 = require("./reports.repository");
 const db_1 = require("../../database/db");
 const axios_1 = __importDefault(require("axios"));
 const generateBranchClientsReport_1 = require("./helpers/generateBranchClientsReport");
+const transaction_repository_1 = require("../transactions/transaction.repository");
 const reportsRepository = new reports_repository_1.ReportsRepository();
 const ordersRepository = new orders_repository_1.OrdersRepository();
 const employeesRepository = new employees_repository_1.EmployeesRepository();
+const transactionsRepository = new transaction_repository_1.TransactionsRepository();
 class ReportsService {
     applyOrderCostUpdates(orders, updates) {
         const map = new Map(updates.map((u) => [u.id, u]));
@@ -45,6 +47,15 @@ class ReportsService {
             }
             if (u.companyNet !== undefined) {
                 order.companyNet = u.companyNet;
+            }
+            if (u.insideBranchNet !== undefined) {
+                order.insideBranchNet = u.insideBranchNet;
+            }
+            if (u.receivingBranchNet !== undefined) {
+                order.receivingBranchNet = u.receivingBranchNet;
+            }
+            if (u.forwardedBranchNet !== undefined) {
+                order.forwardedBranchNet = u.forwardedBranchNet;
             }
         }
         return orders; // optional, mutated in place
@@ -195,6 +206,9 @@ class ReportsService {
             deliveryAgentNet: 0,
             companyNet: 0,
             branchNet: 0,
+            forwardedBranchNet: 0,
+            receivingBranchNet: 0,
+            insideBranchNet: 0,
         };
         let insideOrdersCount = 0;
         let total = 0;
@@ -216,6 +230,12 @@ class ReportsService {
             reportMetaData.deliveryAgentNet += order.deliveryAgentNet;
             // @ts-expect-error Fix later
             reportMetaData.companyNet += +order.companyNet;
+            // @ts-expect-error Fix later
+            reportMetaData.insideBranchNet += +order.insideBranchNet;
+            // @ts-expect-error Fix later
+            reportMetaData.receivingBranchNet += +order.receivingBranchNet;
+            // @ts-expect-error Fix later
+            reportMetaData.forwardedBranchNet += +order.forwardedBranchNet;
             // @ts-expect-error Fix later
             if (order.governorate === "BAGHDAD") {
                 reportMetaData.baghdadOrdersCount++;
@@ -243,6 +263,71 @@ class ReportsService {
         const reportData = await reportsRepository.getReport({
             reportID: report.id,
         });
+        if (data.reportData.type === client_1.ReportType.CLIENT) {
+            await transactionsRepository.createTransaction({
+                companyID: reportData?.company.id,
+                createdByID: reportData?.createdBy.id,
+                data: {
+                    type: "WITHDRAW",
+                    for: `سحب كشف عميل رقم ${report.id}`,
+                    reportID: report.id,
+                    branchID: reportData?.clientReport?.branch?.id,
+                    paidAmount: reportData?.clientNet || 0,
+                    deliveryAgentNet: 0,
+                    forwardedBranchNet: 0,
+                    receivingBranchNet: 0,
+                    insideBranchNet: reportMetaData.insideBranchNet,
+                    branchNet: 0,
+                    totalPaidAmount: reportData?.clientNet || 0,
+                    approved: false,
+                    clientNet: reportData?.clientNet || 0,
+                },
+            });
+        }
+        else if (data.reportData.type === client_1.ReportType.DELIVERY_AGENT) {
+            await transactionsRepository.createTransaction({
+                companyID: reportData?.company.id,
+                createdByID: reportData?.createdBy.id,
+                data: {
+                    type: "DEPOSIT",
+                    for: `سحب كشف مندوب رقم ${report.id}`,
+                    reportID: report.id,
+                    branchID: data.loggedInUser.branchId,
+                    paidAmount: reportMetaData?.companyNet || 0,
+                    deliveryAgentNet: reportData?.deliveryAgentNet || 0,
+                    forwardedBranchNet: 0,
+                    receivingBranchNet: 0,
+                    insideBranchNet: 0,
+                    branchNet: reportMetaData?.companyNet,
+                    totalPaidAmount: reportMetaData?.companyNet || 0,
+                    approved: false,
+                    clientNet: 0,
+                },
+            });
+        }
+        else if (data.reportData.type === client_1.ReportType.BRANCH) {
+            await transactionsRepository.createTransaction({
+                companyID: reportData?.company.id,
+                createdByID: reportData?.createdBy.id,
+                data: {
+                    type: data.ordersFilters.orderType === "received"
+                        ? "WITHDRAW"
+                        : "DEPOSIT",
+                    for: `سحب كشف ${data.ordersFilters.orderType === "received" ? "بريد صادر إلي الفرع" : "بريد وارد من الفرع"} رقم ${report.id}`,
+                    reportID: report.id,
+                    branchID: reportData?.branchReport?.branch.id,
+                    paidAmount: reportMetaData?.branchNet || 0,
+                    deliveryAgentNet: 0,
+                    forwardedBranchNet: reportMetaData.forwardedBranchNet,
+                    receivingBranchNet: reportMetaData.receivingBranchNet,
+                    insideBranchNet: 0,
+                    branchNet: 0,
+                    totalPaidAmount: reportMetaData?.branchNet || 0,
+                    approved: false,
+                    clientNet: 0,
+                },
+            });
+        }
         if (!reportData) {
             throw new AppError_1.AppError("حدث خطأ اثناء عمل الكشف", 500);
         }

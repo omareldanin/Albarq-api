@@ -63,6 +63,7 @@ export class ReportsRepository {
         deliveryAgentNet: data.reportMetaData.deliveryAgentNet,
         companyNet: data.reportMetaData.companyNet,
         branchNet: data.reportMetaData.branchNet,
+        activeProfit: true,
       },
     };
     if (data.reportData.type === ReportType.CLIENT) {
@@ -677,6 +678,16 @@ export class ReportsRepository {
       },
       select: reportSelect,
     });
+
+    await prisma.transaction.updateMany({
+      where: {
+        reportId: deletedReport.id,
+      },
+      data: {
+        deleted: true,
+      },
+    });
+
     return reportReform(deletedReport);
   }
 
@@ -689,6 +700,15 @@ export class ReportsRepository {
         deleted: false,
       },
       select: reportSelect,
+    });
+
+    await prisma.transaction.updateMany({
+      where: {
+        reportId: deletedReport.id,
+      },
+      data: {
+        deleted: false,
+      },
     });
     return reportReform(deletedReport);
   }
