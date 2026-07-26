@@ -145,7 +145,7 @@ class TransactionsRepository {
                 },
             }),
             db_1.prisma.order.aggregate({
-                _sum: { clientNet: true },
+                _sum: { paidAmount: true, deliveryCost: true },
                 _count: { id: true },
                 where: {
                     companyId: filters.loggedInUser?.companyID || undefined,
@@ -276,7 +276,8 @@ class TransactionsRepository {
                 count: notReceived._count.id,
             },
             forClients: {
-                total: forClients._sum.clientNet,
+                total: (forClients._sum.paidAmount ?? 0) -
+                    (forClients._sum.deliveryCost ?? 0),
                 count: forClients._count.id,
             },
             paidToClients: {
