@@ -395,17 +395,6 @@ class MessagesController {
                                     }
                                     : undefined,
                             },
-                            // {
-                            //   branchId: orderType
-                            //     ? undefined
-                            //     : inquiryBranchesIDs
-                            //       ? {
-                            //           in: inquiryBranchesIDs,
-                            //         }
-                            //       : user.mainRepository
-                            //         ? undefined
-                            //         : user.branchId,
-                            // },
                             {
                                 OR: !orderType &&
                                     user.mainRepository &&
@@ -711,59 +700,44 @@ class MessagesController {
     };
     getChatMessages = async (orderId, userId) => {
         const employee = await db_1.prisma.employee.findUnique({
-            where: {
-                id: +userId,
-            },
-            select: {
-                role: true,
-                permissions: true,
-            },
+            where: { id: +userId },
+            select: { role: true, permissions: true },
         });
-        if (employee?.role === "CLIENT_ASSISTANT") {
-            if (!employee?.permissions.includes("MESSAGES")) {
-                return [];
-            }
+        // both assistant roles need the MESSAGES permission
+        if ((employee?.role === "CLIENT_ASSISTANT" ||
+            employee?.role === "EMPLOYEE_CLIENT_ASSISTANT") &&
+            !employee?.permissions.includes("MESSAGES")) {
+            return [];
         }
-        if (employee?.role === "EMPLOYEE_CLIENT_ASSISTANT") {
-            if (!employee?.permissions.includes("MESSAGES")) {
-                return [];
-            }
+        // resolve chat once via the unique orderId — no per-message join
+        const chat = await db_1.prisma.chat.findUnique({
+            where: { orderId },
+            select: { id: true },
+        });
+        if (!chat) {
+            return { data: [] };
         }
         const messages = await db_1.prisma.message.findMany({
-            where: {
-                Chat: {
-                    orderId: orderId,
-                },
-            },
+            where: { chatId: chat.id }, // hits idx_message_chat_created directly
             select: {
                 id: true,
                 content: true,
                 image: true,
                 createdAt: true,
-                createdBy: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
-                },
+                createdBy: { select: { id: true, name: true } },
             },
-            orderBy: {
-                createdAt: "desc",
-            },
+            orderBy: { createdAt: "desc" },
         });
         const messageIds = messages
             .filter((m) => m.createdBy?.id !== userId)
             .map((m) => m.id);
-        await db_1.prisma.messageSeen.createMany({
-            data: messageIds.map((messageId) => ({
-                messageId,
-                userId,
-            })),
-            skipDuplicates: true,
-        });
-        return {
-            data: messages,
-        };
+        if (messageIds.length) {
+            await db_1.prisma.messageSeen.createMany({
+                data: messageIds.map((messageId) => ({ messageId, userId })),
+                skipDuplicates: true,
+            });
+        }
+        return { data: messages };
     };
     sendMessage = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const { content, orderId } = req.body;

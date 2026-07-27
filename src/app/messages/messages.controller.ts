@@ -449,17 +449,6 @@ export class MessagesController {
                           }
                         : undefined,
                     },
-                    // {
-                    //   branchId: orderType
-                    //     ? undefined
-                    //     : inquiryBranchesIDs
-                    //       ? {
-                    //           in: inquiryBranchesIDs,
-                    //         }
-                    //       : user.mainRepository
-                    //         ? undefined
-                    //         : user.branchId,
-                    // },
                     {
                       OR:
                         !orderType &&
@@ -788,65 +777,53 @@ export class MessagesController {
 
   getChatMessages = async (orderId: string, userId: number) => {
     const employee = await prisma.employee.findUnique({
-      where: {
-        id: +userId,
-      },
-      select: {
-        role: true,
-        permissions: true,
-      },
+      where: {id: +userId},
+      select: {role: true, permissions: true},
     });
 
-    if (employee?.role === "CLIENT_ASSISTANT") {
-      if (!employee?.permissions.includes("MESSAGES")) {
-        return [];
-      }
+    // both assistant roles need the MESSAGES permission
+    if (
+      (employee?.role === "CLIENT_ASSISTANT" ||
+        employee?.role === "EMPLOYEE_CLIENT_ASSISTANT") &&
+      !employee?.permissions.includes("MESSAGES")
+    ) {
+      return [];
     }
 
-    if (employee?.role === "EMPLOYEE_CLIENT_ASSISTANT") {
-      if (!employee?.permissions.includes("MESSAGES")) {
-        return [];
-      }
+    // resolve chat once via the unique orderId — no per-message join
+    const chat = await prisma.chat.findUnique({
+      where: {orderId},
+      select: {id: true},
+    });
+
+    if (!chat) {
+      return {data: []};
     }
 
     const messages = await prisma.message.findMany({
-      where: {
-        Chat: {
-          orderId: orderId,
-        },
-      },
+      where: {chatId: chat.id}, // hits idx_message_chat_created directly
       select: {
         id: true,
         content: true,
         image: true,
         createdAt: true,
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+        createdBy: {select: {id: true, name: true}},
       },
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy: {createdAt: "desc"},
     });
 
     const messageIds = messages
       .filter((m) => m.createdBy?.id !== userId)
       .map((m) => m.id);
 
-    await prisma.messageSeen.createMany({
-      data: messageIds.map((messageId) => ({
-        messageId,
-        userId,
-      })),
-      skipDuplicates: true,
-    });
+    if (messageIds.length) {
+      await prisma.messageSeen.createMany({
+        data: messageIds.map((messageId) => ({messageId, userId})),
+        skipDuplicates: true,
+      });
+    }
 
-    return {
-      data: messages,
-    };
+    return {data: messages};
   };
 
   sendMessage = catchAsync(async (req, res) => {
