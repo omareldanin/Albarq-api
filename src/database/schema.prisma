@@ -486,7 +486,6 @@ model Order {
   clientReport           ClientReport[]           @relation("ClientReportToOrder")
   companyReport          CompanyReport[]          @relation("CompanyReportToOrder")
   repositoryReport       RepositoryReport[]       @relation("OrderToRepositoryReport")
-  // @@index([companyId, deleted, status, branchId, createdAt])
 
   @@index([deleted, confirmed, status, governorate, createdAt])
   @@index([branchReportId])
@@ -508,6 +507,7 @@ model Order {
   @@index([companyId, deleted, deliveryAgentId, createdAt])
   @@index([companyId, deleted, receivedAt])
   @@index([deliveryAgentId, deliveryDate])
+  @@index([companyId, receiptNumber])
 }
 
 model Chat {
@@ -554,8 +554,8 @@ model MessageSeen {
   message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([messageId, userId]) // covers (messageId → userId) lookups
-  @@index([userId, messageId], map: "idx_seenBy_user_message") // covers (userId → messageId)
+  @@unique([messageId, userId])
+  @@index([userId, messageId], map: "idx_seenBy_user_message")
   @@index([messageId], map: "idx_seenBy_message")
 }
 
