@@ -512,7 +512,9 @@ export class OrdersRepository {
       });
       childBranchs = branchs.map((b) => b.id);
     }
-
+    const branchScope = [data.filters.branchID, ...childBranchs].filter(
+      (id): id is number => id != null,
+    );
     const where =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
         ? ({
@@ -680,7 +682,7 @@ export class OrdersRepository {
                   ? {
                       in: data.filters.inquiryGovernorates,
                     }
-                  : undefined,
+                  : data.filters.governorate,
               },
               {
                 governorate: data.filters.governorate,
@@ -690,19 +692,15 @@ export class OrdersRepository {
                 notes: data.filters.notes,
               },
               {
-                branch: data.filters.orderType
+                branchId: data.filters.orderType
                   ? undefined
                   : data.filters.inquiryBranchesIDs
                     ? {
-                        id: {
-                          in: data.filters.inquiryBranchesIDs,
-                        },
+                        in: data.filters.inquiryBranchesIDs,
                       }
                     : data.loggedInUser.mainRepository
                       ? undefined
-                      : {
-                          id: data.loggedInUser.branchId,
-                        },
+                      : data.loggedInUser.branchId,
               },
               {
                 branchId: data.filters.orderType
@@ -716,11 +714,9 @@ export class OrdersRepository {
                 deliveryAgentId: data.filters.deliveryAgentID,
               },
               {
-                store: data.filters.inquiryStoresIDs
+                storeId: data.filters.inquiryStoresIDs
                   ? {
-                      id: {
-                        in: data.filters.inquiryStoresIDs,
-                      },
+                      in: data.filters.inquiryStoresIDs,
                     }
                   : undefined,
               },
@@ -730,7 +726,6 @@ export class OrdersRepository {
               {
                 locationId: data.filters.locationID,
               },
-
               // Filter by startDate
               {
                 createdAt: data.filters.startDate
@@ -771,20 +766,16 @@ export class OrdersRepository {
                   : undefined,
               },
               {
-                location: data.filters.inquiryLocationsIDs
+                locationId: data.filters.inquiryLocationsIDs
                   ? {
-                      id: {
-                        in: data.filters.inquiryLocationsIDs,
-                      },
+                      in: data.filters.inquiryLocationsIDs,
                     }
                   : undefined,
               },
               {
-                deliveryAgent: data.filters.inquiryDeliveryAgentsIDs
+                deliveryAgentId: data.filters.inquiryDeliveryAgentsIDs
                   ? {
-                      id: {
-                        in: data.filters.inquiryDeliveryAgentsIDs,
-                      },
+                      in: data.filters.inquiryDeliveryAgentsIDs,
                     }
                   : undefined,
               },
@@ -812,43 +803,6 @@ export class OrdersRepository {
                             },
                             {
                               clientReport: {
-                                some: {
-                                  report: {
-                                    deleted: true,
-                                  },
-                                },
-                              },
-                            },
-                          ]
-                        : undefined,
-                  },
-                ],
-              },
-              // Filter by repositoryReport
-              {
-                AND: [
-                  data.filters.repositoryReport === "true"
-                    ? {
-                        repositoryReport: {
-                          some: {
-                            report: {
-                              deleted: false,
-                            },
-                          },
-                        },
-                      }
-                    : {},
-                  {
-                    OR:
-                      data.filters.repositoryReport === "false"
-                        ? [
-                            {
-                              repositoryReport: {
-                                none: {},
-                              },
-                            },
-                            {
-                              repositoryReport: {
                                 some: {
                                   report: {
                                     deleted: true,
@@ -922,70 +876,6 @@ export class OrdersRepository {
                             {
                               deliveryAgentReport: {
                                 report: {deleted: true},
-                              },
-                            },
-                          ]
-                        : undefined,
-                  },
-                ],
-              },
-              // Filter by governorateReport
-              {
-                AND: [
-                  {
-                    AND:
-                      data.filters.governorateReport === "true"
-                        ? [
-                            {governorateReport: {isNot: null}},
-                            {
-                              governorateReport: {report: {deleted: false}},
-                            },
-                          ]
-                        : undefined,
-                  },
-                  {
-                    OR:
-                      data.filters.governorateReport === "false"
-                        ? [
-                            {governorateReport: {is: null}},
-                            {
-                              governorateReport: {report: {deleted: true}},
-                            },
-                          ]
-                        : undefined,
-                  },
-                ],
-              },
-              // Filter by companyReport
-              {
-                AND: [
-                  data.filters.companyReport === "true"
-                    ? {
-                        companyReport: {
-                          some: {
-                            report: {
-                              deleted: false,
-                            },
-                          },
-                        },
-                      }
-                    : {},
-                  {
-                    OR:
-                      data.filters.companyReport === "false"
-                        ? [
-                            {
-                              companyReport: {
-                                none: {},
-                              },
-                            },
-                            {
-                              companyReport: {
-                                some: {
-                                  report: {
-                                    deleted: true,
-                                  },
-                                },
                               },
                             },
                           ]
@@ -1638,20 +1528,9 @@ export class OrdersRepository {
                       data.filters.orderType === "forwarded"
                         ? [
                             {
-                              OR: [
-                                {
-                                  client: {
-                                    branchId: data.filters.branchID,
-                                  },
-                                },
-                                {
-                                  client: {
-                                    branch: {
-                                      parentBranchId: data.filters.branchID,
-                                    },
-                                  },
-                                },
-                              ],
+                              client: {
+                                branchId: {in: branchScope}, // ← was the two OR branches with parentBranchId
+                              },
                             },
 
                             {
@@ -1669,23 +1548,11 @@ export class OrdersRepository {
                           ? [
                               {
                                 client: {
-                                  branchId: {not: data.filters.branchID},
+                                  branchId: {notIn: branchScope}, // ← was the two OR branches with parentBranchId
                                 },
                               },
                               {
-                                client: {
-                                  branchId: {notIn: childBranchs},
-                                },
-                              },
-                              {
-                                OR: [
-                                  {
-                                    branchId: data.filters.branchID,
-                                  },
-                                  {
-                                    branchId: {in: childBranchs},
-                                  },
-                                ],
+                                branchId: {in: branchScope},
                               },
                             ]
                           : [],
