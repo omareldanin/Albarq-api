@@ -959,7 +959,7 @@ export class OrdersController {
         where: {
           id: params.orderReceiptNumber,
           status: {
-            notIn: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED", "DELIVERED"],
+            in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"],
           },
           companyId: loggedInUser.companyID!!,
           deleted: false,
@@ -970,7 +970,7 @@ export class OrdersController {
         where: {
           receiptNumber: params.orderReceiptNumber,
           status: {
-            notIn: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED", "DELIVERED"],
+            in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"],
           },
           companyId: loggedInUser.companyID!!,
           deleted: false,
