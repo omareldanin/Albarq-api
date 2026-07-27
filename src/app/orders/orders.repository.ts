@@ -3986,7 +3986,6 @@ export class OrdersRepository {
         _count: {id: true},
         where: {
           ...filtersReformed,
-          deleted: false,
           deliveryDate:
             role === "DELIVERY_AGENT"
               ? {gte: new Date(Date.now() - 22 * 60 * 60 * 1000)}
