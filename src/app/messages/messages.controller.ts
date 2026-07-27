@@ -517,9 +517,13 @@ export class MessagesController {
                           }
                         : undefined,
                     },
+                    {
+                      deleted: false,
+                    },
                   ],
                 }
               : {
+                  deleted: false,
                   status:
                     status && status !== "null"
                       ? (status as OrderStatus)
@@ -569,9 +573,6 @@ export class MessagesController {
           id: true,
           orderId: true,
           Order: {
-            where: {
-              deleted: false,
-            },
             select: {
               receiptNumber: true,
             },

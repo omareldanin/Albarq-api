@@ -554,8 +554,8 @@ model MessageSeen {
   message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([messageId, userId])
-  @@index([userId], map: "idx_seenBy_user")
+  @@unique([messageId, userId]) // covers (messageId → userId) lookups
+  @@index([userId, messageId], map: "idx_seenBy_user_message") // covers (userId → messageId)
   @@index([messageId], map: "idx_seenBy_message")
 }
 

@@ -462,9 +462,13 @@ class MessagesController {
                                     }
                                     : undefined,
                             },
+                            {
+                                deleted: false,
+                            },
                         ],
                     }
                     : {
+                        deleted: false,
                         status: status && status !== "null"
                             ? status
                             : user.role === "CLIENT_ASSISTANT" ||
@@ -509,9 +513,6 @@ class MessagesController {
                 id: true,
                 orderId: true,
                 Order: {
-                    where: {
-                        deleted: false,
-                    },
                     select: {
                         receiptNumber: true,
                     },
