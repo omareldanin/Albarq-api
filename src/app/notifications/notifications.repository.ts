@@ -41,8 +41,6 @@ export class NotificationsRepository {
   ) {
     const paginatedNotifications = await prisma.notification.findManyPaginated(
       {
-        // if seen true gett all notifications seen and unseen
-        // if seen false get only unseen notifications
         where: {
           userId: userID,
           seen: seen ? undefined : false,
@@ -58,12 +56,14 @@ export class NotificationsRepository {
         withCount: true,
       },
     );
+
     const unSeenCount = await prisma.notification.count({
       where: {
         seen: false,
         userId: userID,
       },
     });
+
     return {
       notifications: paginatedNotifications.data.map(notificationReform),
       pagesCount: paginatedNotifications.pagesCount,

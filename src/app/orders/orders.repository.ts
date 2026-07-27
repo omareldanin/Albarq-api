@@ -3677,7 +3677,7 @@ export class OrdersRepository {
     } else if (isBranchScoped) {
       statusReportOR = [
         {
-          branch: {id: loggedInUser.branchId},
+          branchId: loggedInUser.branchId,
           status: {not: "WITH_RECEIVING_AGENT"},
         },
         {
@@ -3693,7 +3693,7 @@ export class OrdersRepository {
       loggedInUser?.role !== "COMPANY_MANAGER" &&
       loggedInUser?.role !== "RECEIVING_AGENT"
     ) {
-      statusReportOR = [{branch: {id: loggedInUser?.branchId}}];
+      statusReportOR = [{branchId: loggedInUser?.branchId}];
     } else {
       statusReportOR = undefined;
     }

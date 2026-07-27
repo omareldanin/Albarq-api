@@ -915,12 +915,8 @@ model Notification {
   type          OrderStatus?
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId, id])
-  @@index([userId, seen])
-  @@index([userId, seen, id])
-  @@index([userId, id(sort: Desc)], map: "idx_notification_user_id")
-  @@index([userId, seen], map: "idx_notification_user_seen")
-  @@index([userId, seen, id(sort: Desc)], map: "idx_notification_user_seen_id")
+  @@index([userId, seen, id(sort: Desc)])
+  @@index([userId, id(sort: Desc)])
 }
 
 model Banner {

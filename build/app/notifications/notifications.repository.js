@@ -28,8 +28,6 @@ class NotificationsRepository {
     }
     async getAllNotificationsPaginated(userID, page, size, seen) {
         const paginatedNotifications = await db_1.prisma.notification.findManyPaginated({
-            // if seen true gett all notifications seen and unseen
-            // if seen false get only unseen notifications
             where: {
                 userId: userID,
                 seen: seen ? undefined : false,
