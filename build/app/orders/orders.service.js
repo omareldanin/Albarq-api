@@ -485,15 +485,15 @@ class OrdersService {
             data.loggedInUser.role !== "COMPANY_MANAGER") {
             throw new AppError_1.AppError("ليس لديك صلاحية تعديل المبلغ المدفوع", 403);
         }
-        let oldOrderData = await ordersRepository.getOrderById({
-            orderID: data.params.orderID,
-        });
         if (data.loggedInUser.role !== "COMPANY_MANAGER" &&
             !data.loggedInUser.mainRepository &&
             ((data.orderData.totalCost && data.orderData.totalCost < 0) ||
                 (data.orderData.paidAmount && data.orderData.paidAmount < 0))) {
             throw new AppError_1.AppError("غير مصرح لك تعديل طلبات بالسالب", 400);
         }
+        let oldOrderData = await ordersRepository.getOrderById({
+            orderID: data.params.orderID,
+        });
         if (!oldOrderData) {
             oldOrderData = await ordersRepository.getOrderByReceiptNumber({
                 orderReceiptNumber: data.params.orderID,

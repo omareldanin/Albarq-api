@@ -182,11 +182,9 @@ export class TransactionsRepository {
           branchId: filters.loggedInUser?.branchId,
           deliveryAgentId: filters.deliveryAgentId,
           ...(createdAtFilter && {createdAt: createdAtFilter}),
-          OR: [
-            {deliveryAgentReport: {isNot: null}},
-            {deliveryAgentReport: {report: {deleted: false}}},
-          ],
-          deliveryAgentReport: {report: {activeProfit: true}},
+          deliveryAgentReport: {
+            report: {deleted: false, activeProfit: true},
+          },
         },
       }),
 
@@ -247,6 +245,7 @@ export class TransactionsRepository {
           },
         },
       }),
+
       prisma.order.aggregate({
         _sum: {insideBranchNet: true},
         _count: {id: true},
@@ -275,6 +274,7 @@ export class TransactionsRepository {
           },
         },
       }),
+
       prisma.order.aggregate({
         _sum: {receivingBranchNet: true},
         _count: {id: true},
@@ -299,6 +299,7 @@ export class TransactionsRepository {
           },
         },
       }),
+
       prisma.order.aggregate({
         _sum: {forwardedBranchNet: true},
         _count: {id: true},

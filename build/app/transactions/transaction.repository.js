@@ -118,11 +118,9 @@ class TransactionsRepository {
                     branchId: filters.loggedInUser?.branchId,
                     deliveryAgentId: filters.deliveryAgentId,
                     ...(createdAtFilter && { createdAt: createdAtFilter }),
-                    OR: [
-                        { deliveryAgentReport: { isNot: null } },
-                        { deliveryAgentReport: { report: { deleted: false } } },
-                    ],
-                    deliveryAgentReport: { report: { activeProfit: true } },
+                    deliveryAgentReport: {
+                        report: { deleted: false, activeProfit: true },
+                    },
                 },
             }),
             db_1.prisma.order.aggregate({

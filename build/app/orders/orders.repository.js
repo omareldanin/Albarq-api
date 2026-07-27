@@ -2442,7 +2442,6 @@ class OrdersRepository {
         const order = await db_1.prisma.order.findUnique({
             where: {
                 id: data.orderID,
-                deleted: false,
             },
             select: orders_responses_1.orderSelect,
         });
@@ -3147,6 +3146,128 @@ class OrdersRepository {
         return deletedOrder;
     }
     async getOrdersStatistics(data) {
+        const { filters, loggedInUser } = data;
+        const isManagerOrMainRepo = loggedInUser?.role === "COMPANY_MANAGER" || loggedInUser?.mainRepository;
+        let branchConstraintsA = [];
+        let branchConstraintsB = [];
+        if (filters.orderType === "forwardedAll" &&
+            isManagerOrMainRepo &&
+            filters.branchID) {
+            branchConstraintsA = [
+                { client: { branchId: filters.branchID } },
+                { branchId: { not: filters.branchID } },
+            ];
+        }
+        else if (filters.orderType === "forwardedAll" && isManagerOrMainRepo) {
+            branchConstraintsA = [{ client: { branchId: { not: loggedInUser.branchId } } }];
+        }
+        else if (filters.orderType === "forwardedAll") {
+            branchConstraintsA = [
+                { client: { branchId: loggedInUser?.branchId } },
+                { branchId: { not: loggedInUser?.branchId } },
+            ];
+        }
+        else if (filters.orderType === "receivedAll" &&
+            filters.branchID &&
+            loggedInUser?.role !== "COMPANY_MANAGER" &&
+            !loggedInUser?.mainCompany) {
+            branchConstraintsA = [
+                { client: { branchId: filters.branchID } },
+                { branchId: { not: filters.branchID } },
+            ];
+        }
+        else if (filters.orderType === "inside") {
+            branchConstraintsA = [
+                { client: { branchId: loggedInUser?.branchId } },
+                { branchId: loggedInUser?.branchId },
+            ];
+        }
+        if (filters.orderType === "receivedAll" &&
+            isManagerOrMainRepo &&
+            filters.branchID) {
+            branchConstraintsB = [
+                { branchId: filters.branchID },
+                { client: { branchId: { not: filters.branchID } } },
+            ];
+        }
+        else if (filters.orderType === "receivedAll" && isManagerOrMainRepo) {
+            branchConstraintsB = [{ branchId: { not: loggedInUser.branchId } }];
+        }
+        else if (filters.orderType === "forwardedAll" &&
+            filters.branchID &&
+            loggedInUser?.role !== "COMPANY_MANAGER" &&
+            !loggedInUser?.mainCompany) {
+            branchConstraintsB = [
+                { branchId: filters.branchID },
+                { client: { branchId: { not: filters.branchID } } },
+            ];
+        }
+        else if (filters.orderType === "receivedAll") {
+            branchConstraintsB = [{ branchId: loggedInUser?.branchId }];
+        }
+        const isClientLike = loggedInUser.role === "CLIENT" ||
+            loggedInUser.role === "INQUIRY_EMPLOYEE" ||
+            loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT" ||
+            loggedInUser.role === "CLIENT_ASSISTANT";
+        const isBranchScoped = loggedInUser.role === "REPOSITORIY_EMPLOYEE" ||
+            loggedInUser.role === "BRANCH_MANAGER";
+        let statusReportOR;
+        if (isClientLike) {
+            statusReportOR = [
+                {
+                    clientReport: {
+                        none: { secondaryType: "DELIVERED", report: { deleted: false } },
+                    },
+                    status: { not: "RETURNED" },
+                },
+                {
+                    clientReport: {
+                        none: { secondaryType: "RETURNED", report: { deleted: false } },
+                    },
+                    status: { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] },
+                },
+            ];
+        }
+        else if (loggedInUser.role === "DELIVERY_AGENT") {
+            statusReportOR = [
+                {
+                    OR: [
+                        { deliveryAgentReport: { is: null } },
+                        { deliveryAgentReport: { report: { deleted: true } } },
+                    ],
+                    status: { notIn: ["RETURNED"] },
+                },
+                {
+                    secondaryStatus: "WITH_AGENT",
+                    status: { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] },
+                },
+            ];
+        }
+        else if (isBranchScoped) {
+            statusReportOR = [
+                {
+                    branch: { id: loggedInUser.branchId },
+                    status: { not: "WITH_RECEIVING_AGENT" },
+                },
+                {
+                    client: { branchId: loggedInUser?.branchId },
+                    status: { not: "WITH_RECEIVING_AGENT" },
+                },
+                {
+                    status: "WITH_RECEIVING_AGENT",
+                    deliveryAgent: { branchId: loggedInUser.branchId },
+                },
+            ];
+        }
+        else if (loggedInUser?.role !== "COMPANY_MANAGER" &&
+            loggedInUser?.role !== "RECEIVING_AGENT") {
+            statusReportOR = [{ branch: { id: loggedInUser?.branchId } }];
+        }
+        else {
+            statusReportOR = undefined;
+        }
+        const isClientAssistant = loggedInUser.role === "CLIENT_ASSISTANT" ||
+            loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT";
         const cacheKey = `orders:stats:u:${data.loggedInUser.id}:r:${data.loggedInUser.role}:f:${this.hashFilters(data.filters)}`;
         const cached = await redis_1.redis.get(cacheKey);
         if (cached) {
@@ -3192,13 +3313,6 @@ class OrdersRepository {
                         deleted: false,
                     },
                     {
-                        governorate: data.filters.inquiryGovernorates
-                            ? {
-                                in: data.filters.inquiryGovernorates,
-                            }
-                            : undefined,
-                    },
-                    {
                         branchId: data.filters.orderType
                             ? undefined
                             : data.filters.inquiryBranchesIDs
@@ -3220,13 +3334,6 @@ class OrdersRepository {
                         storeId: data.filters.inquiryStoresIDs
                             ? {
                                 in: data.filters.inquiryStoresIDs,
-                            }
-                            : undefined,
-                    },
-                    {
-                        locationId: data.filters.inquiryLocationsIDs
-                            ? {
-                                in: data.filters.inquiryLocationsIDs,
                             }
                             : undefined,
                     },
@@ -3261,125 +3368,33 @@ class OrdersRepository {
                 AND: [
                     {
                         OR: [
+                            { companyId: filters.companyID },
                             {
-                                companyId: data.filters.companyID,
-                            },
-                            {
-                                forwardedFromId: data.filters.inquiryCompaniesIDs
-                                    ? {
-                                        in: [
-                                            ...data.filters.inquiryCompaniesIDs,
-                                            //   data.filters.companyID as number
-                                        ],
-                                    }
-                                    : data.filters.companyID,
+                                forwardedFromId: filters.inquiryCompaniesIDs
+                                    ? { in: [...filters.inquiryCompaniesIDs] }
+                                    : filters.companyID,
                             },
                         ],
                     },
                     {
-                        branchId: data.filters.inquiryBranchesIDs
-                            ? {
-                                in: data.filters.inquiryBranchesIDs,
-                            }
+                        branchId: filters.inquiryBranchesIDs
+                            ? { in: filters.inquiryBranchesIDs }
                             : undefined,
                     },
                     {
-                        storeId: data.loggedInUser.role === "CLIENT_ASSISTANT" ||
-                            data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT"
-                            ? { in: data.filters.inquiryStoresIDs }
-                            : data.filters.storeID,
+                        storeId: isClientAssistant
+                            ? { in: filters.inquiryStoresIDs }
+                            : filters.storeID,
                     },
                     {
-                        governorateReport: data.filters.governorateReport
-                            ? { isNot: null }
-                            : data.filters.governorateReport
-                                ? { is: null }
-                                : undefined,
+                        clientId: filters.inquiryClientsIDs
+                            ? { in: [...filters.inquiryClientsIDs] }
+                            : filters.clientID,
                     },
-                    {
-                        deliveryAgentReport: data.filters.deliveryAgentReport
-                            ? { isNot: null }
-                            : data.filters.deliveryAgentReport
-                                ? { is: null }
-                                : undefined,
-                    },
-                    {
-                        governorate: data.filters.governorate,
-                    },
-                    {
-                        createdAt: {
-                            gte: data.filters.startDate,
-                        },
-                    },
-                    {
-                        createdAt: {
-                            lte: data.filters.endDate,
-                        },
-                    },
-                    {
-                        clientId: data.filters.inquiryClientsIDs
-                            ? {
-                                in: [
-                                    ...data.filters.inquiryClientsIDs,
-                                    //   data.filters.companyID as number
-                                ],
-                            }
-                            : data.filters.clientID,
-                    },
-                    {
-                        deliveryType: data.filters.deliveryType,
-                    },
-                    {
-                        locationId: data.filters.locationID,
-                    },
-                    {
-                        deliveryAgentId: data.filters.deliveryAgentID,
-                    },
-                    {
-                        deleted: false,
-                    },
-                    {
-                        forwardedBranchId: data.filters.orderType === "forwardedAll" &&
-                            (data.loggedInUser?.role === "COMPANY_MANAGER" ||
-                                data.loggedInUser?.mainRepository) &&
-                            data.filters.branchID
-                            ? data.filters.branchID
-                            : data.filters.orderType === "forwardedAll" &&
-                                (data.loggedInUser?.role === "COMPANY_MANAGER" ||
-                                    data.loggedInUser?.mainRepository)
-                                ? {
-                                    not: null,
-                                }
-                                : data.filters.orderType === "forwardedAll"
-                                    ? data.loggedInUser?.branchId
-                                    : data.filters.orderType === "receivedAll" &&
-                                        data.filters.branchID &&
-                                        data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-                                        !data.loggedInUser?.mainCompany
-                                        ? data.filters.branchID
-                                        : undefined,
-                    },
-                    {
-                        receivedBranchId: data.filters.orderType === "receivedAll" &&
-                            (data.loggedInUser?.role === "COMPANY_MANAGER" ||
-                                data.loggedInUser?.mainRepository) &&
-                            data.filters.branchID
-                            ? data.filters.branchID
-                            : data.filters.orderType === "receivedAll" &&
-                                (data.loggedInUser?.role === "COMPANY_MANAGER" ||
-                                    data.loggedInUser?.mainRepository)
-                                ? {
-                                    not: null,
-                                }
-                                : data.filters.orderType === "forwardedAll" &&
-                                    data.filters.branchID &&
-                                    data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-                                    !data.loggedInUser?.mainCompany
-                                    ? data.filters.branchID
-                                    : data.filters.orderType === "receivedAll"
-                                        ? data.loggedInUser?.branchId
-                                        : undefined,
-                    },
+                    { deliveryAgentId: filters.deliveryAgentID },
+                    { deleted: false },
+                    ...(branchConstraintsA.length ? [{ AND: branchConstraintsA }] : []),
+                    ...(branchConstraintsB.length ? [{ AND: branchConstraintsB }] : []),
                 ],
             };
         const [ordersStatisticsByStatus, ordersStatisticsByGovernorate, allOrdersStatisticsWithoutClientReport, allOrdersStatisticsWithoutDeliveryReport, todayOrdersStatistics,] = await Promise.all([
@@ -3393,98 +3408,7 @@ class OrdersRepository {
                 },
                 where: {
                     ...filtersReformed,
-                    OR: data.loggedInUser.role === "CLIENT" ||
-                        data.loggedInUser.role === "INQUIRY_EMPLOYEE" ||
-                        data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT" ||
-                        data.loggedInUser.role === "CLIENT_ASSISTANT"
-                        ? [
-                            {
-                                clientReport: {
-                                    none: {
-                                        secondaryType: "DELIVERED",
-                                        report: {
-                                            deleted: false,
-                                        },
-                                    },
-                                },
-                                status: {
-                                    not: "RETURNED",
-                                },
-                            },
-                            {
-                                clientReport: {
-                                    none: {
-                                        secondaryType: "RETURNED",
-                                        report: {
-                                            deleted: false,
-                                        },
-                                    },
-                                },
-                                status: {
-                                    in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
-                                },
-                            },
-                        ]
-                        : data.loggedInUser.role === "DELIVERY_AGENT"
-                            ? [
-                                {
-                                    OR: [
-                                        {
-                                            deliveryAgentReport: {
-                                                is: null,
-                                            },
-                                        },
-                                        {
-                                            deliveryAgentReport: {
-                                                report: {
-                                                    deleted: true,
-                                                },
-                                            },
-                                        },
-                                    ],
-                                    status: {
-                                        notIn: ["RETURNED"],
-                                    },
-                                },
-                                {
-                                    secondaryStatus: "WITH_AGENT",
-                                    status: {
-                                        in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
-                                    },
-                                },
-                            ]
-                            : data.loggedInUser.role === "REPOSITORIY_EMPLOYEE" ||
-                                data.loggedInUser.role === "BRANCH_MANAGER"
-                                ? [
-                                    {
-                                        branch: {
-                                            id: data.loggedInUser.branchId,
-                                        },
-                                        status: { not: "WITH_RECEIVING_AGENT" },
-                                    },
-                                    {
-                                        client: {
-                                            branchId: data.loggedInUser?.branchId,
-                                        },
-                                        status: { not: "WITH_RECEIVING_AGENT" },
-                                    },
-                                    {
-                                        status: "WITH_RECEIVING_AGENT",
-                                        deliveryAgent: {
-                                            branchId: data.loggedInUser.branchId,
-                                        },
-                                    },
-                                ]
-                                : data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-                                    data.loggedInUser?.role !== "RECEIVING_AGENT"
-                                    ? [
-                                        {
-                                            branch: {
-                                                id: data.loggedInUser?.branchId,
-                                            },
-                                        },
-                                    ]
-                                    : undefined,
+                    OR: statusReportOR,
                 },
             }),
             db_1.prisma.order.groupBy({
@@ -3578,6 +3502,128 @@ class OrdersRepository {
         };
     }
     async getOrdersStatisticsV2(data) {
+        const { filters, loggedInUser } = data;
+        const isManagerOrMainRepo = loggedInUser?.role === "COMPANY_MANAGER" || loggedInUser?.mainRepository;
+        let branchConstraintsA = [];
+        let branchConstraintsB = [];
+        if (filters.orderType === "forwardedAll" &&
+            isManagerOrMainRepo &&
+            filters.branchID) {
+            branchConstraintsA = [
+                { client: { branchId: filters.branchID } },
+                { branchId: { not: filters.branchID } },
+            ];
+        }
+        else if (filters.orderType === "forwardedAll" && isManagerOrMainRepo) {
+            branchConstraintsA = [{ client: { branchId: { not: loggedInUser.branchId } } }];
+        }
+        else if (filters.orderType === "forwardedAll") {
+            branchConstraintsA = [
+                { client: { branchId: loggedInUser?.branchId } },
+                { branchId: { not: loggedInUser?.branchId } },
+            ];
+        }
+        else if (filters.orderType === "receivedAll" &&
+            filters.branchID &&
+            loggedInUser?.role !== "COMPANY_MANAGER" &&
+            !loggedInUser?.mainCompany) {
+            branchConstraintsA = [
+                { client: { branchId: filters.branchID } },
+                { branchId: { not: filters.branchID } },
+            ];
+        }
+        else if (filters.orderType === "inside") {
+            branchConstraintsA = [
+                { client: { branchId: loggedInUser?.branchId } },
+                { branchId: loggedInUser?.branchId },
+            ];
+        }
+        if (filters.orderType === "receivedAll" &&
+            isManagerOrMainRepo &&
+            filters.branchID) {
+            branchConstraintsB = [
+                { branchId: filters.branchID },
+                { client: { branchId: { not: filters.branchID } } },
+            ];
+        }
+        else if (filters.orderType === "receivedAll" && isManagerOrMainRepo) {
+            branchConstraintsB = [{ branchId: { not: loggedInUser.branchId } }];
+        }
+        else if (filters.orderType === "forwardedAll" &&
+            filters.branchID &&
+            loggedInUser?.role !== "COMPANY_MANAGER" &&
+            !loggedInUser?.mainCompany) {
+            branchConstraintsB = [
+                { branchId: filters.branchID },
+                { client: { branchId: { not: filters.branchID } } },
+            ];
+        }
+        else if (filters.orderType === "receivedAll") {
+            branchConstraintsB = [{ branchId: loggedInUser?.branchId }];
+        }
+        const isClientLike = loggedInUser.role === "CLIENT" ||
+            loggedInUser.role === "INQUIRY_EMPLOYEE" ||
+            loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT" ||
+            loggedInUser.role === "CLIENT_ASSISTANT";
+        const isBranchScoped = loggedInUser.role === "REPOSITORIY_EMPLOYEE" ||
+            loggedInUser.role === "BRANCH_MANAGER";
+        let statusReportOR;
+        if (isClientLike) {
+            statusReportOR = [
+                {
+                    clientReport: {
+                        none: { secondaryType: "DELIVERED", report: { deleted: false } },
+                    },
+                    status: { not: "RETURNED" },
+                },
+                {
+                    clientReport: {
+                        none: { secondaryType: "RETURNED", report: { deleted: false } },
+                    },
+                    status: { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] },
+                },
+            ];
+        }
+        else if (loggedInUser.role === "DELIVERY_AGENT") {
+            statusReportOR = [
+                {
+                    OR: [
+                        { deliveryAgentReport: { is: null } },
+                        { deliveryAgentReport: { report: { deleted: true } } },
+                    ],
+                    status: { notIn: ["RETURNED"] },
+                },
+                {
+                    secondaryStatus: "WITH_AGENT",
+                    status: { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] },
+                },
+            ];
+        }
+        else if (isBranchScoped) {
+            statusReportOR = [
+                {
+                    branch: { id: loggedInUser.branchId },
+                    status: { not: "WITH_RECEIVING_AGENT" },
+                },
+                {
+                    client: { branchId: loggedInUser?.branchId },
+                    status: { not: "WITH_RECEIVING_AGENT" },
+                },
+                {
+                    status: "WITH_RECEIVING_AGENT",
+                    deliveryAgent: { branchId: loggedInUser.branchId },
+                },
+            ];
+        }
+        else if (loggedInUser?.role !== "COMPANY_MANAGER" &&
+            loggedInUser?.role !== "RECEIVING_AGENT") {
+            statusReportOR = [{ branch: { id: loggedInUser?.branchId } }];
+        }
+        else {
+            statusReportOR = undefined;
+        }
+        const isClientAssistant = loggedInUser.role === "CLIENT_ASSISTANT" ||
+            loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT";
         const cacheKey = `orders:stats:u:${data.loggedInUser.id}:r:${data.loggedInUser.role}:f:${this.hashFilters(data.filters)}`;
         const cached = await redis_1.redis.get(cacheKey);
         if (cached) {
@@ -3701,125 +3747,33 @@ class OrdersRepository {
                 AND: [
                     {
                         OR: [
+                            { companyId: filters.companyID },
                             {
-                                companyId: data.filters.companyID,
-                            },
-                            {
-                                forwardedFromId: data.filters.inquiryCompaniesIDs
-                                    ? {
-                                        in: [
-                                            ...data.filters.inquiryCompaniesIDs,
-                                            //   data.filters.companyID as number
-                                        ],
-                                    }
-                                    : data.filters.companyID,
+                                forwardedFromId: filters.inquiryCompaniesIDs
+                                    ? { in: [...filters.inquiryCompaniesIDs] }
+                                    : filters.companyID,
                             },
                         ],
                     },
                     {
-                        branchId: data.filters.inquiryBranchesIDs
-                            ? {
-                                in: data.filters.inquiryBranchesIDs,
-                            }
+                        branchId: filters.inquiryBranchesIDs
+                            ? { in: filters.inquiryBranchesIDs }
                             : undefined,
                     },
                     {
-                        storeId: data.loggedInUser.role === "CLIENT_ASSISTANT" ||
-                            data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT"
-                            ? { in: data.filters.inquiryStoresIDs }
-                            : data.filters.storeID,
+                        storeId: isClientAssistant
+                            ? { in: filters.inquiryStoresIDs }
+                            : filters.storeID,
                     },
                     {
-                        governorateReport: data.filters.governorateReport
-                            ? { isNot: null }
-                            : data.filters.governorateReport
-                                ? { is: null }
-                                : undefined,
+                        clientId: filters.inquiryClientsIDs
+                            ? { in: [...filters.inquiryClientsIDs] }
+                            : filters.clientID,
                     },
-                    {
-                        deliveryAgentReport: data.filters.deliveryAgentReport
-                            ? { isNot: null }
-                            : data.filters.deliveryAgentReport
-                                ? { is: null }
-                                : undefined,
-                    },
-                    {
-                        governorate: data.filters.governorate,
-                    },
-                    {
-                        createdAt: {
-                            gte: data.filters.startDate,
-                        },
-                    },
-                    {
-                        createdAt: {
-                            lte: data.filters.endDate,
-                        },
-                    },
-                    {
-                        clientId: data.filters.inquiryClientsIDs
-                            ? {
-                                in: [
-                                    ...data.filters.inquiryClientsIDs,
-                                    //   data.filters.companyID as number
-                                ],
-                            }
-                            : data.filters.clientID,
-                    },
-                    {
-                        deliveryType: data.filters.deliveryType,
-                    },
-                    {
-                        locationId: data.filters.locationID,
-                    },
-                    {
-                        deliveryAgentId: data.filters.deliveryAgentID,
-                    },
-                    {
-                        deleted: false,
-                    },
-                    {
-                        forwardedBranchId: data.filters.orderType === "forwardedAll" &&
-                            (data.loggedInUser?.role === "COMPANY_MANAGER" ||
-                                data.loggedInUser?.mainRepository) &&
-                            data.filters.branchID
-                            ? data.filters.branchID
-                            : data.filters.orderType === "forwardedAll" &&
-                                (data.loggedInUser?.role === "COMPANY_MANAGER" ||
-                                    data.loggedInUser?.mainRepository)
-                                ? {
-                                    not: null,
-                                }
-                                : data.filters.orderType === "forwardedAll"
-                                    ? data.loggedInUser?.branchId
-                                    : data.filters.orderType === "receivedAll" &&
-                                        data.filters.branchID &&
-                                        data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-                                        !data.loggedInUser?.mainCompany
-                                        ? data.filters.branchID
-                                        : undefined,
-                    },
-                    {
-                        receivedBranchId: data.filters.orderType === "receivedAll" &&
-                            (data.loggedInUser?.role === "COMPANY_MANAGER" ||
-                                data.loggedInUser?.mainRepository) &&
-                            data.filters.branchID
-                            ? data.filters.branchID
-                            : data.filters.orderType === "receivedAll" &&
-                                (data.loggedInUser?.role === "COMPANY_MANAGER" ||
-                                    data.loggedInUser?.mainRepository)
-                                ? {
-                                    not: null,
-                                }
-                                : data.filters.orderType === "forwardedAll" &&
-                                    data.filters.branchID &&
-                                    data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-                                    !data.loggedInUser?.mainCompany
-                                    ? data.filters.branchID
-                                    : data.filters.orderType === "receivedAll"
-                                        ? data.loggedInUser?.branchId
-                                        : undefined,
-                    },
+                    { deliveryAgentId: filters.deliveryAgentID },
+                    { deleted: false },
+                    ...(branchConstraintsA.length ? [{ AND: branchConstraintsA }] : []),
+                    ...(branchConstraintsB.length ? [{ AND: branchConstraintsB }] : []),
                 ],
             };
         const [ordersStatisticsByStatus, ordersStatisticsByGovernorate, allOrdersStatisticsWithoutClientReport, allOrdersStatisticsWithoutDeliveryReport, todayOrdersStatistics,] = await Promise.all([
@@ -3833,98 +3787,7 @@ class OrdersRepository {
                 },
                 where: {
                     ...filtersReformed,
-                    OR: data.loggedInUser.role === "CLIENT" ||
-                        data.loggedInUser.role === "INQUIRY_EMPLOYEE" ||
-                        data.loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT" ||
-                        data.loggedInUser.role === "CLIENT_ASSISTANT"
-                        ? [
-                            {
-                                clientReport: {
-                                    none: {
-                                        secondaryType: "DELIVERED",
-                                        report: {
-                                            deleted: false,
-                                        },
-                                    },
-                                },
-                                status: {
-                                    not: "RETURNED",
-                                },
-                            },
-                            {
-                                clientReport: {
-                                    none: {
-                                        secondaryType: "RETURNED",
-                                        report: {
-                                            deleted: false,
-                                        },
-                                    },
-                                },
-                                status: {
-                                    in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
-                                },
-                            },
-                        ]
-                        : data.loggedInUser.role === "DELIVERY_AGENT"
-                            ? [
-                                {
-                                    OR: [
-                                        {
-                                            deliveryAgentReport: {
-                                                is: null,
-                                            },
-                                        },
-                                        {
-                                            deliveryAgentReport: {
-                                                report: {
-                                                    deleted: true,
-                                                },
-                                            },
-                                        },
-                                    ],
-                                    status: {
-                                        notIn: ["RETURNED"],
-                                    },
-                                },
-                                {
-                                    secondaryStatus: "WITH_AGENT",
-                                    status: {
-                                        in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"],
-                                    },
-                                },
-                            ]
-                            : data.loggedInUser.role === "REPOSITORIY_EMPLOYEE" ||
-                                data.loggedInUser.role === "BRANCH_MANAGER"
-                                ? [
-                                    {
-                                        branch: {
-                                            id: data.loggedInUser.branchId,
-                                        },
-                                        status: { not: "WITH_RECEIVING_AGENT" },
-                                    },
-                                    {
-                                        client: {
-                                            branchId: data.loggedInUser?.branchId,
-                                        },
-                                        status: { not: "WITH_RECEIVING_AGENT" },
-                                    },
-                                    {
-                                        status: "WITH_RECEIVING_AGENT",
-                                        deliveryAgent: {
-                                            branchId: data.loggedInUser.branchId,
-                                        },
-                                    },
-                                ]
-                                : data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-                                    data.loggedInUser?.role !== "RECEIVING_AGENT"
-                                    ? [
-                                        {
-                                            branch: {
-                                                id: data.loggedInUser?.branchId,
-                                            },
-                                        },
-                                    ]
-                                    : undefined,
+                    OR: statusReportOR,
                 },
             }),
             db_1.prisma.order.groupBy({

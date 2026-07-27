@@ -752,29 +752,46 @@ export class OrdersController {
       throw new AppError("لا يوجد مخزن وارد لهذا الفرع!", 404);
     }
 
-    const checkOrders = await prisma.order.findMany({
-      where: {
-        OR: [
-          {
-            receiptNumber: params.orderReceiptNumber,
+    // cheap: two indexed lookups, ids only — no OR scan, no relation assembly
+    const [byId, byReceipt] = await Promise.all([
+      prisma.order.findFirst({
+        where: {
+          id: params.orderReceiptNumber,
+          status: {
+            notIn: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED", "DELIVERED"],
           },
-          {
-            id: params.orderReceiptNumber,
-          },
-        ],
-        status: {
-          notIn: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED", "DELIVERED"],
+          companyId: loggedInUser.companyID!!,
+          deleted: false,
         },
-        companyId: loggedInUser.companyID!!,
-        // confirmed: true,
-        deleted: false,
-      },
-      select: orderSelect,
-    });
+        select: {id: true},
+      }),
+      prisma.order.findFirst({
+        where: {
+          receiptNumber: params.orderReceiptNumber,
+          status: {
+            notIn: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED", "DELIVERED"],
+          },
+          companyId: loggedInUser.companyID!!,
+          deleted: false,
+        },
+        select: {id: true},
+      }),
+    ]);
 
-    if (checkOrders.length === 0) {
+    // dedupe (id and receiptNumber could match the same row)
+    const matchedIds = [
+      ...new Set([byId?.id, byReceipt?.id].filter(Boolean)),
+    ] as string[];
+
+    if (matchedIds.length === 0) {
       throw new AppError("الطلب غير موجود", 404);
     }
+
+    // Stage 2 — full fetch ONLY for the matched rows, by primary key
+    const checkOrders = await prisma.order.findMany({
+      where: {id: {in: matchedIds}},
+      select: orderSelect,
+    });
 
     if (checkOrders.length > 1) {
       res.status(200).json({
@@ -937,42 +954,45 @@ export class OrdersController {
       throw new AppError("لا يوجد مخزن راوجع لهذا الفرع!", 404);
     }
 
-    const checkOrders = await prisma.order.findMany({
-      where: {
-        AND: [
-          {
-            OR: [
-              {
-                receiptNumber: params.orderReceiptNumber,
-              },
-              {
-                id: params.orderReceiptNumber,
-              },
-            ],
+    const [byId, byReceipt] = await Promise.all([
+      prisma.order.findFirst({
+        where: {
+          id: params.orderReceiptNumber,
+          status: {
+            notIn: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED", "DELIVERED"],
           },
-          {
-            status: {in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"]},
+          companyId: loggedInUser.companyID!!,
+          deleted: false,
+        },
+        select: {id: true},
+      }),
+      prisma.order.findFirst({
+        where: {
+          receiptNumber: params.orderReceiptNumber,
+          status: {
+            notIn: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED", "DELIVERED"],
           },
-          {
-            OR: [
-              {
-                companyId: loggedInUser.companyID!!,
-              },
-              {
-                forwardedFromId: loggedInUser.companyID!!,
-              },
-            ],
-          },
-          {confirmed: true},
-          {deleted: false},
-        ],
-      },
-      select: orderSelect,
-    });
+          companyId: loggedInUser.companyID!!,
+          deleted: false,
+        },
+        select: {id: true},
+      }),
+    ]);
 
-    if (checkOrders.length === 0) {
+    // dedupe (id and receiptNumber could match the same row)
+    const matchedIds = [
+      ...new Set([byId?.id, byReceipt?.id].filter(Boolean)),
+    ] as string[];
+
+    if (matchedIds.length === 0) {
       throw new AppError("الطلب غير موجود", 404);
     }
+
+    // Stage 2 — full fetch ONLY for the matched rows, by primary key
+    const checkOrders = await prisma.order.findMany({
+      where: {id: {in: matchedIds}},
+      select: orderSelect,
+    });
 
     if (checkOrders.length > 1) {
       res.status(200).json({

@@ -660,28 +660,43 @@ class OrdersController {
         if (!exportRepo) {
             throw new AppError_1.AppError("لا يوجد مخزن وارد لهذا الفرع!", 404);
         }
-        const checkOrders = await db_1.prisma.order.findMany({
-            where: {
-                OR: [
-                    {
-                        receiptNumber: params.orderReceiptNumber,
+        // cheap: two indexed lookups, ids only — no OR scan, no relation assembly
+        const [byId, byReceipt] = await Promise.all([
+            db_1.prisma.order.findFirst({
+                where: {
+                    id: params.orderReceiptNumber,
+                    status: {
+                        notIn: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED", "DELIVERED"],
                     },
-                    {
-                        id: params.orderReceiptNumber,
-                    },
-                ],
-                status: {
-                    notIn: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED", "DELIVERED"],
+                    companyId: loggedInUser.companyID,
+                    deleted: false,
                 },
-                companyId: loggedInUser.companyID,
-                // confirmed: true,
-                deleted: false,
-            },
-            select: orders_responses_1.orderSelect,
-        });
-        if (checkOrders.length === 0) {
+                select: { id: true },
+            }),
+            db_1.prisma.order.findFirst({
+                where: {
+                    receiptNumber: params.orderReceiptNumber,
+                    status: {
+                        notIn: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED", "DELIVERED"],
+                    },
+                    companyId: loggedInUser.companyID,
+                    deleted: false,
+                },
+                select: { id: true },
+            }),
+        ]);
+        // dedupe (id and receiptNumber could match the same row)
+        const matchedIds = [
+            ...new Set([byId?.id, byReceipt?.id].filter(Boolean)),
+        ];
+        if (matchedIds.length === 0) {
             throw new AppError_1.AppError("الطلب غير موجود", 404);
         }
+        // Stage 2 — full fetch ONLY for the matched rows, by primary key
+        const checkOrders = await db_1.prisma.order.findMany({
+            where: { id: { in: matchedIds } },
+            select: orders_responses_1.orderSelect,
+        });
         if (checkOrders.length > 1) {
             res.status(200).json({
                 multi: true,
@@ -829,41 +844,42 @@ class OrdersController {
         if (!returnsRepo) {
             throw new AppError_1.AppError("لا يوجد مخزن راوجع لهذا الفرع!", 404);
         }
-        const checkOrders = await db_1.prisma.order.findMany({
-            where: {
-                AND: [
-                    {
-                        OR: [
-                            {
-                                receiptNumber: params.orderReceiptNumber,
-                            },
-                            {
-                                id: params.orderReceiptNumber,
-                            },
-                        ],
+        const [byId, byReceipt] = await Promise.all([
+            db_1.prisma.order.findFirst({
+                where: {
+                    id: params.orderReceiptNumber,
+                    status: {
+                        notIn: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED", "DELIVERED"],
                     },
-                    {
-                        status: { in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"] },
+                    companyId: loggedInUser.companyID,
+                    deleted: false,
+                },
+                select: { id: true },
+            }),
+            db_1.prisma.order.findFirst({
+                where: {
+                    receiptNumber: params.orderReceiptNumber,
+                    status: {
+                        notIn: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED", "DELIVERED"],
                     },
-                    {
-                        OR: [
-                            {
-                                companyId: loggedInUser.companyID,
-                            },
-                            {
-                                forwardedFromId: loggedInUser.companyID,
-                            },
-                        ],
-                    },
-                    { confirmed: true },
-                    { deleted: false },
-                ],
-            },
-            select: orders_responses_1.orderSelect,
-        });
-        if (checkOrders.length === 0) {
+                    companyId: loggedInUser.companyID,
+                    deleted: false,
+                },
+                select: { id: true },
+            }),
+        ]);
+        // dedupe (id and receiptNumber could match the same row)
+        const matchedIds = [
+            ...new Set([byId?.id, byReceipt?.id].filter(Boolean)),
+        ];
+        if (matchedIds.length === 0) {
             throw new AppError_1.AppError("الطلب غير موجود", 404);
         }
+        // Stage 2 — full fetch ONLY for the matched rows, by primary key
+        const checkOrders = await db_1.prisma.order.findMany({
+            where: { id: { in: matchedIds } },
+            select: orders_responses_1.orderSelect,
+        });
         if (checkOrders.length > 1) {
             res.status(200).json({
                 multi: true,

@@ -72,7 +72,6 @@ model Employee {
   mainEmergency           Boolean                          @default(false)
   orderType               String?
   deliveryAgentReports    DeliveryAgentReport[]
-  employeeReports         EmployeeReport[]
   deliveryAgentsLocations DeliveryAgentsLocations[]
   branch                  Branch?                          @relation(fields: [branchId], references: [id])
   Client                  Client?                          @relation(fields: [clientId], references: [id])
@@ -82,6 +81,8 @@ model Employee {
   Department              Department?                      @relation(fields: [departmentId], references: [id])
   user                    User                             @relation(fields: [id], references: [id])
   repository              Repository?                      @relation(fields: [repositoryId], references: [id])
+  clientCommissions       EmployeeClientCommission[]
+  employeeReports         EmployeeReport[]
   inquiryBranches         InquiryEmployeesBranches[]
   inquiryCompanies        InquiryEmployeesCompanies[]
   inquiryDeliveryAgents   InquiryEmployeesDeliveryAgents[] @relation("inquiryDeliveryAgents")
@@ -97,7 +98,6 @@ model Employee {
   managedStores           Store[]
   tickets                 Ticket[]
   transactions            Transaction[]
-  clientCommissions       EmployeeClientCommission[]
 
   @@index([companyId])
   @@index([role])
@@ -107,44 +107,43 @@ model Employee {
 }
 
 model Client {
-  id                        Int                @id
-  role                      ClientRole         @default(CLIENT)
-  token                     String             @default("")
-  governoratesDeliveryCosts Json               @default("[]")
+  id                        Int                       @id
+  role                      ClientRole                @default(CLIENT)
+  token                     String                    @default("")
+  governoratesDeliveryCosts Json                      @default("[]")
   deletedById               Int?
   createdById               Int?
   repositoryId              Int?
   branchId                  Int?
   companyId                 Int
-  deleted                   Boolean            @default(false)
+  deleted                   Boolean                   @default(false)
   deletedAt                 DateTime?
   receivingAgentId          Int?
-  showNumbers               Boolean            @default(false)
-  showDeliveryNumber        Boolean            @default(false)
-  isExternal                Boolean            @default(false)
+  showNumbers               Boolean                   @default(false)
+  showDeliveryNumber        Boolean                   @default(false)
+  isExternal                Boolean                   @default(false)
   apiKeyHash                String?
+  activeProfit              Boolean                   @default(false)
+  categories                Category[]
+  branch                    Branch?                   @relation(fields: [branchId], references: [id])
+  company                   Company                   @relation(fields: [companyId], references: [id])
+  createdBy                 User?                     @relation("createdBy", fields: [createdById], references: [id])
+  deletedBy                 User?                     @relation("deletedBy", fields: [deletedById], references: [id])
+  user                      User                      @relation(fields: [id], references: [id])
+  repository                Repository?               @relation(fields: [repositoryId], references: [id])
   branchCosts               ClientBranchCost[]
-  activeProfit              Boolean            @default(false)
-
-  categories            Category[]
-  branch                Branch?                    @relation(fields: [branchId], references: [id])
-  company               Company                    @relation(fields: [companyId], references: [id])
-  createdBy             User?                      @relation("createdBy", fields: [createdById], references: [id])
-  deletedBy             User?                      @relation("deletedBy", fields: [deletedById], references: [id])
-  user                  User                       @relation(fields: [id], references: [id])
-  repository            Repository?                @relation(fields: [repositoryId], references: [id])
-  clientReports         ClientReport[]
-  colors                Color[]
-  CustomerOutput        CustomerOutput[]
-  employees             Employee[]
-  orders                Order[]
-  products              Product[]
-  ReceivingAgentClients ReceivingAgentClients[]
-  savedPdf              SavedPdf[]
-  sizes                 Size[]
-  stores                Store[]
-  tickets               Ticket[]
-  employeeCommissions   EmployeeClientCommission[]
+  clientReports             ClientReport[]
+  colors                    Color[]
+  CustomerOutput            CustomerOutput[]
+  employees                 Employee[]
+  employeeCommissions       EmployeeClientCommission?
+  orders                    Order[]
+  products                  Product[]
+  ReceivingAgentClients     ReceivingAgentClients[]
+  savedPdf                  SavedPdf[]
+  sizes                     Size[]
+  stores                    Store[]
+  tickets                   Ticket[]
 
   @@index([companyId])
   @@index([branchId])
@@ -154,14 +153,13 @@ model EmployeeClientCommission {
   id               Int      @id @default(autoincrement())
   employeeId       Int
   clientId         Int      @unique
-  baghdadOrderCost Float    @default(0)
-  govOrderCost     Float    @default(0)
   active           Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-
-  employee Employee @relation(fields: [employeeId], references: [id])
-  client   Client   @relation(fields: [clientId], references: [id])
+  baghdadOrderCost Float    @default(0)
+  govOrderCost     Float    @default(0)
+  client           Client   @relation(fields: [clientId], references: [id])
+  employee         Employee @relation(fields: [employeeId], references: [id])
 
   @@unique([employeeId, clientId])
   @@index([employeeId])
@@ -178,33 +176,32 @@ model InquiryEmployeesDeliveryAgents {
 }
 
 model Branch {
-  id                     Int          @id @default(autoincrement())
+  id                     Int                        @id @default(autoincrement())
   name                   String
   governorate            Governorate?
   companyId              Int
-  createdAt              DateTime     @default(now())
-  updatedAt              DateTime     @updatedAt
-  branchCLient           Float        @default(1000)
-  branchOrder            Float        @default(1000)
+  createdAt              DateTime                   @default(now())
+  updatedAt              DateTime                   @updatedAt
+  branchCLient           Float                      @default(1000)
+  branchOrder            Float                      @default(1000)
   parentBranchId         Int?
-  forwardedDeliveryCosts Json         @default("[]")
-  receivingDeliveryCosts Json         @default("[]")
-
-  automaticUpdate     AutomaticUpdate[]
-  company             Company                    @relation(fields: [companyId], references: [id])
-  parentBranch        Branch?                    @relation("BranchHierarchy", fields: [parentBranchId], references: [id])
-  childBranches       Branch[]                   @relation("BranchHierarchy")
-  branchReports       BranchReport[]
-  clients             Client[]
-  clientOrderReceipts ClientOrderReceipt[]
-  closedStatus        ClosedStatus[]
-  employees           Employee[]
-  inquiryEmployees    InquiryEmployeesBranches[]
-  locations           Location[]
-  orders              Order[]
-  repositories        Repository[]
-  transctions         Transaction[]
-  clientCosts         ClientBranchCost[]
+  forwardedDeliveryCosts Json                       @default("[]")
+  receivingDeliveryCosts Json                       @default("[]")
+  automaticUpdate        AutomaticUpdate[]
+  company                Company                    @relation(fields: [companyId], references: [id])
+  parentBranch           Branch?                    @relation("BranchHierarchy", fields: [parentBranchId], references: [id])
+  childBranches          Branch[]                   @relation("BranchHierarchy")
+  branchReports          BranchReport[]
+  clients                Client[]
+  clientCosts            ClientBranchCost[]
+  clientOrderReceipts    ClientOrderReceipt[]
+  closedStatus           ClosedStatus[]
+  employees              Employee[]
+  inquiryEmployees       InquiryEmployeesBranches[]
+  locations              Location[]
+  orders                 Order[]
+  repositories           Repository[]
+  transctions            Transaction[]
 
   @@unique([name, companyId])
   @@index([companyId])
@@ -223,11 +220,10 @@ model ClientBranchCost {
   activeProfit          Boolean  @default(false)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
-
-  client    Client?  @relation(fields: [clientId], references: [id])
-  branch    Branch   @relation(fields: [branchId], references: [id])
-  company   Company? @relation(fields: [companyId], references: [id])
-  companyId Int?
+  companyId             Int?
+  branch                Branch   @relation(fields: [branchId], references: [id])
+  client                Client?  @relation(fields: [clientId], references: [id])
+  company               Company? @relation(fields: [companyId], references: [id])
 
   @@unique([clientId, branchId])
   @@unique([companyId, branchId])
@@ -349,43 +345,42 @@ model DeliveryAgentsLocations {
 }
 
 model Company {
-  id                        Int      @id @default(autoincrement())
-  name                      String   @unique
-  phone                     String   @default("")
-  logo                      String   @default("https://w7.pngwing.com/pngs/307/22/png-transparent-computer-icons-business-company-corporation-company-angle-company-text.png")
-  registrationText          String   @default("")
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
-  mainCompany               Boolean  @default(false)
+  id                        Int                         @id @default(autoincrement())
+  name                      String                      @unique
+  phone                     String                      @default("")
+  logo                      String                      @default("https://w7.pngwing.com/pngs/307/22/png-transparent-computer-icons-business-company-corporation-company-angle-company-text.png")
+  registrationText          String                      @default("")
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  mainCompany               Boolean                     @default(false)
   apiKeyHash                String?
+  governoratesDeliveryCosts Json                        @default("[]")
+  isExternal                Boolean                     @default(false)
   targetCompanyId           Int?
-  isExternal                Boolean  @default(false)
-  governoratesDeliveryCosts Json     @default("[]")
   webhookUrl                String?
-  activeProfit              Boolean  @default(false)
-
-  automaticUpdates        AutomaticUpdate[]
-  banners                 Banner[]
-  branches                Branch[]
-  clients                 Client[]
-  closedStatus            ClosedStatus[]
-  CompanyReport           CompanyReport[]
-  CustomerOutput          CustomerOutput[]
-  DeliveryAgentsLocations DeliveryAgentsLocations[]
-  departments             Department[]
-  employees               Employee[]
-  inquiryEmployees        InquiryEmployeesCompanies[]
-  locations               Location[]
-  orders                  Order[]
-  forwardedOrders         Order[]                     @relation("forwardedFrom")
-  products                Product[]
-  reports                 Report[]
-  repositories            Repository[]
-  stores                  Store[]
-  tickets                 Ticket[]
-  transactions            Transaction[]
-  clientCosts             ClientBranchCost[]
-  usersLoginHistory       UsersLoginHistory[]
+  activeProfit              Boolean                     @default(false)
+  automaticUpdates          AutomaticUpdate[]
+  banners                   Banner[]
+  branches                  Branch[]
+  clients                   Client[]
+  clientCosts               ClientBranchCost[]
+  closedStatus              ClosedStatus[]
+  CompanyReport             CompanyReport[]
+  CustomerOutput            CustomerOutput[]
+  DeliveryAgentsLocations   DeliveryAgentsLocations[]
+  departments               Department[]
+  employees                 Employee[]
+  inquiryEmployees          InquiryEmployeesCompanies[]
+  locations                 Location[]
+  orders                    Order[]
+  forwardedOrders           Order[]                     @relation("forwardedFrom")
+  products                  Product[]
+  reports                   Report[]
+  repositories              Repository[]
+  stores                    Store[]
+  tickets                   Ticket[]
+  transactions              Transaction[]
+  usersLoginHistory         UsersLoginHistory[]
 }
 
 model InquiryEmployeesCompanies {
@@ -400,7 +395,6 @@ model InquiryEmployeesCompanies {
 model Order {
   id                     String                   @id @default("")
   receiptNumber          String                   @default("")
-  shipment_number        String?
   quantity               Int                      @default(0)
   weight                 Float                    @default(0)
   recipientName          String                   @default("غير معرف")
@@ -417,9 +411,6 @@ model Order {
   deliveryCost           Float                    @default(0)
   clientNet              Float                    @default(0)
   deliveryAgentNet       Float                    @default(0)
-  forwardedBranchNet     Float                    @default(0)
-  receivingBranchNet     Float                    @default(0)
-  insideBranchNet        Float                    @default(0)
   companyNet             Float                    @default(0)
   discount               Float                    @default(0)
   status                 OrderStatus              @default(REGISTERED)
@@ -463,6 +454,11 @@ model Order {
   receivedAt             DateTime?
   clientNotes            String                   @default("")
   branchDeliveryCost     Float                    @default(0)
+  shipment_number        String?
+  employeeReportId       Int?
+  forwardedBranchNet     Float                    @default(0)
+  insideBranchNet        Float                    @default(0)
+  receivingBranchNet     Float                    @default(0)
   chat                   Chat?
   CustomerOutput         CustomerOutput[]
   automaticUpdate        AutomaticUpdate?         @relation(fields: [automaticUpdateId], references: [id])
@@ -473,6 +469,7 @@ model Order {
   deletedBy              User?                    @relation("deletedBy", fields: [deletedById], references: [id])
   deliveryAgent          Employee?                @relation(fields: [deliveryAgentId], references: [id])
   deliveryAgentReport    DeliveryAgentReport?     @relation(fields: [deliveryAgentReportId], references: [id])
+  employeeReport         EmployeeReport?          @relation(fields: [employeeReportId], references: [id])
   forwardedBy            Employee?                @relation("forwardedBy", fields: [forwardedById], references: [id])
   forwardedFrom          Company?                 @relation("forwardedFrom", fields: [forwardedFromId], references: [id])
   governorateReport      GovernorateReport?       @relation(fields: [governorateReportId], references: [id])
@@ -489,8 +486,7 @@ model Order {
   clientReport           ClientReport[]           @relation("ClientReportToOrder")
   companyReport          CompanyReport[]          @relation("CompanyReportToOrder")
   repositoryReport       RepositoryReport[]       @relation("OrderToRepositoryReport")
-  employeeReport         EmployeeReport?          @relation(fields: [employeeReportId], references: [id])
-  employeeReportId       Int?
+  // @@index([companyId, deleted, status, branchId, createdAt])
 
   @@index([deleted, confirmed, status, governorate, createdAt])
   @@index([branchReportId])
@@ -498,24 +494,20 @@ model Order {
   @@index([governorateReportId])
   @@index([employeeReportId])
   @@index([companyId, deleted, createdAt(sort: Desc)])
-  @@index([companyId, status, deleted, createdAt(sort: Desc)])
   @@index([companyId, clientId, deleted, createdAt(sort: Desc)])
   @@index([companyId, deliveryAgentId, deleted, createdAt(sort: Desc)])
-  @@index([companyId, storeId, deleted, createdAt(sort: Desc)])
-  @@index([companyId, locationId, deleted, createdAt(sort: Desc)])
   @@index([branchId, deleted, createdAt(sort: Desc)])
   @@index([branchId, status, deleted, createdAt(sort: Desc)])
   @@index([clientId, createdAt(sort: Desc)])
   @@index([clientId, status, createdAt(sort: Desc)])
   @@index([deliveryAgentId, createdAt(sort: Desc)])
   @@index([deliveryAgentId, status, createdAt(sort: Desc)])
-  @@index([forwardedFromId, deleted, createdAt(sort: Desc)])
   @@index([forwardedFromId, status, deleted, createdAt(sort: Desc)])
   @@index([deliveryDate])
   @@index([updatedAt])
-  @@index([companyId, deleted, branchId, createdAt])
-  @@index([companyId, deleted, status, branchId, createdAt])
   @@index([companyId, deleted, deliveryAgentId, createdAt])
+  @@index([companyId, deleted, receivedAt])
+  @@index([deliveryAgentId, deliveryDate])
 }
 
 model Chat {
@@ -674,7 +666,6 @@ model Report {
   status                  ReportStatus         @default(UNPAID)
   confirmed               Boolean              @default(false)
   deleted                 Boolean              @default(false)
-  activeProfit            Boolean              @default(false)
   deletedAt               DateTime?
   deletedById             Int?
   totalCost               Float                @default(0)
@@ -687,22 +678,24 @@ model Report {
   updatedAt               DateTime             @updatedAt
   branchNet               Float                @default(0)
   url                     String?
+  activeProfit            Boolean              @default(false)
   branchReport            BranchReport?
   clientReport            ClientReport?
   companyReport           CompanyReport?
   deliveryAgentReport     DeliveryAgentReport?
+  employeeReport          EmployeeReport?
   governorateReport       GovernorateReport?
   company                 Company              @relation(fields: [companyId], references: [id])
   deletedBy               User?                @relation("deletedBy", fields: [deletedById], references: [id])
   createdBy               Employee             @relation(fields: [employeeId], references: [id])
   repositoryReport        RepositoryReport?
-  employeeReport          EmployeeReport?
   transaction             Transaction?
 
   @@index([type])
   @@index([employeeId])
   @@index([companyId])
   @@index([deleted])
+  @@index([deleted, activeProfit])
 }
 
 model SavedPdf {
@@ -750,6 +743,7 @@ model ClientReport {
   @@index([clientId, secondaryType])
   @@index([storeId, secondaryType])
   @@index([id, secondaryType])
+  @@index([clientId, secondaryType, id])
 }
 
 model RepositoryReport {
@@ -769,10 +763,10 @@ model RepositoryReport {
 
 model EmployeeReport {
   id         Int       @id
+  employeeId Int?
+  employee   Employee? @relation(fields: [employeeId], references: [id])
   report     Report    @relation(fields: [id], references: [id], onDelete: Cascade)
   orders     Order[]
-  employee   Employee? @relation(fields: [employeeId], references: [id])
-  employeeId Int?
 
   @@index([employeeId])
 }
@@ -790,6 +784,7 @@ model BranchReport {
 
   @@index([branchId])
   @@index([branchId, type])
+  @@index([branchId, type, id])
 }
 
 model DeliveryAgentReport {
@@ -801,6 +796,7 @@ model DeliveryAgentReport {
   orders                    Order[]
 
   @@index([deliveryAgentId])
+  @@index([deliveryAgentId, id])
 }
 
 model GovernorateReport {
@@ -977,28 +973,28 @@ model Transaction {
   for                String
   employeeId         Int?
   createdById        Int?
-  reportId           Int?            @unique
   companyId          Int
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
   paidAmount         Float           @default(0)
   branchId           Int?
+  approved           Boolean         @default(false)
   branchNet          Float           @default(0)
   clientNet          Float           @default(0)
-  totalPaidAmount    Float           @default(0)
+  deleted            Boolean         @default(false)
   deliveryAgentNet   Float           @default(0)
   forwardedBranchNet Float           @default(0)
-  receivingBranchNet Float           @default(0)
   insideBranchNet    Float           @default(0)
-  deleted            Boolean         @default(false)
-  approved           Boolean         @default(false)
+  receivingBranchNet Float           @default(0)
+  reportId           Int?            @unique
+  totalPaidAmount    Float           @default(0)
   branch             Branch?         @relation(fields: [branchId], references: [id])
   company            Company         @relation(fields: [companyId], references: [id])
   createdBy          User?           @relation(fields: [createdById], references: [id])
   employee           Employee?       @relation(fields: [employeeId], references: [id])
-  report             Report?         @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  report             Report?         @relation(fields: [reportId], references: [id])
 
-  @@index([branchId, deleted, approved, companyId])
+  @@index([reportId, deleted, approved])
 }
 
 model UsersLoginHistory {
@@ -1075,14 +1071,12 @@ enum Permission {
   CREATE_COMPANY_REPORT
   CREATE_GOVERNMENT_REPORT
   CREATE_BRANCH_REPORT
-  CREATE_EMPLOYEE_REPORT
   DELETE_COMPANY_REPORT
   DELETE_REPOSITORY_REPORT
   DELETE_GOVERNMENT_REPORT
   DELETE_DELIVERY_AGENT_REPORT
   DELETE_CLIENT_REPORT
   DELETE_BRANCH_REPORT
-  DELETE_EMPLOYEE_REPORT
   CHANGE_ORDER_DATA
   CHANGE_ORDER_PAID_AMOUNT
   CHANGE_ORDER_RECEIPT_NUMBER
@@ -1104,6 +1098,8 @@ enum Permission {
   REACTIVE_STORE
   REACTIVE_CLIENT
   REACTIVE_EMPLOYEE
+  CREATE_EMPLOYEE_REPORT
+  DELETE_EMPLOYEE_REPORT
 }
 
 enum Governorate {

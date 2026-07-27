@@ -6043,14 +6043,12 @@
                 "CREATE_COMPANY_REPORT",
                 "CREATE_GOVERNMENT_REPORT",
                 "CREATE_BRANCH_REPORT",
-                "CREATE_EMPLOYEE_REPORT",
                 "DELETE_COMPANY_REPORT",
                 "DELETE_REPOSITORY_REPORT",
                 "DELETE_GOVERNMENT_REPORT",
                 "DELETE_DELIVERY_AGENT_REPORT",
                 "DELETE_CLIENT_REPORT",
                 "DELETE_BRANCH_REPORT",
-                "DELETE_EMPLOYEE_REPORT",
                 "CHANGE_ORDER_DATA",
                 "CHANGE_ORDER_PAID_AMOUNT",
                 "CHANGE_ORDER_RECEIPT_NUMBER",
@@ -6071,7 +6069,9 @@
                 "REACTIVE_REPORT",
                 "REACTIVE_STORE",
                 "REACTIVE_CLIENT",
-                "REACTIVE_EMPLOYEE"
+                "REACTIVE_EMPLOYEE",
+                "CREATE_EMPLOYEE_REPORT",
+                "DELETE_EMPLOYEE_REPORT"
               ]
             }
           },
@@ -6463,14 +6463,12 @@
                 "CREATE_COMPANY_REPORT",
                 "CREATE_GOVERNMENT_REPORT",
                 "CREATE_BRANCH_REPORT",
-                "CREATE_EMPLOYEE_REPORT",
                 "DELETE_COMPANY_REPORT",
                 "DELETE_REPOSITORY_REPORT",
                 "DELETE_GOVERNMENT_REPORT",
                 "DELETE_DELIVERY_AGENT_REPORT",
                 "DELETE_CLIENT_REPORT",
                 "DELETE_BRANCH_REPORT",
-                "DELETE_EMPLOYEE_REPORT",
                 "CHANGE_ORDER_DATA",
                 "CHANGE_ORDER_PAID_AMOUNT",
                 "CHANGE_ORDER_RECEIPT_NUMBER",
@@ -6491,7 +6489,9 @@
                 "REACTIVE_REPORT",
                 "REACTIVE_STORE",
                 "REACTIVE_CLIENT",
-                "REACTIVE_EMPLOYEE"
+                "REACTIVE_EMPLOYEE",
+                "CREATE_EMPLOYEE_REPORT",
+                "DELETE_EMPLOYEE_REPORT"
               ]
             }
           },
