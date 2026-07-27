@@ -4447,23 +4447,9 @@ export class OrdersRepository {
         },
         where: {
           ...filtersReformed,
-          OR: [
-            {
-              clientReport: {
-                none: {
-                  secondaryType: "DELIVERED",
-                  report: {
-                    deleted: false,
-                  },
-                },
-              },
-              status: {
-                in: ["DELIVERED", "REPLACED", "PARTIALLY_RETURNED"],
-              },
-            },
-          ],
-          status: {
-            in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"],
+          status: {in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"]},
+          clientReport: {
+            none: {secondaryType: "DELIVERED", report: {deleted: false}},
           },
         },
       }),
