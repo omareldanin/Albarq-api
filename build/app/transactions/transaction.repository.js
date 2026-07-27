@@ -231,7 +231,7 @@ class TransactionsRepository {
                 },
             }),
             db_1.prisma.order.aggregate({
-                _sum: { forwardedBranchNet: true },
+                _sum: { forwardedBranchNet: true, clientNet: true },
                 _count: { id: true },
                 where: {
                     companyId: filters.companyId,
@@ -292,7 +292,8 @@ class TransactionsRepository {
                 count: receivedBranchNet._count.id,
             },
             forwardedBranchNet: {
-                total: forwardedBranchNet._sum.forwardedBranchNet,
+                total: (forwardedBranchNet._sum.forwardedBranchNet ?? 0) -
+                    (forwardedBranchNet._sum.clientNet ?? 0),
                 count: forwardedBranchNet._count.id,
             },
         };
