@@ -66,17 +66,13 @@ class NotificationsRepository {
         return (0, notifications_responses_1.notificationReform)(notification);
     }
     async updateNotifications(data) {
-        const notification = await db_1.prisma.notification.updateMany({
+        return db_1.prisma.notification.updateMany({
             where: {
-                user: {
-                    id: data.userID,
-                },
+                userId: data.userID, // ← direct column, no user subquery
+                seen: !data.notificationData.seen, // ← see Problem 2
             },
-            data: {
-                seen: data.notificationData.seen,
-            },
+            data: { seen: data.notificationData.seen },
         });
-        return notification;
     }
 }
 exports.NotificationsRepository = NotificationsRepository;
