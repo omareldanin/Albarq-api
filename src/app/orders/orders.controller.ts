@@ -961,7 +961,10 @@ export class OrdersController {
           status: {
             in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"],
           },
-          companyId: loggedInUser.companyID!!,
+          OR: [
+            {companyId: loggedInUser.companyID!!},
+            {forwardedFromId: loggedInUser.companyID!!},
+          ],
           deleted: false,
         },
         select: {id: true},
@@ -972,7 +975,10 @@ export class OrdersController {
           status: {
             in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"],
           },
-          companyId: loggedInUser.companyID!!,
+          OR: [
+            {companyId: loggedInUser.companyID!!},
+            {forwardedFromId: loggedInUser.companyID!!},
+          ],
           deleted: false,
         },
         select: {id: true},

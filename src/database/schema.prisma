@@ -508,6 +508,7 @@ model Order {
   @@index([companyId, deleted, receivedAt])
   @@index([deliveryAgentId, deliveryDate])
   @@index([companyId, receiptNumber])
+  @@index([repositoryId, secondaryStatus, deleted])
 }
 
 model Chat {
