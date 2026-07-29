@@ -66,7 +66,7 @@ class TransactionsController {
             deleted,
             startDate,
             endDate,
-        });
+        }, loggedInUser);
         res.status(200).json({
             status: "success",
             page,
@@ -179,6 +179,7 @@ class TransactionsController {
         const { approvedCount } = await transactionsRepository.approveAllBranchTransactions({
             branchID,
             companyID,
+            loggedInUser,
         });
         res.status(200).json({
             status: "success",

@@ -418,7 +418,7 @@ export class ReportsService {
             data.ordersFilters.orderType === "received"
               ? "WITHDRAW"
               : "DEPOSIT",
-          for: `سحب كشف ${data.ordersFilters.orderType === "received" ? "بريد صادر إلي الفرع" : "بريد وارد من الفرع"} رقم ${report.id}`,
+          for: `سحب كشف ${data.ordersFilters.orderType === "received" ? `بريد صادر إلي  ${reportData?.branchReport?.branch.name}` : `بريد وارد من  ${reportData?.branchReport?.branch.name}`} رقم ${report.id}`,
           reportID: report.id,
           branchID: reportData?.branchReport?.branch.id,
           paidAmount: reportMetaData?.branchNet || 0,

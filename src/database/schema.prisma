@@ -976,6 +976,7 @@ model Transaction {
   paidAmount         Float           @default(0)
   branchId           Int?
   approved           Boolean         @default(false)
+  approvedforMain    Boolean         @default(false)
   branchNet          Float           @default(0)
   clientNet          Float           @default(0)
   deleted            Boolean         @default(false)
@@ -992,6 +993,11 @@ model Transaction {
   report             Report?         @relation(fields: [reportId], references: [id])
 
   @@index([reportId, deleted, approved])
+  @@index([companyId, deleted, createdAt(sort: Desc)])
+  @@index([companyId, branchId, deleted, createdAt(sort: Desc)])
+  @@index([companyId, type, approved, deleted])
+  @@index([employeeId, deleted, createdAt(sort: Desc)])
+  @@index([companyId, deleted, approvedforMain, createdAt(sort: Desc)])
 }
 
 model UsersLoginHistory {

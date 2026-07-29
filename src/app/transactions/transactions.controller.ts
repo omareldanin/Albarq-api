@@ -68,18 +68,21 @@ export class TransactionsController {
     }
 
     const {transactions, pagesCount} =
-      await transactionsRepository.getAllTransactionsPaginated({
-        page,
-        size,
-        companyID,
-        branchID,
-        employeeID,
-        type,
-        approved,
-        deleted,
-        startDate,
-        endDate,
-      });
+      await transactionsRepository.getAllTransactionsPaginated(
+        {
+          page,
+          size,
+          companyID,
+          branchID,
+          employeeID,
+          type,
+          approved,
+          deleted,
+          startDate,
+          endDate,
+        },
+        loggedInUser,
+      );
 
     res.status(200).json({
       status: "success",
@@ -216,6 +219,7 @@ export class TransactionsController {
       await transactionsRepository.approveAllBranchTransactions({
         branchID,
         companyID,
+        loggedInUser,
       });
 
     res.status(200).json({
