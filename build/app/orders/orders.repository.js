@@ -1558,27 +1558,13 @@ class OrdersRepository {
                             !data.filters.search
                             ? [
                                 {
-                                    clientReport: {
-                                        none: {
-                                            secondaryType: "DELIVERED",
-                                            report: {
-                                                deleted: false,
-                                            },
-                                        },
-                                    },
+                                    hasDeliveredClientReport: false,
                                     status: {
                                         not: "RETURNED",
                                     },
                                 },
                                 {
-                                    clientReport: {
-                                        none: {
-                                            secondaryType: "RETURNED",
-                                            report: {
-                                                deleted: false,
-                                            },
-                                        },
-                                    },
+                                    hasReturnedClientReport: false,
                                     status: {
                                         in: [
                                             "RETURNED",
@@ -1625,9 +1611,7 @@ class OrdersRepository {
                                     data.loggedInUser?.role === "BRANCH_MANAGER"
                                     ? [
                                         {
-                                            branch: {
-                                                id: data.loggedInUser.branchId,
-                                            },
+                                            branchId: data.loggedInUser?.branchId,
                                             status: { not: "WITH_RECEIVING_AGENT" },
                                         },
                                         {
@@ -1653,9 +1637,7 @@ class OrdersRepository {
                                         data.loggedInUser?.role !== "DELIVERY_AGENT"
                                         ? [
                                             {
-                                                branch: {
-                                                    id: data.loggedInUser?.branchId,
-                                                },
+                                                branchId: data.loggedInUser?.branchId,
                                             },
                                         ]
                                         : undefined,
@@ -3098,15 +3080,11 @@ class OrdersRepository {
         if (isClientLike) {
             statusReportOR = [
                 {
-                    clientReport: {
-                        none: { secondaryType: "DELIVERED", report: { deleted: false } },
-                    },
+                    hasDeliveredClientReport: false,
                     status: { not: "RETURNED" },
                 },
                 {
-                    clientReport: {
-                        none: { secondaryType: "RETURNED", report: { deleted: false } },
-                    },
+                    hasReturnedClientReport: false,
                     status: { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] },
                 },
             ];
@@ -3310,9 +3288,7 @@ class OrdersRepository {
                     where: {
                         ...filtersReformed,
                         status: { in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"] },
-                        clientReport: {
-                            none: { secondaryType: "DELIVERED", report: { deleted: false } },
-                        },
+                        hasDeliveredClientReport: false,
                     },
                 })
                 : Promise.resolve(emptyAggregate),
@@ -3431,15 +3407,11 @@ class OrdersRepository {
         if (isClientLike) {
             statusReportOR = [
                 {
-                    clientReport: {
-                        none: { secondaryType: "DELIVERED", report: { deleted: false } },
-                    },
+                    hasDeliveredClientReport: false,
                     status: { not: "RETURNED" },
                 },
                 {
-                    clientReport: {
-                        none: { secondaryType: "RETURNED", report: { deleted: false } },
-                    },
+                    hasReturnedClientReport: false,
                     status: { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] },
                 },
             ];
@@ -3666,9 +3638,7 @@ class OrdersRepository {
                     where: {
                         ...filtersReformed,
                         status: { in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"] },
-                        clientReport: {
-                            none: { secondaryType: "DELIVERED", report: { deleted: false } },
-                        },
+                        hasDeliveredClientReport: false,
                     },
                 })
                 : Promise.resolve(emptyAggregate),

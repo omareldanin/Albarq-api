@@ -1770,27 +1770,13 @@ export class OrdersRepository {
                     !data.filters.search
                       ? [
                           {
-                            clientReport: {
-                              none: {
-                                secondaryType: "DELIVERED",
-                                report: {
-                                  deleted: false,
-                                },
-                              },
-                            },
+                            hasDeliveredClientReport: false,
                             status: {
                               not: "RETURNED",
                             },
                           },
                           {
-                            clientReport: {
-                              none: {
-                                secondaryType: "RETURNED",
-                                report: {
-                                  deleted: false,
-                                },
-                              },
-                            },
+                            hasReturnedClientReport: false,
                             status: {
                               in: [
                                 "RETURNED",
@@ -3548,15 +3534,11 @@ export class OrdersRepository {
     if (isClientLike) {
       statusReportOR = [
         {
-          clientReport: {
-            none: {secondaryType: "DELIVERED", report: {deleted: false}},
-          },
+          hasDeliveredClientReport: false,
           status: {not: "RETURNED"},
         },
         {
-          clientReport: {
-            none: {secondaryType: "RETURNED", report: {deleted: false}},
-          },
+          hasReturnedClientReport: false,
           status: {in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"]},
         },
       ];
@@ -3858,9 +3840,7 @@ export class OrdersRepository {
             where: {
               ...filtersReformed,
               status: {in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"]},
-              clientReport: {
-                none: {secondaryType: "DELIVERED", report: {deleted: false}},
-              },
+              hasDeliveredClientReport: false,
             },
           })
         : Promise.resolve(emptyAggregate),
@@ -4003,15 +3983,11 @@ export class OrdersRepository {
     if (isClientLike) {
       statusReportOR = [
         {
-          clientReport: {
-            none: {secondaryType: "DELIVERED", report: {deleted: false}},
-          },
+          hasDeliveredClientReport: false,
           status: {not: "RETURNED"},
         },
         {
-          clientReport: {
-            none: {secondaryType: "RETURNED", report: {deleted: false}},
-          },
+          hasReturnedClientReport: false,
           status: {in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"]},
         },
       ];
@@ -4335,9 +4311,7 @@ export class OrdersRepository {
             where: {
               ...filtersReformed,
               status: {in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"]},
-              clientReport: {
-                none: {secondaryType: "DELIVERED", report: {deleted: false}},
-              },
+              hasDeliveredClientReport: false,
             },
           })
         : Promise.resolve(emptyAggregate),
