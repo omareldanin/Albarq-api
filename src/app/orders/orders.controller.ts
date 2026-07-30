@@ -145,7 +145,7 @@ export class OrdersController {
       forwarededForReport: req.query.forwarededForReport,
     });
 
-    const {orders, ordersMetaData, page, pagesCount} =
+    const {orders, ordersMetaData, page, pagesCount, where} =
       await ordersService.getAllOrders({
         loggedInUser: loggedInUser,
         filters: filters,
@@ -153,6 +153,7 @@ export class OrdersController {
 
     res.status(200).json({
       status: "success",
+      where,
       page: page,
       pagesCount: pagesCount,
       data: {
@@ -2111,14 +2112,7 @@ export class OrdersController {
             ],
           },
           {
-            clientReport: {
-              none: {
-                secondaryType: "DELIVERED",
-                report: {
-                  deleted: false,
-                },
-              },
-            },
+            hasDeliveredClientReport: false,
           },
         ],
       },

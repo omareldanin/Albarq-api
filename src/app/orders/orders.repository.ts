@@ -77,12 +77,75 @@ export class OrdersRepository {
     return `${datePart}${ts}${ctr}`;
   }
 
+  clientReportFilter = (
+    secondaryType: "DELIVERED" | "RETURNED" | undefined,
+    hasReport: boolean,
+  ): Prisma.OrderWhereInput => {
+    // specific type → one flag
+    if (secondaryType === "DELIVERED") {
+      return {hasDeliveredClientReport: hasReport};
+    }
+    if (secondaryType === "RETURNED") {
+      return {hasReturnedClientReport: hasReport};
+    }
+
+    // no type specified → "any type"
+    return hasReport
+      ? // has ANY non-deleted client report → either flag true
+        {
+          OR: [
+            {hasDeliveredClientReport: true},
+            {hasReturnedClientReport: true},
+          ],
+        }
+      : // has NO non-deleted client report → both flags false
+        {
+          hasDeliveredClientReport: false,
+          hasReturnedClientReport: false,
+        };
+  };
+
+  flagFieldFor = (
+    orderType: string | undefined,
+    forChilds: boolean | undefined,
+  ):
+    | "hasMainReceivedReport"
+    | "hasMainForwardedReport"
+    | "hasChildReceivedReport"
+    | "hasChildForwardedReport" => {
+    const isChild = !!forChilds;
+    const isReceived = orderType === "received";
+
+    if (isChild) {
+      return isReceived ? "hasChildReceivedReport" : "hasChildForwardedReport";
+    }
+    return isReceived ? "hasMainReceivedReport" : "hasMainForwardedReport";
+  };
+
   hashFilters(filters: OrdersStatisticsFiltersType) {
     return crypto
       .createHash("sha1")
       .update(JSON.stringify(filters))
       .digest("hex");
   }
+
+  stripEmpty = (conditions: any[]): any[] =>
+    conditions.filter((c) => {
+      if (!c || typeof c !== "object") return false;
+      const keys = Object.keys(c);
+      if (keys.length === 0) return false;
+      if (keys.length === 1 && (c.AND?.length === 0 || c.OR?.length === 0))
+        return false;
+      // drop empty relation filters like {timeline: {}}
+      if (
+        keys.length === 1 &&
+        typeof c[keys[0]] === "object" &&
+        c[keys[0]] !== null &&
+        Object.keys(c[keys[0]]).length === 0
+      )
+        return false;
+      return true;
+    });
 
   async generateUniqueOrderId() {
     while (true) {
@@ -515,6 +578,7 @@ export class OrdersRepository {
     const branchScope = [data.filters.branchID, ...childBranchs].filter(
       (id): id is number => id != null,
     );
+
     const where =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
         ? ({
@@ -1207,40 +1271,23 @@ export class OrdersRepository {
               {
                 AND: [
                   data.filters.clientReport === "true"
-                    ? {
-                        clientReport: {
-                          some: {
-                            secondaryType:
-                              data.filters.delivered &&
-                              data.filters.orderType === "forwarded"
-                                ? "DELIVERED"
-                                : data.filters.reportSecondaryStatus,
-                            report: {
-                              deleted: false,
-                            },
-                          },
-                        },
-                      }
+                    ? this.clientReportFilter(
+                        data.filters.delivered &&
+                          data.filters.orderType === "forwarded"
+                          ? "DELIVERED"
+                          : data.filters.reportSecondaryStatus,
+                        true,
+                      )
                     : {},
-                  {
-                    OR:
-                      data.filters.clientReport === "false"
-                        ? [
-                            {
-                              clientReport: {
-                                none: {
-                                  secondaryType: data.filters.delivered
-                                    ? "DELIVERED"
-                                    : data.filters.reportSecondaryStatus,
-                                  report: {
-                                    deleted: false,
-                                  },
-                                },
-                              },
-                            },
-                          ]
-                        : undefined,
-                  },
+
+                  data.filters.clientReport === "false"
+                    ? this.clientReportFilter(
+                        data.filters.delivered
+                          ? "DELIVERED"
+                          : data.filters.reportSecondaryStatus,
+                        false,
+                      )
+                    : {},
                 ],
               },
               // Filter by repositoryReport
@@ -1280,29 +1327,20 @@ export class OrdersRepository {
                 AND: [
                   data.filters.branchReport === "true"
                     ? {
-                        branchReport: {
-                          some: {
-                            report: {
-                              deleted: false,
-                            },
-                          },
-                        },
+                        OR: [
+                          {hasMainReceivedReport: true},
+                          {hasMainForwardedReport: true},
+                          {hasChildReceivedReport: true},
+                          {hasChildForwardedReport: true},
+                        ],
                       }
                     : {},
                   data.filters.branchReport === "false"
                     ? {
-                        branchReport: {
-                          none: {
-                            // branchId: data.filters.branchID,
-                            forChildBranches: data.filters.forChilds
-                              ? true
-                              : false,
-                            type: data.filters.orderType,
-                            report: {
-                              deleted: false,
-                            },
-                          },
-                        },
+                        [this.flagFieldFor(
+                          data.filters.orderType,
+                          data.filters.forChilds,
+                        )]: false,
                       }
                     : {},
                 ],
@@ -1529,7 +1567,7 @@ export class OrdersRepository {
                         ? [
                             {
                               client: {
-                                branchId: {in: branchScope}, // ← was the two OR branches with parentBranchId
+                                branchId: {in: branchScope},
                               },
                             },
 
@@ -1548,7 +1586,7 @@ export class OrdersRepository {
                           ? [
                               {
                                 client: {
-                                  branchId: {notIn: branchScope}, // ← was the two OR branches with parentBranchId
+                                  branchId: {notIn: branchScope},
                                 },
                               },
                               {
@@ -1799,9 +1837,7 @@ export class OrdersRepository {
                             data.loggedInUser?.role === "BRANCH_MANAGER"
                           ? [
                               {
-                                branch: {
-                                  id: data.loggedInUser.branchId,
-                                },
+                                branchId: data.loggedInUser?.branchId,
                                 status: {not: "WITH_RECEIVING_AGENT"},
                               },
                               {
@@ -1827,9 +1863,7 @@ export class OrdersRepository {
                               data.loggedInUser?.role !== "DELIVERY_AGENT"
                             ? [
                                 {
-                                  branch: {
-                                    id: data.loggedInUser?.branchId,
-                                  },
+                                  branchId: data.loggedInUser?.branchId,
                                 },
                               ]
                             : undefined,
@@ -1903,7 +1937,6 @@ export class OrdersRepository {
         {
           page: data.filters.page,
           size: data.filters.size,
-          withCount: false,
         },
       ),
       prisma.order.aggregate({

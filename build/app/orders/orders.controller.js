@@ -148,12 +148,13 @@ class OrdersController {
             createdBy: req.query.created_by,
             forwarededForReport: req.query.forwarededForReport,
         });
-        const { orders, ordersMetaData, page, pagesCount } = await ordersService.getAllOrders({
+        const { orders, ordersMetaData, page, pagesCount, where } = await ordersService.getAllOrders({
             loggedInUser: loggedInUser,
             filters: filters,
         });
         res.status(200).json({
             status: "success",
+            where,
             page: page,
             pagesCount: pagesCount,
             data: {
@@ -1835,14 +1836,7 @@ class OrdersController {
                         ],
                     },
                     {
-                        clientReport: {
-                            none: {
-                                secondaryType: "DELIVERED",
-                                report: {
-                                    deleted: false,
-                                },
-                            },
-                        },
+                        hasDeliveredClientReport: false,
                     },
                 ],
             },

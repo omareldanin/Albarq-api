@@ -393,72 +393,82 @@ model InquiryEmployeesCompanies {
 }
 
 model Order {
-  id                     String                   @id @default("")
-  receiptNumber          String                   @default("")
-  quantity               Int                      @default(0)
-  weight                 Float                    @default(0)
-  recipientName          String                   @default("غير معرف")
-  recipientPhones        String[]
-  recipientAddress       String
-  details                String                   @default("")
-  notes                  String                   @default("")
-  deliveryType           DeliveryType             @default(NORMAL)
-  governorate            Governorate
-  currentLocation        String                   @default("")
-  deliveryDate           DateTime?
-  totalCost              Float                    @default(0)
-  paidAmount             Float                    @default(0)
-  deliveryCost           Float                    @default(0)
-  clientNet              Float                    @default(0)
-  deliveryAgentNet       Float                    @default(0)
-  companyNet             Float                    @default(0)
-  discount               Float                    @default(0)
-  status                 OrderStatus              @default(REGISTERED)
-  secondaryStatus        SecondaryStatus?
-  confirmed              Boolean                  @default(false)
-  clientId               Int
-  deliveryAgentId        Int?
-  oldDeliveryAgentId     Int?
-  locationId             Int
-  storeId                Int
-  repositoryId           Int?
-  branchId               Int?
-  automaticUpdateId      Int?
-  deleted                Boolean                  @default(false)
-  deletedAt              DateTime?
-  deletedById            Int?
-  processed              Boolean                  @default(false)
-  processedAt            DateTime?
-  processedById          Int?
-  forwarded              Boolean                  @default(false)
-  forwardedAt            DateTime?
-  forwardedById          Int?
-  forwardedFromId        Int?
-  branchReportId         Int?
-  deliveryAgentReportId  Int?
-  governorateReportId    Int?
-  companyId              Int
-  createdAt              DateTime                 @default(now())
-  updatedAt              DateTime                 @updatedAt
-  clientOrderReceiptId   Int?                     @unique
-  forwardedToMainRepo    Boolean?                 @default(false)
-  forwardedToGov         Boolean?                 @default(false)
-  forwardedRepo          Int?
-  printed                Boolean                  @default(false)
-  forwardedBranchId      Int?
-  processingStatus       ProcessingStatus         @default(not_processed)
-  oldDeliveryCost        Float                    @default(0)
-  receivedBranchId       Int?
-  branchNet              Float                    @default(0)
-  pdfId                  Int?
-  receivedAt             DateTime?
-  clientNotes            String                   @default("")
-  branchDeliveryCost     Float                    @default(0)
-  shipment_number        String?
-  employeeReportId       Int?
-  forwardedBranchNet     Float                    @default(0)
-  insideBranchNet        Float                    @default(0)
-  receivingBranchNet     Float                    @default(0)
+  id                      String           @id @default("")
+  receiptNumber           String           @default("")
+  quantity                Int              @default(0)
+  weight                  Float            @default(0)
+  recipientName           String           @default("غير معرف")
+  recipientPhones         String[]
+  recipientAddress        String
+  details                 String           @default("")
+  notes                   String           @default("")
+  deliveryType            DeliveryType     @default(NORMAL)
+  governorate             Governorate
+  currentLocation         String           @default("")
+  deliveryDate            DateTime?
+  totalCost               Float            @default(0)
+  paidAmount              Float            @default(0)
+  deliveryCost            Float            @default(0)
+  clientNet               Float            @default(0)
+  deliveryAgentNet        Float            @default(0)
+  companyNet              Float            @default(0)
+  discount                Float            @default(0)
+  status                  OrderStatus      @default(REGISTERED)
+  secondaryStatus         SecondaryStatus?
+  confirmed               Boolean          @default(false)
+  clientId                Int
+  deliveryAgentId         Int?
+  oldDeliveryAgentId      Int?
+  locationId              Int
+  storeId                 Int
+  repositoryId            Int?
+  branchId                Int?
+  automaticUpdateId       Int?
+  deleted                 Boolean          @default(false)
+  deletedAt               DateTime?
+  deletedById             Int?
+  processed               Boolean          @default(false)
+  processedAt             DateTime?
+  processedById           Int?
+  forwarded               Boolean          @default(false)
+  forwardedAt             DateTime?
+  forwardedById           Int?
+  forwardedFromId         Int?
+  branchReportId          Int?
+  deliveryAgentReportId   Int?
+  governorateReportId     Int?
+  companyId               Int
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  clientOrderReceiptId    Int?             @unique
+  forwardedToMainRepo     Boolean?         @default(false)
+  forwardedToGov          Boolean?         @default(false)
+  forwardedRepo           Int?
+  printed                 Boolean          @default(false)
+  forwardedBranchId       Int?
+  processingStatus        ProcessingStatus @default(not_processed)
+  oldDeliveryCost         Float            @default(0)
+  receivedBranchId        Int?
+  branchNet               Float            @default(0)
+  pdfId                   Int?
+  receivedAt              DateTime?
+  clientNotes             String           @default("")
+  branchDeliveryCost      Float            @default(0)
+  shipment_number         String?
+  employeeReportId        Int?
+  forwardedBranchNet      Float            @default(0)
+  insideBranchNet         Float            @default(0)
+  receivingBranchNet      Float            @default(0)
+  // BranchReport flags: type × forChildBranches
+  hasMainReceivedReport   Boolean          @default(false)
+  hasMainForwardedReport  Boolean          @default(false)
+  hasChildReceivedReport  Boolean          @default(false)
+  hasChildForwardedReport Boolean          @default(false)
+
+  // ClientReport flags: secondaryType
+  hasDeliveredClientReport Boolean @default(false)
+  hasReturnedClientReport  Boolean @default(false)
+
   chat                   Chat?
   CustomerOutput         CustomerOutput[]
   automaticUpdate        AutomaticUpdate?         @relation(fields: [automaticUpdateId], references: [id])
@@ -509,6 +519,7 @@ model Order {
   @@index([deliveryAgentId, deliveryDate])
   @@index([companyId, receiptNumber])
   @@index([repositoryId, secondaryStatus, deleted])
+  @@index([companyId, deleted, status, branchId, createdAt(sort: Desc)])
 }
 
 model Chat {

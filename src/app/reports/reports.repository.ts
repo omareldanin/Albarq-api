@@ -13,6 +13,7 @@ import {
   reportReform,
   reportSelect,
 } from "./reports.responses";
+import {recomputeReportFlags} from "../orders/helpers/recomputeReportFlags";
 
 export class ReportsRepository {
   async createReport(data: {
@@ -66,37 +67,42 @@ export class ReportsRepository {
         activeProfit: true,
       },
     };
+
+    // ---------- CLIENT (has flags) ----------
     if (data.reportData.type === ReportType.CLIENT) {
-      const createdReport = await prisma.clientReport.create({
-        data: {
-          secondaryType: data.reportData.secondaryType,
-          client: {
-            connect: {
-              id: data.reportData.clientID,
+      const reportData = data.reportData;
+      const ordersIDs = data.reportData.ordersIDs;
+
+      return prisma.$transaction(
+        async (tx) => {
+          const createdReport = await tx.clientReport.create({
+            data: {
+              secondaryType: reportData.secondaryType,
+              client: {connect: {id: reportData.clientID}},
+              store: {connect: {id: reportData.storeID}},
+              repository: reportData.repositoryID
+                ? {connect: {id: reportData.repositoryID}}
+                : undefined,
+              orders: orders,
+              baghdadDeliveryCost: reportData.baghdadDeliveryCost,
+              governoratesDeliveryCost: reportData.governoratesDeliveryCost,
+              receivingAgentId: reportData.receivingAgentId,
+              report: report,
             },
-          },
-          // TODO
-          store: {
-            connect: {
-              id: data.reportData.storeID,
-            },
-          },
-          repository: data.reportData.repositoryID
-            ? {
-                connect: {
-                  id: data.reportData.repositoryID,
-                },
-              }
-            : undefined,
-          orders: orders,
-          baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
-          governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
-          receivingAgentId: data.reportData.receivingAgentId,
-          report: report,
+          });
+
+          await recomputeReportFlags(
+            Prisma.sql`o."id" = ANY(${ordersIDs}::text[])`,
+            tx,
+          );
+
+          return createdReport;
         },
-      });
-      return createdReport;
+        {timeout: 30000},
+      );
     }
+
+    // ---------- REPOSITORY (no flags) ----------
     if (data.reportData.type === ReportType.REPOSITORY) {
       const createdReport = await prisma.repositoryReport.create({
         data: {
@@ -115,24 +121,42 @@ export class ReportsRepository {
       return createdReport;
     }
 
+    // ---------- BRANCH (has flags) ----------
     if (data.reportData.type === ReportType.BRANCH) {
-      const createdReport = await prisma.branchReport.create({
-        data: {
-          branch: {
-            connect: {
-              id: data.reportData.branchID,
+      const reportData = data.reportData;
+      const ordersIDs = data.reportData.ordersIDs;
+      const branchReportType = data.type;
+
+      return prisma.$transaction(
+        async (tx) => {
+          const createdReport = await tx.branchReport.create({
+            data: {
+              branch: {
+                connect: {
+                  id: reportData.branchID,
+                },
+              },
+              orders: orders,
+              baghdadDeliveryCost: reportData.baghdadDeliveryCost,
+              governoratesDeliveryCost: reportData.governoratesDeliveryCost,
+              report: report,
+              forChildBranches: reportData.forChilds,
+              type: branchReportType,
             },
-          },
-          orders: orders,
-          baghdadDeliveryCost: data.reportData.baghdadDeliveryCost,
-          governoratesDeliveryCost: data.reportData.governoratesDeliveryCost,
-          report: report,
-          forChildBranches: data.reportData.forChilds,
-          type: data.type,
+          });
+
+          await recomputeReportFlags(
+            Prisma.sql`o."id" = ANY(${ordersIDs}::text[])`,
+            tx,
+          );
+
+          return createdReport;
         },
-      });
-      return createdReport;
+        {timeout: 30000},
+      );
     }
+
+    // ---------- DELIVERY_AGENT (no flags) ----------
     if (data.reportData.type === ReportType.DELIVERY_AGENT) {
       const createdReport = await prisma.deliveryAgentReport.create({
         data: {
@@ -148,6 +172,8 @@ export class ReportsRepository {
       });
       return createdReport;
     }
+
+    // ---------- GOVERNORATE (no flags) ----------
     if (data.reportData.type === ReportType.GOVERNORATE) {
       const createdReport = await prisma.governorateReport.create({
         data: {
@@ -160,6 +186,8 @@ export class ReportsRepository {
       });
       return createdReport;
     }
+
+    // ---------- COMPANY (no flags) ----------
     if (data.reportData.type === ReportType.COMPANY) {
       const createdReport = await prisma.companyReport.create({
         data: {
@@ -623,9 +651,7 @@ export class ReportsRepository {
 
   async deactivateReport(data: {reportID: number; deletedByID: number}) {
     const report = await prisma.report.findUnique({
-      where: {
-        id: data.reportID,
-      },
+      where: {id: data.reportID},
       select: reportSelect,
     });
 
@@ -638,11 +664,7 @@ export class ReportsRepository {
       if (report?.type === "REPOSITORY") {
         await prisma.order.updateMany({
           where: {
-            repositoryReport: {
-              some: {
-                id: report.repositoryReport?.id,
-              },
-            },
+            repositoryReport: {some: {id: report.repositoryReport?.id}},
           },
           data: {
             repositoryId: report.repositoryReport?.repository.id,
@@ -653,11 +675,7 @@ export class ReportsRepository {
       if (report?.type === "CLIENT" && report.confirmed === false) {
         await prisma.order.updateMany({
           where: {
-            clientReport: {
-              some: {
-                id: report.clientReport?.id,
-              },
-            },
+            clientReport: {some: {id: report.clientReport?.id}},
           },
           data: {
             repositoryId: report.clientReport?.repository?.id,
@@ -667,49 +685,90 @@ export class ReportsRepository {
       }
     }
 
-    const deletedReport = await prisma.report.update({
-      where: {
-        id: data.reportID,
-      },
-      data: {
-        deleted: true,
-        deletedById: data.deletedByID,
-        deletedAt: new Date(),
-      },
-      select: reportSelect,
-    });
+    const needsFlagSync =
+      report?.type === "CLIENT" || report?.type === "BRANCH";
 
-    await prisma.transaction.updateMany({
-      where: {
-        reportId: deletedReport.id,
+    const deletedReport = await prisma.$transaction(
+      async (tx) => {
+        const updated = await tx.report.update({
+          where: {id: data.reportID},
+          data: {
+            deleted: true,
+            deletedById: data.deletedByID,
+            deletedAt: new Date(),
+          },
+          select: reportSelect,
+        });
+
+        await tx.transaction.updateMany({
+          where: {reportId: updated.id},
+          data: {deleted: true},
+        });
+
+        // recompute flags AFTER deleted=true so EXISTS sees the new state
+        if (needsFlagSync) {
+          const joinTable =
+            report?.type === "CLIENT"
+              ? Prisma.sql`"_ClientReportToOrder"`
+              : Prisma.sql`"_BranchReportToOrder"`;
+
+          await recomputeReportFlags(
+            Prisma.sql`o."id" IN (
+            SELECT "B" FROM ${joinTable} WHERE "A" = ${data.reportID}
+          )`,
+            tx,
+          );
+        }
+
+        return updated;
       },
-      data: {
-        deleted: true,
-      },
-    });
+      {timeout: 30000},
+    );
 
     return reportReform(deletedReport);
   }
 
   async reactivateReport(data: {reportID: number}) {
-    const deletedReport = await prisma.report.update({
-      where: {
-        id: data.reportID,
-      },
-      data: {
-        deleted: false,
-      },
-      select: reportSelect,
+    const report = await prisma.report.findUnique({
+      where: {id: data.reportID},
+      select: {type: true},
     });
 
-    await prisma.transaction.updateMany({
-      where: {
-        reportId: deletedReport.id,
+    const needsFlagSync =
+      report?.type === "CLIENT" || report?.type === "BRANCH";
+
+    const restoredReport = await prisma.$transaction(
+      async (tx) => {
+        const updated = await tx.report.update({
+          where: {id: data.reportID},
+          data: {deleted: false},
+          select: reportSelect,
+        });
+
+        await tx.transaction.updateMany({
+          where: {reportId: updated.id},
+          data: {deleted: false},
+        });
+
+        if (needsFlagSync) {
+          const joinTable =
+            report?.type === "CLIENT"
+              ? Prisma.sql`"_ClientReportToOrder"`
+              : Prisma.sql`"_BranchReportToOrder"`;
+
+          await recomputeReportFlags(
+            Prisma.sql`o."id" IN (
+            SELECT "B" FROM ${joinTable} WHERE "A" = ${data.reportID}
+          )`,
+            tx,
+          );
+        }
+
+        return updated;
       },
-      data: {
-        deleted: false,
-      },
-    });
-    return reportReform(deletedReport);
+      {timeout: 30000},
+    );
+
+    return reportReform(restoredReport);
   }
 }

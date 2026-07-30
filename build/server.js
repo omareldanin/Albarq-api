@@ -12,6 +12,7 @@ const address = `http://localhost:${config_1.env.PORT}`;
 const socket_io_1 = require("socket.io");
 const http_1 = __importDefault(require("http"));
 const approveTransactions_job_1 = require("./cron-jobs/approveTransactions.job");
+const reconcileReportFlags_job_1 = require("./cron-jobs/reconcileReportFlags.job");
 // import {automaticBackUpCronJob} from "./backup";
 const newServer = http_1.default.createServer(app_1.default);
 // Middlewares
@@ -44,6 +45,7 @@ const server = newServer.listen(config_1.env.PORT, () => {
     logger_1.Logger.debug(`Starting APP On -> ${address}`);
     automaticUpdatesCronJob_1.automaticUpdatesCronJob.start();
     (0, approveTransactions_job_1.startApproveTransactionsCron)();
+    (0, reconcileReportFlags_job_1.startReconcileReportFlagsCron)();
     // automaticBackUpCronJob.start();
 });
 process.on("uncaughtException", (err) => {

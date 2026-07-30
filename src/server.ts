@@ -8,6 +8,7 @@ const address = `http://localhost:${env.PORT}`;
 import {Server} from "socket.io";
 import http from "http";
 import {startApproveTransactionsCron} from "./cron-jobs/approveTransactions.job";
+import {startReconcileReportFlagsCron} from "./cron-jobs/reconcileReportFlags.job";
 // import {automaticBackUpCronJob} from "./backup";
 const newServer = http.createServer(app);
 
@@ -48,6 +49,8 @@ const server = newServer.listen(env.PORT, () => {
   automaticUpdatesCronJob.start();
 
   startApproveTransactionsCron();
+  startReconcileReportFlagsCron();
+
   // automaticBackUpCronJob.start();
 });
 
