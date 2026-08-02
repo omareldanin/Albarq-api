@@ -73,6 +73,7 @@ export class EmployeesRepository {
         residencyCard: data.employeeData.residencyCard,
         clientAssistantRole: data.employeeData.clientAssistantRole,
         salary: data.employeeData.salary,
+        deliveryCost: data.employeeData.deliveryCost,
         orderType: data.employeeData.orderType,
         role:
           data.employeeData.role === "EMERGENCY_EMPLOYEE" ||
@@ -560,6 +561,7 @@ export class EmployeesRepository {
         clientAssistantRole: data.employeeData.clientAssistantRole,
         orderType: data.employeeData.orderType,
         salary: data.employeeData.salary,
+        deliveryCost: data.employeeData.deliveryCost,
         role:
           data.employeeData.role === "EMERGENCY_EMPLOYEE" ||
           data.employeeData.role === "MAIN_EMERGENCY_EMPLOYEE"

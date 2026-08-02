@@ -621,6 +621,7 @@ export class MessagesController {
       chats: chatsWithStats,
     };
   };
+
   getChatMessages = async (orderId: string, userId: number) => {
     const employee = await prisma.employee.findUnique({
       where: {id: +userId},

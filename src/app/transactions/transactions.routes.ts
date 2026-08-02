@@ -39,6 +39,15 @@ router
     isAutherized([EmployeeRole.COMPANY_MANAGER, EmployeeRole.BRANCH_MANAGER]),
     transactionsController.getDailyStatistics,
   );
+
+router
+  .route("/transactions/profits")
+  .get(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER, EmployeeRole.BRANCH_MANAGER]),
+    transactionsController.getBranchrofit,
+  );
+
 router
   .route("/transactions/approve-all")
   .patch(

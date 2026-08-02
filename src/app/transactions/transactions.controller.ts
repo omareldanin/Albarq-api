@@ -180,6 +180,46 @@ export class TransactionsController {
     });
   });
 
+  getBranchrofit = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    // Admins may query any company; everyone else is scoped to their own
+    let companyId: number | undefined;
+    if (Object.keys(AdminRole).includes(loggedInUser.role)) {
+      companyId = req.query.company_id ? +req.query.company_id : undefined;
+    } else {
+      companyId = loggedInUser.companyID as number;
+    }
+
+    const deliveryAgentId = req.query.delivery_agent_id
+      ? +req.query.delivery_agent_id
+      : undefined;
+    const clientId = req.query.client_id ? +req.query.client_id : undefined;
+    const branchId = req.query.branch_id ? +req.query.branch_id : undefined;
+    const type = req.query.type as string | undefined;
+    const start_date = req.query.start_date as string | undefined;
+    const end_date = req.query.end_date as string | undefined;
+
+    const statistics = await transactionsRepository.getDailyProfit({
+      companyId,
+      deliveryAgentId,
+      clientId,
+      branchId,
+      type,
+      start_date,
+      end_date,
+      loggedInUser,
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        allTime: statistics.allTime,
+        today: statistics.today,
+      },
+    });
+  });
+
   updateTransaction = catchAsync(async (req, res) => {
     const transactionID = +req.params.transactionID;
     const data = TransactionUpdateSchema.parse(req.body);

@@ -202,6 +202,7 @@ model Branch {
   orders                 Order[]
   repositories           Repository[]
   transctions            Transaction[]
+  dailyProfits           DailyProfit[]
 
   @@unique([name, companyId])
   @@index([companyId])
@@ -381,6 +382,7 @@ model Company {
   tickets                   Ticket[]
   transactions              Transaction[]
   usersLoginHistory         UsersLoginHistory[]
+  dailyProfits              DailyProfit[]
 }
 
 model InquiryEmployeesCompanies {
@@ -428,7 +430,7 @@ model Order {
   deletedAt               DateTime?
   deletedById             Int?
   processed               Boolean          @default(false)
-  processedAt             DateTime?
+  deliveriedAt            DateTime?
   processedById           Int?
   forwarded               Boolean          @default(false)
   forwardedAt             DateTime?
@@ -1009,6 +1011,26 @@ model Transaction {
   @@index([companyId, type, approved, deleted])
   @@index([employeeId, deleted, createdAt(sort: Desc)])
   @@index([companyId, deleted, approvedforMain, createdAt(sort: Desc)])
+}
+
+model DailyProfit {
+  id              Int      @id @default(autoincrement())
+  companyId       Int
+  branchId        Int?
+  totalProfit     Float    @default(0)
+  receiviedProfit Float    @default(0)
+  forwardedProfit Float    @default(0)
+  insideProfit    Float    @default(0)
+  receiviedCount  Int      @default(0)
+  forwardedCount  Int      @default(0)
+  insideCount     Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  branch  Branch? @relation(fields: [branchId], references: [id])
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@index([companyId, branchId, createdAt(sort: Desc)])
 }
 
 model UsersLoginHistory {

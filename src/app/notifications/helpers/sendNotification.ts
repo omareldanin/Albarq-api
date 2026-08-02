@@ -31,9 +31,8 @@ export const sendNotification = async (data: NotificationCreateType) => {
     } | null = null;
 
     if (!data.content.includes("رساله")) {
-      createdNotification = await notificationsRepository.createNotification(
-        data
-      );
+      createdNotification =
+        await notificationsRepository.createNotification(data);
     }
 
     const user = await prisma.user.findUnique({

@@ -21,7 +21,8 @@ const sendNotification = async (data) => {
     try {
         let createdNotification = null;
         if (!data.content.includes("رساله")) {
-            createdNotification = await notificationsRepository.createNotification(data);
+            createdNotification =
+                await notificationsRepository.createNotification(data);
         }
         const user = await db_1.prisma.user.findUnique({
             where: {

@@ -20,6 +20,9 @@ router
     .route("/transactions/daily-statistics")
     .get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.EmployeeRole.BRANCH_MANAGER]), transactionsController.getDailyStatistics);
 router
+    .route("/transactions/profits")
+    .get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.EmployeeRole.BRANCH_MANAGER]), transactionsController.getBranchrofit);
+router
     .route("/transactions/approve-all")
     .patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.EmployeeRole.BRANCH_MANAGER]), upload_1.upload.none(), transactionsController.approveAllBranchTransactions);
 // --- parameterized routes AFTER ---

@@ -120,7 +120,6 @@ exports.orderSelect = {
     updatedAt: true,
     processingStatus: true,
     processed: true,
-    processedAt: true,
     forwardedRepo: true,
     forwardedBranchId: true,
     receivedBranchId: true,

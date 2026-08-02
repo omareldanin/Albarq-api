@@ -9,6 +9,7 @@ import {Server} from "socket.io";
 import http from "http";
 import {startApproveTransactionsCron} from "./cron-jobs/approveTransactions.job";
 import {startReconcileReportFlagsCron} from "./cron-jobs/reconcileReportFlags.job";
+import {startPruneNotificationsCron} from "./cron-jobs/pruneNotifications.job";
 // import {automaticBackUpCronJob} from "./backup";
 const newServer = http.createServer(app);
 
@@ -46,8 +47,9 @@ const server = newServer.listen(env.PORT, () => {
     "------------------------------------------------------------------------------------------\n",
   );
   Logger.debug(`Starting APP On -> ${address}`);
-  automaticUpdatesCronJob.start();
 
+  startPruneNotificationsCron();
+  automaticUpdatesCronJob.start();
   startApproveTransactionsCron();
   startReconcileReportFlagsCron();
 

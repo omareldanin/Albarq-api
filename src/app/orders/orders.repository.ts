@@ -226,6 +226,69 @@ export class OrdersRepository {
 
     return deliveryCost;
   }
+  async getProfits(order: ReturnType<typeof orderReform>, paidAmount: number) {
+    let insideProfit = 0,
+      forwardedProfit = 0,
+      receivingBranchNet = 0,
+      deliveryAgentCost = 0;
+
+    deliveryAgentCost = order?.deliveryAgent?.deliveryCost || 0;
+
+    if (order?.branch?.id === order?.client.branchId) {
+      insideProfit = (order?.deliveryCost ?? 0) - deliveryAgentCost;
+    } else if (order?.branch?.id !== order?.client.branchId) {
+      const branchsCost = await prisma.branch.findMany({
+        where: {
+          id: {in: [order?.branch?.id!!, order?.client.branchId!!]},
+        },
+        select: {
+          id: true,
+          receivingDeliveryCosts: true,
+          forwardedDeliveryCosts: true,
+        },
+      });
+      const receivingDeliveryCosts = branchsCost.find(
+        (b) => b.id === order?.branch?.id,
+      )?.forwardedDeliveryCosts as {
+        governorate: Governorate;
+        cost: number;
+      }[];
+
+      const forwardedDeliveryCosts = branchsCost.find(
+        (b) => b.id === order?.client.branchId,
+      )?.receivingDeliveryCosts as {
+        governorate: Governorate;
+        cost: number;
+      }[];
+
+      receivingBranchNet =
+        (receivingDeliveryCosts.find(
+          (governorateDeliveryCost: {
+            governorate: Governorate;
+            cost: number;
+          }) => {
+            return governorateDeliveryCost.governorate === order?.governorate;
+          },
+        )?.cost ?? 0) - deliveryAgentCost;
+
+      forwardedProfit =
+        paidAmount -
+        (forwardedDeliveryCosts.find(
+          (governorateDeliveryCost: {
+            governorate: Governorate;
+            cost: number;
+          }) => {
+            return governorateDeliveryCost.governorate === order?.governorate;
+          },
+        )?.cost ?? 0);
+    }
+    return {
+      deliveryAgentCost,
+      forwardedProfit,
+      receivingBranchNet,
+      insideProfit,
+    };
+  }
 
   async createOrder(data: {
     companyID: number;
@@ -3170,7 +3233,15 @@ export class OrdersRepository {
     orderData: any,
   ) {
     // Calculate order costs
-    let deliveryAgentCost = orderData?.deliveryAgentNet;
+    let profits:
+      | {
+          deliveryAgentCost: number;
+          forwardedProfit: number;
+          receivingBranchNet: number;
+          insideProfit: number;
+        }
+      | undefined = undefined;
+
     let companyNet = orderData?.companyNet;
     let clientNet = orderData?.clientNet;
     let newDeliveryCost = orderData?.deliveryCost
@@ -3192,35 +3263,12 @@ export class OrdersRepository {
         data.orderData.governorate || orderData.governorate,
         data.orderData.branchID ? data.orderData.branchID : orderData.branch.id,
       );
+      profits = await this.getProfits(
+        orderData,
+        data.orderData.paidAmount || orderData.paidAmount,
+      );
     }
-    // if (weight) {
-    //   const companyAdditionalPrices = await prisma.company.findUnique({
-    //     where: {
-    //       id: orderData?.company?.id,
-    //     },
-    //     select: {
-    //       additionalPriceForEveryKilogram: true,
-    //     },
-    //   });
 
-    //   const oldWeight = orderData?.weight as number;
-
-    //   if (weight > oldWeight) {
-    //     newDeliveryCost = (orderData?.deliveryCost || 0) as number;
-    //     newDeliveryCost +=
-    //       companyAdditionalPrices?.additionalPriceForEveryKilogram
-    //         ? (weight - oldWeight) *
-    //           companyAdditionalPrices.additionalPriceForEveryKilogram
-    //         : 0;
-    //   } else if (weight < oldWeight) {
-    //     newDeliveryCost = (orderData?.deliveryCost || 0) as number;
-    //     newDeliveryCost -=
-    //       companyAdditionalPrices?.additionalPriceForEveryKilogram
-    //         ? (oldWeight - weight) *
-    //           companyAdditionalPrices.additionalPriceForEveryKilogram
-    //         : 0;
-    //   }
-    // }
     if (data.orderData.paidAmount) {
       // calculate client net
       const deliveryCost = newDeliveryCost
@@ -3262,9 +3310,18 @@ export class OrdersRepository {
             }
           : undefined,
         clientNet: clientNet,
+        deliveriedAt:
+          data.orderData.status === "DELIVERED" ||
+          data.orderData.status === "REPLACED" ||
+          data.orderData.status === "PARTIALLY_RETURNED"
+            ? new Date()
+            : undefined,
         deliveryCost: newDeliveryCost,
         oldDeliveryCost: oldDeliveryCost,
-        deliveryAgentNet: deliveryAgentCost,
+        deliveryAgentNet: profits?.deliveryAgentCost,
+        insideBranchNet: profits?.insideProfit,
+        forwardedBranchNet: profits?.forwardedProfit,
+        receivingBranchNet: profits?.receivingBranchNet,
         weight: weight,
         companyNet: companyNet,
         discount: data.orderData.discount,
@@ -3331,7 +3388,6 @@ export class OrdersRepository {
             }
           : undefined,
         processed: data.orderData.processed,
-        processedAt: data.orderData.processed ? new Date() : undefined,
         processedBy: data.orderData.processed
           ? {connect: {id: data.loggedInUser.id}}
           : undefined,

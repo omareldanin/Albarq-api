@@ -25,6 +25,120 @@ const transactionSelect = {
     report: { select: { id: true, type: true } },
 };
 class TransactionsRepository {
+    computeProfit = async (params) => {
+        const { companyId, myBranchId, applyBranchScope, dateFilter } = params;
+        // spread only when a range is given — omitted means "all time"
+        const dateCondition = dateFilter ? { deliveriedAt: dateFilter } : {};
+        const [insideBranchNet, receivedBranchNet, forwardedBranchNet] = await Promise.all([
+            applyBranchScope
+                ? db_1.prisma.order.aggregate({
+                    _sum: {
+                        paidAmount: true,
+                        forwardedBranchNet: true,
+                        receivingBranchNet: true,
+                        deliveryAgentNet: true,
+                        insideBranchNet: true,
+                    },
+                    _count: { id: true },
+                    where: {
+                        companyId,
+                        deleted: false,
+                        confirmed: true,
+                        client: { branchId: { not: myBranchId } },
+                        ...dateCondition,
+                    },
+                })
+                : db_1.prisma.order.aggregate({
+                    _sum: {
+                        paidAmount: true,
+                        forwardedBranchNet: true,
+                        receivingBranchNet: true,
+                        deliveryAgentNet: true,
+                        insideBranchNet: true,
+                    },
+                    _count: { id: true },
+                    where: {
+                        companyId,
+                        deleted: false,
+                        confirmed: true,
+                        branchId: myBranchId,
+                        client: { branchId: myBranchId },
+                        ...dateCondition,
+                    },
+                }),
+            db_1.prisma.order.aggregate({
+                _sum: { receivingBranchNet: true },
+                _count: { id: true },
+                where: {
+                    companyId,
+                    deleted: false,
+                    confirmed: true,
+                    branchId: myBranchId,
+                    client: { branchId: { not: myBranchId } },
+                    ...dateCondition,
+                },
+            }),
+            db_1.prisma.order.aggregate({
+                _sum: {
+                    forwardedBranchNet: true,
+                    clientNet: true,
+                    deliveryCost: true,
+                    receivingBranchNet: true,
+                    deliveryAgentNet: true,
+                },
+                _count: { id: true },
+                where: {
+                    companyId,
+                    deleted: false,
+                    confirmed: true,
+                    branchId: { not: myBranchId },
+                    client: { branchId: myBranchId },
+                    ...dateCondition,
+                },
+            }),
+        ]);
+        const insideBranchProfit = applyBranchScope
+            ? {
+                total: (insideBranchNet._sum.paidAmount ?? 0) -
+                    (insideBranchNet._sum.forwardedBranchNet ?? 0) -
+                    (insideBranchNet._sum.deliveryAgentNet ?? 0) -
+                    (insideBranchNet._sum.receivingBranchNet ?? 0),
+                count: insideBranchNet._count.id,
+            }
+            : {
+                total: insideBranchNet._sum.insideBranchNet ?? 0,
+                count: insideBranchNet._count.id,
+            };
+        const receivedBranchProfit = {
+            total: receivedBranchNet._sum.receivingBranchNet ?? 0,
+            count: receivedBranchNet._count.id,
+        };
+        const forwardedBranchProfit = applyBranchScope
+            ? {
+                total: (forwardedBranchNet._sum.deliveryCost ?? 0) -
+                    (forwardedBranchNet._sum.receivingBranchNet ?? 0) -
+                    (forwardedBranchNet._sum.deliveryAgentNet ?? 0),
+                count: forwardedBranchNet._count.id,
+            }
+            : {
+                total: (forwardedBranchNet._sum.forwardedBranchNet ?? 0) -
+                    (forwardedBranchNet._sum.clientNet ?? 0),
+                count: forwardedBranchNet._count.id,
+            };
+        return {
+            total: {
+                total: insideBranchProfit.total +
+                    receivedBranchProfit.total +
+                    forwardedBranchProfit.total,
+                count: insideBranchProfit.count +
+                    receivedBranchProfit.count +
+                    forwardedBranchProfit.count,
+            },
+            insideBranchNet: insideBranchProfit,
+            receivedBranchNet: receivedBranchProfit,
+            forwardedBranchNet: forwardedBranchProfit,
+        };
+    };
     createTransaction = async ({ companyID, createdByID, data, }) => {
         const { employeeID, reportID, branchID, ...rest } = data;
         return db_1.prisma.transaction.create({
@@ -247,12 +361,7 @@ class TransactionsRepository {
                     status: { in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"] },
                     clientId: filters.clientId,
                     client: { branchId: myBranchId },
-                    clientReport: {
-                        none: {
-                            secondaryType: "DELIVERED",
-                            report: { deleted: false },
-                        },
-                    },
+                    hasDeliveredClientReport: false,
                 },
             }),
             db_1.prisma.report.aggregate({
@@ -846,6 +955,44 @@ class TransactionsRepository {
                     count: forwardedBranchNet._count.id,
                 },
         };
+    }
+    async getDailyProfit(filters) {
+        const applyBranchScope = filters.loggedInUser?.role === "COMPANY_MANAGER" ||
+            filters.loggedInUser?.mainRepository;
+        let myBranchId = filters.loggedInUser?.branchId;
+        if (filters.loggedInUser?.role === "COMPANY_MANAGER") {
+            const mainBranch = await db_1.prisma.repository.findFirst({
+                where: {
+                    companyId: filters.loggedInUser.companyID,
+                    mainRepository: true,
+                },
+                select: {
+                    branchId: true,
+                },
+            });
+            myBranchId = mainBranch?.branchId;
+        }
+        const startDate = new Date();
+        startDate.setHours(0, 0, 0, 0);
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 1);
+        console.log(startDate);
+        const baseParams = {
+            companyId: filters.companyId,
+            myBranchId: myBranchId,
+            applyBranchScope: applyBranchScope,
+        };
+        const [allTime, today] = await Promise.all([
+            this.computeProfit({
+                ...baseParams,
+                dateFilter: { gte: new Date("2026-08-01T21:00:00.000Z"), lt: new Date() },
+            }),
+            this.computeProfit({
+                ...baseParams,
+                dateFilter: { gte: startDate, lt: endDate },
+            }),
+        ]);
+        return { allTime, today };
     }
     getTransaction = async ({ transactionID }) => {
         return db_1.prisma.transaction.findUnique({
