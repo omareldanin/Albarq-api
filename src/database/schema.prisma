@@ -1015,6 +1015,7 @@ model Transaction {
 
 model DailyProfit {
   id              Int      @id @default(autoincrement())
+  day             String
   companyId       Int
   branchId        Int?
   totalProfit     Float    @default(0)
@@ -1030,6 +1031,8 @@ model DailyProfit {
   branch  Branch? @relation(fields: [branchId], references: [id])
   company Company @relation(fields: [companyId], references: [id])
 
+  @@unique([companyId, branchId, day])
+  @@index([companyId, branchId, day(sort: Desc)])
   @@index([companyId, branchId, createdAt(sort: Desc)])
 }
 

@@ -1,4 +1,4 @@
-import {AdminRole} from "@prisma/client";
+import {AdminRole, EmployeeRole} from "@prisma/client";
 import {AppError} from "../../lib/AppError";
 import {catchAsync} from "../../lib/catchAsync";
 import type {loggedInUserType} from "../../types/user";
@@ -7,6 +7,7 @@ import {
   TransactionUpdateSchema,
 } from "./transactions.dto";
 import {TransactionsRepository} from "./transaction.repository";
+import {prisma} from "../../database/db";
 
 const transactionsRepository = new TransactionsRepository();
 
@@ -89,6 +90,67 @@ export class TransactionsController {
       page,
       pagesCount,
       data: transactions,
+    });
+  });
+
+  getAllDailyProfits = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    let companyId: number;
+    if (Object.keys(AdminRole).includes(loggedInUser.role)) {
+      companyId = req.query.company_id
+        ? +req.query.company_id
+        : (loggedInUser.companyID as number);
+    } else {
+      companyId = loggedInUser.companyID as number;
+    }
+
+    // branch managers see only their own branch
+    let branchId = req.query.branch_id ? +req.query.branch_id : undefined;
+
+    if (loggedInUser.role === EmployeeRole.BRANCH_MANAGER) {
+      branchId = loggedInUser.branchId;
+    } else if (loggedInUser.role === EmployeeRole.COMPANY_MANAGER) {
+      const mainBranch = await prisma.repository.findFirst({
+        where: {
+          companyId: loggedInUser.companyID,
+          mainRepository: true,
+        },
+        select: {
+          branchId: true,
+        },
+      });
+      branchId = mainBranch?.branchId || loggedInUser?.branchId;
+    }
+    const startDay = req.query.start_day as string | undefined;
+    const endDay = req.query.end_day as string | undefined;
+
+    const size = req.query.size ? +req.query.size : 30;
+    let page = 1;
+    if (
+      req.query.page &&
+      !Number.isNaN(+req.query.page) &&
+      +req.query.page > 0
+    ) {
+      page = +req.query.page;
+    }
+
+    const {dailyProfits, pagesCount, totals} =
+      await transactionsRepository.getAllDailyProfits({
+        page,
+        size,
+        companyId,
+        branchId,
+        startDay,
+        endDay,
+      });
+
+    res.status(200).json({
+      status: "success",
+      page,
+      pagesCount,
+      totals,
+      data: dailyProfits,
     });
   });
 
@@ -214,7 +276,6 @@ export class TransactionsController {
     res.status(200).json({
       status: "success",
       data: {
-        allTime: statistics.allTime,
         today: statistics.today,
       },
     });

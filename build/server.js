@@ -14,6 +14,7 @@ const http_1 = __importDefault(require("http"));
 const approveTransactions_job_1 = require("./cron-jobs/approveTransactions.job");
 const reconcileReportFlags_job_1 = require("./cron-jobs/reconcileReportFlags.job");
 const pruneNotifications_job_1 = require("./cron-jobs/pruneNotifications.job");
+const computeProfit_job_1 = require("./cron-jobs/computeProfit.job");
 // import {automaticBackUpCronJob} from "./backup";
 const newServer = http_1.default.createServer(app_1.default);
 // Middlewares
@@ -45,6 +46,7 @@ const server = newServer.listen(config_1.env.PORT, () => {
     console.info("------------------------------------------------------------------------------------------\n");
     logger_1.Logger.debug(`Starting APP On -> ${address}`);
     (0, pruneNotifications_job_1.startPruneNotificationsCron)();
+    (0, computeProfit_job_1.startDailyProfitCron)();
     automaticUpdatesCronJob_1.automaticUpdatesCronJob.start();
     (0, approveTransactions_job_1.startApproveTransactionsCron)();
     (0, reconcileReportFlags_job_1.startReconcileReportFlagsCron)();

@@ -6,6 +6,7 @@ const AppError_1 = require("../../lib/AppError");
 const catchAsync_1 = require("../../lib/catchAsync");
 const transactions_dto_1 = require("./transactions.dto");
 const transaction_repository_1 = require("./transaction.repository");
+const db_1 = require("../../database/db");
 const transactionsRepository = new transaction_repository_1.TransactionsRepository();
 class TransactionsController {
     createTransaction = (0, catchAsync_1.catchAsync)(async (req, res) => {
@@ -72,6 +73,59 @@ class TransactionsController {
             page,
             pagesCount,
             data: transactions,
+        });
+    });
+    getAllDailyProfits = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const loggedInUser = res.locals.user;
+        let companyId;
+        if (Object.keys(client_1.AdminRole).includes(loggedInUser.role)) {
+            companyId = req.query.company_id
+                ? +req.query.company_id
+                : loggedInUser.companyID;
+        }
+        else {
+            companyId = loggedInUser.companyID;
+        }
+        // branch managers see only their own branch
+        let branchId = req.query.branch_id ? +req.query.branch_id : undefined;
+        if (loggedInUser.role === client_1.EmployeeRole.BRANCH_MANAGER) {
+            branchId = loggedInUser.branchId;
+        }
+        else if (loggedInUser.role === client_1.EmployeeRole.COMPANY_MANAGER) {
+            const mainBranch = await db_1.prisma.repository.findFirst({
+                where: {
+                    companyId: loggedInUser.companyID,
+                    mainRepository: true,
+                },
+                select: {
+                    branchId: true,
+                },
+            });
+            branchId = mainBranch?.branchId || loggedInUser?.branchId;
+        }
+        const startDay = req.query.start_day;
+        const endDay = req.query.end_day;
+        const size = req.query.size ? +req.query.size : 30;
+        let page = 1;
+        if (req.query.page &&
+            !Number.isNaN(+req.query.page) &&
+            +req.query.page > 0) {
+            page = +req.query.page;
+        }
+        const { dailyProfits, pagesCount, totals } = await transactionsRepository.getAllDailyProfits({
+            page,
+            size,
+            companyId,
+            branchId,
+            startDay,
+            endDay,
+        });
+        res.status(200).json({
+            status: "success",
+            page,
+            pagesCount,
+            totals,
+            data: dailyProfits,
         });
     });
     getTransaction = (0, catchAsync_1.catchAsync)(async (req, res) => {
@@ -181,7 +235,6 @@ class TransactionsController {
         res.status(200).json({
             status: "success",
             data: {
-                allTime: statistics.allTime,
                 today: statistics.today,
             },
         });

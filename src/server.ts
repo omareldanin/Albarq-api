@@ -10,6 +10,7 @@ import http from "http";
 import {startApproveTransactionsCron} from "./cron-jobs/approveTransactions.job";
 import {startReconcileReportFlagsCron} from "./cron-jobs/reconcileReportFlags.job";
 import {startPruneNotificationsCron} from "./cron-jobs/pruneNotifications.job";
+import {startDailyProfitCron} from "./cron-jobs/computeProfit.job";
 // import {automaticBackUpCronJob} from "./backup";
 const newServer = http.createServer(app);
 
@@ -49,6 +50,7 @@ const server = newServer.listen(env.PORT, () => {
   Logger.debug(`Starting APP On -> ${address}`);
 
   startPruneNotificationsCron();
+  startDailyProfitCron();
   automaticUpdatesCronJob.start();
   startApproveTransactionsCron();
   startReconcileReportFlagsCron();
