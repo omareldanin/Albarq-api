@@ -103,7 +103,7 @@ const computeBranchDayProfit = async (params) => {
  * Idempotent — safe to re-run.
  */
 const snapshotDailyProfits = async (targetDay) => {
-    const day = targetDay ?? new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const day = targetDay ?? new Date();
     day.setHours(0, 0, 0, 0);
     const nextDay = new Date(day);
     nextDay.setDate(nextDay.getDate() + 1);
@@ -129,10 +129,8 @@ const snapshotDailyProfits = async (targetDay) => {
             from: day,
             to: nextDay,
         });
-        const totalCount = p.insideCount + p.receivedCount + p.forwardedCount;
         // skip branches with no activity that day
-        if (totalCount === 0)
-            continue;
+        // if (totalCount === 0) continue;
         await db_1.prisma.dailyProfit.upsert({
             where: {
                 companyId_branchId_day: {
@@ -170,7 +168,7 @@ const snapshotDailyProfits = async (targetDay) => {
 };
 exports.snapshotDailyProfits = snapshotDailyProfits;
 const startDailyProfitCron = () => {
-    node_cron_1.default.schedule("0 4 * * *", async () => {
+    node_cron_1.default.schedule("01 0 * * *", async () => {
         try {
             await (0, exports.snapshotDailyProfits)();
         }

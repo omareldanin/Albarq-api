@@ -128,7 +128,7 @@ const computeBranchDayProfit = async (params: {
  * Idempotent — safe to re-run.
  */
 export const snapshotDailyProfits = async (targetDay?: Date) => {
-  const day = targetDay ?? new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const day = targetDay ?? new Date();
   day.setHours(0, 0, 0, 0);
 
   const nextDay = new Date(day);
@@ -161,10 +161,8 @@ export const snapshotDailyProfits = async (targetDay?: Date) => {
       to: nextDay,
     });
 
-    const totalCount = p.insideCount + p.receivedCount + p.forwardedCount;
-
     // skip branches with no activity that day
-    if (totalCount === 0) continue;
+    // if (totalCount === 0) continue;
 
     await prisma.dailyProfit.upsert({
       where: {
@@ -206,7 +204,7 @@ export const snapshotDailyProfits = async (targetDay?: Date) => {
 
 export const startDailyProfitCron = () => {
   cron.schedule(
-    "0 4 * * *",
+    "01 0 * * *",
     async () => {
       try {
         await snapshotDailyProfits();
