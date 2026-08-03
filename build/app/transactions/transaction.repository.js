@@ -1068,10 +1068,10 @@ class TransactionsRepository {
             });
             myBranchId = mainBranch?.branchId;
         }
-        const startDate = new Date();
+        let startDate = new Date();
+        let endDate = new Date();
         startDate.setHours(0, 0, 0, 0);
-        const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + 1);
+        endDate.setHours(23, 59, 59, 59);
         const baseParams = {
             companyId: filters.companyId,
             myBranchId: myBranchId,

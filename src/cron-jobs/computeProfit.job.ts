@@ -130,11 +130,12 @@ const computeBranchDayProfit = async (params: {
 export const snapshotDailyProfits = async (targetDay?: Date) => {
   const day = targetDay ?? new Date();
   day.setHours(0, 0, 0, 0);
+  day.setDate(day.getDate() - 1);
 
   const nextDay = new Date(day);
   nextDay.setDate(nextDay.getDate() + 1);
 
-  const dayString = day.toISOString().slice(0, 10);
+  const dayString = nextDay.toISOString().slice(0, 10);
 
   // every branch, flagged by whether it owns a main repository
   const branches = await prisma.branch.findMany({
@@ -204,7 +205,7 @@ export const snapshotDailyProfits = async (targetDay?: Date) => {
 
 export const startDailyProfitCron = () => {
   cron.schedule(
-    "01 0 * * *",
+    "02 01 * * *",
     async () => {
       try {
         await snapshotDailyProfits();
