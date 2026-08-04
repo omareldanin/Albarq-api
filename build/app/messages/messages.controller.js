@@ -232,11 +232,13 @@ class MessagesController {
     };
     fetchChatsPage = (params) => {
         const { orderWhere, unRead, userId, page, size } = params;
+        const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         const messagesFilter = unRead === "true"
             ? {
                 some: {
-                    NOT: { seenBy: { some: { userId } } },
                     createdById: { not: userId },
+                    createdAt: { gt: since },
+                    NOT: { seenBy: { some: { userId } } },
                 },
             }
             : { some: {} };
@@ -258,7 +260,7 @@ class MessagesController {
                     },
                 },
             },
-        }, { page, size, withCount: true });
+        }, { page, size, withCount: unRead !== "true" });
     };
     fetchUnseenCounts = async (params) => {
         const { pageChatIds, userId, orderScope } = params;
