@@ -158,6 +158,174 @@ export class MessagesController {
     };
   };
 
+  private buildInquiryBranchORSql = (
+    user: loggedInUserType,
+    scope: InquiryScope,
+  ): Prisma.Sql => {
+    const {orderType, inquiryBranchesIDs} = scope;
+    const hasBranches = !!inquiryBranchesIDs?.length;
+
+    if (!orderType && user.mainRepository && hasBranches) {
+      return Prisma.sql`(
+      o."branchId" = ANY(${inquiryBranchesIDs}::int[])
+      OR EXISTS (
+        SELECT 1 FROM "Client" cl
+        WHERE cl."id" = o."clientId"
+          AND cl."branchId" = ANY(${inquiryBranchesIDs}::int[])
+      )
+    )`;
+    }
+
+    if (orderType === "receiving" && user.mainRepository && hasBranches) {
+      return Prisma.sql`o."branchId" = ANY(${inquiryBranchesIDs}::int[])`;
+    }
+
+    if (orderType === "forwarded" && user.mainRepository && hasBranches) {
+      return Prisma.sql`EXISTS (
+      SELECT 1 FROM "Client" cl
+      WHERE cl."id" = o."clientId"
+        AND cl."branchId" = ANY(${inquiryBranchesIDs}::int[])
+    )`;
+    }
+
+    return Prisma.sql`(
+    o."branchId" = ${user.branchId}
+    OR EXISTS (
+      SELECT 1 FROM "Client" cl
+      WHERE cl."id" = o."clientId" AND cl."branchId" = ${user.branchId}
+    )
+  )`;
+  };
+
+  private buildOrderScopeSql = (params: {
+    user: loggedInUserType;
+    employee: {branchId?: number | null; orderStatus?: OrderStatus[]} | null;
+    scope: InquiryScope;
+    status: string | undefined;
+    inquiryStoresIDs?: number[];
+    includeStatusAndDeleted: boolean;
+  }): Prisma.Sql => {
+    const {
+      user,
+      employee,
+      scope,
+      status,
+      inquiryStoresIDs,
+      includeStatusAndDeleted,
+    } = params;
+
+    const isClientAssistant =
+      user.role === "CLIENT_ASSISTANT" ||
+      user.role === "EMPLOYEE_CLIENT_ASSISTANT";
+
+    const conditions: Prisma.Sql[] = [];
+
+    // ---------- INQUIRY_EMPLOYEE ----------
+    if (user.role === "INQUIRY_EMPLOYEE") {
+      // status
+      if (status && status !== "null") {
+        conditions.push(Prisma.sql`o."status" = ${status}::"OrderStatus"`);
+      } else if (scope.inquiryStatuses?.length) {
+        conditions.push(
+          Prisma.sql`o."status" = ANY(${scope.inquiryStatuses}::"OrderStatus"[])`,
+        );
+      }
+
+      // governorate
+      if (scope.inquiryGovernorates?.length) {
+        conditions.push(
+          Prisma.sql`o."governorate" = ANY(${scope.inquiryGovernorates}::"Governorate"[])`,
+        );
+      }
+
+      // the branch OR (mirrors buildInquiryBranchOR)
+      conditions.push(this.buildInquiryBranchORSql(user, scope));
+
+      // stores
+      if (inquiryStoresIDs?.length) {
+        conditions.push(
+          Prisma.sql`o."storeId" = ANY(${inquiryStoresIDs}::int[])`,
+        );
+      }
+
+      // company OR forwardedFrom
+      conditions.push(
+        Prisma.sql`(o."companyId" = ${user.companyID} OR o."forwardedFromId" = ${user.companyID})`,
+      );
+
+      // locations
+      if (scope.inquiryLocationsIDs?.length) {
+        conditions.push(
+          Prisma.sql`o."locationId" = ANY(${scope.inquiryLocationsIDs}::int[])`,
+        );
+      }
+
+      if (includeStatusAndDeleted) {
+        conditions.push(Prisma.sql`o."deleted" = false`);
+      }
+
+      return conditions.length
+        ? Prisma.join(conditions, " AND ")
+        : Prisma.sql`true`;
+    }
+
+    // ---------- non-inquiry roles ----------
+    if (includeStatusAndDeleted) {
+      conditions.push(Prisma.sql`o."deleted" = false`);
+
+      if (status && status !== "null") {
+        conditions.push(Prisma.sql`o."status" = ${status}::"OrderStatus"`);
+      } else if (isClientAssistant && employee?.orderStatus?.length) {
+        conditions.push(
+          Prisma.sql`o."status" = ANY(${employee.orderStatus}::"OrderStatus"[])`,
+        );
+      }
+    }
+
+    if (user.role === "CLIENT") {
+      conditions.push(Prisma.sql`o."clientId" = ${user.id}`);
+    }
+
+    if (user.companyID) {
+      conditions.push(Prisma.sql`o."companyId" = ${user.companyID}`);
+    }
+
+    const usesBranchFilter =
+      user.role !== "COMPANY_MANAGER" &&
+      !isClientAssistant &&
+      !user.mainRepository &&
+      user.role !== "DELIVERY_AGENT" &&
+      user.role !== "BRANCH_MANAGER";
+
+    if (usesBranchFilter && employee?.branchId) {
+      conditions.push(Prisma.sql`o."branchId" = ${employee.branchId}`);
+    }
+
+    if (user.role === "DELIVERY_AGENT") {
+      conditions.push(Prisma.sql`o."deliveryAgentId" = ${user.id}`);
+    }
+
+    if (isClientAssistant && inquiryStoresIDs?.length) {
+      conditions.push(
+        Prisma.sql`o."storeId" = ANY(${inquiryStoresIDs}::int[])`,
+      );
+    }
+
+    if (user.role === "BRANCH_MANAGER" && employee?.branchId) {
+      conditions.push(Prisma.sql`(
+      o."branchId" = ${employee.branchId}
+      OR EXISTS (
+        SELECT 1 FROM "Client" cl
+        WHERE cl."id" = o."clientId" AND cl."branchId" = ${employee.branchId}
+      )
+    )`);
+    }
+
+    return conditions.length
+      ? Prisma.join(conditions, " AND ")
+      : Prisma.sql`true`;
+  };
+
   private fetchChatsPage = (params: {
     orderWhere: Prisma.OrderWhereInput;
     unRead?: string;
@@ -203,12 +371,13 @@ export class MessagesController {
 
   private fetchUnseenCounts = async (params: {
     pageChatIds: number[];
-    globalOrderWhere: Prisma.OrderWhereInput;
     userId: number;
+    orderScope: Prisma.Sql;
   }) => {
-    const {pageChatIds, globalOrderWhere, userId} = params;
+    const {pageChatIds, userId, orderScope} = params;
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-    const [perChat, total] = await Promise.all([
+    const [perChat, totalRows] = await Promise.all([
       pageChatIds.length
         ? prisma.message.groupBy({
             by: ["chatId"],
@@ -216,6 +385,7 @@ export class MessagesController {
             where: {
               chatId: {in: pageChatIds},
               createdById: {not: userId},
+              createdAt: {gt: since},
               NOT: {seenBy: {some: {userId}}},
             },
           })
@@ -223,16 +393,25 @@ export class MessagesController {
             [] as {chatId: number | null; _count: {id: number}}[],
           ),
 
-      prisma.message.count({
-        where: {
-          createdById: {not: userId},
-          NOT: {seenBy: {some: {userId}}},
-          Chat: {Order: globalOrderWhere},
-        },
-      }),
+      prisma.$queryRaw<{count: bigint}[]>`
+      SELECT COUNT(*) AS count FROM (
+        SELECT 1
+        FROM "Message" m
+        JOIN "Chat" c ON c."id" = m."chatId"
+        JOIN "Order" o ON o."id" = c."orderId"
+        WHERE m."createdById" <> ${userId}
+          AND m."createdAt" > ${since}
+          AND ${orderScope}
+          AND NOT EXISTS (
+            SELECT 1 FROM "MessageSeen" ms
+            WHERE ms."messageId" = m."id" AND ms."userId" = ${userId}
+          )
+        LIMIT 100
+      ) sub;
+    `,
     ]);
 
-    return {perChat, total};
+    return {perChat, total: Number(totalRows[0]?.count ?? 0)};
   };
 
   async getOrderInquiryEmployees(data: {orderID: string | undefined}) {
@@ -578,14 +757,15 @@ export class MessagesController {
       inquiryStoresIDs,
       includeStatusAndDeleted: true,
     });
-    const orderWhereBare = this.buildOrderWhere({
-      user,
-      employee,
-      scope,
-      status,
-      inquiryStoresIDs,
-      includeStatusAndDeleted: false,
-    });
+
+    // const orderWhereBare = this.buildOrderWhere({
+    //   user,
+    //   employee,
+    //   scope,
+    //   status,
+    //   inquiryStoresIDs,
+    //   includeStatusAndDeleted: false,
+    // });
 
     // page of chats
     const chats = await this.fetchChatsPage({
@@ -599,10 +779,19 @@ export class MessagesController {
     // unseen counts
     const pageChatIds = chats.data.map((c) => c.id);
 
+    const orderScopeSql = this.buildOrderScopeSql({
+      user,
+      employee,
+      scope,
+      status,
+      inquiryStoresIDs,
+      includeStatusAndDeleted: false, // matches orderWhereBare
+    });
+
     const {perChat, total} = await this.fetchUnseenCounts({
       pageChatIds,
-      globalOrderWhere: orderWhereBare,
       userId: user.id,
+      orderScope: orderScopeSql,
     });
 
     const chatsWithStats = chats.data.map((e) => ({
@@ -833,9 +1022,10 @@ export class MessagesController {
   getUserChatStatics = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
     const {page, status, unRead} = req.query;
+
     const chats = await this.getUserChats(
       loggedInUser,
-      15,
+      25,
       page ? +page : 1,
       typeof status === "string" ? status : undefined,
       unRead + "",
