@@ -3922,7 +3922,6 @@ export class OrdersRepository {
         _count: {id: true},
         where: {
           ...filtersReformed,
-          ...(isBranchScoped ? [{OR: statusReportOR}] : []),
           deliveryDate:
             role === "DELIVERY_AGENT"
               ? {gte: new Date(Date.now() - 22 * 60 * 60 * 1000)}
@@ -3946,7 +3945,9 @@ export class OrdersRepository {
     return {
       ...result,
       todayOrdersStatistics:
-        !data.filters.orderType && data.loggedInUser.role === "BRANCH_MANAGER"
+        data.filters.orderType !== "forwardedAll" &&
+        data.filters.orderType !== "receivedAll" &&
+        data.loggedInUser.role === "BRANCH_MANAGER"
           ? {
               totalCost: 0,
               count: 0,
@@ -4418,7 +4419,9 @@ export class OrdersRepository {
     return {
       ...result,
       todayOrdersStatistics:
-        !data.filters.orderType && data.loggedInUser.role === "BRANCH_MANAGER"
+        data.filters.orderType !== "forwardedAll" &&
+        data.filters.orderType !== "receivedAll" &&
+        data.loggedInUser.role === "BRANCH_MANAGER"
           ? {
               totalCost: 0,
               count: 0,

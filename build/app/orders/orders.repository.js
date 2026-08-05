@@ -3330,7 +3330,6 @@ class OrdersRepository {
                 _count: { id: true },
                 where: {
                     ...filtersReformed,
-                    ...(isBranchScoped ? [{ OR: statusReportOR }] : []),
                     deliveryDate: role === "DELIVERY_AGENT"
                         ? { gte: new Date(Date.now() - 22 * 60 * 60 * 1000) }
                         : undefined,
@@ -3348,7 +3347,9 @@ class OrdersRepository {
         await redis_1.redis.set(cacheKey, JSON.stringify(result), "EX", 60);
         return {
             ...result,
-            todayOrdersStatistics: !data.filters.orderType && data.loggedInUser.role === "BRANCH_MANAGER"
+            todayOrdersStatistics: data.filters.orderType !== "forwardedAll" &&
+                data.filters.orderType !== "receivedAll" &&
+                data.loggedInUser.role === "BRANCH_MANAGER"
                 ? {
                     totalCost: 0,
                     count: 0,
@@ -3699,7 +3700,9 @@ class OrdersRepository {
         await redis_1.redis.set(cacheKey, JSON.stringify(result), "EX", 60);
         return {
             ...result,
-            todayOrdersStatistics: !data.filters.orderType && data.loggedInUser.role === "BRANCH_MANAGER"
+            todayOrdersStatistics: data.filters.orderType !== "forwardedAll" &&
+                data.filters.orderType !== "receivedAll" &&
+                data.loggedInUser.role === "BRANCH_MANAGER"
                 ? {
                     totalCost: 0,
                     count: 0,
