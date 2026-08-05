@@ -178,6 +178,7 @@ exports.orderSelect = {
             company: {
                 select: {
                     name: true,
+                    logo: true,
                 },
             },
         },
@@ -488,6 +489,7 @@ const orderReform = (order) => {
             name: order.client.user.name,
             phone: order.client.user.phone,
             company: order.client.company.name,
+            logo: order.client.company.logo,
             showNumbers: order.client.showNumbers,
             showDeliveryNumber: order.client.showDeliveryNumber,
             branch: order.client.branch?.name,

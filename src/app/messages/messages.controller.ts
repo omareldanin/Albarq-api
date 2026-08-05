@@ -806,8 +806,8 @@ export class MessagesController {
 
     return {
       totalUnSeened: total,
-      pageCounts: chats.pagesCount,
-      count: chats.dataCount,
+      pageCounts: chats.pagesCount ?? 1,
+      count: chats.dataCount ?? 1,
       page: chats.currentPage,
       chats: chatsWithStats,
     };
