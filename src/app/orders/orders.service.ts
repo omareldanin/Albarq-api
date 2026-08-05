@@ -802,6 +802,7 @@ export class OrdersService {
 
       if (
         oldOrderData.forwardedFromId === 84 ||
+        oldOrderData.forwardedFromId === 89 ||
         oldOrderData.forwardedFromId === 87
       ) {
         await updateExternalOrderStatus(
