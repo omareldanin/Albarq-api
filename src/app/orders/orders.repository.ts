@@ -3935,7 +3935,19 @@ export class OrdersRepository {
     const result = statisticsReformed({
       ordersStatisticsByStatus,
       ordersStatisticsByGovernorate,
-      todayOrdersStatistics,
+      todayOrdersStatistics:
+        data.filters.orderType !== "forwardedAll" &&
+        data.filters.orderType !== "receivedAll" &&
+        data.loggedInUser.role === "BRANCH_MANAGER"
+          ? {
+              _count: {
+                id: 0,
+              },
+              _sum: {
+                totalCost: 0,
+              },
+            }
+          : todayOrdersStatistics,
       allOrdersStatisticsWithoutDeliveryReport,
       allOrdersStatisticsWithoutClientReport,
     });
@@ -3944,15 +3956,6 @@ export class OrdersRepository {
 
     return {
       ...result,
-      todayOrdersStatistics:
-        data.filters.orderType !== "forwardedAll" &&
-        data.filters.orderType !== "receivedAll" &&
-        data.loggedInUser.role === "BRANCH_MANAGER"
-          ? {
-              totalCost: 0,
-              count: 0,
-            }
-          : result.todayOrdersStatistics,
     };
   }
 
@@ -4411,22 +4414,26 @@ export class OrdersRepository {
       ordersStatisticsByGovernorate,
       allOrdersStatisticsWithoutClientReport,
       allOrdersStatisticsWithoutDeliveryReport,
-      todayOrdersStatistics,
+      todayOrdersStatistics:
+        data.filters.orderType !== "forwardedAll" &&
+        data.filters.orderType !== "receivedAll" &&
+        data.loggedInUser.role === "BRANCH_MANAGER"
+          ? {
+              _count: {
+                id: 0,
+              },
+              _sum: {
+                totalCost: 0,
+              },
+            }
+          : todayOrdersStatistics,
     });
 
     await redis.set(cacheKey, JSON.stringify(result), "EX", 60);
 
     return {
       ...result,
-      todayOrdersStatistics:
-        data.filters.orderType !== "forwardedAll" &&
-        data.filters.orderType !== "receivedAll" &&
-        data.loggedInUser.role === "BRANCH_MANAGER"
-          ? {
-              totalCost: 0,
-              count: 0,
-            }
-          : result.todayOrdersStatistics,
+      todayOrdersStatistics: result.todayOrdersStatistics,
     };
   }
 

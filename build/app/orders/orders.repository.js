@@ -3340,21 +3340,24 @@ class OrdersRepository {
         const result = (0, orders_responses_1.statisticsReformed)({
             ordersStatisticsByStatus,
             ordersStatisticsByGovernorate,
-            todayOrdersStatistics,
+            todayOrdersStatistics: data.filters.orderType !== "forwardedAll" &&
+                data.filters.orderType !== "receivedAll" &&
+                data.loggedInUser.role === "BRANCH_MANAGER"
+                ? {
+                    _count: {
+                        id: 0,
+                    },
+                    _sum: {
+                        totalCost: 0,
+                    },
+                }
+                : todayOrdersStatistics,
             allOrdersStatisticsWithoutDeliveryReport,
             allOrdersStatisticsWithoutClientReport,
         });
         await redis_1.redis.set(cacheKey, JSON.stringify(result), "EX", 60);
         return {
             ...result,
-            todayOrdersStatistics: data.filters.orderType !== "forwardedAll" &&
-                data.filters.orderType !== "receivedAll" &&
-                data.loggedInUser.role === "BRANCH_MANAGER"
-                ? {
-                    totalCost: 0,
-                    count: 0,
-                }
-                : result.todayOrdersStatistics,
         };
     }
     async getOrdersStatisticsV2(data) {
@@ -3695,19 +3698,23 @@ class OrdersRepository {
             ordersStatisticsByGovernorate,
             allOrdersStatisticsWithoutClientReport,
             allOrdersStatisticsWithoutDeliveryReport,
-            todayOrdersStatistics,
-        });
-        await redis_1.redis.set(cacheKey, JSON.stringify(result), "EX", 60);
-        return {
-            ...result,
             todayOrdersStatistics: data.filters.orderType !== "forwardedAll" &&
                 data.filters.orderType !== "receivedAll" &&
                 data.loggedInUser.role === "BRANCH_MANAGER"
                 ? {
-                    totalCost: 0,
-                    count: 0,
+                    _count: {
+                        id: 0,
+                    },
+                    _sum: {
+                        totalCost: 0,
+                    },
                 }
-                : result.todayOrdersStatistics,
+                : todayOrdersStatistics,
+        });
+        await redis_1.redis.set(cacheKey, JSON.stringify(result), "EX", 60);
+        return {
+            ...result,
+            todayOrdersStatistics: result.todayOrdersStatistics,
         };
     }
     async getOrderTimeline(data) {
