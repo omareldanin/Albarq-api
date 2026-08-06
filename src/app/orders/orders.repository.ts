@@ -237,16 +237,20 @@ export class OrdersRepository {
     if (order?.branch?.id === order?.client.branchId) {
       insideProfit = (order?.deliveryCost ?? 0) - deliveryAgentCost;
     } else if (order?.branch?.id !== order?.client.branchId) {
-      const branchsCost = await prisma.branch.findMany({
-        where: {
-          id: {in: [order?.branch?.id!!, order?.client.branchId!!]},
-        },
-        select: {
-          id: true,
-          receivingDeliveryCosts: true,
-          forwardedDeliveryCosts: true,
-        },
-      });
+      const branchIds = [order?.branch?.id, order?.client.branchId].filter(
+        (id): id is number => id != null,
+      );
+
+      const branchsCost = branchIds.length
+        ? await prisma.branch.findMany({
+            where: {id: {in: branchIds}},
+            select: {
+              id: true,
+              receivingDeliveryCosts: true,
+              forwardedDeliveryCosts: true,
+            },
+          })
+        : [];
       const receivingDeliveryCosts = branchsCost.find(
         (b) => b.id === order?.branch?.id,
       )?.forwardedDeliveryCosts as {
