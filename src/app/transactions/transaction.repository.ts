@@ -809,7 +809,6 @@ export class TransactionsRepository {
         ? {
             total:
               (insideBranchNet._sum.forwardedBranchNet ?? 0) -
-              (insideBranchNet._sum.deliveryAgentNet ?? 0) -
               (insideBranchNet._sum.receivingBranchNet ?? 0),
             count: insideBranchNet._count.id,
           }
