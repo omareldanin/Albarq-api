@@ -125,7 +125,7 @@ class BranchesRepository {
             const paginatedBranches = await db_1.prisma.branch.findManyPaginated({
                 where,
                 orderBy: {
-                    name: "asc",
+                    id: "asc",
                 },
                 select: branches_responses_1.branchSelect,
             }, {

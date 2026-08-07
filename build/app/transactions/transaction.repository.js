@@ -62,7 +62,7 @@ class TransactionsRepository {
                     },
                 }),
             db_1.prisma.order.aggregate({
-                _sum: { receivingBranchNet: true },
+                _sum: { receivingBranchNet: true, deliveryAgentNet: true },
                 _count: { id: true },
                 where: {
                     companyId,
@@ -137,9 +137,7 @@ class TransactionsRepository {
         }
         const insideBranchProfit = applyBranchScope
             ? {
-                total: (insideBranchNet._sum.deliveryCost ?? 0) -
-                    (insideBranchNet._sum.forwardedBranchNet ?? 0) -
-                    (insideBranchNet._sum.deliveryAgentNet ?? 0) -
+                total: (insideBranchNet._sum.forwardedBranchNet ?? 0) -
                     (insideBranchNet._sum.receivingBranchNet ?? 0),
                 count: insideBranchNet._count.id,
             }
@@ -148,18 +146,19 @@ class TransactionsRepository {
                 count: insideBranchNet._count.id,
             };
         const receivedBranchProfit = {
-            total: receivedBranchNet._sum.receivingBranchNet ?? 0,
+            total: (receivedBranchNet._sum.receivingBranchNet ?? 0) -
+                (receivedBranchNet._sum.deliveryAgentNet ?? 0),
             count: receivedBranchNet._count.id,
         };
         const forwardedBranchProfit = applyBranchScope
             ? {
                 total: (forwardedBranchNet._sum.deliveryCost ?? 0) -
-                    (forwardedBranchNet._sum.receivingBranchNet ?? 0) -
-                    (forwardedBranchNet._sum.deliveryAgentNet ?? 0),
+                    (forwardedBranchNet._sum.receivingBranchNet ?? 0),
                 count: forwardedBranchNet._count.id,
             }
             : {
-                total: forwardedBranchNet._sum.forwardedBranchNet ?? 0,
+                total: (forwardedBranchNet._sum.deliveryCost ?? 0) -
+                    (forwardedBranchNet._sum.forwardedBranchNet ?? 0),
                 count: forwardedBranchNet._count.id,
             };
         return {
@@ -572,7 +571,7 @@ class TransactionsRepository {
                     },
                 }),
             db_1.prisma.order.aggregate({
-                _sum: { receivingBranchNet: true },
+                _sum: { receivingBranchNet: true, deliveryAgentNet: true },
                 _count: { id: true },
                 where: {
                     companyId: filters.companyId,
@@ -677,8 +676,7 @@ class TransactionsRepository {
             },
             insideBranchNet: applyBranchScope
                 ? {
-                    total: (insideBranchNet._sum.paidAmount ?? 0) -
-                        (insideBranchNet._sum.forwardedBranchNet ?? 0) -
+                    total: (insideBranchNet._sum.forwardedBranchNet ?? 0) -
                         (insideBranchNet._sum.deliveryAgentNet ?? 0) -
                         (insideBranchNet._sum.receivingBranchNet ?? 0),
                     count: insideBranchNet._count.id,
@@ -688,7 +686,8 @@ class TransactionsRepository {
                     count: insideBranchNet._count.id,
                 },
             receivedBranchNet: {
-                total: receivedBranchNet._sum.receivingBranchNet,
+                total: (receivedBranchNet._sum.receivingBranchNet ?? 0) -
+                    (receivedBranchNet._sum.deliveryAgentNet ?? 0),
                 count: receivedBranchNet._count.id,
             },
             forwardedBranchNet: applyBranchScope
@@ -699,8 +698,8 @@ class TransactionsRepository {
                     count: forwardedBranchNet._count.id,
                 }
                 : {
-                    total: (forwardedBranchNet._sum.forwardedBranchNet ?? 0) -
-                        (forwardedBranchNet._sum.clientNet ?? 0),
+                    total: (forwardedBranchNet._sum.deliveryCost ?? 0) -
+                        (forwardedBranchNet._sum.forwardedBranchNet ?? 0),
                     count: forwardedBranchNet._count.id,
                 },
         };
@@ -921,7 +920,7 @@ class TransactionsRepository {
                     },
                 }),
             db_1.prisma.order.aggregate({
-                _sum: { receivingBranchNet: true },
+                _sum: { receivingBranchNet: true, deliveryAgentNet: true },
                 _count: { id: true },
                 where: {
                     companyId: filters.companyId,
@@ -1025,8 +1024,7 @@ class TransactionsRepository {
             },
             insideBranchNet: applyBranchScope
                 ? {
-                    total: (insideBranchNet._sum.paidAmount ?? 0) -
-                        (insideBranchNet._sum.forwardedBranchNet ?? 0) -
+                    total: (insideBranchNet._sum.forwardedBranchNet ?? 0) -
                         (insideBranchNet._sum.deliveryAgentNet ?? 0) -
                         (insideBranchNet._sum.receivingBranchNet ?? 0),
                     count: insideBranchNet._count.id,
@@ -1036,7 +1034,8 @@ class TransactionsRepository {
                     count: insideBranchNet._count.id,
                 },
             receivedBranchNet: {
-                total: receivedBranchNet._sum.receivingBranchNet,
+                total: (receivedBranchNet._sum.receivingBranchNet ?? 0) -
+                    (receivedBranchNet._sum.deliveryAgentNet ?? 0),
                 count: receivedBranchNet._count.id,
             },
             forwardedBranchNet: applyBranchScope
@@ -1047,8 +1046,8 @@ class TransactionsRepository {
                     count: forwardedBranchNet._count.id,
                 }
                 : {
-                    total: (forwardedBranchNet._sum.forwardedBranchNet ?? 0) -
-                        (forwardedBranchNet._sum.clientNet ?? 0),
+                    total: (forwardedBranchNet._sum.deliveryCost ?? 0) -
+                        (forwardedBranchNet._sum.forwardedBranchNet ?? 0),
                     count: forwardedBranchNet._count.id,
                 },
         };

@@ -162,16 +162,13 @@ class OrdersRepository {
             const receivingDeliveryCosts = branchsCost.find((b) => b.id === order?.branch?.id)?.forwardedDeliveryCosts;
             const forwardedDeliveryCosts = branchsCost.find((b) => b.id === order?.client.branchId)?.receivingDeliveryCosts;
             receivingBranchNet =
-                (receivingDeliveryCosts.find((governorateDeliveryCost) => {
+                receivingDeliveryCosts.find((governorateDeliveryCost) => {
                     return governorateDeliveryCost.governorate === order?.governorate;
-                })?.cost ?? 0) - deliveryAgentCost;
+                })?.cost ?? 0;
             forwardedProfit =
-                (order?.deliveryCost === 0 || !order?.deliveryCost
-                    ? 5000
-                    : order?.deliveryCost) -
-                    (forwardedDeliveryCosts.find((governorateDeliveryCost) => {
-                        return governorateDeliveryCost.governorate === order?.governorate;
-                    })?.cost ?? 0);
+                forwardedDeliveryCosts.find((governorateDeliveryCost) => {
+                    return governorateDeliveryCost.governorate === order?.governorate;
+                })?.cost ?? 0;
         }
         return {
             deliveryAgentCost,
@@ -2669,10 +2666,10 @@ class OrdersRepository {
                 if (!cost)
                     continue;
                 if (data.branchReportType === "forwarded") {
-                    forwardedBranchNet = order?.deliveryCost - cost;
+                    forwardedBranchNet = cost;
                 }
                 else if (data.branchReportType === "received") {
-                    receivingBranchNet = cost - (order?.deliveryAgentNet ?? 0);
+                    receivingBranchNet = cost;
                 }
                 updatedOrders.push({
                     id: order?.id,

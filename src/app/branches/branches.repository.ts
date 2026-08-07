@@ -156,7 +156,7 @@ export class BranchesRepository {
         {
           where,
           orderBy: {
-            name: "asc",
+            id: "asc",
           },
           select: branchSelect,
         },

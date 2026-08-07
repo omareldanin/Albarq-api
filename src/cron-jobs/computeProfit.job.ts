@@ -67,6 +67,7 @@ const computeBranchDayProfit = async (params: {
   const receivedRows = await prisma.$queryRaw<ProfitRow[]>`
     SELECT
       SUM(o."receivingBranchNet") AS "receivingBranchNet",
+      SUM(o."deliveryAgentNet")   AS "deliveryAgentNet",
       COUNT(o."id")               AS "count"
     FROM "Order" o
     JOIN "Client" c ON c."id" = o."clientId"
@@ -98,19 +99,19 @@ const computeBranchDayProfit = async (params: {
   const forwarded = forwardedRows[0];
 
   const insideProfit = applyBranchScope
-    ? n(inside.deliveryCost) -
-      n(inside.forwardedBranchNet) -
+    ? n(inside.forwardedBranchNet) -
       n(inside.deliveryAgentNet) -
       n(inside.receivingBranchNet)
     : n(inside.insideBranchNet);
 
-  const receivedProfit = n(received.receivingBranchNet);
+  const receivedProfit =
+    n(received.receivingBranchNet) - n(received.deliveryAgentNet);
 
   const forwardedProfit = applyBranchScope
     ? n(forwarded.deliveryCost) -
       n(forwarded.receivingBranchNet) -
       n(forwarded.deliveryAgentNet)
-    : n(forwarded.forwardedBranchNet);
+    : n(forwarded.deliveryCost) - n(forwarded.forwardedBranchNet);
 
   return {
     insideProfit,
