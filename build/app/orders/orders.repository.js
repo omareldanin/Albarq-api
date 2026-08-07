@@ -141,7 +141,7 @@ class OrdersRepository {
         }
         return deliveryCost;
     }
-    async getProfits(order, paidAmount) {
+    async getProfits(order) {
         let insideProfit = 0, forwardedProfit = 0, receivingBranchNet = 0, deliveryAgentCost = 0;
         deliveryAgentCost = order?.deliveryAgent?.deliveryCost || 0;
         if (order?.branch?.id === order?.client.branchId) {
@@ -166,7 +166,9 @@ class OrdersRepository {
                     return governorateDeliveryCost.governorate === order?.governorate;
                 })?.cost ?? 0) - deliveryAgentCost;
             forwardedProfit =
-                paidAmount -
+                (order?.deliveryCost === 0 || !order?.deliveryCost
+                    ? 5000
+                    : order?.deliveryCost) -
                     (forwardedDeliveryCosts.find((governorateDeliveryCost) => {
                         return governorateDeliveryCost.governorate === order?.governorate;
                     })?.cost ?? 0);
@@ -2667,7 +2669,7 @@ class OrdersRepository {
                 if (!cost)
                     continue;
                 if (data.branchReportType === "forwarded") {
-                    forwardedBranchNet = order?.paidAmount - cost;
+                    forwardedBranchNet = order?.deliveryCost - cost;
                 }
                 else if (data.branchReportType === "received") {
                     receivingBranchNet = cost - (order?.deliveryAgentNet ?? 0);
@@ -2809,7 +2811,7 @@ class OrdersRepository {
             data.orderData.status === "REPLACED" ||
             data.orderData.status === "PARTIALLY_RETURNED") {
             newDeliveryCost = await this.getDeliverCost(orderData?.client.id, data.orderData.governorate || orderData.governorate, data.orderData.branchID ? data.orderData.branchID : orderData.branch.id);
-            profits = await this.getProfits(orderData, data.orderData.paidAmount || orderData.paidAmount);
+            profits = await this.getProfits(orderData);
         }
         if (data.orderData.paidAmount) {
             // calculate client net

@@ -226,7 +226,7 @@ export class OrdersRepository {
 
     return deliveryCost;
   }
-  async getProfits(order: ReturnType<typeof orderReform>, paidAmount: number) {
+  async getProfits(order: ReturnType<typeof orderReform>) {
     let insideProfit = 0,
       forwardedProfit = 0,
       receivingBranchNet = 0,
@@ -276,7 +276,9 @@ export class OrdersRepository {
         )?.cost ?? 0) - deliveryAgentCost;
 
       forwardedProfit =
-        paidAmount -
+        (order?.deliveryCost === 0 || !order?.deliveryCost
+          ? 5000
+          : order?.deliveryCost) -
         (forwardedDeliveryCosts.find(
           (governorateDeliveryCost: {
             governorate: Governorate;
@@ -3074,7 +3076,7 @@ export class OrdersRepository {
         if (!cost) continue;
 
         if (data.branchReportType === "forwarded") {
-          forwardedBranchNet = order?.paidAmount!! - cost;
+          forwardedBranchNet = order?.deliveryCost!! - cost;
         } else if (data.branchReportType === "received") {
           receivingBranchNet = cost - (order?.deliveryAgentNet ?? 0);
         }
@@ -3267,10 +3269,7 @@ export class OrdersRepository {
         data.orderData.governorate || orderData.governorate,
         data.orderData.branchID ? data.orderData.branchID : orderData.branch.id,
       );
-      profits = await this.getProfits(
-        orderData,
-        data.orderData.paidAmount || orderData.paidAmount,
-      );
+      profits = await this.getProfits(orderData);
     }
 
     if (data.orderData.paidAmount) {

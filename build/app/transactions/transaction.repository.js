@@ -34,7 +34,7 @@ class TransactionsRepository {
             applyBranchScope
                 ? Promise.resolve({
                     _sum: {
-                        paidAmount: 0,
+                        deliveryCost: 0,
                         forwardedBranchNet: 0,
                         receivingBranchNet: 0,
                         deliveryAgentNet: 0,
@@ -44,7 +44,7 @@ class TransactionsRepository {
                 })
                 : db_1.prisma.order.aggregate({
                     _sum: {
-                        paidAmount: true,
+                        deliveryCost: true,
                         forwardedBranchNet: true,
                         receivingBranchNet: true,
                         deliveryAgentNet: true,
@@ -97,7 +97,7 @@ class TransactionsRepository {
         if (applyBranchScope) {
             const rows = await db_1.prisma.$queryRaw `
         SELECT
-          SUM(o."paidAmount")         AS "paidAmount",
+          SUM(o."deliveryCost")         AS "deliveryCost",
           SUM(o."forwardedBranchNet") AS "forwardedBranchNet",
           SUM(o."receivingBranchNet") AS "receivingBranchNet",
           SUM(o."deliveryAgentNet")   AS "deliveryAgentNet",
@@ -116,7 +116,9 @@ class TransactionsRepository {
             const result = rows[0];
             insideBranchNet = {
                 _sum: {
-                    paidAmount: result.paidAmount ? Number(result.paidAmount) : null,
+                    deliveryCost: result.deliveryCost
+                        ? Number(result.deliveryCost)
+                        : null,
                     forwardedBranchNet: result.forwardedBranchNet
                         ? Number(result.forwardedBranchNet)
                         : null,
@@ -135,7 +137,7 @@ class TransactionsRepository {
         }
         const insideBranchProfit = applyBranchScope
             ? {
-                total: (insideBranchNet._sum.paidAmount ?? 0) -
+                total: (insideBranchNet._sum.deliveryCost ?? 0) -
                     (insideBranchNet._sum.forwardedBranchNet ?? 0) -
                     (insideBranchNet._sum.deliveryAgentNet ?? 0) -
                     (insideBranchNet._sum.receivingBranchNet ?? 0),
@@ -157,8 +159,7 @@ class TransactionsRepository {
                 count: forwardedBranchNet._count.id,
             }
             : {
-                total: (forwardedBranchNet._sum.forwardedBranchNet ?? 0) -
-                    (forwardedBranchNet._sum.clientNet ?? 0),
+                total: forwardedBranchNet._sum.forwardedBranchNet ?? 0,
                 count: forwardedBranchNet._count.id,
             };
         return {
