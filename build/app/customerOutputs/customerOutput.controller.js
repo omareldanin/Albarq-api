@@ -17,26 +17,43 @@ class CustomerOutputController {
     saveOrderInCache = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const loggedInUser = res.locals.user;
         const { orderId, companyId, type, repository, storeId } = req.body;
-        const checkOrders = await db_1.prisma.order.findMany({
-            where: {
-                OR: [
-                    {
-                        receiptNumber: orderId,
-                    },
-                    {
-                        id: orderId,
-                    },
-                ],
-                status: { in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"] },
-                companyId: loggedInUser.companyID,
-                confirmed: true,
-                deleted: false,
-            },
-            select: orders_responses_1.orderSelect,
-        });
-        if (checkOrders.length === 0) {
+        const [byId, byReceipt] = await Promise.all([
+            db_1.prisma.order.findFirst({
+                where: {
+                    id: orderId,
+                    status: { in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"] },
+                    OR: [
+                        { companyId: loggedInUser.companyID },
+                        { forwardedFromId: loggedInUser.companyID },
+                    ],
+                    deleted: false,
+                },
+                select: { id: true },
+            }),
+            db_1.prisma.order.findMany({
+                where: {
+                    receiptNumber: orderId,
+                    status: { in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"] },
+                    OR: [
+                        { companyId: loggedInUser.companyID },
+                        { forwardedFromId: loggedInUser.companyID },
+                    ],
+                    deleted: false,
+                },
+                select: { id: true },
+            }),
+        ]);
+        // dedupe — the id lookup may return a row that also matched by receipt
+        const matchedIds = [
+            ...new Set([byId?.id, ...byReceipt.map((o) => o.id)].filter(Boolean)),
+        ];
+        if (matchedIds.length === 0) {
             throw new AppError_1.AppError("الطلب غير موجود", 404);
         }
+        const checkOrders = await db_1.prisma.order.findMany({
+            where: { id: { in: matchedIds } },
+            select: orders_responses_1.orderSelect,
+        });
         if (checkOrders.length > 1) {
             res.status(200).json({
                 multi: true,

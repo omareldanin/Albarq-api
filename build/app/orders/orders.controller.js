@@ -674,7 +674,7 @@ class OrdersController {
                 },
                 select: { id: true },
             }),
-            db_1.prisma.order.findFirst({
+            db_1.prisma.order.findMany({
                 where: {
                     receiptNumber: params.orderReceiptNumber,
                     status: {
@@ -688,7 +688,7 @@ class OrdersController {
         ]);
         // dedupe (id and receiptNumber could match the same row)
         const matchedIds = [
-            ...new Set([byId?.id, byReceipt?.id].filter(Boolean)),
+            ...new Set([byId?.id, ...byReceipt.map((o) => o.id)].filter(Boolean)),
         ];
         if (matchedIds.length === 0) {
             throw new AppError_1.AppError("الطلب غير موجود", 404);
@@ -860,7 +860,7 @@ class OrdersController {
                 },
                 select: { id: true },
             }),
-            db_1.prisma.order.findFirst({
+            db_1.prisma.order.findMany({
                 where: {
                     receiptNumber: params.orderReceiptNumber,
                     status: {
@@ -877,7 +877,7 @@ class OrdersController {
         ]);
         // dedupe (id and receiptNumber could match the same row)
         const matchedIds = [
-            ...new Set([byId?.id, byReceipt?.id].filter(Boolean)),
+            ...new Set([byId?.id, ...byReceipt.map((o) => o.id)].filter(Boolean)),
         ];
         if (matchedIds.length === 0) {
             throw new AppError_1.AppError("الطلب غير موجود", 404);

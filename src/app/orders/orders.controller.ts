@@ -766,7 +766,7 @@ export class OrdersController {
         },
         select: {id: true},
       }),
-      prisma.order.findFirst({
+      prisma.order.findMany({
         where: {
           receiptNumber: params.orderReceiptNumber,
           status: {
@@ -781,7 +781,7 @@ export class OrdersController {
 
     // dedupe (id and receiptNumber could match the same row)
     const matchedIds = [
-      ...new Set([byId?.id, byReceipt?.id].filter(Boolean)),
+      ...new Set([byId?.id, ...byReceipt.map((o) => o.id)].filter(Boolean)),
     ] as string[];
 
     if (matchedIds.length === 0) {
@@ -970,7 +970,7 @@ export class OrdersController {
         },
         select: {id: true},
       }),
-      prisma.order.findFirst({
+      prisma.order.findMany({
         where: {
           receiptNumber: params.orderReceiptNumber,
           status: {
@@ -988,7 +988,7 @@ export class OrdersController {
 
     // dedupe (id and receiptNumber could match the same row)
     const matchedIds = [
-      ...new Set([byId?.id, byReceipt?.id].filter(Boolean)),
+      ...new Set([byId?.id, ...byReceipt.map((o) => o.id)].filter(Boolean)),
     ] as string[];
 
     if (matchedIds.length === 0) {

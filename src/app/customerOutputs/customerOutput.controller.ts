@@ -23,28 +23,46 @@ export class CustomerOutputController {
 
     const {orderId, companyId, type, repository, storeId} = req.body;
 
-    const checkOrders = await prisma.order.findMany({
-      where: {
-        OR: [
-          {
-            receiptNumber: orderId,
-          },
-          {
-            id: orderId,
-          },
-        ],
-        status: {in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"]},
-        companyId: loggedInUser.companyID!!,
-        confirmed: true,
-        deleted: false,
-      },
-      select: orderSelect,
-    });
+    const [byId, byReceipt] = await Promise.all([
+      prisma.order.findFirst({
+        where: {
+          id: orderId,
+          status: {in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"]},
+          OR: [
+            {companyId: loggedInUser.companyID!!},
+            {forwardedFromId: loggedInUser.companyID!!},
+          ],
+          deleted: false,
+        },
+        select: {id: true},
+      }),
+      prisma.order.findMany({
+        where: {
+          receiptNumber: orderId,
+          status: {in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"]},
+          OR: [
+            {companyId: loggedInUser.companyID!!},
+            {forwardedFromId: loggedInUser.companyID!!},
+          ],
+          deleted: false,
+        },
+        select: {id: true},
+      }),
+    ]);
 
-    if (checkOrders.length === 0) {
+    // dedupe — the id lookup may return a row that also matched by receipt
+    const matchedIds = [
+      ...new Set([byId?.id, ...byReceipt.map((o) => o.id)].filter(Boolean)),
+    ] as string[];
+
+    if (matchedIds.length === 0) {
       throw new AppError("الطلب غير موجود", 404);
     }
 
+    const checkOrders = await prisma.order.findMany({
+      where: {id: {in: matchedIds}},
+      select: orderSelect,
+    });
     if (checkOrders.length > 1) {
       res.status(200).json({
         multi: true,
