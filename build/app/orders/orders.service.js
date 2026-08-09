@@ -610,59 +610,6 @@ class OrdersService {
         }
         // Update Order Timeline
         try {
-            // Update status
-            if ((oldOrderData.status !== newOrder.status ||
-                newOrder.paidAmount !== oldOrderData.paidAmount) &&
-                oldOrderData.forwarded &&
-                oldOrderData.forwardedFromId !== oldOrderData.company.id) {
-                const companyId = oldOrderData.company.id;
-                const webhookUrl = oldOrderData.forwardedFrom?.webhookUrl;
-                if (oldOrderData.forwardedFromId === 84 ||
-                    oldOrderData.forwardedFromId === 89 ||
-                    oldOrderData.forwardedFromId === 87) {
-                    await (0, updateGeniStatus_1.updateExternalOrderStatus)(oldOrderData.shipment_number, webhookUrl, data.orderData.status ? data.orderData.status : newOrder.status, {
-                        return_reason: data.orderData.status === "RETURNED"
-                            ? data.orderData.notes
-                            : undefined,
-                        postponed_reason: data.orderData.status === "POSTPONED"
-                            ? data.orderData.notes
-                            : undefined,
-                        new_amount_iqd: data.orderData.paidAmount
-                            ? data.orderData.paidAmount + ""
-                            : undefined,
-                        treated_message: data.orderData.status === "PROCESSING"
-                            ? data.orderData.notes
-                            : undefined,
-                        postponed_date_id: data.orderData.status === "POSTPONED"
-                            ? (0, updateGeniStatus_1.toPostponedDateId)(data.orderData.notes)
-                            : undefined,
-                    });
-                }
-                if (webhookUrl) {
-                    const payload = {
-                        id: newOrder.id,
-                        receiptNumber: newOrder.receiptNumber,
-                        notes: newOrder.notes,
-                        status: newOrder.status,
-                    };
-                    if (newOrder.status === "DELIVERED" ||
-                        newOrder.status === "PARTIALLY_RETURNED" ||
-                        newOrder.status === "REPLACED") {
-                        payload.paidAmount = newOrder.paidAmount;
-                    }
-                    try {
-                        await axios_1.default.post(webhookUrl, payload, {
-                            headers: {
-                                "Content-Type": "application/json",
-                            },
-                            timeout: 10000,
-                        });
-                    }
-                    catch (error) {
-                        console.error(`Webhook failed for company ${companyId}`, error);
-                    }
-                }
-            }
             if ((data.orderData.status && oldOrderData.status !== newOrder.status) ||
                 (data.orderData.notes && data.orderData.notes !== oldOrderData.notes)) {
                 // send notification to client
@@ -914,6 +861,59 @@ class OrdersService {
                         message: `تم تغيير المبلغ المدفوع من ${oldOrderData.paidAmount} إلى ${newOrder.paidAmount}`,
                     },
                 });
+            }
+            // Update status
+            if ((oldOrderData.status !== newOrder.status ||
+                newOrder.paidAmount !== oldOrderData.paidAmount) &&
+                oldOrderData.forwarded &&
+                oldOrderData.forwardedFromId !== oldOrderData.company.id) {
+                const companyId = oldOrderData.company.id;
+                const webhookUrl = oldOrderData.forwardedFrom?.webhookUrl;
+                if (oldOrderData.forwardedFromId === 84 ||
+                    oldOrderData.forwardedFromId === 89 ||
+                    oldOrderData.forwardedFromId === 87) {
+                    await (0, updateGeniStatus_1.updateExternalOrderStatus)(oldOrderData.shipment_number, webhookUrl, data.orderData.status ? data.orderData.status : newOrder.status, {
+                        return_reason: data.orderData.status === "RETURNED"
+                            ? data.orderData.notes
+                            : undefined,
+                        postponed_reason: data.orderData.status === "POSTPONED"
+                            ? data.orderData.notes
+                            : undefined,
+                        new_amount_iqd: data.orderData.paidAmount
+                            ? data.orderData.paidAmount + ""
+                            : undefined,
+                        treated_message: data.orderData.status === "PROCESSING"
+                            ? data.orderData.notes
+                            : undefined,
+                        postponed_date_id: data.orderData.status === "POSTPONED"
+                            ? (0, updateGeniStatus_1.toPostponedDateId)(data.orderData.notes)
+                            : undefined,
+                    });
+                }
+                if (webhookUrl) {
+                    const payload = {
+                        id: newOrder.id,
+                        receiptNumber: newOrder.receiptNumber,
+                        notes: newOrder.notes,
+                        status: newOrder.status,
+                    };
+                    if (newOrder.status === "DELIVERED" ||
+                        newOrder.status === "PARTIALLY_RETURNED" ||
+                        newOrder.status === "REPLACED") {
+                        payload.paidAmount = newOrder.paidAmount;
+                    }
+                    try {
+                        await axios_1.default.post(webhookUrl, payload, {
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            timeout: 10000,
+                        });
+                    }
+                    catch (error) {
+                        console.error(`Webhook failed for company ${companyId}`, error);
+                    }
+                }
             }
         }
         catch (error) {
