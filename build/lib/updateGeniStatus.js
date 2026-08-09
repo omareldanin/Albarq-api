@@ -16,9 +16,9 @@ const JENNI_SYSTEM_CODE = process.env.JENNI_SYSTEM_CODE ?? "";
 // ── Token cache ────────────────────────────────────────────────
 let authToken = null;
 let tokenExpiry = 0;
-async function loginToJenni() {
+async function loginToJenni(url) {
     try {
-        const { data } = await axios_1.default.post(`${JENNI_API_URL}/v2/auth/login`, {
+        const { data } = await axios_1.default.post(`${url}/v2/auth/login`, {
             username: JENNI_USERNAME,
             password: JENNI_PASSWORD,
         });
@@ -30,10 +30,10 @@ async function loginToJenni() {
         throw new AppError_1.AppError(`فشل تسجيل الدخول إلى النظام الخارجي: ${error?.response?.data?.message ?? error?.message ?? "unknown"}`, 502);
     }
 }
-async function ensureValidToken() {
+async function ensureValidToken(url) {
     // refresh 5 minutes before expiry
     if (!authToken || Date.now() > tokenExpiry - 5 * 60 * 1000) {
-        await loginToJenni();
+        await loginToJenni(url);
     }
 }
 const POSTPONED_DATE_ID_MAP = {
@@ -56,7 +56,7 @@ function stripEmpty(obj) {
  * Prefer `updateExternalOrderStatus` which maps from the internal OrderStatus.
  */
 async function sendStatusUpdateToJenni(shipmentId, url, actionCode, details = {}) {
-    await ensureValidToken();
+    await ensureValidToken(url);
     const payload = {
         system_code: JENNI_SYSTEM_CODE,
         updates: [
@@ -80,7 +80,7 @@ async function sendStatusUpdateToJenni(shipmentId, url, actionCode, details = {}
         // token may have expired mid-flight — retry once after re-login
         console.log(error);
         if (error?.response?.status === 401) {
-            await loginToJenni();
+            await loginToJenni(url);
             const { data } = await axios_1.default.post(`${JENNI_API_URL}/v2/push/update-status`, { ...payload }, {
                 headers: {
                     Authorization: `${authToken}`,

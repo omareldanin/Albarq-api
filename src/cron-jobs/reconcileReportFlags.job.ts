@@ -4,7 +4,7 @@ import {prisma} from "../database/db";
 import {recomputeReportFlags} from "../app/orders/helpers/recomputeReportFlags";
 
 // set to true only after the report-only mode has been quiet for several days
-const AUTO_FIX = false;
+const AUTO_FIX = true;
 
 const MISMATCH_CONDITION = Prisma.sql`
   o."hasMainReceivedReport" <> EXISTS (
@@ -56,7 +56,7 @@ export const reconcileReportFlags = async () => {
 
   // Only check recently-touched orders — keeps the job cheap.
   // Widen the window if you suspect older drift.
-  const recentWindow = Prisma.sql`o."updatedAt" > now() - interval '3 days'`;
+  const recentWindow = Prisma.sql`o."updatedAt" > now() - interval '30 days'`;
 
   const mismatches = await prisma.$queryRaw<{id: string}[]>`
     SELECT o."id" FROM "Order" o
@@ -96,7 +96,7 @@ export const reconcileReportFlags = async () => {
 export const startReconcileReportFlagsCron = () => {
   // 03:00 daily — off-peak
   cron.schedule(
-    "0 3 * * *",
+    "04 06 * * *",
     async () => {
       try {
         await reconcileReportFlags();

@@ -78,9 +78,7 @@ const computeBranchDayProfit = async (params) => {
     const received = receivedRows[0];
     const forwarded = forwardedRows[0];
     const insideProfit = applyBranchScope
-        ? n(inside.forwardedBranchNet) -
-            n(inside.deliveryAgentNet) -
-            n(inside.receivingBranchNet)
+        ? n(inside.forwardedBranchNet) - n(inside.receivingBranchNet)
         : n(inside.insideBranchNet);
     const receivedProfit = n(received.receivingBranchNet) - n(received.deliveryAgentNet);
     const forwardedProfit = applyBranchScope

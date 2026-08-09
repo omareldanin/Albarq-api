@@ -267,7 +267,7 @@ export class OrdersRepository {
       }[];
 
       receivingBranchNet =
-        receivingDeliveryCosts.find(
+        receivingDeliveryCosts?.find(
           (governorateDeliveryCost: {
             governorate: Governorate;
             cost: number;
@@ -277,7 +277,7 @@ export class OrdersRepository {
         )?.cost ?? 0;
 
       forwardedProfit =
-        forwardedDeliveryCosts.find(
+        forwardedDeliveryCosts?.find(
           (governorateDeliveryCost: {
             governorate: Governorate;
             cost: number;

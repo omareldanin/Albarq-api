@@ -162,11 +162,11 @@ class OrdersRepository {
             const receivingDeliveryCosts = branchsCost.find((b) => b.id === order?.branch?.id)?.forwardedDeliveryCosts;
             const forwardedDeliveryCosts = branchsCost.find((b) => b.id === order?.client.branchId)?.receivingDeliveryCosts;
             receivingBranchNet =
-                receivingDeliveryCosts.find((governorateDeliveryCost) => {
+                receivingDeliveryCosts?.find((governorateDeliveryCost) => {
                     return governorateDeliveryCost.governorate === order?.governorate;
                 })?.cost ?? 0;
             forwardedProfit =
-                forwardedDeliveryCosts.find((governorateDeliveryCost) => {
+                forwardedDeliveryCosts?.find((governorateDeliveryCost) => {
                     return governorateDeliveryCost.governorate === order?.governorate;
                 })?.cost ?? 0;
         }

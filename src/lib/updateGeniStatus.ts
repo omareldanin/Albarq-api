@@ -46,9 +46,9 @@ export interface StatusUpdateDetails {
 let authToken: string | null = null;
 let tokenExpiry = 0;
 
-async function loginToJenni(): Promise<string> {
+async function loginToJenni(url: string): Promise<string> {
   try {
-    const {data} = await axios.post(`${JENNI_API_URL}/v2/auth/login`, {
+    const {data} = await axios.post(`${url}/v2/auth/login`, {
       username: JENNI_USERNAME,
       password: JENNI_PASSWORD,
     });
@@ -65,10 +65,10 @@ async function loginToJenni(): Promise<string> {
   }
 }
 
-async function ensureValidToken(): Promise<void> {
+async function ensureValidToken(url: string): Promise<void> {
   // refresh 5 minutes before expiry
   if (!authToken || Date.now() > tokenExpiry - 5 * 60 * 1000) {
-    await loginToJenni();
+    await loginToJenni(url);
   }
 }
 
@@ -103,7 +103,7 @@ export async function sendStatusUpdateToJenni(
   actionCode: string,
   details: StatusUpdateDetails = {},
 ) {
-  await ensureValidToken();
+  await ensureValidToken(url);
 
   const payload = {
     system_code: JENNI_SYSTEM_CODE,
@@ -129,7 +129,7 @@ export async function sendStatusUpdateToJenni(
     console.log(error);
 
     if (error?.response?.status === 401) {
-      await loginToJenni();
+      await loginToJenni(url);
       const {data} = await axios.post(
         `${JENNI_API_URL}/v2/push/update-status`,
         {...payload},
