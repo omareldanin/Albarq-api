@@ -26,9 +26,8 @@ const recompute = async () => {
             where: {
                 deleted: false,
                 deliveriedAt: { gte: from },
-                forwardedBranchNet: { equals: 0 },
                 client: {
-                    branchId: { not: 114 },
+                    branchId: { in: [209, 156] },
                 },
                 companyId: 16,
                 ...(cursor && { id: { gt: cursor } }),
@@ -64,6 +63,16 @@ const recompute = async () => {
             let receivingBranchNet = 0;
             if (o.branchId === o.client.branchId) {
                 insideProfit = (o.deliveryCost ?? 0) - deliveryAgentCost;
+            }
+            else if (o?.forwarded && o?.forwardedFromId) {
+                const orderBranch = o.branchId ? branchMap.get(o.branchId) : undefined;
+                const forwardedDeliveryCosts = o.forwardedFrom
+                    ?.governoratesDeliveryCosts;
+                receivingBranchNet = costFor(orderBranch?.forwardedDeliveryCosts, o.governorate);
+                forwardedProfit =
+                    forwardedDeliveryCosts?.find((governorateDeliveryCost) => {
+                        return governorateDeliveryCost.governorate === o?.governorate;
+                    })?.cost ?? 0;
             }
             else {
                 // NOTE: mirrors getProfits — order's branch uses forwardedDeliveryCosts,

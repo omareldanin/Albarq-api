@@ -166,7 +166,7 @@ const snapshotDailyProfits = async (targetDay) => {
 };
 exports.snapshotDailyProfits = snapshotDailyProfits;
 const startDailyProfitCron = () => {
-    node_cron_1.default.schedule("01 0 * * *", async () => {
+    node_cron_1.default.schedule("0 03 * * *", async () => {
         try {
             await (0, exports.snapshotDailyProfits)();
         }

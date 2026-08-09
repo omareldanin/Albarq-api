@@ -203,7 +203,7 @@ export const snapshotDailyProfits = async (targetDay?: Date) => {
 
 export const startDailyProfitCron = () => {
   cron.schedule(
-    "01 0 * * *",
+    "0 03 * * *",
     async () => {
       try {
         await snapshotDailyProfits();
