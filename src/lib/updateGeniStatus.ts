@@ -48,10 +48,18 @@ let tokenExpiry = 0;
 
 async function loginToJenni(url: string): Promise<string> {
   try {
-    const {data} = await axios.post(`${url}/v2/auth/login`, {
-      username: JENNI_USERNAME,
-      password: JENNI_PASSWORD,
-    });
+    const {data} = await axios.post(
+      `${url}/v2/auth/login`,
+      {
+        username: JENNI_USERNAME,
+        password: JENNI_PASSWORD,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
     authToken = data.token;
     tokenExpiry = Date.now() + data.expires_in * 1000;
     return authToken as string;

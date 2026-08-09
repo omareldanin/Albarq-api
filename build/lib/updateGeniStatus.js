@@ -21,6 +21,10 @@ async function loginToJenni(url) {
         const { data } = await axios_1.default.post(`${url}/v2/auth/login`, {
             username: JENNI_USERNAME,
             password: JENNI_PASSWORD,
+        }, {
+            headers: {
+                "Content-Type": "application/json",
+            },
         });
         authToken = data.token;
         tokenExpiry = Date.now() + data.expires_in * 1000;
