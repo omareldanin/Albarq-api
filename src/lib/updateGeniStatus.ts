@@ -46,24 +46,26 @@ export interface StatusUpdateDetails {
 let authToken: string | null = null;
 let tokenExpiry = 0;
 
+interface LoginResponse {
+  token: string;
+  expires_in: number;
+}
+
 async function loginToJenni(url: string): Promise<string> {
+  const {gotScraping} = await import("got-scraping");
+
   try {
-    const {data} = await axios.post(
-      `${url}/v2/auth/login`,
-      {
-        username: JENNI_USERNAME,
-        password: JENNI_PASSWORD,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
-    authToken = data.token;
-    tokenExpiry = Date.now() + data.expires_in * 1000;
+    const {body} = (await gotScraping.post(`${url}/v2/auth/login`, {
+      json: {username: JENNI_USERNAME, password: JENNI_PASSWORD},
+      responseType: "json",
+    })) as {body: LoginResponse};
+
+    authToken = body.token;
+    tokenExpiry = Date.now() + body.expires_in * 1000;
     return authToken as string;
   } catch (error: any) {
+    console.log(error);
+
     throw new AppError(
       `فشل تسجيل الدخول إلى النظام الخارجي: ${
         error?.response?.data?.message ?? error?.message ?? "unknown"
@@ -125,17 +127,20 @@ export async function sendStatusUpdateToJenni(
   };
 
   try {
-    const {data} = await axios.post(`${url}/v2/push/update-status`, payload, {
+    const {gotScraping} = await import("got-scraping");
+
+    const {body} = await gotScraping.post(`${url}/v2/push/update-status`, {
+      json: payload,
+      responseType: "json",
       headers: {
         Authorization: `${authToken}`,
         "Content-Type": "application/json",
       },
     });
-    return data;
+
+    return body;
   } catch (error: any) {
     // token may have expired mid-flight — retry once after re-login
-    console.log(error);
-
     if (error?.response?.status === 401) {
       await loginToJenni(url);
       const {data} = await axios.post(

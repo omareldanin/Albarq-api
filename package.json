@@ -54,6 +54,7 @@
     "express-rate-limit": "^7.3.1",
     "firebase-admin": "^12.1.1",
     "googleapis": "^148.0.0",
+    "got-scraping": "^4.2.1",
     "handlebars": "^4.7.8",
     "handlebars-async-helpers": "^1.0.6",
     "helmet": "^7.1.0",

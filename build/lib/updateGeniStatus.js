@@ -17,20 +17,18 @@ const JENNI_SYSTEM_CODE = process.env.JENNI_SYSTEM_CODE ?? "";
 let authToken = null;
 let tokenExpiry = 0;
 async function loginToJenni(url) {
+    const { gotScraping } = await import("got-scraping");
     try {
-        const { data } = await axios_1.default.post(`${url}/v2/auth/login`, {
-            username: JENNI_USERNAME,
-            password: JENNI_PASSWORD,
-        }, {
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
-        authToken = data.token;
-        tokenExpiry = Date.now() + data.expires_in * 1000;
+        const { body } = (await gotScraping.post(`${url}/v2/auth/login`, {
+            json: { username: JENNI_USERNAME, password: JENNI_PASSWORD },
+            responseType: "json",
+        }));
+        authToken = body.token;
+        tokenExpiry = Date.now() + body.expires_in * 1000;
         return authToken;
     }
     catch (error) {
+        console.log(error);
         throw new AppError_1.AppError(`فشل تسجيل الدخول إلى النظام الخارجي: ${error?.response?.data?.message ?? error?.message ?? "unknown"}`, 502);
     }
 }
@@ -72,17 +70,19 @@ async function sendStatusUpdateToJenni(shipmentId, url, actionCode, details = {}
         ],
     };
     try {
-        const { data } = await axios_1.default.post(`${url}/v2/push/update-status`, payload, {
+        const { gotScraping } = await import("got-scraping");
+        const { body } = await gotScraping.post(`${url}/v2/push/update-status`, {
+            json: payload,
+            responseType: "json",
             headers: {
                 Authorization: `${authToken}`,
                 "Content-Type": "application/json",
             },
         });
-        return data;
+        return body;
     }
     catch (error) {
         // token may have expired mid-flight — retry once after re-login
-        console.log(error);
         if (error?.response?.status === 401) {
             await loginToJenni(url);
             const { data } = await axios_1.default.post(`${JENNI_API_URL}/v2/push/update-status`, { ...payload }, {
