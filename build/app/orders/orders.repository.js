@@ -178,27 +178,51 @@ class OrdersRepository {
                 })?.cost ?? 0;
         }
         else if (order?.branch?.id !== order?.client.branchId) {
-            const branchIds = [order?.branch?.id, order?.client.branchId].filter((id) => id != null);
-            const branchsCost = branchIds.length
-                ? await db_1.prisma.branch.findMany({
-                    where: { id: { in: branchIds } },
-                    select: {
-                        id: true,
-                        receivingDeliveryCosts: true,
-                        forwardedDeliveryCosts: true,
+            const client = await db_1.prisma.client.findUnique({
+                where: {
+                    id: order?.client.id,
+                },
+                select: {
+                    activeProfit: true,
+                    branchCosts: {
+                        where: {
+                            branchId: order?.branch?.id,
+                        },
                     },
-                })
-                : [];
-            const receivingDeliveryCosts = branchsCost.find((b) => b.id === order?.branch?.id)?.forwardedDeliveryCosts;
-            const forwardedDeliveryCosts = branchsCost.find((b) => b.id === order?.client.branchId)?.receivingDeliveryCosts;
-            receivingBranchNet =
-                receivingDeliveryCosts?.find((governorateDeliveryCost) => {
-                    return governorateDeliveryCost.governorate === order?.governorate;
-                })?.cost ?? 0;
-            forwardedProfit =
-                forwardedDeliveryCosts?.find((governorateDeliveryCost) => {
-                    return governorateDeliveryCost.governorate === order?.governorate;
-                })?.cost ?? 0;
+                },
+            });
+            if (client?.activeProfit) {
+                forwardedProfit =
+                    client.branchCosts[0].deliveryAgentProfit +
+                        client.branchCosts[0].mainBranchProfit +
+                        client.branchCosts[0].receivingBranchProfit;
+                receivingBranchNet =
+                    client.branchCosts[0].deliveryAgentProfit +
+                        client.branchCosts[0].receivingBranchProfit;
+            }
+            else {
+                const branchIds = [order?.branch?.id, order?.client.branchId].filter((id) => id != null);
+                const branchsCost = branchIds.length
+                    ? await db_1.prisma.branch.findMany({
+                        where: { id: { in: branchIds } },
+                        select: {
+                            id: true,
+                            receivingDeliveryCosts: true,
+                            forwardedDeliveryCosts: true,
+                        },
+                    })
+                    : [];
+                const receivingDeliveryCosts = branchsCost.find((b) => b.id === order?.branch?.id)?.forwardedDeliveryCosts;
+                const forwardedDeliveryCosts = branchsCost.find((b) => b.id === order?.client.branchId)?.receivingDeliveryCosts;
+                receivingBranchNet =
+                    receivingDeliveryCosts?.find((governorateDeliveryCost) => {
+                        return governorateDeliveryCost.governorate === order?.governorate;
+                    })?.cost ?? 0;
+                forwardedProfit =
+                    forwardedDeliveryCosts?.find((governorateDeliveryCost) => {
+                        return governorateDeliveryCost.governorate === order?.governorate;
+                    })?.cost ?? 0;
+            }
         }
         return {
             deliveryAgentCost,
