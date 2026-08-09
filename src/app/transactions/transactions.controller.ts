@@ -16,15 +16,30 @@ export class TransactionsController {
     const loggedInUser = res.locals.user as loggedInUserType;
     const data = TransactionCreateSchema.parse(req.body);
 
+    let branchID = loggedInUser.branchId as number;
     const companyID = loggedInUser.companyID as number;
+
     if (!companyID) {
       throw new AppError("الشركة غير محددة", 400);
+    }
+
+    if (loggedInUser?.role === "COMPANY_MANAGER") {
+      const mainBranch = await prisma.repository.findFirst({
+        where: {
+          companyId: loggedInUser.companyID,
+          mainRepository: true,
+        },
+        select: {
+          branchId: true,
+        },
+      });
+      branchID = mainBranch?.branchId || loggedInUser.branchId;
     }
 
     const transaction = await transactionsRepository.createTransaction({
       companyID,
       createdByID: loggedInUser.id,
-      data,
+      data: {...data, branchID},
     });
 
     res.status(200).json({status: "success", data: transaction});
