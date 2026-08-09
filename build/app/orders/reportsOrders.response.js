@@ -27,6 +27,7 @@ exports.reportsOrderSelect = {
         select: {
             id: true,
             activeProfit: true,
+            governoratesDeliveryCosts: true,
             clientCosts: {
                 select: {
                     branchId: true,

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = require("../database/db");
 const BATCH_SIZE = 500;
-const DRY_RUN = false; // ← flip to false after reviewing the dry output
+const DRY_RUN = true; // ← flip to false after reviewing the dry output
 const recompute = async () => {
     // one month back
     const from = new Date();
@@ -26,18 +26,31 @@ const recompute = async () => {
             where: {
                 deleted: false,
                 deliveriedAt: { gte: from },
+                forwardedBranchNet: { equals: 0 },
+                client: {
+                    branchId: { not: 114 },
+                },
+                companyId: 16,
                 ...(cursor && { id: { gt: cursor } }),
             },
             orderBy: { id: "asc" },
             take: BATCH_SIZE,
             select: {
                 id: true,
+                receiptNumber: true,
                 governorate: true,
                 deliveryCost: true,
                 branchId: true,
                 insideBranchNet: true,
                 forwardedBranchNet: true,
                 receivingBranchNet: true,
+                forwardedFromId: true,
+                forwarded: true,
+                forwardedFrom: {
+                    select: {
+                        governoratesDeliveryCosts: true,
+                    },
+                },
                 client: { select: { branchId: true } },
                 deliveryAgent: { select: { deliveryCost: true } },
             },
@@ -68,7 +81,7 @@ const recompute = async () => {
             //   o.receivingBranchNet !== receivingBranchNet;
             // if (!differs) continue;
             if (DRY_RUN) {
-                console.log(o.id, {
+                console.log(o.receiptNumber, {
                     was: {
                         inside: o.insideBranchNet,
                         forwarded: o.forwardedBranchNet,

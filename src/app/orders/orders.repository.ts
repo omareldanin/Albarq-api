@@ -237,6 +237,58 @@ export class OrdersRepository {
 
     if (order?.branch?.id === order?.client.branchId) {
       insideProfit = (order?.deliveryCost ?? 0) - deliveryAgentCost;
+    } else if (
+      order?.forwarded &&
+      order?.forwardedFromId &&
+      order.forwardedFromId !== order.company.id
+    ) {
+      const company = await prisma.company.findUnique({
+        where: {
+          id: order?.forwardedFromId,
+        },
+        select: {
+          governoratesDeliveryCosts: true,
+        },
+      });
+
+      const branchsCost = await prisma.branch.findUnique({
+        where: {id: order.branch?.id},
+        select: {
+          id: true,
+          receivingDeliveryCosts: true,
+          forwardedDeliveryCosts: true,
+        },
+      });
+
+      const receivingDeliveryCosts = branchsCost?.forwardedDeliveryCosts as {
+        governorate: Governorate;
+        cost: number;
+      }[];
+
+      const forwardedDeliveryCosts = company?.governoratesDeliveryCosts as {
+        governorate: Governorate;
+        cost: number;
+      }[];
+
+      receivingBranchNet =
+        receivingDeliveryCosts?.find(
+          (governorateDeliveryCost: {
+            governorate: Governorate;
+            cost: number;
+          }) => {
+            return governorateDeliveryCost.governorate === order?.governorate;
+          },
+        )?.cost ?? 0;
+
+      forwardedProfit =
+        forwardedDeliveryCosts?.find(
+          (governorateDeliveryCost: {
+            governorate: Governorate;
+            cost: number;
+          }) => {
+            return governorateDeliveryCost.governorate === order?.governorate;
+          },
+        )?.cost ?? 0;
     } else if (order?.branch?.id !== order?.client.branchId) {
       const branchIds = [order?.branch?.id, order?.client.branchId].filter(
         (id): id is number => id != null,
@@ -468,27 +520,9 @@ export class OrdersRepository {
         },
         company: {
           connect: {
-            id: data.orderData.forwardedCompanyID
-              ? data.orderData.forwardedCompanyID
-              : data.companyID,
+            id: data.companyID,
           },
         },
-        forwarded: data.orderData.forwardedCompanyID ? true : undefined,
-        forwardedBy: data.orderData.forwardedCompanyID
-          ? {
-              connect: {
-                id: data.loggedInUser.id,
-              },
-            }
-          : undefined,
-        forwardedAt: data.orderData.forwardedCompanyID ? new Date() : undefined,
-        forwardedFrom: data.orderData.forwardedCompanyID
-          ? {
-              connect: {
-                id: data.companyID,
-              },
-            }
-          : undefined,
         client: {
           connect: {
             id: data.clientID,
