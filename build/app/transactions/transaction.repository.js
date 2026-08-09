@@ -692,8 +692,7 @@ class TransactionsRepository {
             forwardedBranchNet: applyBranchScope
                 ? {
                     total: (forwardedBranchNet._sum.deliveryCost ?? 0) -
-                        (forwardedBranchNet._sum.receivingBranchNet ?? 0) -
-                        (forwardedBranchNet._sum.deliveryAgentNet ?? 0),
+                        (forwardedBranchNet._sum.receivingBranchNet ?? 0),
                     count: forwardedBranchNet._count.id,
                 }
                 : {
