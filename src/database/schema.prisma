@@ -349,6 +349,8 @@ model Company {
   id                        Int                         @id @default(autoincrement())
   name                      String                      @unique
   phone                     String                      @default("")
+  username                  String                      @default("")
+  password                  String                      @default("")
   logo                      String                      @default("https://w7.pngwing.com/pngs/307/22/png-transparent-computer-icons-business-company-corporation-company-angle-company-text.png")
   registrationText          String                      @default("")
   createdAt                 DateTime                    @default(now())

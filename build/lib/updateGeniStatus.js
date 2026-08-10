@@ -9,18 +9,15 @@ exports.updateExternalOrderStatus = updateExternalOrderStatus;
 const axios_1 = __importDefault(require("axios"));
 const AppError_1 = require("../lib/AppError");
 const externalStatus_1 = require("./externalStatus");
-const JENNI_API_URL = process.env.JENNI_API_URL ?? "https://rover.jenni.systems/api";
-const JENNI_USERNAME = process.env.JENNI_USERNAME ?? "";
-const JENNI_PASSWORD = process.env.JENNI_PASSWORD ?? "";
 const JENNI_SYSTEM_CODE = process.env.JENNI_SYSTEM_CODE ?? "";
 // ── Token cache ────────────────────────────────────────────────
 let authToken = null;
 let tokenExpiry = 0;
-async function loginToJenni(url) {
+async function loginToJenni(url, username, password) {
     const { gotScraping } = await import("got-scraping");
     try {
         const { body } = (await gotScraping.post(`${url}/v2/auth/login`, {
-            json: { username: JENNI_USERNAME, password: JENNI_PASSWORD },
+            json: { username, password },
             responseType: "json",
         }));
         authToken = body.token;
@@ -32,10 +29,10 @@ async function loginToJenni(url) {
         throw new AppError_1.AppError(`فشل تسجيل الدخول إلى النظام الخارجي: ${error?.response?.data?.message ?? error?.message ?? "unknown"}`, 502);
     }
 }
-async function ensureValidToken(url) {
+async function ensureValidToken(url, username, password) {
     // refresh 5 minutes before expiry
     if (!authToken || Date.now() > tokenExpiry - 5 * 60 * 1000) {
-        await loginToJenni(url);
+        await loginToJenni(url, username, password);
     }
 }
 const POSTPONED_DATE_ID_MAP = {
@@ -57,8 +54,8 @@ function stripEmpty(obj) {
  * Send a single status update to Jenni using an already-resolved action code.
  * Prefer `updateExternalOrderStatus` which maps from the internal OrderStatus.
  */
-async function sendStatusUpdateToJenni(shipmentId, url, actionCode, details = {}) {
-    await ensureValidToken(url);
+async function sendStatusUpdateToJenni(shipmentId, url, actionCode, details = {}, username, password) {
+    await ensureValidToken(url, username, password);
     const payload = {
         system_code: JENNI_SYSTEM_CODE,
         updates: [
@@ -84,8 +81,8 @@ async function sendStatusUpdateToJenni(shipmentId, url, actionCode, details = {}
     catch (error) {
         // token may have expired mid-flight — retry once after re-login
         if (error?.response?.status === 401) {
-            await loginToJenni(url);
-            const { data } = await axios_1.default.post(`${JENNI_API_URL}/v2/push/update-status`, { ...payload }, {
+            await loginToJenni(url, username, password);
+            const { data } = await axios_1.default.post(`${url}/v2/push/update-status`, { ...payload }, {
                 headers: {
                     Authorization: `${authToken}`,
                     "Content-Type": "application/json",
@@ -104,12 +101,12 @@ async function sendStatusUpdateToJenni(shipmentId, url, actionCode, details = {}
  * @param details     extra fields required by some actions
  * @returns the external response, or null if this status has no external action
  */
-async function updateExternalOrderStatus(shipmentId, url, status, details = {}) {
+async function updateExternalOrderStatus(shipmentId, url, username, password, status, details = {}) {
     const actionCode = (0, externalStatus_1.toExternalAction)(status);
     if (!actionCode) {
         // REGISTERED / CHANGE_ADDRESS — nothing to push
         return null;
     }
-    return sendStatusUpdateToJenni(+shipmentId, url, actionCode, details);
+    return sendStatusUpdateToJenni(+shipmentId, url, actionCode, details, username, password);
 }
 //# sourceMappingURL=updateGeniStatus.js.map

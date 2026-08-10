@@ -3,10 +3,6 @@ import {OrderStatus} from "@prisma/client";
 import {AppError} from "../lib/AppError";
 import {toExternalAction} from "./externalStatus";
 
-const JENNI_API_URL =
-  process.env.JENNI_API_URL ?? "https://rover.jenni.systems/api";
-const JENNI_USERNAME = process.env.JENNI_USERNAME ?? "";
-const JENNI_PASSWORD = process.env.JENNI_PASSWORD ?? "";
 const JENNI_SYSTEM_CODE = process.env.JENNI_SYSTEM_CODE ?? "";
 
 /**
@@ -51,12 +47,16 @@ interface LoginResponse {
   expires_in: number;
 }
 
-async function loginToJenni(url: string): Promise<string> {
+async function loginToJenni(
+  url: string,
+  username: string,
+  password: string,
+): Promise<string> {
   const {gotScraping} = await import("got-scraping");
 
   try {
     const {body} = (await gotScraping.post(`${url}/v2/auth/login`, {
-      json: {username: JENNI_USERNAME, password: JENNI_PASSWORD},
+      json: {username, password},
       responseType: "json",
     })) as {body: LoginResponse};
 
@@ -75,10 +75,14 @@ async function loginToJenni(url: string): Promise<string> {
   }
 }
 
-async function ensureValidToken(url: string): Promise<void> {
+async function ensureValidToken(
+  url: string,
+  username: string,
+  password: string,
+): Promise<void> {
   // refresh 5 minutes before expiry
   if (!authToken || Date.now() > tokenExpiry - 5 * 60 * 1000) {
-    await loginToJenni(url);
+    await loginToJenni(url, username, password);
   }
 }
 
@@ -112,8 +116,10 @@ export async function sendStatusUpdateToJenni(
   url: string,
   actionCode: string,
   details: StatusUpdateDetails = {},
+  username: string,
+  password: string,
 ) {
-  await ensureValidToken(url);
+  await ensureValidToken(url, username, password);
 
   const payload = {
     system_code: JENNI_SYSTEM_CODE,
@@ -142,9 +148,9 @@ export async function sendStatusUpdateToJenni(
   } catch (error: any) {
     // token may have expired mid-flight — retry once after re-login
     if (error?.response?.status === 401) {
-      await loginToJenni(url);
+      await loginToJenni(url, username, password);
       const {data} = await axios.post(
-        `${JENNI_API_URL}/v2/push/update-status`,
+        `${url}/v2/push/update-status`,
         {...payload},
         {
           headers: {
@@ -175,6 +181,8 @@ export async function sendStatusUpdateToJenni(
 export async function updateExternalOrderStatus(
   shipmentId: number | string,
   url: string,
+  username: string,
+  password: string,
   status: OrderStatus,
   details: StatusUpdateDetails = {},
 ) {
@@ -183,5 +191,12 @@ export async function updateExternalOrderStatus(
     // REGISTERED / CHANGE_ADDRESS — nothing to push
     return null;
   }
-  return sendStatusUpdateToJenni(+shipmentId, url, actionCode, details);
+  return sendStatusUpdateToJenni(
+    +shipmentId,
+    url,
+    actionCode,
+    details,
+    username,
+    password,
+  );
 }

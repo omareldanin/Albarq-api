@@ -1133,6 +1133,8 @@ export class OrdersService {
           await updateExternalOrderStatus(
             oldOrderData.shipment_number!!,
             webhookUrl!!,
+            oldOrderData.forwardedFrom?.username || "",
+            oldOrderData.forwardedFrom?.password || "",
             data.orderData.status ? data.orderData.status : newOrder.status,
             {
               return_reason:
