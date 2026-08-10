@@ -303,7 +303,7 @@ export class OrdersRepository {
           },
         },
       });
-      if (client?.activeProfit) {
+      if (client?.activeProfit && client.branchCosts[0]) {
         forwardedProfit =
           client.branchCosts[0].deliveryAgentProfit +
           client.branchCosts[0].mainBranchProfit +
