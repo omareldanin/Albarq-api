@@ -327,6 +327,7 @@ export class OrdersRepository {
               },
             })
           : [];
+
         const receivingDeliveryCosts = branchsCost.find(
           (b) => b.id === order?.branch?.id,
         )?.forwardedDeliveryCosts as {
