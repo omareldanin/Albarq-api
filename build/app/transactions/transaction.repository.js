@@ -325,6 +325,7 @@ class TransactionsRepository {
         };
     };
     async getStatistics(filters) {
+        let childBranchs = [];
         const applyBranchScope = filters.loggedInUser?.role === "COMPANY_MANAGER" ||
             filters.loggedInUser?.mainRepository;
         let myBranchId = filters.loggedInUser?.branchId;
@@ -340,6 +341,16 @@ class TransactionsRepository {
             });
             myBranchId = mainBranch?.branchId;
         }
+        const branchs = await db_1.prisma.branch.findMany({
+            where: {
+                parentBranchId: myBranchId,
+            },
+            select: {
+                id: true,
+            },
+        });
+        childBranchs = branchs.map((b) => b.id);
+        const branchScope = [myBranchId, ...childBranchs].filter((id) => id != null);
         let startDate = new Date();
         let endDate = new Date();
         if (filters.start_date) {
@@ -646,9 +657,195 @@ class TransactionsRepository {
                 },
             }),
         ]);
+        //مبالغ مستحقه للفرع الرئيسي / مبالغ مستحقه عند الافرع
+        const forMainBranchRows = applyBranchScope
+            ? await db_1.prisma.$queryRaw `
+      SELECT
+        SUM(o."paidAmount")         AS "paidAmount",
+        SUM(o."receivingBranchNet") AS "receivingBranchNet",
+        SUM(o."forwardedBranchNet") AS "forwardedBranchNet",
+        COUNT(o."id")               AS "count"
+      FROM "Order" o
+      JOIN "Client" c ON c."id" = o."clientId"
+      WHERE o."companyId" = ${filters.companyId}
+        AND o."deleted" = false
+        AND o."confirmed" = true
+        AND o."status" IN ('DELIVERED','PARTIALLY_RETURNED','REPLACED')
+        AND o."hasMainReceivedReport" = false
+        AND o."branchId" IS DISTINCT FROM c."branchId"
+        ${createdAtFilter
+                ? client_1.Prisma.sql `AND o."createdAt" >= ${createdAtFilter.gt} AND o."createdAt" < ${createdAtFilter.lte}`
+                : client_1.Prisma.empty};
+    `
+            : null;
+        const forMainBranch = applyBranchScope
+            ? {
+                _sum: {
+                    paidAmount: forMainBranchRows[0].paidAmount
+                        ? Number(forMainBranchRows[0].paidAmount)
+                        : null,
+                    receivingBranchNet: forMainBranchRows[0].receivingBranchNet
+                        ? Number(forMainBranchRows[0].receivingBranchNet)
+                        : null,
+                    forwardedBranchNet: forMainBranchRows[0].forwardedBranchNet
+                        ? Number(forMainBranchRows[0].forwardedBranchNet)
+                        : null,
+                },
+                _count: { id: Number(forMainBranchRows[0].count) },
+            }
+            : await db_1.prisma.order.aggregate({
+                _sum: {
+                    paidAmount: true,
+                    receivingBranchNet: true,
+                    forwardedBranchNet: true,
+                },
+                _count: { id: true },
+                where: {
+                    companyId: filters.companyId,
+                    deleted: false,
+                    status: { in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"] },
+                    OR: [
+                        {
+                            AND: [
+                                {
+                                    client: {
+                                        branchId: { notIn: branchScope },
+                                    },
+                                },
+                                {
+                                    branchId: { in: branchScope },
+                                },
+                            ],
+                        },
+                        {
+                            AND: [
+                                {
+                                    branch: {
+                                        id: myBranchId,
+                                        governorate: "BAGHDAD",
+                                        parentBranchId: { equals: null },
+                                    },
+                                },
+                                {
+                                    client: {
+                                        branchId: myBranchId,
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                    hasMainReceivedReport: false,
+                },
+            });
+        //مبالغ مستحقه عند الفرع الرئيسي / مبالغ مستحقه للأفرع
+        const forMyBranchRows = applyBranchScope
+            ? await db_1.prisma.$queryRaw `
+          SELECT
+            SUM(o."paidAmount")         AS "paidAmount",
+            SUM(o."receivingBranchNet") AS "receivingBranchNet",
+            SUM(o."forwardedBranchNet") AS "forwardedBranchNet",
+            COUNT(o."id")               AS "count"
+          FROM "Order" o
+          JOIN "Client" c ON c."id" = o."clientId"
+          WHERE o."companyId" = ${filters.companyId}
+            AND o."deleted" = false
+            AND o."confirmed" = true
+            AND o."status" IN ('DELIVERED','PARTIALLY_RETURNED','REPLACED')
+            AND o."hasMainForwardedReport" = false
+            AND o."hasDeliveredClientReport" = true
+            AND c."branchId" <> ${myBranchId}
+            AND c."companyId" = 16
+            AND o."branchId" IS DISTINCT FROM c."branchId"
+            ${createdAtFilter
+                ? client_1.Prisma.sql `AND o."createdAt" >= ${createdAtFilter.gt} AND o."createdAt" < ${createdAtFilter.lte}`
+                : client_1.Prisma.empty};
+          `
+            : null;
+        const forMyBranch = applyBranchScope
+            ? {
+                _sum: {
+                    paidAmount: forMyBranchRows[0].paidAmount
+                        ? Number(forMyBranchRows[0].paidAmount)
+                        : null,
+                    receivingBranchNet: forMyBranchRows[0].receivingBranchNet
+                        ? Number(forMyBranchRows[0].receivingBranchNet)
+                        : null,
+                    forwardedBranchNet: forMyBranchRows[0].forwardedBranchNet
+                        ? Number(forMyBranchRows[0].forwardedBranchNet)
+                        : null,
+                },
+                _count: { id: Number(forMyBranchRows[0].count) },
+            }
+            : await db_1.prisma.order.aggregate({
+                _sum: {
+                    paidAmount: true,
+                    forwardedBranchNet: true,
+                    receivingBranchNet: true,
+                },
+                _count: { id: true },
+                where: {
+                    companyId: filters.companyId,
+                    deleted: false,
+                    confirmed: true,
+                    status: { in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"] },
+                    hasMainForwardedReport: false,
+                    hasDeliveredClientReport: true,
+                    OR: [
+                        {
+                            AND: [
+                                { branchId: { notIn: branchScope } },
+                                {
+                                    client: {
+                                        branchId: { in: branchScope },
+                                    },
+                                },
+                            ],
+                        },
+                        {
+                            AND: [
+                                {
+                                    branch: {
+                                        id: myBranchId,
+                                        governorate: "BAGHDAD",
+                                        parentBranchId: { equals: null },
+                                    },
+                                },
+                                {
+                                    client: {
+                                        branchId: myBranchId,
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                    ...(createdAtFilter && { createdAt: createdAtFilter }),
+                },
+            });
         return {
             totalDepoist: totalDepoist._sum.paidAmount,
             totalWithdraw: totalWithdraw._sum.paidAmount,
+            forMainBranch: applyBranchScope
+                ? {
+                    total: (forMainBranch._sum.paidAmount ?? 0) -
+                        (forMainBranch._sum.forwardedBranchNet ?? 0),
+                    count: forMainBranch._count.id,
+                }
+                : {
+                    total: (forMainBranch._sum.paidAmount ?? 0) -
+                        (forMainBranch._sum.receivingBranchNet ?? 0),
+                    count: forMainBranch._count.id,
+                },
+            forMyBranch: applyBranchScope
+                ? {
+                    total: (forMyBranch._sum.paidAmount ?? 0) -
+                        (forMyBranch._sum.forwardedBranchNet ?? 0),
+                    count: forMyBranch._count.id,
+                }
+                : {
+                    total: (forMyBranch._sum.paidAmount ?? 0) -
+                        (forMyBranch._sum.forwardedBranchNet ?? 0),
+                    count: forMyBranch._count.id,
+                },
             total: (totalDepoist._sum.paidAmount ?? 0) -
                 (totalWithdraw._sum.paidAmount ?? 0),
             receivedFromAgents: {

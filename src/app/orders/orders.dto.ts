@@ -325,6 +325,7 @@ export const OrdersFiltersSchema = z.object({
   }, z.boolean().optional()),
   forwardedByID: z.coerce.number().optional(),
   forwardedFromID: z.coerce.number().optional(),
+  limit: z.coerce.number().optional(),
   clientID: z.coerce.number().optional(),
   updateBy: z.coerce.number().optional(),
   createdBy: z.coerce.number().optional(),

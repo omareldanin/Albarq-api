@@ -268,6 +268,7 @@ exports.OrdersFiltersSchema = zod_1.z.object({
     }, zod_1.z.boolean().optional()),
     forwardedByID: zod_1.z.coerce.number().optional(),
     forwardedFromID: zod_1.z.coerce.number().optional(),
+    limit: zod_1.z.coerce.number().optional(),
     clientID: zod_1.z.coerce.number().optional(),
     updateBy: zod_1.z.coerce.number().optional(),
     createdBy: zod_1.z.coerce.number().optional(),

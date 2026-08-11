@@ -1298,6 +1298,14 @@ export class OrdersRepository {
               {
                 deliveryType: data.filters.deliveryType,
               },
+              {
+                totalCost:
+                  data.filters.limit === 0
+                    ? 0
+                    : data.filters.limit === -1
+                      ? {lt: 0}
+                      : undefined,
+              },
               // Filter by deliveryDate
               {
                 // gte deliveryDate day start time (00:00:00) and lte deliveryDate day end time (23:59:59)
