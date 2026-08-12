@@ -1,9 +1,6 @@
-import axios from "axios";
 import {OrderStatus} from "@prisma/client";
 import {AppError} from "../lib/AppError";
 import {toExternalAction} from "./externalStatus";
-
-const JENNI_SYSTEM_CODE = process.env.JENNI_SYSTEM_CODE ?? "";
 
 /**
  * Extra fields sent alongside a status update. Which ones are required
@@ -39,8 +36,16 @@ export interface StatusUpdateDetails {
 }
 
 // ── Token cache ────────────────────────────────────────────────
-let authToken: string | null = null;
-let tokenExpiry = 0;
+
+// ── Token cache, keyed per credential set ──────────────────────
+interface CachedToken {
+  token: string;
+  expiry: number;
+}
+
+const tokenCache = new Map<string, CachedToken>();
+
+const cacheKey = (url: string, username: string) => `${url}::${username}`;
 
 interface LoginResponse {
   token: string;
@@ -60,12 +65,13 @@ async function loginToJenni(
       responseType: "json",
     })) as {body: LoginResponse};
 
-    authToken = body.token;
-    tokenExpiry = Date.now() + body.expires_in * 1000;
-    return authToken as string;
-  } catch (error: any) {
-    console.log(error);
+    tokenCache.set(cacheKey(url, username), {
+      token: body.token,
+      expiry: Date.now() + body.expires_in * 1000,
+    });
 
+    return body.token;
+  } catch (error: any) {
     throw new AppError(
       `فشل تسجيل الدخول إلى النظام الخارجي: ${
         error?.response?.data?.message ?? error?.message ?? "unknown"
@@ -79,11 +85,16 @@ async function ensureValidToken(
   url: string,
   username: string,
   password: string,
-): Promise<void> {
+): Promise<string> {
+  const key = cacheKey(url, username);
+  const cached = tokenCache.get(key);
+
   // refresh 5 minutes before expiry
-  if (!authToken || Date.now() > tokenExpiry - 5 * 60 * 1000) {
-    await loginToJenni(url, username, password);
+  if (cached && Date.now() < cached.expiry - 5 * 60 * 1000) {
+    return cached.token;
   }
+
+  return loginToJenni(url, username, password);
 }
 
 const POSTPONED_DATE_ID_MAP: Record<string, number> = {
@@ -118,11 +129,12 @@ export async function sendStatusUpdateToJenni(
   details: StatusUpdateDetails = {},
   username: string,
   password: string,
+  registrationText: string,
 ) {
-  await ensureValidToken(url, username, password);
+  let token = await ensureValidToken(url, username, password);
 
   const payload = {
-    system_code: JENNI_SYSTEM_CODE,
+    system_code: registrationText,
     updates: [
       {
         shipment_id: shipmentId,
@@ -132,35 +144,33 @@ export async function sendStatusUpdateToJenni(
     ],
   };
 
-  try {
+  const post = async (bearer: string) => {
     const {gotScraping} = await import("got-scraping");
-
     const {body} = await gotScraping.post(`${url}/v2/push/update-status`, {
       json: payload,
       responseType: "json",
       headers: {
-        Authorization: `${authToken}`,
+        Authorization: `${bearer}`,
         "Content-Type": "application/json",
       },
     });
 
     return body;
+  };
+
+  try {
+    return await post(token);
   } catch (error: any) {
-    // token may have expired mid-flight — retry once after re-login
-    if (error?.response?.status === 401) {
-      await loginToJenni(url, username, password);
-      const {data} = await axios.post(
-        `${url}/v2/push/update-status`,
-        {...payload},
-        {
-          headers: {
-            Authorization: `${authToken}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-      return data;
+    // token may have expired mid-flight — re-login once and retry
+    if (
+      error?.response?.statusCode === 401 ||
+      error?.response?.status === 401
+    ) {
+      tokenCache.delete(cacheKey(url, username));
+      token = await loginToJenni(url, username, password);
+      return await post(token);
     }
+
     throw new AppError(
       `فشل إرسال تحديث الحالة إلى النظام الخارجي: ${
         error?.response?.data?.message ?? error?.message ?? "unknown"
@@ -183,6 +193,7 @@ export async function updateExternalOrderStatus(
   url: string,
   username: string,
   password: string,
+  registrationText: string,
   status: OrderStatus,
   details: StatusUpdateDetails = {},
 ) {
@@ -198,5 +209,6 @@ export async function updateExternalOrderStatus(
     details,
     username,
     password,
+    registrationText,
   );
 }

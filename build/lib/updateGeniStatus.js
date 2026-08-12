@@ -1,18 +1,12 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.toPostponedDateId = toPostponedDateId;
 exports.sendStatusUpdateToJenni = sendStatusUpdateToJenni;
 exports.updateExternalOrderStatus = updateExternalOrderStatus;
-const axios_1 = __importDefault(require("axios"));
 const AppError_1 = require("../lib/AppError");
 const externalStatus_1 = require("./externalStatus");
-const JENNI_SYSTEM_CODE = process.env.JENNI_SYSTEM_CODE ?? "";
-// ── Token cache ────────────────────────────────────────────────
-let authToken = null;
-let tokenExpiry = 0;
+const tokenCache = new Map();
+const cacheKey = (url, username) => `${url}::${username}`;
 async function loginToJenni(url, username, password) {
     const { gotScraping } = await import("got-scraping");
     try {
@@ -20,20 +14,24 @@ async function loginToJenni(url, username, password) {
             json: { username, password },
             responseType: "json",
         }));
-        authToken = body.token;
-        tokenExpiry = Date.now() + body.expires_in * 1000;
-        return authToken;
+        tokenCache.set(cacheKey(url, username), {
+            token: body.token,
+            expiry: Date.now() + body.expires_in * 1000,
+        });
+        return body.token;
     }
     catch (error) {
-        console.log(error);
         throw new AppError_1.AppError(`فشل تسجيل الدخول إلى النظام الخارجي: ${error?.response?.data?.message ?? error?.message ?? "unknown"}`, 502);
     }
 }
 async function ensureValidToken(url, username, password) {
+    const key = cacheKey(url, username);
+    const cached = tokenCache.get(key);
     // refresh 5 minutes before expiry
-    if (!authToken || Date.now() > tokenExpiry - 5 * 60 * 1000) {
-        await loginToJenni(url, username, password);
+    if (cached && Date.now() < cached.expiry - 5 * 60 * 1000) {
+        return cached.token;
     }
+    return loginToJenni(url, username, password);
 }
 const POSTPONED_DATE_ID_MAP = {
     "مؤجل غدا": 1, // tomorrow
@@ -54,10 +52,10 @@ function stripEmpty(obj) {
  * Send a single status update to Jenni using an already-resolved action code.
  * Prefer `updateExternalOrderStatus` which maps from the internal OrderStatus.
  */
-async function sendStatusUpdateToJenni(shipmentId, url, actionCode, details = {}, username, password) {
-    await ensureValidToken(url, username, password);
+async function sendStatusUpdateToJenni(shipmentId, url, actionCode, details = {}, username, password, registrationText) {
+    let token = await ensureValidToken(url, username, password);
     const payload = {
-        system_code: JENNI_SYSTEM_CODE,
+        system_code: registrationText,
         updates: [
             {
                 shipment_id: shipmentId,
@@ -66,29 +64,28 @@ async function sendStatusUpdateToJenni(shipmentId, url, actionCode, details = {}
             },
         ],
     };
-    try {
+    const post = async (bearer) => {
         const { gotScraping } = await import("got-scraping");
         const { body } = await gotScraping.post(`${url}/v2/push/update-status`, {
             json: payload,
             responseType: "json",
             headers: {
-                Authorization: `${authToken}`,
+                Authorization: `${bearer}`,
                 "Content-Type": "application/json",
             },
         });
         return body;
+    };
+    try {
+        return await post(token);
     }
     catch (error) {
-        // token may have expired mid-flight — retry once after re-login
-        if (error?.response?.status === 401) {
-            await loginToJenni(url, username, password);
-            const { data } = await axios_1.default.post(`${url}/v2/push/update-status`, { ...payload }, {
-                headers: {
-                    Authorization: `${authToken}`,
-                    "Content-Type": "application/json",
-                },
-            });
-            return data;
+        // token may have expired mid-flight — re-login once and retry
+        if (error?.response?.statusCode === 401 ||
+            error?.response?.status === 401) {
+            tokenCache.delete(cacheKey(url, username));
+            token = await loginToJenni(url, username, password);
+            return await post(token);
         }
         throw new AppError_1.AppError(`فشل إرسال تحديث الحالة إلى النظام الخارجي: ${error?.response?.data?.message ?? error?.message ?? "unknown"}`, 502);
     }
@@ -101,12 +98,12 @@ async function sendStatusUpdateToJenni(shipmentId, url, actionCode, details = {}
  * @param details     extra fields required by some actions
  * @returns the external response, or null if this status has no external action
  */
-async function updateExternalOrderStatus(shipmentId, url, username, password, status, details = {}) {
+async function updateExternalOrderStatus(shipmentId, url, username, password, registrationText, status, details = {}) {
     const actionCode = (0, externalStatus_1.toExternalAction)(status);
     if (!actionCode) {
         // REGISTERED / CHANGE_ADDRESS — nothing to push
         return null;
     }
-    return sendStatusUpdateToJenni(+shipmentId, url, actionCode, details, username, password);
+    return sendStatusUpdateToJenni(+shipmentId, url, actionCode, details, username, password, registrationText);
 }
 //# sourceMappingURL=updateGeniStatus.js.map

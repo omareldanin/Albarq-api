@@ -873,7 +873,7 @@ class OrdersService {
                     oldOrderData.forwardedFromId === 89 ||
                     oldOrderData.forwardedFromId === 91 ||
                     oldOrderData.forwardedFromId === 87) {
-                    await (0, updateGeniStatus_1.updateExternalOrderStatus)(oldOrderData.shipment_number, webhookUrl, oldOrderData.forwardedFrom?.username || "", oldOrderData.forwardedFrom?.password || "", data.orderData.status ? data.orderData.status : newOrder.status, {
+                    await (0, updateGeniStatus_1.updateExternalOrderStatus)(oldOrderData.shipment_number, webhookUrl, oldOrderData.forwardedFrom?.username || "", oldOrderData.forwardedFrom?.password || "", oldOrderData.forwardedFrom?.registrationText || "", data.orderData.status ? data.orderData.status : newOrder.status, {
                         return_reason: data.orderData.status === "RETURNED"
                             ? data.orderData.notes
                             : undefined,
@@ -891,7 +891,7 @@ class OrdersService {
                             : undefined,
                     });
                 }
-                if (webhookUrl) {
+                else if (webhookUrl) {
                     const payload = {
                         id: newOrder.id,
                         receiptNumber: newOrder.receiptNumber,

@@ -1135,6 +1135,7 @@ export class OrdersService {
             webhookUrl!!,
             oldOrderData.forwardedFrom?.username || "",
             oldOrderData.forwardedFrom?.password || "",
+            oldOrderData.forwardedFrom?.registrationText || "",
             data.orderData.status ? data.orderData.status : newOrder.status,
             {
               return_reason:
@@ -1161,8 +1162,7 @@ export class OrdersService {
                   : undefined,
             },
           );
-        }
-        if (webhookUrl) {
+        } else if (webhookUrl) {
           const payload: any = {
             id: newOrder.id,
             receiptNumber: newOrder.receiptNumber,
