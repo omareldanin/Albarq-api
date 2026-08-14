@@ -88,9 +88,9 @@ export const ORDER_STATUS_TO_EXTERNAL: Record<
     nameAr: "تسليم لمندوب الارتباط",
   }, // NOTE: verify — assumes receiving agent == liaison agent
   [OrderStatus.PROCESSING]: {
-    code: "TREATED",
-    nameEn: "Order/issue has been handled/treated",
-    nameAr: "تم معالجة الطلب",
+    code: "RTO_WITH_DA",
+    nameEn: "Returned shipment with delivery agent",
+    nameAr: "راجع عند المندوب",
   }, // NOTE: verify
   [OrderStatus.IN_MAIN_REPOSITORY]: {
     code: "MOVE_TO_STORE",
