@@ -286,6 +286,7 @@ export class ReportsService {
         orders,
         costs: {
           deliveryAgentDeliveryCost: data.reportData.deliveryAgentDeliveryCost,
+          reportType: data.reportData.type,
         },
       });
 
