@@ -42,6 +42,7 @@ export const reportsOrderSelect = {
     select: {
       branchId: true,
       activeProfit: true,
+      governoratesDeliveryCosts: true,
       company: {
         select: {
           id: true,
@@ -182,6 +183,8 @@ export const reportsOrderSelect = {
     select: {
       id: true,
       name: true,
+      isChild: true,
+      parentBranchId: true,
     },
   },
   repository: {
@@ -211,6 +214,7 @@ export const reportsOrderReform = (
       branchId: order.client.branchId,
       activeProfit: order.client.activeProfit,
       branchCosts: order.client.branchCosts,
+      governoratesDeliveryCosts: order.client.governoratesDeliveryCosts,
     },
     forwardedFrom: {
       id: order.forwardedFrom?.id,

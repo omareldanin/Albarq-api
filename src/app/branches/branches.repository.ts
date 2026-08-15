@@ -41,6 +41,7 @@ export class BranchesRepository {
         governorate: data.governorate,
         receivingDeliveryCosts: data.receivingDeliveryCosts,
         forwardedDeliveryCosts: data.forwardedDeliveryCosts,
+        isChild: data.parentBranchId ? true : false,
         parentBranch: data.parentBranchId
           ? {
               connect: {

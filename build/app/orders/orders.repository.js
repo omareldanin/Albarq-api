@@ -246,6 +246,16 @@ class OrdersRepository {
                 branchId: true,
             },
         });
+        const branch = await db_1.prisma.branch.findUnique({
+            where: {
+                id: data.orderData.branchID,
+            },
+            select: {
+                id: true,
+                isChild: true,
+                parentBranchId: true,
+            },
+        });
         if (!client) {
             throw new AppError_1.AppError("العميل غير موجود", 400);
         }
@@ -309,7 +319,7 @@ class OrdersRepository {
             }
         }
         // Calculate delivery cost
-        let deliveryCost = await this.getDeliverCost(data.clientID, data.orderData.governorate, data.orderData.branchID);
+        let deliveryCost = await this.getDeliverCost(data.clientID, data.orderData.governorate, branch?.isChild ? branch.parentBranchId : data.orderData.branchID);
         const governoratesDeliveryCosts = client.governoratesDeliveryCosts;
         if (governoratesDeliveryCosts) {
             deliveryCost =
@@ -1753,7 +1763,7 @@ class OrdersRepository {
                     ...where,
                 },
                 orderBy: {
-                    createdAt: "desc",
+                    receiptNumber: "asc",
                 },
                 select: reportsOrders_response_1.reportsOrderSelect,
             }, {
@@ -2639,13 +2649,26 @@ class OrdersRepository {
                 let deliveryCost = order?.governorate === client_1.Governorate.BAGHDAD
                     ? (data.costs.baghdadDeliveryCost ?? order.deliveryCost)
                     : (data.costs.governoratesDeliveryCost ?? order?.deliveryCost);
-                const cost = order?.client.branchCosts.find((c) => c.branchId === order.branch?.id);
+                const cost = order?.branch?.isChild
+                    ? order?.client.branchCosts.find((c) => c.branchId === order.branch?.parentBranchId)
+                    : order?.client.branchCosts.find((c) => c.branchId === order.branch?.id);
                 if (order?.client.activeProfit && cost) {
                     deliveryCost =
                         cost?.deliveryAgentProfit +
                             cost?.forwardedBranchProfit +
                             cost?.mainBranchProfit +
                             cost?.receivingBranchProfit;
+                }
+                else if (!data.costs.baghdadDeliveryCost &&
+                    !data.costs.governoratesDeliveryCost) {
+                    const governoratesDeliveryCosts = order?.client
+                        .governoratesDeliveryCosts;
+                    if (governoratesDeliveryCosts) {
+                        deliveryCost =
+                            governoratesDeliveryCosts.find((governorateDeliveryCost) => {
+                                return (governorateDeliveryCost.governorate === order?.governorate);
+                            })?.cost || 0;
+                    }
                 }
                 const clientNet = (order?.paidAmount || 0) - deliveryCost;
                 let insideCost = 0;
@@ -2682,15 +2705,16 @@ class OrdersRepository {
         /* ===============================
            BRANCH REPORT
         =============================== */
-        if (data.costs.reportType === client_1.ReportType.BRANCH &&
-            (data.costs.baghdadDeliveryCost || data.costs.governoratesDeliveryCost)) {
+        if (data.costs.reportType === client_1.ReportType.BRANCH) {
             for (const order of data.orders) {
                 let forwardedBranchNet = order?.forwardedBranchNet;
                 let receivingBranchNet = order?.receivingBranchNet;
                 let cost = order?.governorate === client_1.Governorate.BAGHDAD
-                    ? data.costs.baghdadDeliveryCost
-                    : data.costs.governoratesDeliveryCost;
-                const branchProfit = order?.client.branchCosts.find((c) => c.branchId === order.branch?.id);
+                    ? (data.costs.baghdadDeliveryCost ?? 0)
+                    : (data.costs.governoratesDeliveryCost ?? 0);
+                const branchProfit = order?.branch?.isChild
+                    ? order?.client.branchCosts.find((c) => c.branchId === order.branch?.parentBranchId)
+                    : order?.client.branchCosts.find((c) => c.branchId === order.branch?.id);
                 if (order?.client.activeProfit &&
                     data.branchReportType === "received" &&
                     branchProfit) {
@@ -2706,8 +2730,33 @@ class OrdersRepository {
                             branchProfit.deliveryAgentProfit +
                             branchProfit.mainBranchProfit;
                 }
-                if (!cost)
-                    continue;
+                if (cost === 0) {
+                    const branchIds = [order?.branch?.id, order?.client.branchId].filter((id) => id != null);
+                    const branchsCost = branchIds.length
+                        ? await db_1.prisma.branch.findMany({
+                            where: { id: { in: branchIds } },
+                            select: {
+                                id: true,
+                                receivingDeliveryCosts: true,
+                                forwardedDeliveryCosts: true,
+                            },
+                        })
+                        : [];
+                    const receivingDeliveryCosts = branchsCost.find((b) => b.id === order?.branch?.id)?.forwardedDeliveryCosts;
+                    const forwardedDeliveryCosts = branchsCost.find((b) => b.id === order?.client.branchId)?.receivingDeliveryCosts;
+                    if (data.branchReportType === "forwarded") {
+                        cost =
+                            forwardedDeliveryCosts?.find((governorateDeliveryCost) => {
+                                return (governorateDeliveryCost.governorate === order?.governorate);
+                            })?.cost ?? 0;
+                    }
+                    else if (data.branchReportType === "received") {
+                        cost =
+                            receivingDeliveryCosts?.find((governorateDeliveryCost) => {
+                                return (governorateDeliveryCost.governorate === order?.governorate);
+                            })?.cost ?? 0;
+                    }
+                }
                 if (data.branchReportType === "forwarded") {
                     forwardedBranchNet = cost;
                 }
@@ -2747,40 +2796,44 @@ class OrdersRepository {
                 }
             }
         }
-        if (data.costs.reportType === client_1.ReportType.BRANCH) {
-            if (!data.costs.baghdadDeliveryCost &&
-                !data.costs.governoratesDeliveryCost) {
-                await db_1.prisma.$executeRaw `
-              UPDATE "Order"
-              SET
-                "branchNet" = "paidAmount" - "deliveryCost"
-              WHERE id = ANY(${data.ordersIDs});
-            `;
-            }
-        }
+        // if (data.costs.reportType === ReportType.BRANCH) {
+        //   if (
+        //     !data.costs.baghdadDeliveryCost &&
+        //     !data.costs.governoratesDeliveryCost
+        //   ) {
+        //     await prisma.$executeRaw`
+        //           UPDATE "Order"
+        //           SET
+        //             "branchNet" = "paidAmount" - "deliveryCost"
+        //           WHERE id = ANY(${data.ordersIDs});
+        //         `;
+        //   }
+        // }
         /* ===============================
            DELIVERY AGENT REPORT
         =============================== */
-        if (data.costs.deliveryAgentDeliveryCost) {
+        if (data.costs.reportType === client_1.ReportType.DELIVERY_AGENT) {
             // build response
             for (const order of data.orders) {
-                let deliveryAgentNet = data.costs.deliveryAgentDeliveryCost;
+                let deliveryAgentNet = data.costs.deliveryAgentDeliveryCost ??
+                    order?.deliveryAgent?.deliveryCost ??
+                    0;
                 if (order?.forwardedFrom.activeProfit) {
                     const cost = order.forwardedFrom.branchCosts?.find((c) => c.branchId === order.branch?.id);
                     if (cost) {
                         deliveryAgentNet =
-                            data.costs.deliveryAgentDeliveryCost > cost.receivingBranchProfit
+                            deliveryAgentNet > cost.receivingBranchProfit
                                 ? cost.receivingBranchProfit - 250
-                                : data.costs.deliveryAgentDeliveryCost - 250;
+                                : deliveryAgentNet - 250;
                     }
                 }
                 else if (order?.client.activeProfit) {
                     const cost = order.client.branchCosts.find((c) => c.branchId === order.branch?.id);
                     if (cost) {
                         deliveryAgentNet =
-                            data.costs.deliveryAgentDeliveryCost > cost.receivingBranchProfit
+                            deliveryAgentNet > cost.receivingBranchProfit
                                 ? cost.receivingBranchProfit - 250
-                                : data.costs.deliveryAgentDeliveryCost - 250;
+                                : deliveryAgentNet - 250;
                     }
                 }
                 const companyNet = (order?.paidAmount || 0) - deliveryAgentNet;
