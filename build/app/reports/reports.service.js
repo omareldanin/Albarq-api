@@ -192,6 +192,7 @@ class ReportsService {
                 orders,
                 costs: {
                     deliveryAgentDeliveryCost: data.reportData.deliveryAgentDeliveryCost,
+                    reportType: data.reportData.type,
                 },
             });
             orders = await ordersRepository.getOrdersByIDForReports({ ordersIDs });

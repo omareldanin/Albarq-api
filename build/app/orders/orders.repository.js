@@ -2815,9 +2815,10 @@ class OrdersRepository {
         if (data.costs.reportType === client_1.ReportType.DELIVERY_AGENT) {
             // build response
             for (const order of data.orders) {
-                let deliveryAgentNet = data.costs.deliveryAgentDeliveryCost ??
-                    order?.deliveryAgent?.deliveryCost ??
-                    0;
+                let deliveryAgentNet = data.costs.deliveryAgentDeliveryCost ?? 0;
+                if (deliveryAgentNet === 0) {
+                    deliveryAgentNet = order?.deliveryAgent?.deliveryCost ?? 0;
+                }
                 if (order?.forwardedFrom.activeProfit) {
                     const cost = order.forwardedFrom.branchCosts?.find((c) => c.branchId === order.branch?.id);
                     if (cost) {
@@ -2837,6 +2838,7 @@ class OrdersRepository {
                     }
                 }
                 const companyNet = (order?.paidAmount || 0) - deliveryAgentNet;
+                console.log(companyNet);
                 updatedOrders.push({
                     id: order?.id,
                     deliveryAgentNet,
