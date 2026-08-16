@@ -30,7 +30,7 @@ exports.OrderCreateSchema = zod_1.z.object({
 exports.ShipmentSchema = zod_1.z.object({
     shipment_id: zod_1.z.number(),
     shipment_number: zod_1.z.string(),
-    receiver_name: zod_1.z.string().optional().default("غير معرف"),
+    receiver_name: zod_1.z.string().nullish().transform((v) => v || "غير معرف"),
     receiver_phone_1: zod_1.z.string(),
     governorate_code: zod_1.z.string(),
     city_name: zod_1.z.string(),
