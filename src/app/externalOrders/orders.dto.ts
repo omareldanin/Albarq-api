@@ -31,7 +31,7 @@ export type OrderCreateType = z.infer<typeof OrderCreateSchema>;
 export const ShipmentSchema = z.object({
   shipment_id: z.number(),
   shipment_number: z.string(),
-  receiver_name: z.string().optional().default("غير معرف"),
+  receiver_name: z.string().nullish().transform((v) => v || "غير معرف"),
   receiver_phone_1: z.string(),
   governorate_code: z.string(),
   city_name: z.string(),
