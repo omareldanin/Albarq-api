@@ -600,6 +600,11 @@ class OrdersService {
             data.orderData.status = undefined;
             data.orderData.secondaryStatus = "WITH_AGENT";
         }
+        if (data.loggedInUser.companyID !== oldOrderData.company.id &&
+            oldOrderData.forwarded &&
+            data.orderData.status !== oldOrderData.status) {
+            throw new AppError_1.AppError("الطلب محال إلي شركة اخري", 403);
+        }
         const newOrder = await ordersRepository.updateOrder({
             orderID: oldOrderData.id,
             loggedInUser: data.loggedInUser,
