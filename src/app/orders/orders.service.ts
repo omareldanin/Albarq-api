@@ -1133,10 +1133,18 @@ export class OrdersService {
         const webhookUrl = oldOrderData.forwardedFrom?.webhookUrl;
 
         if (
-          oldOrderData.forwardedFromId === 84 ||
-          oldOrderData.forwardedFromId === 89 ||
-          oldOrderData.forwardedFromId === 91 ||
-          oldOrderData.forwardedFromId === 87
+          (oldOrderData.forwardedFromId === 84 ||
+            oldOrderData.forwardedFromId === 89 ||
+            oldOrderData.forwardedFromId === 91 ||
+            oldOrderData.forwardedFromId === 87) &&
+          (newOrder.status === "DELIVERED" ||
+            newOrder.status === "REPLACED" ||
+            newOrder.status === "RETURNED" ||
+            newOrder.status === "PROCESSING" ||
+            newOrder.status === "POSTPONED" ||
+            newOrder.status === "WITH_DELIVERY_AGENT" ||
+            newOrder.status === "RESEND" ||
+            newOrder.status === "PARTIALLY_RETURNED")
         ) {
           await updateExternalOrderStatus(
             oldOrderData.shipment_number!!,

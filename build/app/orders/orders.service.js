@@ -874,10 +874,18 @@ class OrdersService {
                 oldOrderData.forwardedFromId !== oldOrderData.company.id) {
                 const companyId = oldOrderData.company.id;
                 const webhookUrl = oldOrderData.forwardedFrom?.webhookUrl;
-                if (oldOrderData.forwardedFromId === 84 ||
+                if ((oldOrderData.forwardedFromId === 84 ||
                     oldOrderData.forwardedFromId === 89 ||
                     oldOrderData.forwardedFromId === 91 ||
-                    oldOrderData.forwardedFromId === 87) {
+                    oldOrderData.forwardedFromId === 87) &&
+                    (newOrder.status === "DELIVERED" ||
+                        newOrder.status === "REPLACED" ||
+                        newOrder.status === "RETURNED" ||
+                        newOrder.status === "PROCESSING" ||
+                        newOrder.status === "POSTPONED" ||
+                        newOrder.status === "WITH_DELIVERY_AGENT" ||
+                        newOrder.status === "RESEND" ||
+                        newOrder.status === "PARTIALLY_RETURNED")) {
                     await (0, updateGeniStatus_1.updateExternalOrderStatus)(oldOrderData.shipment_number, webhookUrl, oldOrderData.forwardedFrom?.username || "", oldOrderData.forwardedFrom?.password || "", oldOrderData.forwardedFrom?.registrationText || "", data.orderData.status ? data.orderData.status : newOrder.status, {
                         return_reason: data.orderData.status === "RETURNED"
                             ? data.orderData.notes
