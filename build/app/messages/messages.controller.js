@@ -92,31 +92,44 @@ class MessagesController {
         }
         // non-inquiry roles
         return {
-            ...(includeStatusAndDeleted && { deleted: false }),
-            ...(includeStatusAndDeleted && {
-                status: status && status !== "null"
-                    ? status
-                    : isClientAssistant
-                        ? { in: employee?.orderStatus }
+            AND: [
+                { ...(includeStatusAndDeleted && { deleted: false }) },
+                {
+                    ...(includeStatusAndDeleted && {
+                        status: status && status !== "null"
+                            ? status
+                            : isClientAssistant
+                                ? { in: employee?.orderStatus }
+                                : undefined,
+                    }),
+                },
+                { clientId: user.role === "CLIENT" ? user.id : undefined },
+                {
+                    OR: [
+                        { companyId: user.companyID },
+                        { forwardedFromId: user.companyID },
+                    ],
+                },
+                {
+                    branchId: user.role !== "COMPANY_MANAGER" &&
+                        !isClientAssistant &&
+                        !user.mainRepository &&
+                        user.role !== "DELIVERY_AGENT" &&
+                        user.role !== "BRANCH_MANAGER"
+                        ? employee?.branchId
                         : undefined,
-            }),
-            clientId: user.role === "CLIENT" ? user.id : undefined,
-            companyId: user?.companyID || undefined,
-            branchId: user.role !== "COMPANY_MANAGER" &&
-                !isClientAssistant &&
-                !user.mainRepository &&
-                user.role !== "DELIVERY_AGENT" &&
-                user.role !== "BRANCH_MANAGER"
-                ? employee?.branchId
-                : undefined,
-            deliveryAgentId: user.role === "DELIVERY_AGENT" ? user.id : undefined,
-            storeId: isClientAssistant ? { in: inquiryStoresIDs } : undefined,
-            OR: user.role === "BRANCH_MANAGER"
-                ? [
-                    { branchId: employee?.branchId },
-                    { client: { branchId: employee?.branchId } },
-                ]
-                : undefined,
+                },
+                { deliveryAgentId: user.role === "DELIVERY_AGENT" ? user.id : undefined },
+                { storeId: isClientAssistant ? { in: inquiryStoresIDs } : undefined },
+                {
+                    OR: user.role === "BRANCH_MANAGER"
+                        ? [
+                            { branchId: employee?.branchId },
+                            { client: { branchId: employee?.branchId } },
+                        ]
+                        : undefined,
+                },
+            ],
         };
     };
     buildInquiryBranchORSql = (user, scope) => {
@@ -770,13 +783,6 @@ class MessagesController {
                         id: loggedInUser.id,
                     },
                 },
-                seenByClient: loggedInUser.role === "CLIENT",
-                seenByClientAssistant: loggedInUser.role === "CLIENT_ASSISTANT" ||
-                    loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT",
-                seenByDelivery: loggedInUser.role === "DELIVERY_AGENT",
-                seenByBranchManager: loggedInUser.role === "BRANCH_MANAGER",
-                seenByCompanyManager: loggedInUser.role === "COMPANY_MANAGER",
-                seenByCallCenter: loggedInUser.role === "INQUIRY_EMPLOYEE",
             },
             select: {
                 id: true,
