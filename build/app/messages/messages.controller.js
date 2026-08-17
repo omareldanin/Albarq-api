@@ -214,7 +214,7 @@ class MessagesController {
             conditions.push(client_1.Prisma.sql `o."clientId" = ${user.id}`);
         }
         if (user.companyID) {
-            conditions.push(client_1.Prisma.sql `o."companyId" = ${user.companyID}`);
+            conditions.push(client_1.Prisma.sql `(o."companyId" = ${user.companyID} OR o."forwardedFromId" = ${user.companyID})`);
         }
         const usesBranchFilter = user.role !== "COMPANY_MANAGER" &&
             !isClientAssistant &&

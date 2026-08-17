@@ -300,7 +300,9 @@ export class MessagesController {
     }
 
     if (user.companyID) {
-      conditions.push(Prisma.sql`o."companyId" = ${user.companyID}`);
+      conditions.push(
+        Prisma.sql`(o."companyId" = ${user.companyID} OR o."forwardedFromId" = ${user.companyID})`,
+      );
     }
 
     const usesBranchFilter =
