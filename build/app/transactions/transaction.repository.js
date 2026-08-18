@@ -175,6 +175,141 @@ class TransactionsRepository {
             forwardedBranchNet: forwardedBranchProfit,
         };
     };
+    getProfitOrders = async (params) => {
+        const { companyId, myBranchId, bucket, applyBranchScope, startDay, endDay, page, size, clientId, storeId, deliveryAgentId, governorate, receiptNumber, } = params;
+        // ---- the scoped "inside" bucket needs raw SQL ----
+        if (bucket === "inside" && applyBranchScope) {
+            const extraSql = client_1.Prisma.sql `
+      ${startDay ? client_1.Prisma.sql `AND o."deliveriedAt" >= ${new Date(startDay)}` : client_1.Prisma.empty}
+      ${endDay ? client_1.Prisma.sql `AND o."deliveriedAt" < ${new Date(new Date(endDay).getTime() + 86400000)}` : client_1.Prisma.empty}
+      ${clientId ? client_1.Prisma.sql `AND o."clientId" = ${clientId}` : client_1.Prisma.empty}
+      ${storeId ? client_1.Prisma.sql `AND o."storeId" = ${storeId}` : client_1.Prisma.empty}
+      ${deliveryAgentId ? client_1.Prisma.sql `AND o."deliveryAgentId" = ${deliveryAgentId}` : client_1.Prisma.empty}
+      ${governorate ? client_1.Prisma.sql `AND o."governorate" = ${governorate}::"Governorate"` : client_1.Prisma.empty}
+      ${receiptNumber ? client_1.Prisma.sql `AND o."receiptNumber" = ${receiptNumber}` : client_1.Prisma.empty}
+    `;
+            const whereSql = client_1.Prisma.sql `
+      o."companyId" = ${companyId}
+      AND o."deleted" = false
+      AND o."confirmed" = true
+      AND o."deliveriedAt" IS NOT NULL
+      AND o."status" IN ('DELIVERED','PARTIALLY_RETURNED','REPLACED')
+      AND c."branchId" <> ${myBranchId}
+      AND o."branchId" IS DISTINCT FROM c."branchId"
+      ${extraSql}
+    `;
+            const [orders, countRows] = await Promise.all([
+                db_1.prisma.$queryRaw `
+        SELECT
+          o."id",
+          o."receiptNumber",
+          o."governorate",
+          o."status",
+          o."deliveriedAt",
+          o."deliveryCost",
+          o."paidAmount",
+          o."insideBranchNet",
+          o."receivingBranchNet",
+          o."forwardedBranchNet",
+          o."deliveryAgentNet",
+          o."branchId",
+          ob."name" AS "orderBranchName",
+          c."branchId" AS "clientBranchId",
+          cb."name"   AS "clientBranchName",
+          u."name"    AS "clientName",
+          s."name"    AS "storeName",
+          au."name"   AS "deliveryAgentName"
+        FROM "Order" o
+        JOIN "Client" c  ON c."id" = o."clientId"
+        LEFT JOIN "User" u    ON u."id" = c."id"
+        LEFT JOIN "Branch" ob ON ob."id" = o."branchId"
+        LEFT JOIN "Branch" cb ON cb."id" = c."branchId"
+        LEFT JOIN "Store" s   ON s."id" = o."storeId"
+        LEFT JOIN "User" au   ON au."id" = o."deliveryAgentId"
+        WHERE ${whereSql}
+        ORDER BY o."deliveriedAt" DESC
+        LIMIT ${size} OFFSET ${(page - 1) * size};
+      `,
+                page === 1
+                    ? db_1.prisma.$queryRaw `
+            SELECT COUNT(*) AS count
+            FROM "Order" o
+            JOIN "Client" c ON c."id" = o."clientId"
+            WHERE ${whereSql};
+          `
+                    : Promise.resolve(undefined),
+            ]);
+            return {
+                orders,
+                pagesCount: countRows
+                    ? Math.ceil(Number(countRows[0].count) / size)
+                    : undefined,
+            };
+        }
+        // ---- everything else stays in Prisma ----
+        const base = {
+            companyId,
+            deleted: false,
+            confirmed: true,
+            status: { in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"] },
+            deliveriedAt: {
+                not: null,
+                ...(startDay && { gte: new Date(startDay) }),
+                ...(endDay && { lt: new Date(new Date(endDay).getTime() + 86400000) }),
+            },
+            ...(clientId !== undefined && { clientId }),
+            ...(storeId !== undefined && { storeId }),
+            ...(deliveryAgentId !== undefined && { deliveryAgentId }),
+            ...(governorate !== undefined && { governorate }),
+            ...(receiptNumber !== undefined && { receiptNumber }),
+        };
+        const where = bucket === "received"
+            ? { ...base, branchId: myBranchId, client: { branchId: { not: myBranchId } } }
+            : bucket === "forwarded"
+                ? {
+                    ...base,
+                    branchId: { not: myBranchId },
+                    client: { branchId: myBranchId },
+                }
+                : { ...base, branchId: myBranchId, client: { branchId: myBranchId } };
+        const [orders, count] = await Promise.all([
+            db_1.prisma.order.findMany({
+                skip: (page - 1) * size,
+                take: size,
+                where,
+                orderBy: { deliveriedAt: "desc" },
+                select: {
+                    id: true,
+                    receiptNumber: true,
+                    governorate: true,
+                    status: true,
+                    deliveriedAt: true,
+                    deliveryCost: true,
+                    paidAmount: true,
+                    insideBranchNet: true,
+                    receivingBranchNet: true,
+                    forwardedBranchNet: true,
+                    deliveryAgentNet: true,
+                    branch: { select: { id: true, name: true } },
+                    store: { select: { id: true, name: true } },
+                    deliveryAgent: { select: { id: true, user: { select: { name: true } } } },
+                    client: {
+                        select: {
+                            id: true,
+                            branchId: true,
+                            user: { select: { name: true } },
+                            branch: { select: { name: true } },
+                        },
+                    },
+                },
+            }),
+            page === 1 ? db_1.prisma.order.count({ where }) : Promise.resolve(undefined),
+        ]);
+        return {
+            orders,
+            pagesCount: count !== undefined ? Math.ceil(count / size) : undefined,
+        };
+    };
     createTransaction = async ({ companyID, createdByID, data, }) => {
         const { employeeID, reportID, branchID, ...rest } = data;
         return db_1.prisma.transaction.create({
@@ -189,8 +324,8 @@ class TransactionsRepository {
             select: transactionSelect,
         });
     };
-    getAllTransactionsPaginated = async ({ page, size, companyID, branchID, employeeID, type, approved, deleted, startDate, endDate, }, loggedInUser) => {
-        const applyBranchScope = loggedInUser?.role === "COMPANY_MANAGER" || loggedInUser?.mainRepository;
+    getAllTransactionsPaginated = async ({ page, size, companyID, branchID, employeeID, type, approved, deleted, startDate, endDate, targetBranch, }, loggedInUser) => {
+        let applyBranchScope = loggedInUser?.role === "COMPANY_MANAGER" || loggedInUser?.mainRepository;
         let myBranchId = loggedInUser?.branchId;
         if (loggedInUser?.role === "COMPANY_MANAGER") {
             const mainBranch = await db_1.prisma.repository.findFirst({
@@ -203,6 +338,12 @@ class TransactionsRepository {
                 },
             });
             myBranchId = mainBranch?.branchId || loggedInUser?.branchId;
+        }
+        if (loggedInUser?.role === "COMPANY_MANAGER" &&
+            loggedInUser.mainRepository &&
+            targetBranch) {
+            myBranchId = targetBranch;
+            applyBranchScope = false;
         }
         const where = {
             companyId: companyID,
@@ -326,7 +467,7 @@ class TransactionsRepository {
     };
     async getStatistics(filters) {
         let childBranchs = [];
-        const applyBranchScope = filters.loggedInUser?.role === "COMPANY_MANAGER" ||
+        let applyBranchScope = filters.loggedInUser?.role === "COMPANY_MANAGER" ||
             filters.loggedInUser?.mainRepository;
         let myBranchId = filters.loggedInUser?.branchId;
         if (filters.loggedInUser?.role === "COMPANY_MANAGER") {
@@ -340,6 +481,12 @@ class TransactionsRepository {
                 },
             });
             myBranchId = mainBranch?.branchId;
+        }
+        if (filters.loggedInUser?.role === "COMPANY_MANAGER" &&
+            filters.loggedInUser.mainRepository &&
+            filters.targetBranch) {
+            myBranchId = filters.targetBranch;
+            applyBranchScope = false;
         }
         const branchs = await db_1.prisma.branch.findMany({
             where: {
@@ -391,7 +538,7 @@ class TransactionsRepository {
                         : {
                             approved: true,
                             type: "DEPOSIT",
-                            branchId: filters.loggedInUser?.branchId,
+                            branchId: myBranchId,
                         }),
                 },
             }),
@@ -420,7 +567,7 @@ class TransactionsRepository {
                         : {
                             approved: true,
                             type: "WITHDRAW",
-                            branchId: filters.loggedInUser?.branchId,
+                            branchId: myBranchId,
                         }),
                 },
             }),
@@ -560,9 +707,9 @@ class TransactionsRepository {
                         companyId: filters.companyId,
                         deleted: false,
                         confirmed: true,
-                        branchId: filters.loggedInUser?.branchId,
+                        branchId: myBranchId,
                         client: {
-                            branchId: filters.loggedInUser?.branchId,
+                            branchId: myBranchId,
                         },
                         ...(createdAtFilter && { createdAt: createdAtFilter }),
                         clientReport: {
@@ -591,7 +738,7 @@ class TransactionsRepository {
                     ...(createdAtFilter && { createdAt: createdAtFilter }),
                     branchReport: {
                         some: {
-                            branchId: filters.loggedInUser?.branchId,
+                            branchId: myBranchId,
                             type: "received",
                             report: {
                                 deleted: false,
@@ -641,7 +788,7 @@ class TransactionsRepository {
                         : {
                             branchReport: {
                                 some: {
-                                    branchId: filters.loggedInUser?.branchId,
+                                    branchId: myBranchId,
                                     type: "forwarded",
                                     report: {
                                         deleted: false,
@@ -900,7 +1047,7 @@ class TransactionsRepository {
         };
     }
     async getDailyStatistics(filters) {
-        const applyBranchScope = filters.loggedInUser?.role === "COMPANY_MANAGER" ||
+        let applyBranchScope = filters.loggedInUser?.role === "COMPANY_MANAGER" ||
             filters.loggedInUser?.mainRepository;
         let myBranchId = filters.loggedInUser?.branchId;
         if (filters.loggedInUser?.role === "COMPANY_MANAGER") {
@@ -914,6 +1061,12 @@ class TransactionsRepository {
                 },
             });
             myBranchId = mainBranch?.branchId;
+        }
+        if (filters.loggedInUser?.role === "COMPANY_MANAGER" &&
+            filters.loggedInUser.mainRepository &&
+            filters.targetBranch) {
+            myBranchId = filters.targetBranch;
+            applyBranchScope = false;
         }
         let startDate = new Date();
         let endDate = new Date();
@@ -947,7 +1100,7 @@ class TransactionsRepository {
                         : {
                             approved: false,
                             type: "DEPOSIT",
-                            branchId: filters.loggedInUser?.branchId,
+                            branchId: myBranchId,
                         }),
                 },
             }),
@@ -976,7 +1129,7 @@ class TransactionsRepository {
                         : {
                             approvedforMain: false,
                             type: "WITHDRAW",
-                            branchId: filters.loggedInUser?.branchId,
+                            branchId: myBranchId,
                         }),
                 },
             }),
@@ -1021,7 +1174,7 @@ class TransactionsRepository {
                     activeProfit: true,
                     clientReport: {
                         clientId: filters.clientId,
-                        client: { branchId: filters.loggedInUser?.branchId },
+                        client: { branchId: myBranchId },
                         secondaryType: "DELIVERED",
                         report: { deleted: false, activeProfit: true },
                     },
@@ -1094,9 +1247,9 @@ class TransactionsRepository {
                         companyId: filters.companyId,
                         deleted: false,
                         confirmed: true,
-                        branchId: filters.loggedInUser?.branchId,
+                        branchId: myBranchId,
                         client: {
-                            branchId: filters.loggedInUser?.branchId,
+                            branchId: myBranchId,
                         },
                         clientReport: {
                             some: {
@@ -1123,7 +1276,7 @@ class TransactionsRepository {
                     confirmed: true,
                     branchReport: {
                         some: {
-                            branchId: filters.loggedInUser?.branchId,
+                            branchId: myBranchId,
                             type: "received",
                             report: {
                                 deleted: false,
@@ -1172,7 +1325,7 @@ class TransactionsRepository {
                         : {
                             branchReport: {
                                 some: {
-                                    branchId: filters.loggedInUser?.branchId,
+                                    branchId: myBranchId,
                                     type: "forwarded",
                                     report: {
                                         deleted: false,
@@ -1246,7 +1399,7 @@ class TransactionsRepository {
         };
     }
     async getDailyProfit(filters) {
-        const applyBranchScope = filters.loggedInUser?.role === "COMPANY_MANAGER" ||
+        let applyBranchScope = filters.loggedInUser?.role === "COMPANY_MANAGER" ||
             filters.loggedInUser?.mainRepository;
         let myBranchId = filters.loggedInUser?.branchId;
         if (filters.loggedInUser?.role === "COMPANY_MANAGER") {
@@ -1260,6 +1413,12 @@ class TransactionsRepository {
                 },
             });
             myBranchId = mainBranch?.branchId;
+        }
+        if (filters.loggedInUser?.role === "COMPANY_MANAGER" &&
+            filters.loggedInUser.mainRepository &&
+            filters.targetBranch) {
+            myBranchId = filters.targetBranch;
+            applyBranchScope = false;
         }
         let startDate = new Date();
         let endDate = new Date();

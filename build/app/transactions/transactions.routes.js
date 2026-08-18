@@ -23,6 +23,9 @@ router
     .route("/transactions/profits/daily")
     .get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.EmployeeRole.BRANCH_MANAGER]), transactionsController.getAllDailyProfits);
 router
+    .route("/transactions/profits/orders")
+    .get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.EmployeeRole.BRANCH_MANAGER]), transactionsController.getProfitOrders);
+router
     .route("/transactions/profits")
     .get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.EmployeeRole.BRANCH_MANAGER]), transactionsController.getBranchrofit);
 router

@@ -1,4 +1,4 @@
-import {AdminRole, EmployeeRole} from "@prisma/client";
+import {AdminRole, EmployeeRole, Governorate} from "@prisma/client";
 import {AppError} from "../../lib/AppError";
 import {catchAsync} from "../../lib/catchAsync";
 import type {loggedInUserType} from "../../types/user";
@@ -45,6 +45,107 @@ export class TransactionsController {
     res.status(200).json({status: "success", data: transaction});
   });
 
+  getProfitOrders = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    let companyId: number;
+    if (Object.keys(AdminRole).includes(loggedInUser.role)) {
+      companyId = req.query.company_id
+        ? +req.query.company_id
+        : (loggedInUser.companyID as number);
+    } else {
+      companyId = loggedInUser.companyID as number;
+    }
+
+    const bucket = req.query.bucket as
+      | "inside"
+      | "received"
+      | "forwarded"
+      | undefined;
+
+    if (!bucket || !["inside", "received", "forwarded"].includes(bucket)) {
+      throw new AppError("نوع الأرباح غير صحيح", 400);
+    }
+
+    // resolve the branch the same way getAllDailyProfits does
+    const targetBranch = req.query.targetBranch
+      ? +req.query.targetBranch
+      : undefined;
+
+    let myBranchId = loggedInUser.branchId;
+
+    if (loggedInUser.role === EmployeeRole.BRANCH_MANAGER) {
+      myBranchId = loggedInUser.branchId;
+    } else if (loggedInUser.role === EmployeeRole.COMPANY_MANAGER) {
+      const mainBranch = await prisma.repository.findFirst({
+        where: {
+          companyId: loggedInUser.companyID,
+          mainRepository: true,
+        },
+        select: {branchId: true},
+      });
+      myBranchId = mainBranch?.branchId || loggedInUser?.branchId;
+    }
+
+    let applyBranchScope =
+      (loggedInUser.role === "COMPANY_MANAGER" ||
+        !!loggedInUser.mainRepository) &&
+      !targetBranch;
+
+    if (
+      loggedInUser?.role === "COMPANY_MANAGER" &&
+      loggedInUser.mainRepository &&
+      targetBranch
+    ) {
+      myBranchId = targetBranch;
+      applyBranchScope = false;
+    }
+
+    const startDay = req.query.start_day as string | undefined;
+    const endDay = req.query.end_day as string | undefined;
+
+    const clientId = req.query.client_id ? +req.query.client_id : undefined;
+    const storeId = req.query.store_id ? +req.query.store_id : undefined;
+    const deliveryAgentId = req.query.delivery_agent_id
+      ? +req.query.delivery_agent_id
+      : undefined;
+    const governorate = req.query.governorate as Governorate | undefined;
+    const receiptNumber = req.query.receipt_number as string | undefined;
+
+    const size = req.query.size ? +req.query.size : 20;
+    let page = 1;
+    if (
+      req.query.page &&
+      !Number.isNaN(+req.query.page) &&
+      +req.query.page > 0
+    ) {
+      page = +req.query.page;
+    }
+
+    const {orders, pagesCount} = await transactionsRepository.getProfitOrders({
+      companyId,
+      myBranchId,
+      bucket,
+      applyBranchScope,
+      startDay,
+      endDay,
+      page,
+      size,
+      clientId,
+      storeId,
+      deliveryAgentId,
+      governorate,
+      receiptNumber,
+    });
+
+    res.status(200).json({
+      status: "success",
+      page,
+      pagesCount,
+      data: orders,
+    });
+  });
+
   getAllTransactions = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
 
@@ -58,6 +159,9 @@ export class TransactionsController {
     const branchID = req.query.branch_id
       ? +req.query.branch_id
       : loggedInUser.branchId;
+    const targetBranch = req.query.targetBranch
+      ? +req.query.targetBranch
+      : undefined;
     const employeeID = req.query.employee_id
       ? +req.query.employee_id
       : undefined;
@@ -96,6 +200,7 @@ export class TransactionsController {
           deleted,
           startDate,
           endDate,
+          targetBranch,
         },
         loggedInUser,
       );
@@ -122,6 +227,9 @@ export class TransactionsController {
 
     // branch managers see only their own branch
     let branchId = req.query.branch_id ? +req.query.branch_id : undefined;
+    const targetBranch = req.query.targetBranch
+      ? +req.query.targetBranch
+      : undefined;
 
     if (loggedInUser.role === EmployeeRole.BRANCH_MANAGER) {
       branchId = loggedInUser.branchId;
@@ -136,6 +244,14 @@ export class TransactionsController {
         },
       });
       branchId = mainBranch?.branchId || loggedInUser?.branchId;
+    }
+
+    if (
+      loggedInUser?.role === "COMPANY_MANAGER" &&
+      loggedInUser.mainRepository &&
+      targetBranch
+    ) {
+      branchId = targetBranch;
     }
     const startDay = req.query.start_day as string | undefined;
     const endDay = req.query.end_day as string | undefined;
@@ -202,7 +318,9 @@ export class TransactionsController {
     const type = req.query.type as string | undefined;
     const start_date = req.query.start_date as string | undefined;
     const end_date = req.query.end_date as string | undefined;
-
+    const targetBranch = req.query.targetBranch
+      ? +req.query.targetBranch
+      : undefined;
     const statistics = await transactionsRepository.getStatistics({
       companyId,
       deliveryAgentId,
@@ -211,6 +329,7 @@ export class TransactionsController {
       type,
       start_date,
       end_date,
+      targetBranch,
       loggedInUser,
     });
 
@@ -239,6 +358,9 @@ export class TransactionsController {
     const type = req.query.type as string | undefined;
     const start_date = req.query.start_date as string | undefined;
     const end_date = req.query.end_date as string | undefined;
+    const targetBranch = req.query.targetBranch
+      ? +req.query.targetBranch
+      : undefined;
 
     const statistics = await transactionsRepository.getDailyStatistics({
       companyId,
@@ -247,6 +369,7 @@ export class TransactionsController {
       branchId,
       type,
       start_date,
+      targetBranch,
       end_date,
       loggedInUser,
     });
@@ -276,6 +399,9 @@ export class TransactionsController {
     const type = req.query.type as string | undefined;
     const start_date = req.query.start_date as string | undefined;
     const end_date = req.query.end_date as string | undefined;
+    const targetBranch = req.query.targetBranch
+      ? +req.query.targetBranch
+      : undefined;
 
     const statistics = await transactionsRepository.getDailyProfit({
       companyId,
@@ -285,6 +411,7 @@ export class TransactionsController {
       type,
       start_date,
       end_date,
+      targetBranch,
       loggedInUser,
     });
 

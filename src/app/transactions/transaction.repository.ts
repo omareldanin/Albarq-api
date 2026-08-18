@@ -1,4 +1,4 @@
-import {Prisma} from "@prisma/client";
+import {Governorate, Prisma} from "@prisma/client";
 import {prisma} from "../../database/db";
 import {loggedInUserType} from "../../types/user";
 import type {
@@ -212,6 +212,180 @@ export class TransactionsRepository {
     };
   };
 
+  getProfitOrders = async (params: {
+    companyId: number;
+    myBranchId?: number;
+    bucket: "inside" | "received" | "forwarded";
+    applyBranchScope: boolean;
+    startDay?: string;
+    endDay?: string;
+    page: number;
+    size: number;
+    // new filters
+    clientId?: number;
+    storeId?: number;
+    deliveryAgentId?: number;
+    governorate?: Governorate;
+    receiptNumber?: string;
+  }) => {
+    const {
+      companyId,
+      myBranchId,
+      bucket,
+      applyBranchScope,
+      startDay,
+      endDay,
+      page,
+      size,
+      clientId,
+      storeId,
+      deliveryAgentId,
+      governorate,
+      receiptNumber,
+    } = params;
+
+    // ---- the scoped "inside" bucket needs raw SQL ----
+    if (bucket === "inside" && applyBranchScope) {
+      const extraSql = Prisma.sql`
+      ${startDay ? Prisma.sql`AND o."deliveriedAt" >= ${new Date(startDay)}` : Prisma.empty}
+      ${endDay ? Prisma.sql`AND o."deliveriedAt" < ${new Date(new Date(endDay).getTime() + 86400000)}` : Prisma.empty}
+      ${clientId ? Prisma.sql`AND o."clientId" = ${clientId}` : Prisma.empty}
+      ${storeId ? Prisma.sql`AND o."storeId" = ${storeId}` : Prisma.empty}
+      ${deliveryAgentId ? Prisma.sql`AND o."deliveryAgentId" = ${deliveryAgentId}` : Prisma.empty}
+      ${governorate ? Prisma.sql`AND o."governorate" = ${governorate}::"Governorate"` : Prisma.empty}
+      ${receiptNumber ? Prisma.sql`AND o."receiptNumber" = ${receiptNumber}` : Prisma.empty}
+    `;
+
+      const whereSql = Prisma.sql`
+      o."companyId" = ${companyId}
+      AND o."deleted" = false
+      AND o."confirmed" = true
+      AND o."deliveriedAt" IS NOT NULL
+      AND o."status" IN ('DELIVERED','PARTIALLY_RETURNED','REPLACED')
+      AND c."branchId" <> ${myBranchId}
+      AND o."branchId" IS DISTINCT FROM c."branchId"
+      ${extraSql}
+    `;
+
+      const [orders, countRows] = await Promise.all([
+        prisma.$queryRaw<any[]>`
+        SELECT
+          o."id",
+          o."receiptNumber",
+          o."governorate",
+          o."status",
+          o."deliveriedAt",
+          o."deliveryCost",
+          o."paidAmount",
+          o."insideBranchNet",
+          o."receivingBranchNet",
+          o."forwardedBranchNet",
+          o."deliveryAgentNet",
+          o."branchId",
+          ob."name" AS "orderBranchName",
+          c."branchId" AS "clientBranchId",
+          cb."name"   AS "clientBranchName",
+          u."name"    AS "clientName",
+          s."name"    AS "storeName",
+          au."name"   AS "deliveryAgentName"
+        FROM "Order" o
+        JOIN "Client" c  ON c."id" = o."clientId"
+        LEFT JOIN "User" u    ON u."id" = c."id"
+        LEFT JOIN "Branch" ob ON ob."id" = o."branchId"
+        LEFT JOIN "Branch" cb ON cb."id" = c."branchId"
+        LEFT JOIN "Store" s   ON s."id" = o."storeId"
+        LEFT JOIN "User" au   ON au."id" = o."deliveryAgentId"
+        WHERE ${whereSql}
+        ORDER BY o."deliveriedAt" DESC
+        LIMIT ${size} OFFSET ${(page - 1) * size};
+      `,
+        page === 1
+          ? prisma.$queryRaw<{count: bigint}[]>`
+            SELECT COUNT(*) AS count
+            FROM "Order" o
+            JOIN "Client" c ON c."id" = o."clientId"
+            WHERE ${whereSql};
+          `
+          : Promise.resolve(undefined),
+      ]);
+
+      return {
+        orders,
+        pagesCount: countRows
+          ? Math.ceil(Number(countRows[0].count) / size)
+          : undefined,
+      };
+    }
+
+    // ---- everything else stays in Prisma ----
+    const base: Prisma.OrderWhereInput = {
+      companyId,
+      deleted: false,
+      confirmed: true,
+      status: {in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"]},
+      deliveriedAt: {
+        not: null,
+        ...(startDay && {gte: new Date(startDay)}),
+        ...(endDay && {lt: new Date(new Date(endDay).getTime() + 86400000)}),
+      },
+      ...(clientId !== undefined && {clientId}),
+      ...(storeId !== undefined && {storeId}),
+      ...(deliveryAgentId !== undefined && {deliveryAgentId}),
+      ...(governorate !== undefined && {governorate}),
+      ...(receiptNumber !== undefined && {receiptNumber}),
+    };
+
+    const where: Prisma.OrderWhereInput =
+      bucket === "received"
+        ? {...base, branchId: myBranchId, client: {branchId: {not: myBranchId}}}
+        : bucket === "forwarded"
+          ? {
+              ...base,
+              branchId: {not: myBranchId},
+              client: {branchId: myBranchId},
+            }
+          : {...base, branchId: myBranchId, client: {branchId: myBranchId}};
+
+    const [orders, count] = await Promise.all([
+      prisma.order.findMany({
+        skip: (page - 1) * size,
+        take: size,
+        where,
+        orderBy: {deliveriedAt: "desc"},
+        select: {
+          id: true,
+          receiptNumber: true,
+          governorate: true,
+          status: true,
+          deliveriedAt: true,
+          deliveryCost: true,
+          paidAmount: true,
+          insideBranchNet: true,
+          receivingBranchNet: true,
+          forwardedBranchNet: true,
+          deliveryAgentNet: true,
+          branch: {select: {id: true, name: true}},
+          store: {select: {id: true, name: true}},
+          deliveryAgent: {select: {id: true, user: {select: {name: true}}}},
+          client: {
+            select: {
+              id: true,
+              branchId: true,
+              user: {select: {name: true}},
+              branch: {select: {name: true}},
+            },
+          },
+        },
+      }),
+      page === 1 ? prisma.order.count({where}) : Promise.resolve(undefined),
+    ]);
+
+    return {
+      orders,
+      pagesCount: count !== undefined ? Math.ceil(count / size) : undefined,
+    };
+  };
+
   createTransaction = async ({
     companyID,
     createdByID,
@@ -248,11 +422,13 @@ export class TransactionsRepository {
       deleted,
       startDate,
       endDate,
+      targetBranch,
     }: {
       page: number;
       size: number;
       companyID?: number;
       branchID?: number;
+      targetBranch?: number;
       employeeID?: number;
       type?: string;
       approved?: boolean;
@@ -262,7 +438,7 @@ export class TransactionsRepository {
     },
     loggedInUser: loggedInUserType,
   ) => {
-    const applyBranchScope =
+    let applyBranchScope =
       loggedInUser?.role === "COMPANY_MANAGER" || loggedInUser?.mainRepository;
 
     let myBranchId = loggedInUser?.branchId;
@@ -278,6 +454,15 @@ export class TransactionsRepository {
         },
       });
       myBranchId = mainBranch?.branchId || loggedInUser?.branchId;
+    }
+
+    if (
+      loggedInUser?.role === "COMPANY_MANAGER" &&
+      loggedInUser.mainRepository &&
+      targetBranch
+    ) {
+      myBranchId = targetBranch;
+      applyBranchScope = false;
     }
 
     const where: Prisma.TransactionWhereInput = {
@@ -420,6 +605,7 @@ export class TransactionsRepository {
     deliveryAgentId?: number;
     clientId?: number;
     branchId?: number;
+    targetBranch?: number;
     type?: string;
     start_date?: string;
     end_date?: string;
@@ -427,7 +613,7 @@ export class TransactionsRepository {
   }) {
     let childBranchs: number[] = [];
 
-    const applyBranchScope =
+    let applyBranchScope =
       filters.loggedInUser?.role === "COMPANY_MANAGER" ||
       filters.loggedInUser?.mainRepository;
 
@@ -445,6 +631,14 @@ export class TransactionsRepository {
       });
       myBranchId = mainBranch?.branchId;
     }
+    if (
+      filters.loggedInUser?.role === "COMPANY_MANAGER" &&
+      filters.loggedInUser.mainRepository &&
+      filters.targetBranch
+    ) {
+      myBranchId = filters.targetBranch;
+      applyBranchScope = false;
+    }
 
     const branchs = await prisma.branch.findMany({
       where: {
@@ -454,6 +648,7 @@ export class TransactionsRepository {
         id: true,
       },
     });
+
     childBranchs = branchs.map((b) => b.id);
 
     const branchScope = [myBranchId, ...childBranchs].filter(
@@ -514,7 +709,7 @@ export class TransactionsRepository {
             : {
                 approved: true,
                 type: "DEPOSIT",
-                branchId: filters.loggedInUser?.branchId,
+                branchId: myBranchId,
               }),
         },
       }),
@@ -544,7 +739,7 @@ export class TransactionsRepository {
             : {
                 approved: true,
                 type: "WITHDRAW",
-                branchId: filters.loggedInUser?.branchId,
+                branchId: myBranchId,
               }),
         },
       }),
@@ -689,9 +884,9 @@ export class TransactionsRepository {
               companyId: filters.companyId,
               deleted: false,
               confirmed: true,
-              branchId: filters.loggedInUser?.branchId,
+              branchId: myBranchId,
               client: {
-                branchId: filters.loggedInUser?.branchId,
+                branchId: myBranchId,
               },
               ...(createdAtFilter && {createdAt: createdAtFilter}),
               clientReport: {
@@ -721,7 +916,7 @@ export class TransactionsRepository {
           ...(createdAtFilter && {createdAt: createdAtFilter}),
           branchReport: {
             some: {
-              branchId: filters.loggedInUser?.branchId,
+              branchId: myBranchId,
               type: "received",
               report: {
                 deleted: false,
@@ -772,7 +967,7 @@ export class TransactionsRepository {
             : {
                 branchReport: {
                   some: {
-                    branchId: filters.loggedInUser?.branchId,
+                    branchId: myBranchId,
                     type: "forwarded",
                     report: {
                       deleted: false,
@@ -1073,13 +1268,14 @@ export class TransactionsRepository {
     companyId?: number;
     deliveryAgentId?: number;
     clientId?: number;
+    targetBranch?: number;
     branchId?: number;
     type?: string;
     start_date?: string;
     end_date?: string;
     loggedInUser?: loggedInUserType;
   }) {
-    const applyBranchScope =
+    let applyBranchScope =
       filters.loggedInUser?.role === "COMPANY_MANAGER" ||
       filters.loggedInUser?.mainRepository;
 
@@ -1098,6 +1294,14 @@ export class TransactionsRepository {
       myBranchId = mainBranch?.branchId;
     }
 
+    if (
+      filters.loggedInUser?.role === "COMPANY_MANAGER" &&
+      filters.loggedInUser.mainRepository &&
+      filters.targetBranch
+    ) {
+      myBranchId = filters.targetBranch;
+      applyBranchScope = false;
+    }
     let startDate = new Date();
     let endDate = new Date();
 
@@ -1141,7 +1345,7 @@ export class TransactionsRepository {
             : {
                 approved: false,
                 type: "DEPOSIT",
-                branchId: filters.loggedInUser?.branchId,
+                branchId: myBranchId,
               }),
         },
       }),
@@ -1171,7 +1375,7 @@ export class TransactionsRepository {
             : {
                 approvedforMain: false,
                 type: "WITHDRAW",
-                branchId: filters.loggedInUser?.branchId,
+                branchId: myBranchId,
               }),
         },
       }),
@@ -1218,7 +1422,7 @@ export class TransactionsRepository {
           activeProfit: true,
           clientReport: {
             clientId: filters.clientId,
-            client: {branchId: filters.loggedInUser?.branchId},
+            client: {branchId: myBranchId},
             secondaryType: "DELIVERED",
             report: {deleted: false, activeProfit: true},
           },
@@ -1292,9 +1496,9 @@ export class TransactionsRepository {
               companyId: filters.companyId,
               deleted: false,
               confirmed: true,
-              branchId: filters.loggedInUser?.branchId,
+              branchId: myBranchId,
               client: {
-                branchId: filters.loggedInUser?.branchId,
+                branchId: myBranchId,
               },
               clientReport: {
                 some: {
@@ -1322,7 +1526,7 @@ export class TransactionsRepository {
           confirmed: true,
           branchReport: {
             some: {
-              branchId: filters.loggedInUser?.branchId,
+              branchId: myBranchId,
               type: "received",
               report: {
                 deleted: false,
@@ -1372,7 +1576,7 @@ export class TransactionsRepository {
             : {
                 branchReport: {
                   some: {
-                    branchId: filters.loggedInUser?.branchId,
+                    branchId: myBranchId,
                     type: "forwarded",
                     report: {
                       deleted: false,
@@ -1461,12 +1665,13 @@ export class TransactionsRepository {
     deliveryAgentId?: number;
     clientId?: number;
     branchId?: number;
+    targetBranch?: number;
     type?: string;
     start_date?: string;
     end_date?: string;
     loggedInUser?: loggedInUserType;
   }) {
-    const applyBranchScope =
+    let applyBranchScope =
       filters.loggedInUser?.role === "COMPANY_MANAGER" ||
       filters.loggedInUser?.mainRepository;
 
@@ -1485,6 +1690,14 @@ export class TransactionsRepository {
       myBranchId = mainBranch?.branchId;
     }
 
+    if (
+      filters.loggedInUser?.role === "COMPANY_MANAGER" &&
+      filters.loggedInUser.mainRepository &&
+      filters.targetBranch
+    ) {
+      myBranchId = filters.targetBranch;
+      applyBranchScope = false;
+    }
     let startDate = new Date();
     let endDate = new Date();
 
