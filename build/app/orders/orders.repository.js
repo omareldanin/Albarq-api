@@ -17,6 +17,15 @@ const reportsOrders_response_1 = require("./reportsOrders.response");
 const p_limit_1 = __importDefault(require("p-limit"));
 const messageController = new messages_controller_1.MessagesController();
 let counter = 0;
+const clean = (v) => {
+    if (v === null || v === undefined)
+        return undefined;
+    const s = String(v).trim();
+    if (!s || s.toLowerCase() === "nan" || s === "undefined" || s === "null") {
+        return undefined;
+    }
+    return s;
+};
 class OrdersRepository {
     generateRandomId() {
         const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Baghdad" }));
@@ -342,10 +351,8 @@ class OrdersRepository {
                     : data.orderData.recipientPhone
                         ? [data.orderData.recipientPhone]
                         : undefined,
-                receiptNumber: data.orderData.receiptNumber
-                    ? data.orderData.receiptNumber
-                    : randomId,
-                recipientAddress: data.orderData.recipientAddress,
+                receiptNumber: clean(data.orderData.receiptNumber) ?? String(randomId),
+                recipientAddress: clean(data.orderData.recipientAddress) ?? "",
                 clientNotes: data.orderData.notes,
                 details: data.orderData.details,
                 deliveryType: data.orderData.deliveryType,
@@ -3000,7 +3007,7 @@ class OrdersRepository {
                     connect: {
                         id: data.orderData.forwardedCompanyID
                             ? data.orderData.forwardedCompanyID
-                            : data.loggedInUser.companyID,
+                            : undefined,
                     },
                 },
                 forwarded: data.orderData.forwardedCompanyID ? true : undefined,

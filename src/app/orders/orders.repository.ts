@@ -54,6 +54,14 @@ type UpdatedOrderCosts = {
   receivingBranchNet?: number;
   insideBranchNet?: number;
 };
+const clean = (v: unknown): string | undefined => {
+  if (v === null || v === undefined) return undefined;
+  const s = String(v).trim();
+  if (!s || s.toLowerCase() === "nan" || s === "undefined" || s === "null") {
+    return undefined;
+  }
+  return s;
+};
 
 export class OrdersRepository {
   generateRandomId() {
@@ -512,10 +520,8 @@ export class OrdersRepository {
           : data.orderData.recipientPhone
             ? [data.orderData.recipientPhone]
             : undefined,
-        receiptNumber: data.orderData.receiptNumber
-          ? data.orderData.receiptNumber
-          : randomId,
-        recipientAddress: data.orderData.recipientAddress,
+        receiptNumber: clean(data.orderData.receiptNumber) ?? String(randomId),
+        recipientAddress: clean(data.orderData.recipientAddress) ?? "",
         clientNotes: data.orderData.notes,
         details: data.orderData.details,
         deliveryType: data.orderData.deliveryType,
@@ -3534,7 +3540,7 @@ export class OrdersRepository {
           connect: {
             id: data.orderData.forwardedCompanyID
               ? data.orderData.forwardedCompanyID
-              : (data.loggedInUser.companyID as number),
+              : undefined,
           },
         },
         forwarded: data.orderData.forwardedCompanyID ? true : undefined,
