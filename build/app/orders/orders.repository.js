@@ -3003,13 +3003,13 @@ class OrdersRepository {
                 forwardedRepo: data.orderData.secondaryStatus === "IN_REPOSITORY"
                     ? null
                     : data.orderData.forwardedRepo,
-                company: {
-                    connect: {
-                        id: data.orderData.forwardedCompanyID
-                            ? data.orderData.forwardedCompanyID
-                            : undefined,
-                    },
-                },
+                company: data.orderData.forwardedCompanyID
+                    ? {
+                        connect: {
+                            id: data.orderData.forwardedCompanyID,
+                        },
+                    }
+                    : undefined,
                 forwarded: data.orderData.forwardedCompanyID ? true : undefined,
                 forwardedBy: data.orderData.forwardedCompanyID
                     ? {
