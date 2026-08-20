@@ -1476,7 +1476,10 @@ class OrdersRepository {
                                         ? [
                                             {
                                                 client: {
-                                                    branchId: { notIn: branchScope },
+                                                    OR: [
+                                                        { branchId: { notIn: branchScope } },
+                                                        { branchId: null },
+                                                    ],
                                                 },
                                             },
                                             {
