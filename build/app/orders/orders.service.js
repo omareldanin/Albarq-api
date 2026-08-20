@@ -695,17 +695,6 @@ class OrdersService {
                             content: `تم تغيير حالة الطلب رقم ${newOrder.receiptNumber} إلى ${(0, localize_1.localizeOrderStatus)(newOrder.status)} ${newOrder.notes ? `(${newOrder.notes})` : ""}`,
                         });
                     }
-                    // if (data.orderData.status === "PROCESSING") {
-                    //   await sendOrderProcessingTemplate(oldOrderData.client.phone, {
-                    //     storeName: oldOrderData.store.name,
-                    //     customerName: oldOrderData.recipientName,
-                    //     orderNumber: oldOrderData.receiptNumber,
-                    //     phone: oldOrderData.recipientPhones[0],
-                    //     price: oldOrderData.totalCost.toLocaleString(),
-                    //     address: `${governorateArabicNames[newOrder.governorate]} - ${newOrder.location.name} - ${newOrder.recipientAddress}`,
-                    //     notes: newOrder.notes,
-                    //   });
-                    // }
                 }
                 if (newOrder.status !== "IN_GOV_REPOSITORY" &&
                     newOrder.status !== "IN_MAIN_REPOSITORY") {

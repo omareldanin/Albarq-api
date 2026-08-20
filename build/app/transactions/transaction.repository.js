@@ -176,29 +176,50 @@ class TransactionsRepository {
         };
     };
     getProfitOrders = async (params) => {
-        const { companyId, myBranchId, bucket, applyBranchScope, startDay, endDay, page, size, clientId, storeId, deliveryAgentId, governorate, receiptNumber, } = params;
+        const { companyId, myBranchId, bucket, applyBranchScope, startDay, endDay, page, size, clientId, storeId, deliveryAgentId, governorate, receivedBranch, forwardedBranch, receiptNumber, } = params;
+        let startDate = new Date();
+        let endDate = new Date();
+        if (startDay) {
+            startDate = new Date(startDay);
+            startDate.setHours(0, 0, 0, 0);
+        }
+        else {
+            if (applyBranchScope) {
+                startDate = new Date("2026-08-09");
+            }
+            else {
+                startDate = new Date("2026-08-07");
+            }
+            startDate.setHours(0, 0, 0, 0);
+        }
+        if (endDay) {
+            endDate = new Date(endDay);
+            endDate.setHours(23, 59, 59, 59);
+        }
         // ---- the scoped "inside" bucket needs raw SQL ----
         if (bucket === "inside" && applyBranchScope) {
             const extraSql = client_1.Prisma.sql `
-      ${startDay ? client_1.Prisma.sql `AND o."deliveriedAt" >= ${new Date(startDay)}` : client_1.Prisma.empty}
-      ${endDay ? client_1.Prisma.sql `AND o."deliveriedAt" < ${new Date(new Date(endDay).getTime() + 86400000)}` : client_1.Prisma.empty}
+      ${endDay ? client_1.Prisma.sql `AND o."deliveriedAt" < ${endDate}` : client_1.Prisma.empty}
       ${clientId ? client_1.Prisma.sql `AND o."clientId" = ${clientId}` : client_1.Prisma.empty}
       ${storeId ? client_1.Prisma.sql `AND o."storeId" = ${storeId}` : client_1.Prisma.empty}
       ${deliveryAgentId ? client_1.Prisma.sql `AND o."deliveryAgentId" = ${deliveryAgentId}` : client_1.Prisma.empty}
       ${governorate ? client_1.Prisma.sql `AND o."governorate" = ${governorate}::"Governorate"` : client_1.Prisma.empty}
       ${receiptNumber ? client_1.Prisma.sql `AND o."receiptNumber" = ${receiptNumber}` : client_1.Prisma.empty}
+      ${receivedBranch ? client_1.Prisma.sql `AND o."branchId" = ${receivedBranch}` : client_1.Prisma.empty}
+      ${forwardedBranch ? client_1.Prisma.sql `AND c."branchId" = ${forwardedBranch}` : client_1.Prisma.empty}
     `;
             const whereSql = client_1.Prisma.sql `
       o."companyId" = ${companyId}
       AND o."deleted" = false
       AND o."confirmed" = true
       AND o."deliveriedAt" IS NOT NULL
+      AND o."deliveriedAt" >= ${startDate}
       AND o."status" IN ('DELIVERED','PARTIALLY_RETURNED','REPLACED')
       AND c."branchId" <> ${myBranchId}
       AND o."branchId" IS DISTINCT FROM c."branchId"
       ${extraSql}
     `;
-            const [orders, countRows] = await Promise.all([
+            const [orders, aggRows] = await Promise.all([
                 db_1.prisma.$queryRaw `
         SELECT
           o."id",
@@ -230,20 +251,29 @@ class TransactionsRepository {
         ORDER BY o."deliveriedAt" DESC
         LIMIT ${size} OFFSET ${(page - 1) * size};
       `,
-                page === 1
-                    ? db_1.prisma.$queryRaw `
-            SELECT COUNT(*) AS count
-            FROM "Order" o
-            JOIN "Client" c ON c."id" = o."clientId"
-            WHERE ${whereSql};
-          `
-                    : Promise.resolve(undefined),
+                db_1.prisma.$queryRaw `
+      SELECT
+        COUNT(*)                    AS count,
+        SUM(o."forwardedBranchNet") AS "forwardedBranchNet",
+        SUM(o."receivingBranchNet") AS "receivingBranchNet",
+        SUM(o."deliveryAgentNet")   AS "deliveryAgentNet",
+        SUM(o."insideBranchNet")    AS "insideBranchNet",
+        SUM(o."deliveryCost")       AS "deliveryCost"
+      FROM "Order" o
+      JOIN "Client" c ON c."id" = o."clientId"
+      WHERE ${whereSql};
+    `,
             ]);
+            const a = aggRows[0];
+            const n = (v) => Number(v ?? 0);
+            const total = n(a.forwardedBranchNet) - n(a.receivingBranchNet);
             return {
                 orders,
-                pagesCount: countRows
-                    ? Math.ceil(Number(countRows[0].count) / size)
-                    : undefined,
+                pagesCount: Math.ceil(Number(a.count) / size),
+                totals: {
+                    total,
+                    count: Number(a.count),
+                },
             };
         }
         // ---- everything else stays in Prisma ----
@@ -254,8 +284,8 @@ class TransactionsRepository {
             status: { in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"] },
             deliveriedAt: {
                 not: null,
-                ...(startDay && { gte: new Date(startDay) }),
-                ...(endDay && { lt: new Date(new Date(endDay).getTime() + 86400000) }),
+                gte: startDate,
+                ...(endDay && { lt: endDate }),
             },
             ...(clientId !== undefined && { clientId }),
             ...(storeId !== undefined && { storeId }),
@@ -268,11 +298,11 @@ class TransactionsRepository {
             : bucket === "forwarded"
                 ? {
                     ...base,
-                    branchId: { not: myBranchId },
+                    branchId: receivedBranch ? receivedBranch : { not: myBranchId },
                     client: { branchId: myBranchId },
                 }
                 : { ...base, branchId: myBranchId, client: { branchId: myBranchId } };
-        const [orders, count] = await Promise.all([
+        const [orders, agg] = await Promise.all([
             db_1.prisma.order.findMany({
                 skip: (page - 1) * size,
                 take: size,
@@ -303,11 +333,40 @@ class TransactionsRepository {
                     },
                 },
             }),
-            page === 1 ? db_1.prisma.order.count({ where }) : Promise.resolve(undefined),
+            db_1.prisma.order.aggregate({
+                where,
+                _count: { id: true },
+                _sum: {
+                    insideBranchNet: true,
+                    receivingBranchNet: true,
+                    forwardedBranchNet: true,
+                    deliveryAgentNet: true,
+                    deliveryCost: true,
+                },
+            }),
         ]);
+        const n = (v) => v ?? 0;
+        const s = agg._sum;
+        let total;
+        if (bucket === "received") {
+            total = n(s.receivingBranchNet) - n(s.deliveryAgentNet);
+        }
+        else if (bucket === "forwarded") {
+            total = applyBranchScope
+                ? n(s.deliveryCost) - n(s.receivingBranchNet)
+                : n(s.deliveryCost) - n(s.forwardedBranchNet);
+        }
+        else {
+            // inside, non-scoped (the scoped case returned earlier)
+            total = n(s.insideBranchNet);
+        }
         return {
             orders,
-            pagesCount: count !== undefined ? Math.ceil(count / size) : undefined,
+            pagesCount: Math.ceil(agg._count.id / size),
+            totals: {
+                total,
+                count: agg._count.id,
+            },
         };
     };
     createTransaction = async ({ companyID, createdByID, data, }) => {

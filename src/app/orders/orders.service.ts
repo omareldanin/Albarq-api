@@ -924,18 +924,6 @@ export class OrdersService {
               }`,
             });
           }
-
-          // if (data.orderData.status === "PROCESSING") {
-          //   await sendOrderProcessingTemplate(oldOrderData.client.phone, {
-          //     storeName: oldOrderData.store.name,
-          //     customerName: oldOrderData.recipientName,
-          //     orderNumber: oldOrderData.receiptNumber,
-          //     phone: oldOrderData.recipientPhones[0],
-          //     price: oldOrderData.totalCost.toLocaleString(),
-          //     address: `${governorateArabicNames[newOrder.governorate]} - ${newOrder.location.name} - ${newOrder.recipientAddress}`,
-          //     notes: newOrder.notes,
-          //   });
-          // }
         }
 
         if (

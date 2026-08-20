@@ -55,6 +55,12 @@ class TransactionsController {
         const targetBranch = req.query.targetBranch
             ? +req.query.targetBranch
             : undefined;
+        const receivedBranch = req.query.receivedBranch
+            ? +req.query.receivedBranch
+            : undefined;
+        const forwardedBranch = req.query.forwardedBranch
+            ? +req.query.forwardedBranch
+            : undefined;
         let myBranchId = loggedInUser.branchId;
         if (loggedInUser.role === client_1.EmployeeRole.BRANCH_MANAGER) {
             myBranchId = loggedInUser.branchId;
@@ -94,7 +100,7 @@ class TransactionsController {
             +req.query.page > 0) {
             page = +req.query.page;
         }
-        const { orders, pagesCount } = await transactionsRepository.getProfitOrders({
+        const { orders, pagesCount, totals } = await transactionsRepository.getProfitOrders({
             companyId,
             myBranchId,
             bucket,
@@ -108,11 +114,14 @@ class TransactionsController {
             deliveryAgentId,
             governorate,
             receiptNumber,
+            receivedBranch,
+            forwardedBranch,
         });
         res.status(200).json({
             status: "success",
             page,
             pagesCount,
+            totals,
             data: orders,
         });
     });
