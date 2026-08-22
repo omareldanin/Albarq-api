@@ -123,6 +123,8 @@ model Client {
   showDeliveryNumber        Boolean                   @default(false)
   isExternal                Boolean                   @default(false)
   apiKeyHash                String?
+  status                    Json                      @default("[]")
+  webhookUrl                String?
   activeProfit              Boolean                   @default(false)
   categories                Category[]
   branch                    Branch?                   @relation(fields: [branchId], references: [id])

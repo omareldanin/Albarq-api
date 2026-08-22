@@ -21,6 +21,7 @@ const db_1 = require("../../database/db");
 const locations_repository_1 = require("../locations/locations.repository");
 const axios_1 = __importDefault(require("axios"));
 const updateGeniStatus_1 = require("../../lib/updateGeniStatus");
+const clientWebhook_1 = require("../../lib/clientWebhook");
 const ordersRepository = new orders_repository_1.OrdersRepository();
 const employeesRepository = new employees_repository_1.EmployeesRepository();
 const clientsRepository = new clients_repository_1.ClientsRepository();
@@ -855,6 +856,16 @@ class OrdersService {
                         },
                         message: `تم تغيير المبلغ المدفوع من ${oldOrderData.paidAmount} إلى ${newOrder.paidAmount}`,
                     },
+                });
+            }
+            if (data.orderData.status && data.orderData.status !== newOrder.status) {
+                (0, clientWebhook_1.notifyClientWebhook)({
+                    clientId: newOrder.client.id,
+                    receiptNumber: newOrder.receiptNumber,
+                    status: newOrder.status,
+                    note: data.orderData.notes,
+                }).catch((err) => {
+                    console.error("[webhook] unhandled:", err);
                 });
             }
             // Update status

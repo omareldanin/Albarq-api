@@ -45,6 +45,7 @@ import {
   toPostponedDateId,
   updateExternalOrderStatus,
 } from "../../lib/updateGeniStatus";
+import {notifyClientWebhook} from "../../lib/clientWebhook";
 
 const ordersRepository = new OrdersRepository();
 const employeesRepository = new EmployeesRepository();
@@ -1110,6 +1111,16 @@ export class OrdersService {
         });
       }
 
+      if (data.orderData.status && data.orderData.status !== newOrder.status) {
+        notifyClientWebhook({
+          clientId: newOrder.client.id,
+          receiptNumber: newOrder.receiptNumber,
+          status: newOrder.status,
+          note: data.orderData.notes,
+        }).catch((err) => {
+          console.error("[webhook] unhandled:", err);
+        });
+      }
       // Update status
       if (
         (oldOrderData.status !== newOrder.status ||
