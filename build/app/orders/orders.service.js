@@ -42,6 +42,7 @@ class OrdersService {
         if (Array.isArray(data.orderOrOrdersData)) {
             const createdOrders = [];
             for (const order of data.orderOrOrdersData) {
+                let locationID = order.locationID;
                 const clientID = await clientsRepository.getClientIDByStoreID({
                     storeID: order.storeID,
                 });
@@ -54,8 +55,18 @@ class OrdersService {
                     throw new AppError_1.AppError("غير مصرح لك إضافه طلبات بالسالب", 400);
                 }
                 let branchID = undefined;
+                if (!locationID) {
+                    const locations = await db_1.prisma.location.findMany({
+                        where: {
+                            governorate: order.governorate,
+                            companyId: data.loggedInUser.companyID,
+                        },
+                    });
+                    locationID =
+                        locations.find((l) => l.name === locations_repository_1.governorateArabicNames[order.governorate])?.id ?? locations[0].id;
+                }
                 const branch = await branchesRepository.getBranchByLocation({
-                    locationID: order.locationID,
+                    locationID: locationID,
                 });
                 if (!branch) {
                     throw new AppError_1.AppError("لا يوجد فرع مرتبط بالموقع", 500);
@@ -65,7 +76,7 @@ class OrdersService {
                     companyID: data.loggedInUser.companyID,
                     clientID,
                     loggedInUser: data.loggedInUser,
-                    orderData: { ...order, confirmed, status, branchID },
+                    orderData: { ...order, confirmed, status, branchID, locationID },
                 });
                 if (!createdOrder) {
                     throw new AppError_1.AppError("Failed to create order", 500);
@@ -147,8 +158,21 @@ class OrdersService {
             data.orderOrOrdersData.clientOrderReceiptId = clientReceipt?.id + "";
         }
         let branchID = undefined;
+        let locationID = data.orderOrOrdersData.locationID;
+        if (!locationID) {
+            const g = data.orderOrOrdersData.governorate;
+            const locations = await db_1.prisma.location.findMany({
+                where: {
+                    governorate: data.orderOrOrdersData.governorate,
+                    companyId: data.loggedInUser.companyID,
+                },
+            });
+            locationID =
+                locations.find((l) => l.name ===
+                    locations_repository_1.governorateArabicNames[g])?.id ?? locations[0].id;
+        }
         const branch = await branchesRepository.getBranchByLocation({
-            locationID: data.orderOrOrdersData.locationID,
+            locationID: locationID,
         });
         if (!branch) {
             throw new AppError_1.AppError("لا يوجد فرع مرتبط بالموقع", 500);
@@ -158,7 +182,13 @@ class OrdersService {
             companyID: data.loggedInUser.companyID,
             clientID,
             loggedInUser: data.loggedInUser,
-            orderData: { ...data.orderOrOrdersData, confirmed, status, branchID },
+            orderData: {
+                ...data.orderOrOrdersData,
+                confirmed,
+                status,
+                branchID,
+                locationID,
+            },
         });
         // Update Order Timeline
         try {

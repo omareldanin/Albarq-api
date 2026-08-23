@@ -10,6 +10,7 @@
  *    when sending data to the external system. All codes are accepted when
  *    reading from the external system.
  */
+import {z} from "zod";
 
 export enum Governorate {
   AL_ANBAR = "AL_ANBAR",
@@ -137,3 +138,58 @@ export function toExternalCode(g: Governorate): string | null {
 export function fromExternalCode(code: string): Governorate | undefined {
   return EXTERNAL_CODE_TO_GOVERNORATE[code];
 }
+
+export const governorateCodeMap: Record<string, Governorate> = {
+  ANB: Governorate.AL_ANBAR,
+  BBL: Governorate.BABIL,
+  BBC: Governorate.BABIL_COMPANIES,
+  BGD: Governorate.BAGHDAD,
+  BSR: Governorate.BASRA,
+  DHQ: Governorate.DHI_QAR,
+  QAD: Governorate.AL_QADISIYYAH,
+  DYL: Governorate.DIYALA,
+  DHK: Governorate.DUHOK,
+  ERB: Governorate.ERBIL,
+  KAR: Governorate.KARBALA,
+  KIR: Governorate.KIRKUK,
+  MYS: Governorate.MAYSAN,
+  MUT: Governorate.MUTHANNA,
+  NJF: Governorate.NAJAF,
+  NIN: Governorate.NINAWA,
+  SAL: Governorate.SALAH_AL_DIN,
+  SUL: Governorate.SULAYMANIYAH,
+  WAS: Governorate.WASIT,
+};
+
+export const governorateToCode: Record<Governorate, string> = Object.entries(
+  governorateCodeMap,
+).reduce(
+  (acc, [code, gov]) => ({...acc, [gov]: code}),
+  {} as Record<Governorate, string>,
+);
+
+export const resolveGovernorate = (input: unknown): Governorate | undefined => {
+  if (input === null || input === undefined || input === "") return undefined;
+
+  const raw = String(input).trim().toUpperCase();
+
+  if (Object.values(Governorate).includes(raw as Governorate)) {
+    return raw as Governorate;
+  }
+
+  return governorateCodeMap[raw];
+};
+
+export const GovernorateSchema = z
+  .union([z.string(), z.number()])
+  .transform((v, ctx) => {
+    const resolved = resolveGovernorate(v);
+    if (!resolved) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `المحافظة غير معروفة: ${v}`,
+      });
+      return z.NEVER;
+    }
+    return resolved;
+  });

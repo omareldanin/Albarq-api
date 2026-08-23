@@ -7797,29 +7797,17 @@
                         ]
                     },
                     "governorate": {
-                        "type": [
-                            "string"
-                        ],
-                        "enum": [
-                            "AL_ANBAR",
-                            "BABIL",
-                            "BABIL_COMPANIES",
-                            "BAGHDAD",
-                            "BASRA",
-                            "DHI_QAR",
-                            "AL_QADISIYYAH",
-                            "DIYALA",
-                            "DUHOK",
-                            "ERBIL",
-                            "KARBALA",
-                            "KIRKUK",
-                            "MAYSAN",
-                            "MUTHANNA",
-                            "NAJAF",
-                            "NINAWA",
-                            "SALAH_AL_DIN",
-                            "SULAYMANIYAH",
-                            "WASIT"
+                        "oneOf": [
+                            {
+                                "type": [
+                                    "string"
+                                ]
+                            },
+                            {
+                                "type": [
+                                    "number"
+                                ]
+                            }
                         ]
                     },
                     "locationID": {
@@ -7882,7 +7870,6 @@
                 "required": [
                     "recipientAddress",
                     "governorate",
-                    "locationID",
                     "storeID",
                     "totalCost"
                 ]

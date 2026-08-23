@@ -5,6 +5,7 @@ exports.OrdersReportPDFCreateSchema = exports.OrdersStatisticsFiltersOpenAPISche
 const zod_openapi_1 = require("@anatine/zod-openapi");
 const client_1 = require("@prisma/client");
 const zod_1 = require("zod");
+const governerates_1 = require("../../lib/governerates");
 exports.OrderCreateSchema = zod_1.z.object({
     receiptNumber: zod_1.z.string().optional(),
     clientOrderReceiptId: zod_1.z.coerce.string().optional(),
@@ -17,8 +18,8 @@ exports.OrderCreateSchema = zod_1.z.object({
     notes: zod_1.z.string().optional(),
     details: zod_1.z.string().optional(),
     deliveryType: zod_1.z.nativeEnum(client_1.DeliveryType).default(client_1.DeliveryType.NORMAL),
-    governorate: zod_1.z.nativeEnum(client_1.Governorate),
-    locationID: zod_1.z.coerce.number(),
+    governorate: governerates_1.GovernorateSchema,
+    locationID: zod_1.z.coerce.number().optional(),
     storeID: zod_1.z.coerce.number(),
     repositoryID: zod_1.z.coerce.number().optional(),
     branchID: zod_1.z.coerce.number().optional(),

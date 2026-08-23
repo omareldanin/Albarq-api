@@ -1,4 +1,9 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.GovernorateSchema = exports.resolveGovernorate = exports.governorateToCode = exports.governorateCodeMap = exports.EXTERNAL_CODE_TO_GOVERNORATE = exports.GOVERNORATE_TO_EXTERNAL = exports.Governorate = void 0;
+exports.toExternalCodes = toExternalCodes;
+exports.toExternalCode = toExternalCode;
+exports.fromExternalCode = fromExternalCode;
 /**
  * Mapping between the internal `Governorate` enum and the external system's
  * governorate entries (code / global_name / arabic_name).
@@ -11,11 +16,7 @@
  *    when sending data to the external system. All codes are accepted when
  *    reading from the external system.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.EXTERNAL_CODE_TO_GOVERNORATE = exports.GOVERNORATE_TO_EXTERNAL = exports.Governorate = void 0;
-exports.toExternalCodes = toExternalCodes;
-exports.toExternalCode = toExternalCode;
-exports.fromExternalCode = fromExternalCode;
+const zod_1 = require("zod");
 var Governorate;
 (function (Governorate) {
     Governorate["AL_ANBAR"] = "AL_ANBAR";
@@ -125,4 +126,49 @@ function toExternalCode(g) {
 function fromExternalCode(code) {
     return exports.EXTERNAL_CODE_TO_GOVERNORATE[code];
 }
+exports.governorateCodeMap = {
+    ANB: Governorate.AL_ANBAR,
+    BBL: Governorate.BABIL,
+    BBC: Governorate.BABIL_COMPANIES,
+    BGD: Governorate.BAGHDAD,
+    BSR: Governorate.BASRA,
+    DHQ: Governorate.DHI_QAR,
+    QAD: Governorate.AL_QADISIYYAH,
+    DYL: Governorate.DIYALA,
+    DHK: Governorate.DUHOK,
+    ERB: Governorate.ERBIL,
+    KAR: Governorate.KARBALA,
+    KIR: Governorate.KIRKUK,
+    MYS: Governorate.MAYSAN,
+    MUT: Governorate.MUTHANNA,
+    NJF: Governorate.NAJAF,
+    NIN: Governorate.NINAWA,
+    SAL: Governorate.SALAH_AL_DIN,
+    SUL: Governorate.SULAYMANIYAH,
+    WAS: Governorate.WASIT,
+};
+exports.governorateToCode = Object.entries(exports.governorateCodeMap).reduce((acc, [code, gov]) => ({ ...acc, [gov]: code }), {});
+const resolveGovernorate = (input) => {
+    if (input === null || input === undefined || input === "")
+        return undefined;
+    const raw = String(input).trim().toUpperCase();
+    if (Object.values(Governorate).includes(raw)) {
+        return raw;
+    }
+    return exports.governorateCodeMap[raw];
+};
+exports.resolveGovernorate = resolveGovernorate;
+exports.GovernorateSchema = zod_1.z
+    .union([zod_1.z.string(), zod_1.z.number()])
+    .transform((v, ctx) => {
+    const resolved = (0, exports.resolveGovernorate)(v);
+    if (!resolved) {
+        ctx.addIssue({
+            code: zod_1.z.ZodIssueCode.custom,
+            message: `المحافظة غير معروفة: ${v}`,
+        });
+        return zod_1.z.NEVER;
+    }
+    return resolved;
+});
 //# sourceMappingURL=governerates.js.map

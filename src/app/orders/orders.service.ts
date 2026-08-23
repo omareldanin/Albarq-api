@@ -73,6 +73,7 @@ export class OrdersService {
     if (Array.isArray(data.orderOrOrdersData)) {
       const createdOrders: Order[] = [];
       for (const order of data.orderOrOrdersData) {
+        let locationID = order.locationID;
         const clientID = await clientsRepository.getClientIDByStoreID({
           storeID: order.storeID,
         });
@@ -87,9 +88,24 @@ export class OrdersService {
           throw new AppError("غير مصرح لك إضافه طلبات بالسالب", 400);
         }
         let branchID = undefined;
+
+        if (!locationID) {
+          const locations = await prisma.location.findMany({
+            where: {
+              governorate: order.governorate,
+              companyId: data.loggedInUser.companyID,
+            },
+          });
+          locationID =
+            locations.find(
+              (l) => l.name === governorateArabicNames[order.governorate],
+            )?.id ?? locations[0].id;
+        }
+
         const branch = await branchesRepository.getBranchByLocation({
-          locationID: order.locationID,
+          locationID: locationID,
         });
+
         if (!branch) {
           throw new AppError("لا يوجد فرع مرتبط بالموقع", 500);
         }
@@ -99,7 +115,7 @@ export class OrdersService {
           companyID: data.loggedInUser.companyID as number,
           clientID,
           loggedInUser: data.loggedInUser,
-          orderData: {...order, confirmed, status, branchID},
+          orderData: {...order, confirmed, status, branchID, locationID},
         });
 
         if (!createdOrder) {
@@ -193,8 +209,26 @@ export class OrdersService {
     }
 
     let branchID = undefined;
+    let locationID = data.orderOrOrdersData.locationID;
+
+    if (!locationID) {
+      const g = data.orderOrOrdersData.governorate;
+      const locations = await prisma.location.findMany({
+        where: {
+          governorate: data.orderOrOrdersData.governorate,
+          companyId: data.loggedInUser.companyID,
+        },
+      });
+      locationID =
+        locations.find(
+          (l) =>
+            l.name ===
+            governorateArabicNames[g as keyof typeof governorateArabicNames],
+        )?.id ?? locations[0].id;
+    }
+
     const branch = await branchesRepository.getBranchByLocation({
-      locationID: data.orderOrOrdersData.locationID,
+      locationID: locationID,
     });
 
     if (!branch) {
@@ -207,7 +241,13 @@ export class OrdersService {
       companyID: data.loggedInUser.companyID as number,
       clientID,
       loggedInUser: data.loggedInUser,
-      orderData: {...data.orderOrOrdersData, confirmed, status, branchID},
+      orderData: {
+        ...data.orderOrOrdersData,
+        confirmed,
+        status,
+        branchID,
+        locationID,
+      },
     });
 
     // Update Order Timeline

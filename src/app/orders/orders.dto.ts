@@ -11,6 +11,7 @@ import {
   SecondaryStatus,
 } from "@prisma/client";
 import {z} from "zod";
+import {GovernorateSchema} from "../../lib/governerates";
 
 export const OrderCreateSchema = z.object({
   receiptNumber: z.string().optional(),
@@ -24,8 +25,8 @@ export const OrderCreateSchema = z.object({
   notes: z.string().optional(),
   details: z.string().optional(),
   deliveryType: z.nativeEnum(DeliveryType).default(DeliveryType.NORMAL),
-  governorate: z.nativeEnum(Governorate),
-  locationID: z.coerce.number(),
+  governorate: GovernorateSchema,
+  locationID: z.coerce.number().optional(),
   storeID: z.coerce.number(),
   repositoryID: z.coerce.number().optional(),
   branchID: z.coerce.number().optional(),
