@@ -2012,6 +2012,7 @@ class OrdersService {
         }
         if (data.loggedInUser.role === "REPOSITORIY_EMPLOYEE") {
             const withReceingAgent = statistics.ordersStatisticsByStatus.find((s) => s.status === "WITH_RECEIVING_AGENT");
+            const READY_TO_SEND = statistics.ordersStatisticsByStatus.find((s) => s.status === "READY_TO_SEND");
             const inRepo = await this.getRepositoryOrderCount({
                 loggedInUser: data.loggedInUser,
                 secondaryStatus: "IN_REPOSITORY",
@@ -2030,6 +2031,7 @@ class OrdersService {
                 ...statistics,
                 ordersStatisticsByStatus: [
                     withReceingAgent,
+                    READY_TO_SEND,
                     {
                         status: "inrepo",
                         totalCost: 0,
