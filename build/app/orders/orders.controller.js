@@ -1777,13 +1777,17 @@ class OrdersController {
                         },
                     }
                     : undefined,
-                client: status === "RETURNED"
-                    ? undefined
-                    : {
-                        id: {
-                            in: inquiryClientsIDs,
+                client: loggedInUser.role === "REPOSITORIY_EMPLOYEE"
+                    ? {
+                        branchId: loggedInUser.branchId,
+                    }
+                    : status === "RETURNED"
+                        ? undefined
+                        : {
+                            id: {
+                                in: inquiryClientsIDs,
+                            },
                         },
-                    },
             },
         });
         res.status(200).json({

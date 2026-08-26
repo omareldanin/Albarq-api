@@ -2045,13 +2045,17 @@ export class OrdersController {
               }
             : undefined,
         client:
-          status === "RETURNED"
-            ? undefined
-            : {
-                id: {
-                  in: inquiryClientsIDs,
+          loggedInUser.role === "REPOSITORIY_EMPLOYEE"
+            ? {
+                branchId: loggedInUser.branchId,
+              }
+            : status === "RETURNED"
+              ? undefined
+              : {
+                  id: {
+                    in: inquiryClientsIDs,
+                  },
                 },
-              },
       },
     });
 
