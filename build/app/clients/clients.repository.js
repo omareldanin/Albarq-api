@@ -216,13 +216,13 @@ class ClientsRepository {
                 isExternal: data.clientData.isExternal,
                 showDeliveryNumber: data.clientData.showDeliveryNumber,
                 activeProfit: data.clientData.activeProfit,
-                branch: data.clientData.branchID
-                    ? {
-                        connect: {
-                            id: data.clientData.branchID,
-                        },
-                    }
-                    : undefined,
+                // branch: data.clientData.branchID
+                //   ? {
+                //       connect: {
+                //         id: data.clientData.branchID,
+                //       },
+                //     }
+                //   : undefined,
                 repository: data.clientData.repositoryID
                     ? {
                         connect: {
