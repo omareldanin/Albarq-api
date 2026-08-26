@@ -2455,12 +2455,26 @@ export class OrdersService {
         },
       });
 
+      const countWithoutReceiving = await prisma.order.count({
+        where: {
+          status: "READY_TO_SEND",
+          deleted: false,
+          client: {
+            branchId: data.loggedInUser.branchId,
+            ReceivingAgentClients: {
+              none: {},
+            },
+          },
+        },
+      });
+
       let total = 0;
       let count = 0;
       ordersStatisticsByStatus.map((s) => {
         total += s._sum.totalCost || 0;
         count += s._count.id;
       });
+
       return {
         ...statistics,
         ordersStatisticsByStatus: [
@@ -2474,6 +2488,12 @@ export class OrdersService {
             totalCost: total,
             count: count,
             name: "الرواجع",
+          },
+          {
+            status: "REGISTERED",
+            totalCost: 0,
+            count: countWithoutReceiving,
+            name: "عملاء غير محالين",
           },
         ],
       };

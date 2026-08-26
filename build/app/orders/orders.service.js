@@ -1918,6 +1918,18 @@ class OrdersService {
                     },
                 },
             });
+            const countWithoutReceiving = await db_1.prisma.order.count({
+                where: {
+                    status: "READY_TO_SEND",
+                    deleted: false,
+                    client: {
+                        branchId: data.loggedInUser.branchId,
+                        ReceivingAgentClients: {
+                            none: {},
+                        },
+                    },
+                },
+            });
             let total = 0;
             let count = 0;
             ordersStatisticsByStatus.map((s) => {
@@ -1934,6 +1946,12 @@ class OrdersService {
                         totalCost: total,
                         count: count,
                         name: "الرواجع",
+                    },
+                    {
+                        status: "REGISTERED",
+                        totalCost: 0,
+                        count: countWithoutReceiving,
+                        name: "عملاء غير محالين",
                     },
                 ],
             };

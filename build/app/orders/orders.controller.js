@@ -1763,9 +1763,11 @@ class OrdersController {
             },
             where: {
                 deleted: false,
-                status: status === "RETURNED"
-                    ? { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] }
-                    : status,
+                status: loggedInUser.role === "RECEIVING_AGENT" && status === "REGISTERED"
+                    ? "READY_TO_SEND"
+                    : status === "RETURNED"
+                        ? { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] }
+                        : status,
                 clientReport: status === "RETURNED"
                     ? {
                         some: {
@@ -1783,11 +1785,19 @@ class OrdersController {
                     }
                     : status === "RETURNED"
                         ? undefined
-                        : {
-                            id: {
-                                in: inquiryClientsIDs,
+                        : loggedInUser.role === "RECEIVING_AGENT" &&
+                            status === "REGISTERED"
+                            ? {
+                                branchId: loggedInUser.branchId,
+                                ReceivingAgentClients: {
+                                    none: {},
+                                },
+                            }
+                            : {
+                                id: {
+                                    in: inquiryClientsIDs,
+                                },
                             },
-                        },
             },
         });
         res.status(200).json({
