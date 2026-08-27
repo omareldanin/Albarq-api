@@ -648,13 +648,11 @@ class OrdersService {
         // Update Order Timeline
         try {
             if (data.orderData.status && oldOrderData.status !== newOrder.status) {
-                console.log("//--------notifyClientWebhook");
                 (0, clientWebhook_1.notifyClientWebhook)({
                     clientId: newOrder.client.id,
                     receiptNumber: newOrder.receiptNumber,
                     status: newOrder.status,
                     note: data.orderData.notes,
-                    token: newOrder.client.token,
                 }).catch((err) => {
                     console.error("[webhook] unhandled:", err);
                 });

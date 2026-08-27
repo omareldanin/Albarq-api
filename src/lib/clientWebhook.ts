@@ -14,15 +14,14 @@ export const notifyClientWebhook = async (params: {
   clientId: number;
   receiptNumber: string;
   status: OrderStatus;
-  token?: string;
   note?: string;
 }) => {
-  const {clientId, receiptNumber, status, note, token} = params;
+  const {clientId, receiptNumber, status, note} = params;
 
   try {
     const client = await prisma.client.findUnique({
       where: {id: clientId},
-      select: {webhookUrl: true, status: true},
+      select: {webhookUrl: true, status: true, token: true},
     });
 
     if (!client?.webhookUrl) return;
@@ -40,7 +39,7 @@ export const notifyClientWebhook = async (params: {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(token && {"x-api-key": token}),
+        ...(client.token && {"x-api-key": client.token}),
       },
       body: JSON.stringify({
         receiptNumber,

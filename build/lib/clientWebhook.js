@@ -7,11 +7,11 @@ const db_1 = require("../database/db");
  * Fire-and-forget: never blocks or fails the caller.
  */
 const notifyClientWebhook = async (params) => {
-    const { clientId, receiptNumber, status, note, token } = params;
+    const { clientId, receiptNumber, status, note } = params;
     try {
         const client = await db_1.prisma.client.findUnique({
             where: { id: clientId },
-            select: { webhookUrl: true, status: true },
+            select: { webhookUrl: true, status: true, token: true },
         });
         if (!client?.webhookUrl)
             return;
@@ -26,7 +26,7 @@ const notifyClientWebhook = async (params) => {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                ...(token && { "x-api-key": token }),
+                ...(client.token && { "x-api-key": client.token }),
             },
             body: JSON.stringify({
                 receiptNumber,
