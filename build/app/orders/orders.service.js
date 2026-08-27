@@ -894,6 +894,7 @@ class OrdersService {
                     receiptNumber: newOrder.receiptNumber,
                     status: newOrder.status,
                     note: data.orderData.notes,
+                    token: newOrder.client.token,
                 }).catch((err) => {
                     console.error("[webhook] unhandled:", err);
                 });

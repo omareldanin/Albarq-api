@@ -166,6 +166,7 @@ export const orderSelect = {
       showNumbers: true,
       showDeliveryNumber: true,
       branchId: true,
+      token: true,
       branch: {
         select: {
           name: true,
@@ -508,6 +509,7 @@ export const orderReform = (
       showDeliveryNumber: order.client.showDeliveryNumber,
       branch: order.client.branch?.name,
       branchId: order.client.branchId,
+      token: order.client.token,
     },
     deliveryAgent: order.deliveryAgent && {
       id: order.deliveryAgent.user.id,
