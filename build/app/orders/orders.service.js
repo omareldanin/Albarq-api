@@ -647,7 +647,7 @@ class OrdersService {
         }
         // Update Order Timeline
         try {
-            if (data.orderData.status && data.orderData.status !== newOrder.status) {
+            if (data.orderData.status && oldOrderData.status !== newOrder.status) {
                 console.log("//--------notifyClientWebhook");
                 (0, clientWebhook_1.notifyClientWebhook)({
                     clientId: newOrder.client.id,
