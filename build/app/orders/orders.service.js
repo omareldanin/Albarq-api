@@ -889,6 +889,7 @@ class OrdersService {
                 });
             }
             if (data.orderData.status && data.orderData.status !== newOrder.status) {
+                console.log("//--------notifyClientWebhook");
                 (0, clientWebhook_1.notifyClientWebhook)({
                     clientId: newOrder.client.id,
                     receiptNumber: newOrder.receiptNumber,

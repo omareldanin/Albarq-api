@@ -1152,6 +1152,8 @@ export class OrdersService {
       }
 
       if (data.orderData.status && data.orderData.status !== newOrder.status) {
+        console.log("//--------notifyClientWebhook");
+
         notifyClientWebhook({
           clientId: newOrder.client.id,
           receiptNumber: newOrder.receiptNumber,

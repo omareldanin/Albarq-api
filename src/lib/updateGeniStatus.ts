@@ -154,7 +154,6 @@ export async function sendStatusUpdateToJenni(
         "Content-Type": "application/json",
       },
     });
-    console.log(body);
 
     return body;
   };

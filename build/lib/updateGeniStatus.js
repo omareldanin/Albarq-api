@@ -74,7 +74,6 @@ async function sendStatusUpdateToJenni(shipmentId, url, actionCode, details = {}
                 "Content-Type": "application/json",
             },
         });
-        console.log(body);
         return body;
     };
     try {

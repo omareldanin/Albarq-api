@@ -49,6 +49,7 @@ export const notifyClientWebhook = async (params: {
       }),
       signal: controller.signal,
     });
+    console.log(res);
 
     clearTimeout(timeout);
 
