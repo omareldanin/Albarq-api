@@ -647,6 +647,18 @@ class OrdersService {
         }
         // Update Order Timeline
         try {
+            if (data.orderData.status && data.orderData.status !== newOrder.status) {
+                console.log("//--------notifyClientWebhook");
+                (0, clientWebhook_1.notifyClientWebhook)({
+                    clientId: newOrder.client.id,
+                    receiptNumber: newOrder.receiptNumber,
+                    status: newOrder.status,
+                    note: data.orderData.notes,
+                    token: newOrder.client.token,
+                }).catch((err) => {
+                    console.error("[webhook] unhandled:", err);
+                });
+            }
             if ((data.orderData.status && oldOrderData.status !== newOrder.status) ||
                 (data.orderData.notes && data.orderData.notes !== oldOrderData.notes)) {
                 // send notification to client
@@ -886,18 +898,6 @@ class OrdersService {
                         },
                         message: `تم تغيير المبلغ المدفوع من ${oldOrderData.paidAmount} إلى ${newOrder.paidAmount}`,
                     },
-                });
-            }
-            if (data.orderData.status && data.orderData.status !== newOrder.status) {
-                console.log("//--------notifyClientWebhook");
-                (0, clientWebhook_1.notifyClientWebhook)({
-                    clientId: newOrder.client.id,
-                    receiptNumber: newOrder.receiptNumber,
-                    status: newOrder.status,
-                    note: data.orderData.notes,
-                    token: newOrder.client.token,
-                }).catch((err) => {
-                    console.error("[webhook] unhandled:", err);
                 });
             }
             // Update status

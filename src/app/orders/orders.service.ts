@@ -842,6 +842,19 @@ export class OrdersService {
 
     // Update Order Timeline
     try {
+      if (data.orderData.status && data.orderData.status !== newOrder.status) {
+        console.log("//--------notifyClientWebhook");
+
+        notifyClientWebhook({
+          clientId: newOrder.client.id,
+          receiptNumber: newOrder.receiptNumber,
+          status: newOrder.status,
+          note: data.orderData.notes,
+          token: newOrder.client.token,
+        }).catch((err) => {
+          console.error("[webhook] unhandled:", err);
+        });
+      }
       if (
         (data.orderData.status && oldOrderData.status !== newOrder.status) ||
         (data.orderData.notes && data.orderData.notes !== oldOrderData.notes)
@@ -1151,19 +1164,6 @@ export class OrdersService {
         });
       }
 
-      if (data.orderData.status && data.orderData.status !== newOrder.status) {
-        console.log("//--------notifyClientWebhook");
-
-        notifyClientWebhook({
-          clientId: newOrder.client.id,
-          receiptNumber: newOrder.receiptNumber,
-          status: newOrder.status,
-          note: data.orderData.notes,
-          token: newOrder.client.token,
-        }).catch((err) => {
-          console.error("[webhook] unhandled:", err);
-        });
-      }
       // Update status
       if (
         (oldOrderData.status !== newOrder.status ||
