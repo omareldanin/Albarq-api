@@ -1756,6 +1756,7 @@ class OrdersController {
                 },
             },
         });
+        console.log(inquiryClientsIDs);
         const ordersStatisticsByStatus = await db_1.prisma.order.groupBy({
             by: ["clientId"],
             _count: {
