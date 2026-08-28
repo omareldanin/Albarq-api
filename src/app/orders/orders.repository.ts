@@ -4493,9 +4493,12 @@ export class OrdersRepository {
                   : filters.storeID,
               },
               {
-                clientId: filters.inquiryClientsIDs
-                  ? {in: [...filters.inquiryClientsIDs]}
-                  : filters.clientID,
+                clientId:
+                  loggedInUser.role === "RECEIVING_AGENT"
+                    ? {in: filters.inquiryClientsIDs || []}
+                    : filters.inquiryClientsIDs
+                      ? {in: [...filters.inquiryClientsIDs]}
+                      : filters.clientID,
               },
               {deliveryAgentId: filters.deliveryAgentID},
               {deleted: false},
