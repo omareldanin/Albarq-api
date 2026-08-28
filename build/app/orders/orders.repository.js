@@ -1031,24 +1031,33 @@ class OrdersRepository {
                                     ]
                                     : data.filters.forwardedFromID
                                         ? [{ forwardedFromId: data.filters.forwardedFromID }]
-                                        : [
-                                            {
-                                                companyId: data.filters.companyID,
-                                            },
-                                            {
-                                                forwardedFromId: data.filters.inquiryCompaniesIDs
-                                                    ? {
-                                                        in: [
-                                                            ...data.filters.inquiryCompaniesIDs,
-                                                            //   data.filters.companyID as number
-                                                        ],
-                                                    }
-                                                    : data.filters.forwarded &&
-                                                        data.filters.forwardedFromID === undefined
-                                                        ? undefined
-                                                        : data.filters.companyID,
-                                            },
-                                        ],
+                                        : data.filters.forwarededForReport
+                                            ? [
+                                                {
+                                                    companyId: data.loggedInUser?.companyID,
+                                                    forwardedFromId: data.filters.companyID,
+                                                    forwarded: true,
+                                                },
+                                            ]
+                                            : [
+                                                {
+                                                    companyId: data.filters.companyID,
+                                                },
+                                                {
+                                                    forwardedFromId: data.filters
+                                                        .inquiryCompaniesIDs
+                                                        ? {
+                                                            in: [
+                                                                ...data.filters.inquiryCompaniesIDs,
+                                                                //   data.filters.companyID as number
+                                                            ],
+                                                        }
+                                                        : data.filters.forwarded &&
+                                                            data.filters.forwardedFromID === undefined
+                                                            ? undefined
+                                                            : data.filters.companyID,
+                                                },
+                                            ],
                     },
                     // Filter by companyID
                     {
