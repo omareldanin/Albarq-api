@@ -762,7 +762,14 @@ export class OrdersController {
           status: {
             notIn: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED", "DELIVERED"],
           },
-          companyId: loggedInUser.companyID!!,
+          OR: [
+            {
+              companyId: loggedInUser.companyID!!,
+            },
+            {
+              forwardedFromId: loggedInUser.companyID!!,
+            },
+          ],
           deleted: false,
         },
         select: {id: true},
@@ -773,7 +780,14 @@ export class OrdersController {
           status: {
             notIn: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED", "DELIVERED"],
           },
-          companyId: loggedInUser.companyID!!,
+          OR: [
+            {
+              companyId: loggedInUser.companyID!!,
+            },
+            {
+              forwardedFromId: loggedInUser.companyID!!,
+            },
+          ],
           deleted: false,
         },
         select: {id: true},
@@ -889,7 +903,6 @@ export class OrdersController {
         orderData.received = true;
         // orderData.deliveryAgentID = null;
       }
-
       if (
         oldOrder?.status === "RETURNED" ||
         oldOrder?.status === "REPLACED" ||
