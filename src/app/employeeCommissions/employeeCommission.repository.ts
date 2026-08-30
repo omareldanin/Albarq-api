@@ -1,6 +1,7 @@
 import {prisma} from "../../database/db";
 import {AppError} from "../../lib/AppError";
 import {loggedInUserType} from "../../types/user";
+import {TransactionsRepository} from "../transactions/transaction.repository";
 import {EmployeeClientCommissionUpsertType} from "./employeeCommissions.dto";
 import {Prisma} from "@prisma/client";
 
@@ -14,6 +15,8 @@ type CommissionRow = {
   baghdadTotal: number;
   govTotal: number;
 };
+
+const transactionsRepository = new TransactionsRepository();
 
 export class EmployeeClientCommissionRepository {
   getEmployeeClients = async ({employeeID}: {employeeID: number}) => {
@@ -246,6 +249,27 @@ export class EmployeeClientCommissionRepository {
       },
     });
 
+    if (createdReport) {
+      await transactionsRepository.createTransaction({
+        companyID: loggedInUser.companyID!!,
+        createdByID: loggedInUser.id!!,
+        data: {
+          type: "WITHDRAW",
+          for: `سحب كشف نسب موظف رقم ${createdReport.id}`,
+          reportID: createdReport.id,
+          branchID: loggedInUser.branchId,
+          paidAmount: data.totalCommission || 0,
+          deliveryAgentNet: data.totalCommission || 0,
+          forwardedBranchNet: 0,
+          receivingBranchNet: 0,
+          insideBranchNet: 0,
+          branchNet: 0,
+          totalPaidAmount: 0,
+          approved: false,
+          clientNet: 0,
+        },
+      });
+    }
     return {
       id: createdReport.id,
       data,

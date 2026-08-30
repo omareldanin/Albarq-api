@@ -3,7 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmployeeClientCommissionRepository = void 0;
 const db_1 = require("../../database/db");
 const AppError_1 = require("../../lib/AppError");
+const transaction_repository_1 = require("../transactions/transaction.repository");
 const client_1 = require("@prisma/client");
+const transactionsRepository = new transaction_repository_1.TransactionsRepository();
 class EmployeeClientCommissionRepository {
     getEmployeeClients = async ({ employeeID }) => {
         return db_1.prisma.employeeClientCommission.findMany({
@@ -184,6 +186,27 @@ class EmployeeClientCommissionRepository {
                 },
             },
         });
+        if (createdReport) {
+            await transactionsRepository.createTransaction({
+                companyID: loggedInUser.companyID,
+                createdByID: loggedInUser.id,
+                data: {
+                    type: "WITHDRAW",
+                    for: `سحب كشف نسب موظف رقم ${createdReport.id}`,
+                    reportID: createdReport.id,
+                    branchID: loggedInUser.branchId,
+                    paidAmount: data.totalCommission || 0,
+                    deliveryAgentNet: data.totalCommission || 0,
+                    forwardedBranchNet: 0,
+                    receivingBranchNet: 0,
+                    insideBranchNet: 0,
+                    branchNet: 0,
+                    totalPaidAmount: 0,
+                    approved: false,
+                    clientNet: 0,
+                },
+            });
+        }
         return {
             id: createdReport.id,
             data,

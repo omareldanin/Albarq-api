@@ -383,7 +383,7 @@ class TransactionsRepository {
             select: transactionSelect,
         });
     };
-    getAllTransactionsPaginated = async ({ page, size, companyID, branchID, employeeID, type, approved, deleted, startDate, endDate, targetBranch, }, loggedInUser) => {
+    getAllTransactionsPaginated = async ({ page, size, companyID, employeeID, type, approved, deleted, startDate, endDate, targetBranch, }, loggedInUser) => {
         let applyBranchScope = loggedInUser?.role === "COMPANY_MANAGER" || loggedInUser?.mainRepository;
         let myBranchId = loggedInUser?.branchId;
         if (loggedInUser?.role === "COMPANY_MANAGER") {
@@ -430,7 +430,7 @@ class TransactionsRepository {
                 }
                 : {
                     approved,
-                    branchId: branchID,
+                    branchId: myBranchId,
                 }),
         };
         const [transactions, count] = await Promise.all([

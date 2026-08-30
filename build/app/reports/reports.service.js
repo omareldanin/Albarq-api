@@ -330,6 +330,27 @@ class ReportsService {
                 },
             });
         }
+        else if (data.reportData.type === client_1.ReportType.COMPANY) {
+            await transactionsRepository.createTransaction({
+                companyID: reportData?.company.id,
+                createdByID: reportData?.createdBy.id,
+                data: {
+                    type: "WITHDRAW",
+                    for: `سحب كشف شركة رقم ${report.id}`,
+                    reportID: report.id,
+                    branchID: data.loggedInUser.branchId,
+                    paidAmount: reportData?.companyNet || 0,
+                    deliveryAgentNet: 0,
+                    forwardedBranchNet: 0,
+                    receivingBranchNet: 0,
+                    insideBranchNet: 0,
+                    branchNet: 0,
+                    totalPaidAmount: reportData?.companyNet || 0,
+                    approved: false,
+                    clientNet: 0,
+                },
+            });
+        }
         if (!reportData) {
             throw new AppError_1.AppError("حدث خطأ اثناء عمل الكشف", 500);
         }

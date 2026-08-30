@@ -487,7 +487,6 @@ export class TransactionsRepository {
       page,
       size,
       companyID,
-      branchID,
       employeeID,
       type,
       approved,
@@ -563,7 +562,7 @@ export class TransactionsRepository {
           }
         : {
             approved,
-            branchId: branchID,
+            branchId: myBranchId,
           }),
     };
 
