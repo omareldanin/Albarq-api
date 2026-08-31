@@ -370,9 +370,11 @@ class ReportsRepository {
                             company: {
                                 id: data.filters.company,
                             },
-                            clientReport: {
-                                secondaryType: data.filters.secondaryType,
-                            },
+                            clientReport: data.filters.type === "CLIENT"
+                                ? {
+                                    secondaryType: data.filters.secondaryType,
+                                }
+                                : undefined,
                         },
                         {
                             companyReport: {

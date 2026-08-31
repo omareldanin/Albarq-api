@@ -214,18 +214,20 @@ export class ReportController {
 
   getReportsReportPDF = catchAsync(async (req, res) => {
     const reportsData = ReportsReportPDFCreateSchema.parse(req.body);
+    const loggedInUser: loggedInUserType = res.locals.user;
 
     const filters = ReportsFiltersSchema.parse({
       page: req.query.page,
       size: req.query.size,
       company: req.query.company,
       branch: req.query.branch,
-      sort: "id:asc",
+      sort: req.query.sort,
       startDate: req.query.start_date,
       endDate: req.query.end_date,
       governorate: req.query.governorate,
       status: req.query.status,
       type: req.query.type,
+      types: req.query.types,
       storeID: req.query.store_id,
       repositoryID: req.query.repository_id,
       branchID: req.query.branch_id,
@@ -234,13 +236,17 @@ export class ReportController {
       clientID: req.query.client_id,
       createdByID: req.query.created_by_id,
       deleted: req.query.deleted,
-      minified: false,
+      minified: req.query.minified,
       forMainClients: req.query.forMainClients,
+      secondaryType: req.query.secondaryReportType,
+      exported_repository_id: req.query.exported_repository_id,
+      target_repository_id: req.query.target_repository_id,
     });
 
     const pdf = await reportsService.getReportsReportPDF({
       reportsData: reportsData,
       reportsFilters: filters,
+      loggedInUser: loggedInUser,
     });
 
     const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);

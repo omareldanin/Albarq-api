@@ -16,6 +16,9 @@ const generateReportsReport = async (reportType, reportsData, reports) => {
         if (reportType === "CLIENT") {
             templatePath = node_path_1.default.join(__dirname, "../../../static/templates/clientReportsReport.hbs");
         }
+        else if (reportType === "COMPANY") {
+            templatePath = node_path_1.default.join(__dirname, "../../../static/templates/companyReportsReport.hbs");
+        }
         else {
             throw new Error("لا يوجد قالب لهذا التقرير");
         }

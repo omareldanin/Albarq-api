@@ -752,7 +752,7 @@ class ReportsService {
                 filters: {
                     ...data.reportsFilters,
                     type: data.reportsData.type,
-                    secondaryType: "DELIVERED",
+                    company: data.loggedInUser.companyID,
                     size: 5000,
                 },
             })).reports;
@@ -771,40 +771,40 @@ class ReportsService {
         if (!reports || reports.length === 0) {
             throw new AppError_1.AppError("لا يوجد كشوفات لعمل التقرير", 400);
         }
-        if (data.reportsData.type === "CLIENT") {
-            const reportsData = {
-                company: reports[0]?.company,
-                companyNet: reports.reduce((acc, report) => {
-                    if (report) {
-                        return acc + report.companyNet;
-                    }
-                    return acc;
-                }, 0),
-                clientNet: reports.reduce((acc, report) => {
-                    if (report) {
-                        return acc + report.clientNet;
-                    }
-                    return acc;
-                }, 0),
-                baghdadOrdersCount: reports.reduce((acc, report) => {
-                    if (report) {
-                        return acc + (report.baghdadOrdersCount || 0);
-                    }
-                    return acc;
-                }, 0),
-                governoratesOrdersCount: reports.reduce((acc, report) => {
-                    if (report) {
-                        return acc + (report.governoratesOrdersCount || 0);
-                    }
-                    return acc;
-                }, 0),
-                date: new Date(),
-                count: reports.length,
-            };
-            const pdf = await (0, generateReportsReport_1.generateReportsReport)(data.reportsData.type, reportsData, reports);
-            return pdf;
-        }
-        throw new AppError_1.AppError("لا يمكن عمل تقرير لهذا النوع من التقارير", 400);
+        // if (data.reportsData.type === "CLIENT") {
+        const reportsData = {
+            company: reports[0]?.company,
+            companyNet: reports.reduce((acc, report) => {
+                if (report) {
+                    return acc + report.companyNet;
+                }
+                return acc;
+            }, 0),
+            clientNet: reports.reduce((acc, report) => {
+                if (report) {
+                    return acc + report.clientNet;
+                }
+                return acc;
+            }, 0),
+            baghdadOrdersCount: reports.reduce((acc, report) => {
+                if (report) {
+                    return acc + (report.baghdadOrdersCount || 0);
+                }
+                return acc;
+            }, 0),
+            governoratesOrdersCount: reports.reduce((acc, report) => {
+                if (report) {
+                    return acc + (report.governoratesOrdersCount || 0);
+                }
+                return acc;
+            }, 0),
+            date: new Date(),
+            count: reports.length,
+        };
+        const pdf = await (0, generateReportsReport_1.generateReportsReport)(data.reportsData.type, reportsData, reports);
+        return pdf;
+        // }
+        // throw new AppError("لا يمكن عمل تقرير لهذا النوع من التقارير", 400);
     }
     async updateReport(data) {
         if (data.reportData.confirmed === false &&

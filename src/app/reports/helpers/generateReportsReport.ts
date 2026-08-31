@@ -10,14 +10,19 @@ import type {reportReform} from "../reports.responses";
 export const generateReportsReport = async (
   reportType: ReportType,
   reportsData: object,
-  reports: ReturnType<typeof reportReform>[]
+  reports: ReturnType<typeof reportReform>[],
 ) => {
   try {
     let templatePath = "";
     if (reportType === "CLIENT") {
       templatePath = path.join(
         __dirname,
-        "../../../static/templates/clientReportsReport.hbs"
+        "../../../static/templates/clientReportsReport.hbs",
+      );
+    } else if (reportType === "COMPANY") {
+      templatePath = path.join(
+        __dirname,
+        "../../../static/templates/companyReportsReport.hbs",
       );
     } else {
       throw new Error("لا يوجد قالب لهذا التقرير");
@@ -26,7 +31,7 @@ export const generateReportsReport = async (
     const template = await fs.readFile(templatePath, "utf8");
     const css = await fs.readFile(
       path.join(__dirname, "../../../static/styles/reportStyle.css"),
-      "utf8"
+      "utf8",
     );
 
     const html = await generateHTML(template, {
