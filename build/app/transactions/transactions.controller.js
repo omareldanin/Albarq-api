@@ -289,6 +289,33 @@ class TransactionsController {
             data: statistics,
         });
     });
+    getStatisticsByBranch = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const loggedInUser = res.locals.user;
+        let companyId;
+        if (Object.keys(client_1.AdminRole).includes(loggedInUser.role)) {
+            companyId = req.query.company_id ? +req.query.company_id : undefined;
+        }
+        else {
+            companyId = loggedInUser.companyID;
+        }
+        const type = req.query.type;
+        if (!type ||
+            !["forMainBranch", "forMyBranch", "allForMyBranch"].includes(type)) {
+            throw new AppError_1.AppError("النوع غير صحيح", 400);
+        }
+        const clientId = req.query.client_id ? +req.query.client_id : undefined;
+        const start_date = req.query.start_date;
+        const end_date = req.query.end_date;
+        const { results } = await transactionsRepository.getStatisticsByBranch({
+            companyId,
+            clientId,
+            type,
+            start_date,
+            end_date,
+            loggedInUser,
+        });
+        res.status(200).json({ status: "success", data: results });
+    });
     getDailyStatistics = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const loggedInUser = res.locals.user;
         // Admins may query any company; everyone else is scoped to their own

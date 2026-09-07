@@ -212,6 +212,122 @@ export class TransactionsRepository {
     };
   };
 
+  getBranchTotalsByType = async (params: {
+    companyId: number;
+    myBranchId?: number;
+    type: "forMainBranch" | "forMyBranch" | "allForMyBranch";
+    createdAtFilter?: {gt: Date; lte: Date};
+  }) => {
+    const {companyId, myBranchId, type, createdAtFilter} = params;
+
+    const dateSql = createdAtFilter
+      ? Prisma.sql`AND o."createdAt" >= ${createdAtFilter.gt} AND o."createdAt" < ${createdAtFilter.lte}`
+      : Prisma.empty;
+
+    if (type === "forMainBranch") {
+      return prisma.$queryRaw<
+        {
+          branchId: number | null;
+          branchName: string | null;
+          paidAmount: number | null;
+          receivingBranchNet: number | null;
+          forwardedBranchNet: number | null;
+          count: bigint;
+        }[]
+      >`
+      SELECT
+        o."branchId",
+        b."name"                     AS "branchName",
+        SUM(o."paidAmount")          AS "paidAmount",
+        SUM(o."receivingBranchNet")  AS "receivingBranchNet",
+        SUM(o."forwardedBranchNet")  AS "forwardedBranchNet",
+        COUNT(o."id")                AS "count"
+      FROM "Order" o
+      JOIN "Client" c ON c."id" = o."clientId"
+      LEFT JOIN "Branch" b ON b."id" = o."branchId"
+      WHERE o."companyId" = ${companyId}
+        AND o."deleted" = false
+        AND o."confirmed" = true
+        AND o."status" IN ('DELIVERED','PARTIALLY_RETURNED','REPLACED')
+        AND o."hasMainReceivedReport" = false
+        AND o."branchId" IS DISTINCT FROM c."branchId"
+        ${dateSql}
+      GROUP BY o."branchId", b."name"
+      ORDER BY "paidAmount" DESC NULLS LAST;
+    `;
+    }
+
+    if (type === "forMyBranch") {
+      return prisma.$queryRaw<
+        {
+          branchId: number | null;
+          branchName: string | null;
+          paidAmount: number | null;
+          receivingBranchNet: number | null;
+          forwardedBranchNet: number | null;
+          count: bigint;
+        }[]
+      >`
+      SELECT
+        c."branchId",
+        b."name"                     AS "branchName",
+        SUM(o."paidAmount")          AS "paidAmount",
+        SUM(o."receivingBranchNet")  AS "receivingBranchNet",
+        SUM(o."forwardedBranchNet")  AS "forwardedBranchNet",
+        COUNT(o."id")                AS "count"
+      FROM "Order" o
+      JOIN "Client" c ON c."id" = o."clientId"
+      LEFT JOIN "Branch" b ON b."id" = c."branchId"
+      WHERE o."companyId" = ${companyId}
+        AND o."deleted" = false
+        AND o."confirmed" = true
+        AND o."status" IN ('DELIVERED','PARTIALLY_RETURNED','REPLACED')
+        AND o."hasMainForwardedReport" = false
+        AND o."hasDeliveredClientReport" = true
+        AND c."branchId" IS DISTINCT FROM ${myBranchId}
+        AND c."companyId" = ${companyId}
+        AND o."branchId" IS DISTINCT FROM c."branchId"
+        ${dateSql}
+      GROUP BY c."branchId", b."name"
+      ORDER BY "paidAmount" DESC NULLS LAST;
+    `;
+    }
+
+    // allForMyBranch
+    return prisma.$queryRaw<
+      {
+        branchId: number | null;
+        branchName: string | null;
+        paidAmount: number | null;
+        receivingBranchNet: number | null;
+        forwardedBranchNet: number | null;
+        count: bigint;
+      }[]
+    >`
+      SELECT
+        c."branchId",
+        b."name"                     AS "branchName",
+        SUM(o."paidAmount")          AS "paidAmount",
+        SUM(o."receivingBranchNet")  AS "receivingBranchNet",
+        SUM(o."forwardedBranchNet")  AS "forwardedBranchNet",
+        COUNT(o."id")                AS "count"
+      FROM "Order" o
+      JOIN "Client" c ON c."id" = o."clientId"
+      LEFT JOIN "Branch" b ON b."id" = c."branchId"
+      WHERE o."companyId" = ${companyId}
+        AND o."deleted" = false
+        AND o."confirmed" = true
+        AND o."status" IN ('DELIVERED','PARTIALLY_RETURNED','REPLACED')
+        AND o."hasMainForwardedReport" = false
+        AND c."branchId" IS DISTINCT FROM ${myBranchId}
+        AND c."companyId" = ${companyId}
+        AND o."branchId" IS DISTINCT FROM c."branchId"
+        ${dateSql}
+      GROUP BY c."branchId", b."name"
+      ORDER BY "paidAmount" DESC NULLS LAST;
+    `;
+  };
+
   getProfitOrders = async (params: {
     companyId: number;
     myBranchId?: number;
@@ -669,6 +785,48 @@ export class TransactionsRepository {
         forwardedCount: totals._sum.forwardedCount ?? 0,
       },
     };
+  };
+
+  getStatisticsByBranch = async (filters: {
+    companyId?: number;
+    clientId?: number;
+    type: "forMainBranch" | "forMyBranch" | "allForMyBranch";
+    start_date?: string;
+    end_date?: string;
+    loggedInUser?: loggedInUserType;
+  }) => {
+    let myBranchId = filters.loggedInUser?.branchId;
+    const mainBranch = await prisma.repository.findFirst({
+      where: {
+        companyId: filters.loggedInUser?.companyID!!,
+        mainRepository: true,
+      },
+      select: {
+        branchId: true,
+      },
+    });
+    myBranchId = mainBranch?.branchId;
+
+    const rows = await this.getBranchTotalsByType({
+      companyId: filters.loggedInUser?.companyID!!,
+      myBranchId,
+      type: filters.type,
+    });
+
+    const results = rows.map((r) => {
+      const n = (v: number | null) => Number(v ?? 0);
+      return {
+        branchId: r.branchId,
+        branchName: r.branchName ?? "غير محدد",
+        count: Number(r.count),
+        total:
+          filters.type === "forMainBranch"
+            ? n(r.paidAmount) - n(r.receivingBranchNet)
+            : n(r.paidAmount) - n(r.forwardedBranchNet),
+      };
+    });
+
+    return {results};
   };
 
   async getStatistics(filters: {
@@ -1243,36 +1401,121 @@ export class TransactionsRepository {
           },
         });
 
+    // اجمالي المبالغ المستحقه للأفرع
+    const allForMyBranchRows = applyBranchScope
+      ? await prisma.$queryRaw<
+          {
+            paidAmount: number | null;
+            receivingBranchNet: number | null;
+            forwardedBranchNet: number | null;
+            count: bigint;
+          }[]
+        >`
+          SELECT
+            SUM(o."paidAmount")         AS "paidAmount",
+            SUM(o."receivingBranchNet") AS "receivingBranchNet",
+            SUM(o."forwardedBranchNet") AS "forwardedBranchNet",
+            COUNT(o."id")               AS "count"
+          FROM "Order" o
+          JOIN "Client" c ON c."id" = o."clientId"
+          WHERE o."companyId" = ${filters.companyId}
+            AND o."deleted" = false
+            AND o."confirmed" = true
+            AND o."status" IN ('DELIVERED','PARTIALLY_RETURNED','REPLACED')
+            AND o."hasMainForwardedReport" = false
+            AND c."branchId" <> ${myBranchId}
+            AND c."companyId" = 16
+            AND o."branchId" IS DISTINCT FROM c."branchId"
+            ${
+              createdAtFilter
+                ? Prisma.sql`AND o."createdAt" >= ${createdAtFilter.gt} AND o."createdAt" < ${createdAtFilter.lte}`
+                : Prisma.empty
+            };
+          `
+      : null;
+
+    const allForMyBranch = applyBranchScope
+      ? {
+          _sum: {
+            paidAmount: allForMyBranchRows![0].paidAmount
+              ? Number(allForMyBranchRows![0].paidAmount)
+              : null,
+            receivingBranchNet: allForMyBranchRows![0].receivingBranchNet
+              ? Number(allForMyBranchRows![0].receivingBranchNet)
+              : null,
+            forwardedBranchNet: allForMyBranchRows![0].forwardedBranchNet
+              ? Number(allForMyBranchRows![0].forwardedBranchNet)
+              : null,
+          },
+          _count: {id: Number(allForMyBranchRows![0].count)},
+        }
+      : await prisma.order.aggregate({
+          _sum: {
+            paidAmount: true,
+            forwardedBranchNet: true,
+            receivingBranchNet: true,
+          },
+          _count: {id: true},
+          where: {
+            companyId: filters.companyId,
+            deleted: false,
+            confirmed: true,
+            status: {in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"]},
+            hasMainForwardedReport: false,
+            OR: [
+              {
+                AND: [
+                  {branchId: {notIn: branchScope}},
+                  {
+                    client: {
+                      branchId: {in: branchScope},
+                    },
+                  },
+                ],
+              },
+              {
+                AND: [
+                  {
+                    branch: {
+                      id: myBranchId,
+                      governorate: "BAGHDAD",
+                      parentBranchId: {equals: null},
+                    },
+                  },
+                  {
+                    client: {
+                      branchId: myBranchId,
+                    },
+                  },
+                ],
+              },
+            ],
+            ...(createdAtFilter && {createdAt: createdAtFilter}),
+          },
+        });
+
     return {
       totalDepoist: totalDepoist._sum.paidAmount,
       totalWithdraw: totalWithdraw._sum.paidAmount,
-      forMainBranch: applyBranchScope
-        ? {
-            total:
-              (forMainBranch._sum.paidAmount ?? 0) -
-              (forMainBranch._sum.forwardedBranchNet ?? 0),
-            count: forMainBranch._count.id,
-          }
-        : {
-            total:
-              (forMainBranch._sum.paidAmount ?? 0) -
-              (forMainBranch._sum.receivingBranchNet ?? 0),
-            count: forMainBranch._count.id,
-          },
+      forMainBranch: {
+        total:
+          (forMainBranch._sum.paidAmount ?? 0) -
+          (forMainBranch._sum.receivingBranchNet ?? 0),
+        count: forMainBranch._count.id,
+      },
 
-      forMyBranch: applyBranchScope
-        ? {
-            total:
-              (forMyBranch._sum.paidAmount ?? 0) -
-              (forMyBranch._sum.forwardedBranchNet ?? 0),
-            count: forMyBranch._count.id,
-          }
-        : {
-            total:
-              (forMyBranch._sum.paidAmount ?? 0) -
-              (forMyBranch._sum.forwardedBranchNet ?? 0),
-            count: forMyBranch._count.id,
-          },
+      forMyBranch: {
+        total:
+          (forMyBranch._sum.paidAmount ?? 0) -
+          (forMyBranch._sum.forwardedBranchNet ?? 0),
+        count: forMyBranch._count.id,
+      },
+      allForMyBranch: {
+        total:
+          (allForMyBranch._sum.paidAmount ?? 0) -
+          (allForMyBranch._sum.forwardedBranchNet ?? 0),
+        count: allForMyBranch._count.id,
+      },
       total:
         (totalDepoist._sum.paidAmount ?? 0) -
         (totalWithdraw._sum.paidAmount ?? 0),

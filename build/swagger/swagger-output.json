@@ -5069,6 +5069,25 @@
                 }
             }
         },
+        "/api/v1/transactions/profits/by-branch": {
+            "get": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/transactions/profits/orders": {
             "get": {
                 "description": "",

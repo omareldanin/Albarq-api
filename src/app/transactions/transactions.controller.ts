@@ -351,6 +351,45 @@ export class TransactionsController {
     });
   });
 
+  getStatisticsByBranch = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    let companyId: number | undefined;
+    if (Object.keys(AdminRole).includes(loggedInUser.role)) {
+      companyId = req.query.company_id ? +req.query.company_id : undefined;
+    } else {
+      companyId = loggedInUser.companyID as number;
+    }
+
+    const type = req.query.type as
+      | "forMainBranch"
+      | "forMyBranch"
+      | "allForMyBranch"
+      | undefined;
+
+    if (
+      !type ||
+      !["forMainBranch", "forMyBranch", "allForMyBranch"].includes(type)
+    ) {
+      throw new AppError("النوع غير صحيح", 400);
+    }
+
+    const clientId = req.query.client_id ? +req.query.client_id : undefined;
+    const start_date = req.query.start_date as string | undefined;
+    const end_date = req.query.end_date as string | undefined;
+
+    const {results} = await transactionsRepository.getStatisticsByBranch({
+      companyId,
+      clientId,
+      type,
+      start_date,
+      end_date,
+      loggedInUser,
+    });
+
+    res.status(200).json({status: "success", data: results});
+  });
+
   getDailyStatistics = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
 
