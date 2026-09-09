@@ -54,6 +54,7 @@ const isApiClient = async (req, res, next) => {
         branchId: client?.branchId,
         parentBranchId: 0,
         mainRepository: true,
+        showTreatury: false,
         repositoryId: 0,
     };
     // GRANT ACCESS

@@ -37,6 +37,7 @@ export const isLoggedIn = async (
       mainRepository,
       repositoryId,
       parentBranchId,
+      showTreatury,
     } = jwt.verify(
       token,
       env.ACCESS_TOKEN_SECRET as string,
@@ -76,6 +77,7 @@ export const isLoggedIn = async (
       mainRepository,
       repositoryId,
       parentBranchId,
+      showTreatury,
     } as loggedInUserType;
 
     // GRANT ACCESS

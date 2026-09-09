@@ -38,5 +38,6 @@ export type loggedInUserType = {
   parentBranchId: number;
   repositoryId: number;
   mainRepository: boolean;
+  showTreatury: boolean;
   permissions: Permission[];
 } & (AdminUserType | NonAdminUserType);

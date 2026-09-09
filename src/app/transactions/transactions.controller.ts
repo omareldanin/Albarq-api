@@ -279,14 +279,17 @@ export class TransactionsController {
     }
 
     const {dailyProfits, pagesCount, totals} =
-      await transactionsRepository.getAllDailyProfits({
-        page,
-        size,
-        companyId,
-        branchId,
-        startDay,
-        endDay,
-      });
+      await transactionsRepository.getAllDailyProfits(
+        {
+          page,
+          size,
+          companyId,
+          branchId,
+          startDay,
+          endDay,
+        },
+        loggedInUser,
+      );
 
     res.status(200).json({
       status: "success",

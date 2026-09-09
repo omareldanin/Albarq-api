@@ -233,7 +233,7 @@ class TransactionsController {
             branchId,
             startDay,
             endDay,
-        });
+        }, loggedInUser);
         res.status(200).json({
             status: "success",
             page,

@@ -61,6 +61,7 @@ export const isApiClient = async (
     branchId: client?.branchId,
     parentBranchId: 0,
     mainRepository: true,
+    showTreatury: false,
     repositoryId: 0,
   } as loggedInUserType;
 

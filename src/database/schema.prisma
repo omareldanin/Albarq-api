@@ -70,6 +70,7 @@ model Employee {
   clientAssistantRole     String?
   emergency               Boolean                          @default(false)
   mainEmergency           Boolean                          @default(false)
+  showTreatury            Boolean                          @default(false)
   orderType               String?
   deliveryAgentReports    DeliveryAgentReport[]
   deliveryAgentsLocations DeliveryAgentsLocations[]

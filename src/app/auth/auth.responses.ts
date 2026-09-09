@@ -17,6 +17,7 @@ export const userSelect = {
       orderStatus: true,
       branchId: true,
       clientId: true,
+      showTreatury: true,
       company: {
         select: {
           id: true,
@@ -93,6 +94,7 @@ export const userReform = (
     mainRepository:
       user.employee?.branch?.repositories[0]?.mainRepository || false,
     repository: user.employee?.repository?.name,
+    showTreatury: user.employee?.showTreatury,
     type: user.employee?.repository?.type,
     role: (user.admin?.role || user.employee?.role || user.client?.role) as
       | AdminRole

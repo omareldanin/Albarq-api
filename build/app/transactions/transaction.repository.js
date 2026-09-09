@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TransactionsRepository = void 0;
 const client_1 = require("@prisma/client");
 const db_1 = require("../../database/db");
+const AppError_1 = require("../../lib/AppError");
 const transactionSelect = {
     id: true,
     type: true,
@@ -465,6 +466,9 @@ class TransactionsRepository {
     getAllTransactionsPaginated = async ({ page, size, companyID, employeeID, type, approved, deleted, startDate, endDate, targetBranch, }, loggedInUser) => {
         let applyBranchScope = loggedInUser?.role === "COMPANY_MANAGER" || loggedInUser?.mainRepository;
         let myBranchId = loggedInUser?.branchId;
+        if (applyBranchScope && !loggedInUser.showTreatury) {
+            throw new AppError_1.AppError("ليس مصرح لك الاطلاع علي الارباح", 401);
+        }
         if (loggedInUser?.role === "COMPANY_MANAGER") {
             const mainBranch = await db_1.prisma.repository.findFirst({
                 where: {
@@ -543,7 +547,11 @@ class TransactionsRepository {
             pagesCount: Math.ceil(count / size),
         };
     };
-    getAllDailyProfits = async (params) => {
+    getAllDailyProfits = async (params, loggedInUser) => {
+        let applyBranchScope = loggedInUser?.role === "COMPANY_MANAGER" || loggedInUser?.mainRepository;
+        if (applyBranchScope && !loggedInUser.showTreatury) {
+            throw new AppError_1.AppError("ليس مصرح لك الاطلاع علي الارباح", 401);
+        }
         const { page, size, companyId, branchId, startDay, endDay } = params;
         const where = {
             companyId,
@@ -637,6 +645,9 @@ class TransactionsRepository {
         let childBranchs = [];
         let applyBranchScope = filters.loggedInUser?.role === "COMPANY_MANAGER" ||
             filters.loggedInUser?.mainRepository;
+        if (applyBranchScope && !filters.loggedInUser?.showTreatury) {
+            throw new AppError_1.AppError("ليس مصرح لك الاطلاع علي الارباح", 401);
+        }
         let myBranchId = filters.loggedInUser?.branchId;
         if (filters.loggedInUser?.role === "COMPANY_MANAGER") {
             const mainBranch = await db_1.prisma.repository.findFirst({
@@ -1292,6 +1303,9 @@ class TransactionsRepository {
     async getDailyStatistics(filters) {
         let applyBranchScope = filters.loggedInUser?.role === "COMPANY_MANAGER" ||
             filters.loggedInUser?.mainRepository;
+        if (applyBranchScope && !filters.loggedInUser?.showTreatury) {
+            throw new AppError_1.AppError("ليس مصرح لك الاطلاع علي الارباح", 401);
+        }
         let myBranchId = filters.loggedInUser?.branchId;
         if (filters.loggedInUser?.role === "COMPANY_MANAGER") {
             const mainBranch = await db_1.prisma.repository.findFirst({
@@ -1645,6 +1659,9 @@ class TransactionsRepository {
         let applyBranchScope = filters.loggedInUser?.role === "COMPANY_MANAGER" ||
             filters.loggedInUser?.mainRepository;
         let myBranchId = filters.loggedInUser?.branchId;
+        if (applyBranchScope && !filters.loggedInUser?.showTreatury) {
+            throw new AppError_1.AppError("ليس مصرح لك الاطلاع علي الارباح", 401);
+        }
         if (filters.loggedInUser?.role === "COMPANY_MANAGER") {
             const mainBranch = await db_1.prisma.repository.findFirst({
                 where: {

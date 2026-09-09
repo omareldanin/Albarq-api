@@ -18,6 +18,7 @@ exports.userSelect = {
             orderStatus: true,
             branchId: true,
             clientId: true,
+            showTreatury: true,
             company: {
                 select: {
                     id: true,
@@ -83,6 +84,7 @@ const userReform = (user) => {
         repositoryId: user.employee?.repository?.id ?? user.employee?.repository?.id ?? null,
         mainRepository: user.employee?.branch?.repositories[0]?.mainRepository || false,
         repository: user.employee?.repository?.name,
+        showTreatury: user.employee?.showTreatury,
         type: user.employee?.repository?.type,
         role: (user.admin?.role || user.employee?.role || user.client?.role),
         permissions: user.employee?.permissions || [],
