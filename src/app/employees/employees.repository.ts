@@ -303,6 +303,7 @@ export class EmployeesRepository {
             : undefined,
         },
         {deleted: data.filters.deleted},
+        {showTreatury: false},
         {
           company: {id: data.filters.companyID},
         },
