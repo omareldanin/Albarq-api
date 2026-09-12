@@ -125,6 +125,7 @@ export const orderSelect = {
   receivedBranchId: true,
   branchDeliveryCost: true,
   forwardedFromId: true,
+  hasDeliveredClientReport: true,
   processedBy: {
     select: {
       user: {
