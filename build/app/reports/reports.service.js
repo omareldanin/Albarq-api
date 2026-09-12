@@ -836,7 +836,8 @@ class ReportsService {
         });
         if (!report)
             return;
-        if (!data.loggedInUser.showTreatury && report?.type === "CLIENT") {
+        if (!data.loggedInUser.showTreatury &&
+            (report?.type === "CLIENT" || report?.type === "BRANCH")) {
             throw new AppError_1.AppError("ليس لديك صلاحية", 403);
         }
         if (data.loggedInUser.role !== "COMPANY_MANAGER") {

@@ -684,7 +684,9 @@ export class OrdersService {
     }
 
     if (
-      oldOrderData.hasDeliveredClientReport &&
+      (oldOrderData.hasDeliveredClientReport ||
+        oldOrderData.hasMainForwardedReport ||
+        oldOrderData.hasMainReceivedReport) &&
       data.orderData.paidAmount &&
       !data.loggedInUser.showTreatury
     ) {

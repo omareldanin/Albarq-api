@@ -533,7 +533,9 @@ class OrdersService {
                 throw new AppError_1.AppError("الطلب غير موجود", 404);
             }
         }
-        if (oldOrderData.hasDeliveredClientReport &&
+        if ((oldOrderData.hasDeliveredClientReport ||
+            oldOrderData.hasMainForwardedReport ||
+            oldOrderData.hasMainReceivedReport) &&
             data.orderData.paidAmount &&
             !data.loggedInUser.showTreatury) {
             throw new AppError_1.AppError("ليس لديك صلاحية تعديل المبلغ المدفوع", 403);

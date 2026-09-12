@@ -1061,7 +1061,10 @@ export class ReportsService {
 
     if (!report) return;
 
-    if (!data.loggedInUser.showTreatury && report?.type === "CLIENT") {
+    if (
+      !data.loggedInUser.showTreatury &&
+      (report?.type === "CLIENT" || report?.type === "BRANCH")
+    ) {
       throw new AppError("ليس لديك صلاحية", 403);
     }
 
