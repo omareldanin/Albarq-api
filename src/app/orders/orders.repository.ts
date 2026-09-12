@@ -770,6 +770,7 @@ export class OrdersRepository {
     const branchScope = [data.filters.branchID, ...childBranchs].filter(
       (id): id is number => id != null,
     );
+    console.log(data.filters);
 
     const where =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
@@ -1533,6 +1534,7 @@ export class OrdersRepository {
               },
               {
                 AND: [
+                  data.filters.branch_report_for_report === "0" ||
                   data.filters.branch_report_for_report === "false"
                     ? {
                         [this.flagFieldFor(

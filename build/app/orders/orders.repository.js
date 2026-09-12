@@ -568,6 +568,7 @@ class OrdersRepository {
             childBranchs = branchs.map((b) => b.id);
         }
         const branchScope = [data.filters.branchID, ...childBranchs].filter((id) => id != null);
+        console.log(data.filters);
         const where = data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
             ? {
                 AND: [
@@ -1282,7 +1283,7 @@ class OrdersRepository {
                     },
                     {
                         AND: [
-                            data.filters.branch_report_for_report === "false"
+                            data.filters.branch_report_for_report === "0"
                                 ? {
                                     [this.flagFieldFor(data.filters.orderType, data.filters.forChilds)]: false,
                                 }
