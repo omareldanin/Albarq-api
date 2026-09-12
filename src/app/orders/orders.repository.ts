@@ -130,6 +130,55 @@ export class OrdersRepository {
     return isReceived ? "hasMainReceivedReport" : "hasMainForwardedReport";
   };
 
+  getBranchReportFilter(value?: string | null): Prisma.OrderWhereInput {
+    switch (value) {
+      case "1":
+      case "true":
+        return {
+          OR: [
+            {hasMainReceivedReport: true},
+            {hasMainForwardedReport: true},
+            {hasChildReceivedReport: true},
+            {hasChildForwardedReport: true},
+          ],
+        };
+
+      case "0":
+      case "false":
+        return {
+          hasMainReceivedReport: false,
+          hasMainForwardedReport: false,
+          hasChildReceivedReport: false,
+          hasChildForwardedReport: false,
+        };
+
+      case "received":
+        return {
+          OR: [{hasMainReceivedReport: true}, {hasChildReceivedReport: true}],
+        };
+
+      case "without_received":
+        return {
+          hasMainReceivedReport: false,
+          hasChildReceivedReport: false,
+        };
+
+      case "forwarded":
+        return {
+          OR: [{hasMainForwardedReport: true}, {hasChildForwardedReport: true}],
+        };
+
+      case "without_forwarded":
+        return {
+          hasMainForwardedReport: false,
+          hasChildForwardedReport: false,
+        };
+
+      default:
+        return {};
+    }
+  }
+
   hashFilters(filters: OrdersStatisticsFiltersType) {
     return crypto
       .createHash("sha1")
@@ -1482,20 +1531,9 @@ export class OrdersRepository {
                   },
                 ],
               },
-              // Filter by branchReport
               {
                 AND: [
-                  data.filters.branchReport === "true"
-                    ? {
-                        OR: [
-                          {hasMainReceivedReport: true},
-                          {hasMainForwardedReport: true},
-                          {hasChildReceivedReport: true},
-                          {hasChildForwardedReport: true},
-                        ],
-                      }
-                    : {},
-                  data.filters.branchReport === "false"
+                  data.filters.branch_report_for_report === "false"
                     ? {
                         [this.flagFieldFor(
                           data.filters.orderType,
@@ -1505,6 +1543,8 @@ export class OrdersRepository {
                     : {},
                 ],
               },
+              // Filter by branchReport
+              this.getBranchReportFilter(data.filters.branchReport),
               // Filter by deliveryAgentReport
               {
                 AND: [

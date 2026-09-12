@@ -323,6 +323,7 @@ exports.OrdersFiltersSchema = zod_1.z.object({
     clientReport: zod_1.z.string().optional(),
     repositoryReport: zod_1.z.string().optional(),
     branchReport: zod_1.z.string().optional(),
+    branch_report_for_report: zod_1.z.string().optional(),
     deliveryAgentReport: zod_1.z.string().optional(),
     governorateReport: zod_1.z.string().optional(),
     companyReport: zod_1.z.string().optional(),

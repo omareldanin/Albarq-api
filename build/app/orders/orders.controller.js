@@ -148,6 +148,7 @@ class OrdersController {
             createdBy: req.query.created_by,
             forwarededForReport: req.query.forwarededForReport,
             limit: req.query.limit,
+            branch_report_for_report: req.query.branch_report_for_report,
         });
         const { orders, ordersMetaData, page, pagesCount, where } = await ordersService.getAllOrders({
             loggedInUser: loggedInUser,

@@ -36,6 +36,7 @@ export class ReportController {
       clientReport: req.query.client_report,
       repositoryReport: req.query.repository_report,
       branchReport: req.query.branch_report,
+      branch_report_for_report: req.query.branch_report_for_report,
       deliveryAgentReport: req.query.delivery_agent_report,
       governorateReport: req.query.governorate_report,
       companyReport: req.query.company_report,

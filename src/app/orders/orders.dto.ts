@@ -386,6 +386,7 @@ export const OrdersFiltersSchema = z.object({
   clientReport: z.string().optional(),
   repositoryReport: z.string().optional(),
   branchReport: z.string().optional(),
+  branch_report_for_report: z.string().optional(),
   deliveryAgentReport: z.string().optional(),
   governorateReport: z.string().optional(),
   companyReport: z.string().optional(),
