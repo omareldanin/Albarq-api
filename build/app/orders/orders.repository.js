@@ -1283,7 +1283,8 @@ class OrdersRepository {
                     },
                     {
                         AND: [
-                            data.filters.branch_report_for_report === "0"
+                            data.filters.branch_report_for_report === "0" ||
+                                data.filters.branch_report_for_report === "false"
                                 ? {
                                     [this.flagFieldFor(data.filters.orderType, data.filters.forChilds)]: false,
                                 }
