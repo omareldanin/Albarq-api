@@ -575,6 +575,162 @@ export class TransactionsRepository {
     };
   };
 
+  getOrdersByBranch = async (filters: {
+    companyId: number;
+    branchId: number | null;
+    type: "forMainBranch" | "forMyBranch" | "allForMyBranch";
+    clientId?: number;
+    startDate?: Date;
+    endDate?: Date;
+    page: number;
+    limit: number;
+  }) => {
+    const {
+      companyId,
+      branchId,
+      type,
+      clientId,
+      startDate,
+      endDate,
+      page,
+      limit,
+    } = filters;
+
+    let typeSql: Prisma.Sql;
+    let reportBranchSql: Prisma.Sql;
+
+    if (type === "forMainBranch") {
+      // Statistics groups this type by the ORDER's branch.
+      reportBranchSql = Prisma.sql`o."branchId"`;
+      typeSql = Prisma.sql`AND o."hasMainReceivedReport" = false`;
+    } else if (type === "forMyBranch" || type === "allForMyBranch") {
+      // This matches your existing use of the company's main repository branch.
+      // It deliberately does not substitute the logged-in user's branchId.
+      const mainBranch = await prisma.repository.findFirst({
+        where: {companyId, mainRepository: true},
+        select: {branchId: true},
+      });
+      if (mainBranch?.branchId == null) {
+        throw new AppError("لم يتم تحديد الفرع الرئيسي لهذه الشركة", 400);
+      }
+
+      // Statistics groups both of these types by the CLIENT's branch.
+      reportBranchSql = Prisma.sql`c."branchId"`;
+      typeSql = Prisma.sql`
+      AND o."hasMainForwardedReport" = false
+      AND c."branchId" IS DISTINCT FROM ${mainBranch.branchId}
+      AND c."companyId" = ${companyId}
+      ${
+        type === "forMyBranch"
+          ? Prisma.sql`AND o."hasDeliveredClientReport" = true`
+          : Prisma.empty
+      }
+    `;
+    } else {
+      throw new AppError("النوع غير صحيح", 400);
+    }
+
+    // Both queries reuse this exact predicate so page data and count agree.
+    // Every external value is bound through Prisma.sql.
+    const whereSql = Prisma.sql`
+    WHERE o."companyId" = ${companyId}
+      AND o."deleted" = false
+      AND o."confirmed" = true
+      AND o."status" IN ('DELIVERED', 'PARTIALLY_RETURNED', 'REPLACED')
+      AND o."branchId" IS DISTINCT FROM c."branchId"
+      ${typeSql}
+      AND ${reportBranchSql} IS NOT DISTINCT FROM ${branchId}
+      ${clientId !== undefined ? Prisma.sql`AND o."clientId" = ${clientId}` : Prisma.empty}
+      ${startDate ? Prisma.sql`AND o."createdAt" >= ${startDate}` : Prisma.empty}
+      ${endDate ? Prisma.sql`AND o."createdAt" < ${endDate}` : Prisma.empty}
+  `;
+
+    const offset = (page - 1) * limit;
+
+    type BranchOrderRow = Pick<
+      Prisma.OrderGetPayload<{}>,
+      | "id"
+      | "receiptNumber"
+      | "governorate"
+      | "status"
+      | "deliveriedAt"
+      | "deliveryCost"
+      | "paidAmount"
+      | "insideBranchNet"
+      | "receivingBranchNet"
+      | "forwardedBranchNet"
+      | "deliveryAgentNet"
+      | "branchId"
+    > & {
+      orderBranchName: string | null;
+      clientBranchId: number | null;
+      clientBranchName: string | null;
+      clientName: string | null;
+      storeName: string | null;
+      deliveryAgentName: string | null;
+    };
+
+    // RepeatableRead keeps the page and its count on the same database snapshot.
+    const [orders, countRows] = await prisma.$transaction(
+      [
+        prisma.$queryRaw<BranchOrderRow[]>(Prisma.sql`
+      SELECT
+        o."id",
+        o."receiptNumber",
+        o."governorate",
+        o."status",
+        o."deliveriedAt",
+        o."deliveryCost",
+        o."paidAmount",
+        o."insideBranchNet",
+        o."receivingBranchNet",
+        o."forwardedBranchNet",
+        o."deliveryAgentNet",
+        o."branchId",
+        ob."name" AS "orderBranchName",
+        c."branchId" AS "clientBranchId",
+        cb."name" AS "clientBranchName",
+        u."name" AS "clientName",
+        s."name" AS "storeName",
+        au."name" AS "deliveryAgentName"
+      FROM "Order" o
+      JOIN "Client" c ON c."id" = o."clientId"
+      LEFT JOIN "User" u ON u."id" = c."id"
+      LEFT JOIN "Branch" ob ON ob."id" = o."branchId"
+      LEFT JOIN "Branch" cb ON cb."id" = c."branchId"
+      LEFT JOIN "Store" s ON s."id" = o."storeId"
+      LEFT JOIN "User" au ON au."id" = o."deliveryAgentId"
+      ${whereSql}
+      ORDER BY o."createdAt" DESC, o."id" DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `),
+        prisma.$queryRaw<{count: bigint}[]>(Prisma.sql`
+      SELECT COUNT(o."id") AS "count"
+      FROM "Order" o
+      JOIN "Client" c ON c."id" = o."clientId"
+      ${whereSql}
+    `),
+      ],
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+      },
+    );
+
+    const total = Number(countRows[0]?.count ?? 0);
+
+    return {
+      results: orders,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page < Math.ceil(total / limit),
+        hasPreviousPage: page > 1 && total > 0,
+      },
+    };
+  };
+
   createTransaction = async ({
     companyID,
     createdByID,

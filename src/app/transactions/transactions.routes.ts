@@ -41,6 +41,14 @@ router
   );
 
 router
+  .route("/transactions/orders-by-branch")
+  .get(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER, EmployeeRole.BRANCH_MANAGER]),
+    transactionsController.getOrdersByBranch,
+  );
+
+router
   .route("/transactions/profits/daily")
   .get(
     isLoggedIn,

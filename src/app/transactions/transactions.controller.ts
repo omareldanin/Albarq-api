@@ -393,6 +393,116 @@ export class TransactionsController {
     res.status(200).json({status: "success", data: results});
   });
 
+  getOrdersByBranch = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+    if (!loggedInUser) throw new AppError("يجب تسجيل الدخول", 401);
+
+    const readString = (key: string): string | undefined => {
+      const value = req.query[key];
+      if (value === undefined) return undefined;
+      if (typeof value !== "string" || value.trim() === "") {
+        throw new AppError(`قيمة ${key} غير صحيحة`, 400);
+      }
+      return value.trim();
+    };
+
+    const readPositiveInt = (
+      key: string,
+      fallback?: number,
+    ): number | undefined => {
+      const value = readString(key);
+      if (value === undefined) return fallback;
+      const number = Number(value);
+      if (!/^\d+$/.test(value) || !Number.isSafeInteger(number) || number < 1) {
+        throw new AppError(`قيمة ${key} غير صحيحة`, 400);
+      }
+      return number;
+    };
+
+    const type = readString("type");
+    if (
+      type !== "forMainBranch" &&
+      type !== "forMyBranch" &&
+      type !== "allForMyBranch"
+    ) {
+      throw new AppError("النوع غير صحيح", 400);
+    }
+
+    // "null" selects the unassigned branch group returned by the statistics API.
+    const branchValue = readString("branch_id");
+    const branchId =
+      branchValue === "null" ? null : readPositiveInt("branch_id");
+    if (branchId === undefined) throw new AppError("معرف الفرع مطلوب", 400);
+
+    // Preserve your existing administrator-role policy.
+    const isAdmin = Object.keys(AdminRole).includes(loggedInUser.role);
+    const companyId = isAdmin
+      ? (readPositiveInt("company_id") ?? loggedInUser.companyID)
+      : loggedInUser.companyID;
+    if (
+      typeof companyId !== "number" ||
+      !Number.isSafeInteger(companyId) ||
+      companyId < 1
+    ) {
+      throw new AppError("يجب تحديد الشركة", 400);
+    }
+
+    const page = readPositiveInt("page", 1)!;
+    const limit = readPositiveInt("limit", 50)!;
+    if (limit > 100) throw new AppError("الحد الأقصى لكل صفحة هو 100 طلب", 400);
+    if (!Number.isSafeInteger((page - 1) * limit)) {
+      throw new AppError("رقم الصفحة كبير جداً", 400);
+    }
+
+    // Date-only inputs use UTC midnight. Timestamps must include a timezone.
+    // The interval is [start_date, end_date): start inclusive, end exclusive.
+    const readDate = (key: string): Date | undefined => {
+      const value = readString(key);
+      if (value === undefined) return undefined;
+      const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
+      const timestamp =
+        /^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,3})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.test(
+          value,
+        );
+      if (!dateOnly && !timestamp)
+        throw new AppError(`صيغة ${key} غير صحيحة`, 400);
+
+      const calendarDay = value.slice(0, 10);
+      const day = new Date(`${calendarDay}T00:00:00.000Z`);
+      const date = new Date(dateOnly ? `${value}T00:00:00.000Z` : value);
+      if (
+        Number.isNaN(day.getTime()) ||
+        day.toISOString().slice(0, 10) !== calendarDay ||
+        Number.isNaN(date.getTime())
+      ) {
+        throw new AppError(`قيمة ${key} غير صحيحة`, 400);
+      }
+      return date;
+    };
+
+    const startDate = readDate("start_date");
+    const endDate = readDate("end_date");
+    if (startDate && endDate && startDate >= endDate) {
+      throw new AppError("تاريخ النهاية يجب أن يكون بعد تاريخ البداية", 400);
+    }
+
+    const result = await transactionsRepository.getOrdersByBranch({
+      companyId,
+      branchId,
+      type,
+      clientId: readPositiveInt("client_id"),
+      startDate,
+      endDate,
+      page,
+      limit,
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: result.results,
+      pagination: result.pagination,
+    });
+  });
   getDailyStatistics = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
 
