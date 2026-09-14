@@ -12,7 +12,7 @@ export const generateReceipts = async (
   try {
     const templatePath = path.join(
       __dirname,
-      "../../../static/templates/receipt4.hbs",
+      "../../../static/templates/receipt2.hbs",
     );
 
     const template = await fs.readFile(templatePath, "utf8");

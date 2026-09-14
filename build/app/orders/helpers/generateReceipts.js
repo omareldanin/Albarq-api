@@ -12,7 +12,7 @@ const logger_1 = require("../../../lib/logger");
 const generatePDF_1 = require("./generatePDF");
 const generateReceipts = async (orders) => {
     try {
-        const templatePath = node_path_1.default.join(__dirname, "../../../static/templates/receipt4.hbs");
+        const templatePath = node_path_1.default.join(__dirname, "../../../static/templates/receipt2.hbs");
         const template = await promises_1.default.readFile(templatePath, "utf8");
         const css = await promises_1.default.readFile(node_path_1.default.join(__dirname, "../../../static/styles/receiptStyle.css"), "utf8");
         const html = await (0, generateHTML_1.generateHTML)(template, { orders });
