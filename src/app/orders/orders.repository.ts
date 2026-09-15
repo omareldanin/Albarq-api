@@ -770,7 +770,6 @@ export class OrdersRepository {
     const branchScope = [data.filters.branchID, ...childBranchs].filter(
       (id): id is number => id != null,
     );
-    console.log(data.filters);
 
     const where =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
@@ -1333,9 +1332,6 @@ export class OrdersRepository {
                 confirmed: data.filters.confirmed,
               },
               {
-                processed: data.filters.processed,
-              },
-              {
                 processingStatus: data.filters.processingStatus,
               },
               // Filter by orderID
@@ -1503,7 +1499,7 @@ export class OrdersRepository {
               // Filter by repositoryReport
               {
                 AND: [
-                  data.filters.repositoryReport === "true"
+                  data.filters.repositoryReport === "1"
                     ? {
                         repositoryReport: {
                           some: {
@@ -1516,19 +1512,49 @@ export class OrdersRepository {
                     : {},
                   {
                     OR:
-                      data.filters.repositoryReport === "false"
+                      data.filters.repositoryReport === "0"
                         ? [
                             {
                               repositoryReport: {
                                 none: {
                                   report: {
-                                    deleted: true,
+                                    deleted: false,
                                   },
                                 },
                               },
                             },
                           ]
-                        : undefined,
+                        : data.filters.repositoryReport === "without_branch"
+                          ? [
+                              {
+                                repositoryReport: {
+                                  none: {
+                                    repository: {
+                                      mainRepository: true,
+                                    },
+                                    report: {
+                                      deleted: false,
+                                    },
+                                  },
+                                },
+                              },
+                            ]
+                          : data.filters.repositoryReport === "without_main"
+                            ? [
+                                {
+                                  repositoryReport: {
+                                    none: {
+                                      repository: {
+                                        mainRepository: false,
+                                      },
+                                      report: {
+                                        deleted: false,
+                                      },
+                                    },
+                                  },
+                                },
+                              ]
+                            : undefined,
                   },
                 ],
               },
@@ -1718,28 +1744,10 @@ export class OrdersRepository {
                     : data.filters.governorate,
               },
               {
-                repository:
-                  data.filters.secondaryStatus === "IN_REPOSITORY"
-                    ? {
-                        mainRepository: false,
-                        branchId: data.filters.branchID,
-                      }
-                    : data.filters.secondaryStatus === "IN_CAR"
-                      ? {
-                          mainRepository: true,
-                        }
-                      : {
-                          id: data.filters.repositoryID,
-                        },
+                repositoryId: data.filters.repositoryID,
               },
               {
-                secondaryStatus:
-                  data.filters.secondaryStatus === "WITH_AGENT"
-                    ? "WITH_AGENT"
-                    : data.filters.secondaryStatus === "IN_REPOSITORY" ||
-                        data.filters.secondaryStatus === "IN_CAR"
-                      ? "IN_REPOSITORY"
-                      : data.filters.secondaryStatus,
+                secondaryStatus: data.filters.secondaryStatus,
               },
               {
                 timeline: {

@@ -68,26 +68,83 @@ export class ReportsRepository {
       },
     };
 
-    // ---------- CLIENT (has flags) ----------
     if (data.reportData.type === ReportType.CLIENT) {
       const reportData = data.reportData;
-      const ordersIDs = data.reportData.ordersIDs;
+      const ordersIDs = [...new Set(reportData.ordersIDs)];
+      const companyId = data.loggedInUser.companyID;
+      // Matches both ReportCreateSchema and ClientReport's database default.
+      const secondaryType = reportData.secondaryType ?? "DELIVERED";
+
+      if (ordersIDs.length === 0) {
+        throw new AppError("لا يوجد طلبات لعمل الكشف", 400);
+      }
+      if (
+        typeof companyId !== "number" ||
+        !Number.isSafeInteger(companyId) ||
+        companyId < 1
+      ) {
+        throw new AppError("لم يتم تحديد الشركة", 400);
+      }
 
       return prisma.$transaction(
         async (tx) => {
+          // All CLIENT-report creation paths must acquire these locks first.
+          // Fixed ordering reduces deadlocks when batches overlap.
+          // text[] matches the Order ID cast already used by recomputeReportFlags.
+          const lockedOrders = await tx.$queryRaw<{id: string}[]>(Prisma.sql`
+        SELECT o."id"
+        FROM "Order" o
+        WHERE o."id" = ANY(${ordersIDs}::text[])
+          AND o."companyId" = ${companyId}
+        ORDER BY o."id"
+        FOR UPDATE OF o
+      `);
+
+          if (lockedOrders.length !== ordersIDs.length) {
+            throw new AppError("بعض الطلبات غير موجودة أو لا تتبع الشركة", 400);
+          }
+
+          // Read again AFTER acquiring locks. Do not reuse the service's old orders.
+          const existingReport = await tx.clientReport.findFirst({
+            where: {
+              secondaryType,
+              orders: {some: {id: {in: ordersIDs}}},
+              report: {
+                deleted: false,
+              },
+            },
+            select: {
+              id: true,
+              orders: {
+                where: {id: {in: ordersIDs}},
+                select: {receiptNumber: true},
+                take: 1,
+              },
+            },
+          });
+
+          if (existingReport) {
+            const receipt = existingReport.orders[0]?.receiptNumber ?? "";
+            const label = secondaryType === "RETURNED" ? "راجع" : "واصل";
+            throw new AppError(
+              `الطلب ${receipt} يوجد في كشف عملاء ${label} آخر رقمه ${existingReport.id}`,
+              409,
+            );
+          }
+
           const createdReport = await tx.clientReport.create({
             data: {
-              secondaryType: reportData.secondaryType,
+              secondaryType,
               client: {connect: {id: reportData.clientID}},
               store: {connect: {id: reportData.storeID}},
               repository: reportData.repositoryID
                 ? {connect: {id: reportData.repositoryID}}
                 : undefined,
-              orders: orders,
+              orders: {connect: ordersIDs.map((id) => ({id}))},
               baghdadDeliveryCost: reportData.baghdadDeliveryCost,
               governoratesDeliveryCost: reportData.governoratesDeliveryCost,
               receivingAgentId: reportData.receivingAgentId,
-              report: report,
+              report,
             },
           });
 
@@ -98,7 +155,11 @@ export class ReportsRepository {
 
           return createdReport;
         },
-        {timeout: 30000},
+        {
+          // The query after waiting for a row lock must see the latest commit.
+          isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+          timeout: 30000,
+        },
       );
     }
 
