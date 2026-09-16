@@ -63,7 +63,6 @@ class ReportsRepository {
         SELECT o."id"
         FROM "Order" o
         WHERE o."id" = ANY(${ordersIDs}::text[])
-          AND o."companyId" = ${companyId}
         ORDER BY o."id"
         FOR UPDATE OF o
       `);
