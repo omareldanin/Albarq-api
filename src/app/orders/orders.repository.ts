@@ -1780,7 +1780,6 @@ export class OrdersRepository {
                                 branchId: {in: branchScope},
                               },
                             },
-
                             {
                               branch: {
                                 id: {not: data.filters.branchID},

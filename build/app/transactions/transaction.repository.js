@@ -183,77 +183,148 @@ class TransactionsRepository {
             : client_1.Prisma.empty;
         if (type === "forMainBranch") {
             return db_1.prisma.$queryRaw `
-      SELECT
-        o."branchId",
-        b."name"                     AS "branchName",
-        SUM(o."paidAmount")          AS "paidAmount",
-        SUM(o."receivingBranchNet")  AS "receivingBranchNet",
-        SUM(o."forwardedBranchNet")  AS "forwardedBranchNet",
-        COUNT(o."id")                AS "count"
-      FROM "Order" o
-      JOIN "Client" c ON c."id" = o."clientId"
-      LEFT JOIN "Branch" b ON b."id" = o."branchId"
-      WHERE o."companyId" = ${companyId}
-        AND o."deleted" = false
-        AND o."confirmed" = true
-        AND o."status" IN ('DELIVERED','PARTIALLY_RETURNED','REPLACED')
-        AND o."hasMainReceivedReport" = false
-        AND o."branchId" IS DISTINCT FROM c."branchId"
-        ${dateSql}
-      GROUP BY o."branchId", b."name"
-      ORDER BY "paidAmount" DESC NULLS LAST;
-    `;
+    SELECT
+      COALESCE(ob."parentBranchId", o."branchId") AS "branchId",
+      b."name"                                 AS "branchName",
+      SUM(o."paidAmount")                       AS "paidAmount",
+      SUM(o."receivingBranchNet")               AS "receivingBranchNet",
+      SUM(o."forwardedBranchNet")               AS "forwardedBranchNet",
+      COUNT(o."id")                             AS "count"
+
+    FROM "Order" o
+    JOIN "Client" c ON c."id" = o."clientId"
+
+    LEFT JOIN "Branch" ob ON ob."id" = o."branchId"
+    LEFT JOIN "Branch" cb ON cb."id" = c."branchId"
+
+    LEFT JOIN "Branch" b
+      ON b."id" = COALESCE(ob."parentBranchId", o."branchId")
+
+    WHERE o."companyId" = ${companyId}
+      AND o."deleted" = false
+      AND o."confirmed" = true
+      AND o."status" IN (
+        'DELIVERED',
+        'PARTIALLY_RETURNED',
+        'REPLACED'
+      )
+      AND o."hasMainReceivedReport" = false
+
+      -- The order must belong to a branch.
+      AND o."branchId" IS NOT NULL
+
+      -- Client is outside this branch family, or has no branch.
+      AND COALESCE(cb."parentBranchId", c."branchId")
+            IS DISTINCT FROM COALESCE(
+              ob."parentBranchId",
+              o."branchId"
+            )
+
+      ${dateSql}
+
+    GROUP BY
+      COALESCE(ob."parentBranchId", o."branchId"),
+      b."name"
+
+    ORDER BY "paidAmount" DESC NULLS LAST;
+  `;
         }
         if (type === "forMyBranch") {
             return db_1.prisma.$queryRaw `
-      SELECT
-        c."branchId",
-        b."name"                     AS "branchName",
-        SUM(o."paidAmount")          AS "paidAmount",
-        SUM(o."receivingBranchNet")  AS "receivingBranchNet",
-        SUM(o."forwardedBranchNet")  AS "forwardedBranchNet",
-        COUNT(o."id")                AS "count"
-      FROM "Order" o
-      JOIN "Client" c ON c."id" = o."clientId"
-      LEFT JOIN "Branch" b ON b."id" = c."branchId"
-      WHERE o."companyId" = ${companyId}
-        AND o."deleted" = false
-        AND o."confirmed" = true
-        AND o."status" IN ('DELIVERED','PARTIALLY_RETURNED','REPLACED')
-        AND o."hasMainForwardedReport" = false
-        AND o."hasDeliveredClientReport" = true
-        AND c."branchId" IS DISTINCT FROM ${myBranchId}
-        AND c."companyId" = ${companyId}
-        AND o."branchId" IS DISTINCT FROM c."branchId"
-        ${dateSql}
-      GROUP BY c."branchId", b."name"
-      ORDER BY "paidAmount" DESC NULLS LAST;
-    `;
+    SELECT
+      COALESCE(cb."parentBranchId", c."branchId") AS "branchId",
+      b."name"                                 AS "branchName",
+      SUM(o."paidAmount")                       AS "paidAmount",
+      SUM(o."receivingBranchNet")               AS "receivingBranchNet",
+      SUM(o."forwardedBranchNet")               AS "forwardedBranchNet",
+      COUNT(o."id")                             AS "count"
+
+    FROM "Order" o
+    JOIN "Client" c ON c."id" = o."clientId"
+
+    LEFT JOIN "Branch" cb ON cb."id" = c."branchId"
+    LEFT JOIN "Branch" ob ON ob."id" = o."branchId"
+
+    LEFT JOIN "Branch" b
+      ON b."id" = COALESCE(cb."parentBranchId", c."branchId")
+
+    WHERE o."companyId" = ${companyId}
+      AND o."deleted" = false
+      AND o."confirmed" = true
+      AND o."status" IN (
+        'DELIVERED',
+        'PARTIALLY_RETURNED',
+        'REPLACED'
+      )
+      AND o."hasMainForwardedReport" = false
+      AND o."hasDeliveredClientReport" = true
+      AND c."companyId" = ${companyId}
+
+      AND COALESCE(cb."parentBranchId", c."branchId")
+            IS DISTINCT FROM ${myBranchId}
+
+      AND COALESCE(ob."parentBranchId", o."branchId")
+            IS DISTINCT FROM COALESCE(
+              cb."parentBranchId",
+              c."branchId"
+            )
+
+      ${dateSql}
+
+    GROUP BY
+      COALESCE(cb."parentBranchId", c."branchId"),
+      b."name"
+
+    ORDER BY "paidAmount" DESC NULLS LAST;
+  `;
         }
         // allForMyBranch
         return db_1.prisma.$queryRaw `
-      SELECT
-        c."branchId",
-        b."name"                     AS "branchName",
-        SUM(o."paidAmount")          AS "paidAmount",
-        SUM(o."receivingBranchNet")  AS "receivingBranchNet",
-        SUM(o."forwardedBranchNet")  AS "forwardedBranchNet",
-        COUNT(o."id")                AS "count"
-      FROM "Order" o
-      JOIN "Client" c ON c."id" = o."clientId"
-      LEFT JOIN "Branch" b ON b."id" = c."branchId"
-      WHERE o."companyId" = ${companyId}
-        AND o."deleted" = false
-        AND o."confirmed" = true
-        AND o."status" IN ('DELIVERED','PARTIALLY_RETURNED','REPLACED')
-        AND o."hasMainForwardedReport" = false
-        AND c."branchId" IS DISTINCT FROM ${myBranchId}
-        AND c."companyId" = ${companyId}
-        AND o."branchId" IS DISTINCT FROM c."branchId"
-        ${dateSql}
-      GROUP BY c."branchId", b."name"
-      ORDER BY "paidAmount" DESC NULLS LAST;
-    `;
+    SELECT
+      COALESCE(cb."parentBranchId", c."branchId") AS "branchId",
+      b."name"                                 AS "branchName",
+      SUM(o."paidAmount")                       AS "paidAmount",
+      SUM(o."receivingBranchNet")               AS "receivingBranchNet",
+      SUM(o."forwardedBranchNet")               AS "forwardedBranchNet",
+      COUNT(o."id")                             AS "count"
+
+    FROM "Order" o
+    JOIN "Client" c ON c."id" = o."clientId"
+
+    LEFT JOIN "Branch" cb ON cb."id" = c."branchId"
+    LEFT JOIN "Branch" ob ON ob."id" = o."branchId"
+
+    LEFT JOIN "Branch" b
+      ON b."id" = COALESCE(cb."parentBranchId", c."branchId")
+
+    WHERE o."companyId" = ${companyId}
+      AND o."deleted" = false
+      AND o."confirmed" = true
+      AND o."status" IN (
+        'DELIVERED',
+        'PARTIALLY_RETURNED',
+        'REPLACED'
+      )
+      AND o."hasMainForwardedReport" = false
+      AND c."companyId" = ${companyId}
+
+      AND COALESCE(cb."parentBranchId", c."branchId")
+            IS DISTINCT FROM ${myBranchId}
+
+      AND COALESCE(ob."parentBranchId", o."branchId")
+            IS DISTINCT FROM COALESCE(
+              cb."parentBranchId",
+              c."branchId"
+            )
+
+      ${dateSql}
+
+    GROUP BY
+      COALESCE(cb."parentBranchId", c."branchId"),
+      b."name"
+
+    ORDER BY "paidAmount" DESC NULLS LAST;
+  `;
     };
     getProfitOrders = async (params) => {
         const { companyId, myBranchId, bucket, applyBranchScope, startDay, endDay, page, size, clientId, storeId, deliveryAgentId, governorate, receivedBranch, forwardedBranch, receiptNumber, } = params;
@@ -453,26 +524,62 @@ class TransactionsRepository {
         const { companyId, branchId, type, clientId, startDate, endDate, page, limit, } = filters;
         let typeSql;
         let reportBranchSql;
+        let crossBranchSql = client_1.Prisma.sql `
+    o."branchId" IS DISTINCT FROM c."branchId"
+  `;
         if (type === "forMainBranch") {
-            // Statistics groups this type by the ORDER's branch.
-            reportBranchSql = client_1.Prisma.sql `o."branchId"`;
-            typeSql = client_1.Prisma.sql `AND o."hasMainReceivedReport" = false`;
+            // Received: order belongs to the selected parent or its children.
+            reportBranchSql = client_1.Prisma.sql `
+      COALESCE(ob."parentBranchId", o."branchId")
+    `;
+            // Client belongs outside that family, or has no branch.
+            crossBranchSql = client_1.Prisma.sql `
+      COALESCE(cb."parentBranchId", c."branchId")
+        IS DISTINCT FROM COALESCE(
+          ob."parentBranchId",
+          o."branchId"
+        )
+    `;
+            typeSql = client_1.Prisma.sql `
+      AND o."hasMainReceivedReport" = false
+      AND o."branchId" IS NOT NULL
+    `;
         }
         else if (type === "forMyBranch" || type === "allForMyBranch") {
-            // This matches your existing use of the company's main repository branch.
-            // It deliberately does not substitute the logged-in user's branchId.
             const mainBranch = await db_1.prisma.repository.findFirst({
-                where: { companyId, mainRepository: true },
-                select: { branchId: true },
+                where: {
+                    companyId,
+                    mainRepository: true,
+                },
+                select: {
+                    branchId: true,
+                },
             });
             if (mainBranch?.branchId == null) {
                 throw new AppError_1.AppError("لم يتم تحديد الفرع الرئيسي لهذه الشركة", 400);
             }
-            // Statistics groups both of these types by the CLIENT's branch.
-            reportBranchSql = client_1.Prisma.sql `c."branchId"`;
+            if (type === "forMyBranch") {
+                // Forwarded: client belongs to the selected parent or its children.
+                reportBranchSql = client_1.Prisma.sql `
+        COALESCE(cb."parentBranchId", c."branchId")
+      `;
+                // Exclude deliveries within that same family.
+                crossBranchSql = client_1.Prisma.sql `
+        COALESCE(ob."parentBranchId", o."branchId")
+          IS DISTINCT FROM COALESCE(
+            cb."parentBranchId",
+            c."branchId"
+          )
+      `;
+            }
+            else {
+                // Preserve the existing allForMyBranch statistics rules.
+                reportBranchSql = client_1.Prisma.sql `c."branchId"`;
+            }
             typeSql = client_1.Prisma.sql `
       AND o."hasMainForwardedReport" = false
-      AND c."branchId" IS DISTINCT FROM ${mainBranch.branchId}
+      AND ${reportBranchSql}
+            IS DISTINCT FROM ${mainBranch.branchId}
       AND c."companyId" = ${companyId}
       ${type === "forMyBranch"
                 ? client_1.Prisma.sql `AND o."hasDeliveredClientReport" = true`
@@ -482,60 +589,71 @@ class TransactionsRepository {
         else {
             throw new AppError_1.AppError("النوع غير صحيح", 400);
         }
-        // Both queries reuse this exact predicate so page data and count agree.
-        // Every external value is bound through Prisma.sql.
+        // Shared by the orders query and the count query.
         const whereSql = client_1.Prisma.sql `
     WHERE o."companyId" = ${companyId}
       AND o."deleted" = false
       AND o."confirmed" = true
-      AND o."status" IN ('DELIVERED', 'PARTIALLY_RETURNED', 'REPLACED')
-      AND o."branchId" IS DISTINCT FROM c."branchId"
+      AND o."status" IN (
+        'DELIVERED',
+        'PARTIALLY_RETURNED',
+        'REPLACED'
+      )
+      AND ${crossBranchSql}
       ${typeSql}
       AND ${reportBranchSql} IS NOT DISTINCT FROM ${branchId}
-      ${clientId !== undefined ? client_1.Prisma.sql `AND o."clientId" = ${clientId}` : client_1.Prisma.empty}
+      ${clientId !== undefined
+            ? client_1.Prisma.sql `AND o."clientId" = ${clientId}`
+            : client_1.Prisma.empty}
       ${startDate ? client_1.Prisma.sql `AND o."createdAt" >= ${startDate}` : client_1.Prisma.empty}
       ${endDate ? client_1.Prisma.sql `AND o."createdAt" < ${endDate}` : client_1.Prisma.empty}
   `;
         const offset = (page - 1) * limit;
-        // RepeatableRead keeps the page and its count on the same database snapshot.
         const [orders, countRows] = await db_1.prisma.$transaction([
             db_1.prisma.$queryRaw(client_1.Prisma.sql `
-      SELECT
-        o."id",
-        o."receiptNumber",
-        o."governorate",
-        o."status",
-        o."deliveriedAt",
-        o."deliveryCost",
-        o."paidAmount",
-        o."insideBranchNet",
-        o."receivingBranchNet",
-        o."forwardedBranchNet",
-        o."deliveryAgentNet",
-        o."branchId",
-        ob."name" AS "orderBranchName",
-        c."branchId" AS "clientBranchId",
-        cb."name" AS "clientBranchName",
-        u."name" AS "clientName",
-        s."name" AS "storeName",
-        au."name" AS "deliveryAgentName"
-      FROM "Order" o
-      JOIN "Client" c ON c."id" = o."clientId"
-      LEFT JOIN "User" u ON u."id" = c."id"
-      LEFT JOIN "Branch" ob ON ob."id" = o."branchId"
-      LEFT JOIN "Branch" cb ON cb."id" = c."branchId"
-      LEFT JOIN "Store" s ON s."id" = o."storeId"
-      LEFT JOIN "User" au ON au."id" = o."deliveryAgentId"
-      ${whereSql}
-      ORDER BY o."createdAt" DESC, o."id" DESC
-      LIMIT ${limit} OFFSET ${offset}
-    `),
+        SELECT
+          o."id",
+          o."receiptNumber",
+          o."governorate",
+          o."status",
+          o."deliveriedAt",
+          o."deliveryCost",
+          o."paidAmount",
+          o."insideBranchNet",
+          o."receivingBranchNet",
+          o."forwardedBranchNet",
+          o."deliveryAgentNet",
+          o."branchId",
+          ob."name" AS "orderBranchName",
+          c."branchId" AS "clientBranchId",
+          cb."name" AS "clientBranchName",
+          u."name" AS "clientName",
+          s."name" AS "storeName",
+          au."name" AS "deliveryAgentName"
+
+        FROM "Order" o
+        JOIN "Client" c ON c."id" = o."clientId"
+        LEFT JOIN "User" u ON u."id" = c."id"
+        LEFT JOIN "Branch" ob ON ob."id" = o."branchId"
+        LEFT JOIN "Branch" cb ON cb."id" = c."branchId"
+        LEFT JOIN "Store" s ON s."id" = o."storeId"
+        LEFT JOIN "User" au ON au."id" = o."deliveryAgentId"
+
+        ${whereSql}
+
+        ORDER BY o."createdAt" DESC, o."id" DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `),
             db_1.prisma.$queryRaw(client_1.Prisma.sql `
-      SELECT COUNT(o."id") AS "count"
-      FROM "Order" o
-      JOIN "Client" c ON c."id" = o."clientId"
-      ${whereSql}
-    `),
+        SELECT COUNT(o."id") AS "count"
+
+        FROM "Order" o
+        JOIN "Client" c ON c."id" = o."clientId"
+        LEFT JOIN "Branch" ob ON ob."id" = o."branchId"
+        LEFT JOIN "Branch" cb ON cb."id" = c."branchId"
+
+        ${whereSql}
+      `),
         ], {
             isolationLevel: client_1.Prisma.TransactionIsolationLevel.RepeatableRead,
         });
@@ -1086,6 +1204,12 @@ class TransactionsRepository {
                 },
             }),
         ]);
+        const branchTotalsDateSql = createdAtFilter
+            ? client_1.Prisma.sql `
+      AND o."createdAt" >= ${createdAtFilter.gt}
+      AND o."createdAt" < ${createdAtFilter.lte}
+    `
+            : client_1.Prisma.empty;
         //مبالغ مستحقه للفرع الرئيسي / مبالغ مستحقه عند الافرع
         const forMainBranchRows = applyBranchScope
             ? await db_1.prisma.$queryRaw `
@@ -1094,17 +1218,31 @@ class TransactionsRepository {
         SUM(o."receivingBranchNet") AS "receivingBranchNet",
         SUM(o."forwardedBranchNet") AS "forwardedBranchNet",
         COUNT(o."id")               AS "count"
+
       FROM "Order" o
       JOIN "Client" c ON c."id" = o."clientId"
+      LEFT JOIN "Branch" ob ON ob."id" = o."branchId"
+      LEFT JOIN "Branch" cb ON cb."id" = c."branchId"
+
       WHERE o."companyId" = ${filters.companyId}
         AND o."deleted" = false
         AND o."confirmed" = true
-        AND o."status" IN ('DELIVERED','PARTIALLY_RETURNED','REPLACED')
+        AND o."status" IN (
+          'DELIVERED',
+          'PARTIALLY_RETURNED',
+          'REPLACED'
+        )
         AND o."hasMainReceivedReport" = false
-        AND o."branchId" IS DISTINCT FROM c."branchId"
-        ${createdAtFilter
-                ? client_1.Prisma.sql `AND o."createdAt" >= ${createdAtFilter.gt} AND o."createdAt" < ${createdAtFilter.lte}`
-                : client_1.Prisma.empty};
+        AND o."branchId" IS NOT NULL
+
+        -- Client is outside the order's family, or has no branch.
+        AND COALESCE(cb."parentBranchId", c."branchId")
+              IS DISTINCT FROM COALESCE(
+                ob."parentBranchId",
+                o."branchId"
+              )
+
+        ${branchTotalsDateSql}
     `
             : null;
         const forMainBranch = applyBranchScope
@@ -1169,26 +1307,42 @@ class TransactionsRepository {
         //مبالغ مستحقه عند الفرع الرئيسي / مبالغ مستحقه للأفرع
         const forMyBranchRows = applyBranchScope
             ? await db_1.prisma.$queryRaw `
-          SELECT
-            SUM(o."paidAmount")         AS "paidAmount",
-            SUM(o."receivingBranchNet") AS "receivingBranchNet",
-            SUM(o."forwardedBranchNet") AS "forwardedBranchNet",
-            COUNT(o."id")               AS "count"
-          FROM "Order" o
-          JOIN "Client" c ON c."id" = o."clientId"
-          WHERE o."companyId" = ${filters.companyId}
-            AND o."deleted" = false
-            AND o."confirmed" = true
-            AND o."status" IN ('DELIVERED','PARTIALLY_RETURNED','REPLACED')
-            AND o."hasMainForwardedReport" = false
-            AND o."hasDeliveredClientReport" = true
-            AND c."branchId" <> ${myBranchId}
-            AND c."companyId" = 16
-            AND o."branchId" IS DISTINCT FROM c."branchId"
-            ${createdAtFilter
-                ? client_1.Prisma.sql `AND o."createdAt" >= ${createdAtFilter.gt} AND o."createdAt" < ${createdAtFilter.lte}`
-                : client_1.Prisma.empty};
-          `
+      SELECT
+        SUM(o."paidAmount")         AS "paidAmount",
+        SUM(o."receivingBranchNet") AS "receivingBranchNet",
+        SUM(o."forwardedBranchNet") AS "forwardedBranchNet",
+        COUNT(o."id")               AS "count"
+
+      FROM "Order" o
+      JOIN "Client" c ON c."id" = o."clientId"
+      LEFT JOIN "Branch" cb ON cb."id" = c."branchId"
+      LEFT JOIN "Branch" ob ON ob."id" = o."branchId"
+
+      WHERE o."companyId" = ${filters.companyId}
+        AND o."deleted" = false
+        AND o."confirmed" = true
+        AND o."status" IN (
+          'DELIVERED',
+          'PARTIALLY_RETURNED',
+          'REPLACED'
+        )
+        AND o."hasMainForwardedReport" = false
+        AND o."hasDeliveredClientReport" = true
+        AND c."companyId" = ${filters.companyId}
+
+        -- Exclude clients in the main branch and its children.
+        AND COALESCE(cb."parentBranchId", c."branchId")
+              IS DISTINCT FROM ${myBranchId}
+
+        -- Exclude deliveries within the same branch family.
+        AND COALESCE(ob."parentBranchId", o."branchId")
+              IS DISTINCT FROM COALESCE(
+                cb."parentBranchId",
+                c."branchId"
+              )
+
+        ${branchTotalsDateSql}
+    `
             : null;
         const forMyBranch = applyBranchScope
             ? {
@@ -1253,25 +1407,41 @@ class TransactionsRepository {
         // اجمالي المبالغ المستحقه للأفرع
         const allForMyBranchRows = applyBranchScope
             ? await db_1.prisma.$queryRaw `
-          SELECT
-            SUM(o."paidAmount")         AS "paidAmount",
-            SUM(o."receivingBranchNet") AS "receivingBranchNet",
-            SUM(o."forwardedBranchNet") AS "forwardedBranchNet",
-            COUNT(o."id")               AS "count"
-          FROM "Order" o
-          JOIN "Client" c ON c."id" = o."clientId"
-          WHERE o."companyId" = ${filters.companyId}
-            AND o."deleted" = false
-            AND o."confirmed" = true
-            AND o."status" IN ('DELIVERED','PARTIALLY_RETURNED','REPLACED')
-            AND o."hasMainForwardedReport" = false
-            AND c."branchId" <> ${myBranchId}
-            AND c."companyId" = 16
-            AND o."branchId" IS DISTINCT FROM c."branchId"
-            ${createdAtFilter
-                ? client_1.Prisma.sql `AND o."createdAt" >= ${createdAtFilter.gt} AND o."createdAt" < ${createdAtFilter.lte}`
-                : client_1.Prisma.empty};
-          `
+      SELECT
+        SUM(o."paidAmount")         AS "paidAmount",
+        SUM(o."receivingBranchNet") AS "receivingBranchNet",
+        SUM(o."forwardedBranchNet") AS "forwardedBranchNet",
+        COUNT(o."id")               AS "count"
+
+      FROM "Order" o
+      JOIN "Client" c ON c."id" = o."clientId"
+      LEFT JOIN "Branch" cb ON cb."id" = c."branchId"
+      LEFT JOIN "Branch" ob ON ob."id" = o."branchId"
+
+      WHERE o."companyId" = ${filters.companyId}
+        AND o."deleted" = false
+        AND o."confirmed" = true
+        AND o."status" IN (
+          'DELIVERED',
+          'PARTIALLY_RETURNED',
+          'REPLACED'
+        )
+        AND o."hasMainForwardedReport" = false
+        AND c."companyId" = ${filters.companyId}
+
+        -- Exclude clients in the main branch and its children.
+        AND COALESCE(cb."parentBranchId", c."branchId")
+              IS DISTINCT FROM ${myBranchId}
+
+        -- Exclude deliveries within the same branch family.
+        AND COALESCE(ob."parentBranchId", o."branchId")
+              IS DISTINCT FROM COALESCE(
+                cb."parentBranchId",
+                c."branchId"
+              )
+
+        ${branchTotalsDateSql}
+    `
             : null;
         const allForMyBranch = applyBranchScope
             ? {
