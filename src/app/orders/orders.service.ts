@@ -674,6 +674,7 @@ export class OrdersService {
     let oldOrderData = await ordersRepository.getOrderById({
       orderID: data.params.orderID,
     });
+
     if (!oldOrderData) {
       oldOrderData = await ordersRepository.getOrderByReceiptNumber({
         orderReceiptNumber: data.params.orderID,

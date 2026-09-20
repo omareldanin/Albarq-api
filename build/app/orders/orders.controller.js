@@ -923,6 +923,9 @@ class OrdersController {
                 oldOrder.repository?.id === returnsRepo?.id) {
                 throw new AppError_1.AppError("هذا الطلب موجود في مخزن!", 400);
             }
+            if (oldOrder.hasReturnedClientReport) {
+                throw new AppError_1.AppError("هذا الطلب مغلق!", 400);
+            }
             const returnedReport = oldOrder.repositoryReport.find((r) => r.secondaryType === "RETURNED");
             // Remove the order from the repository report
             if (returnedReport) {

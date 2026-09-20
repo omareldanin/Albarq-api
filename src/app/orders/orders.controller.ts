@@ -1043,6 +1043,10 @@ export class OrdersController {
         throw new AppError("هذا الطلب موجود في مخزن!", 400);
       }
 
+      if (oldOrder.hasReturnedClientReport) {
+        throw new AppError("هذا الطلب مغلق!", 400);
+      }
+
       const returnedReport = oldOrder.repositoryReport.find(
         (r) => r.secondaryType === "RETURNED",
       );

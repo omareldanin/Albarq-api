@@ -128,6 +128,7 @@ export const orderSelect = {
   hasDeliveredClientReport: true,
   hasMainForwardedReport: true,
   hasMainReceivedReport: true,
+  hasReturnedClientReport: true,
   processedBy: {
     select: {
       user: {
