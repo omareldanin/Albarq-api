@@ -94,15 +94,7 @@ export class EmployeeClientCommissionRepository {
            AND r2."deleted" = false
        )
      )
-     AND EXISTS (
-       SELECT 1
-       FROM "_ClientReportToOrder" cro
-       JOIN "ClientReport" cr ON cr."id" = cro."A"
-       JOIN "Report" r        ON r."id"  = cr."id"
-       WHERE cro."B" = o."id"
-         AND cr."secondaryType" = 'DELIVERED'
-         AND r."deleted" = false
-     )
+     AND o."hasDeliveredClientReport" = true
      ${startDate ? Prisma.sql`AND o."receivedAt" >= ${startDate}` : Prisma.empty}
      ${endDate ? Prisma.sql`AND o."receivedAt" <= ${endDate}` : Prisma.empty}
     WHERE ecc."employeeId" = ${employeeID}
@@ -162,15 +154,7 @@ export class EmployeeClientCommissionRepository {
         ON o."clientId" = ecc."clientId"
       AND o."deleted" = false
       AND o."status" IN ('DELIVERED', 'PARTIALLY_RETURNED', 'REPLACED')
-      AND EXISTS (
-        SELECT 1
-        FROM "_ClientReportToOrder" cro
-        JOIN "ClientReport" cr ON cr."id" = cro."A"
-        JOIN "Report" r        ON r."id"  = cr."id"
-        WHERE cro."B" = o."id"
-          AND cr."secondaryType" = 'DELIVERED'
-          AND r."deleted" = false
-      )
+      AND o."hasDeliveredClientReport" = true
       AND (
         o."employeeReportId" IS NULL
         OR NOT EXISTS (
@@ -212,43 +196,69 @@ export class EmployeeClientCommissionRepository {
       endDate,
     });
 
-    const createdReport = await prisma.employeeReport.create({
-      data: {
-        employee: {
-          connect: {
-            id: employeeID,
-          },
-        },
-        orders: {
-          connect: orderIDs.map((id) => ({id})),
-        },
-        report: {
-          create: {
-            type: "EMPLOYEE",
-            createdBy: {
-              connect: {
-                id: loggedInUser.id,
-              },
-            },
-            company: {
-              connect: {
-                id: loggedInUser.companyID as number,
-              },
-            },
-            baghdadOrdersCount: data.totalBaghdadOrders,
-            governoratesOrdersCount: data.totalGovOrders,
-            totalCost: 0,
-            paidAmount: 0,
-            deliveryCost: 0,
-            clientNet: 0,
-            deliveryAgentNet: data.totalCommission,
-            companyNet: 0,
-            branchNet: 0,
-          },
-        },
-      },
-    });
+    const CONNECT_BATCH_SIZE = 1000;
 
+    const createdReport = await prisma.$transaction(
+      async (tx) => {
+        // Create the report without the large orders.connect list.
+        const report = await tx.employeeReport.create({
+          data: {
+            employee: {
+              connect: {id: employeeID},
+            },
+            report: {
+              create: {
+                type: "EMPLOYEE",
+                createdBy: {
+                  connect: {id: loggedInUser.id},
+                },
+                company: {
+                  connect: {id: loggedInUser.companyID as number},
+                },
+                baghdadOrdersCount: data.totalBaghdadOrders,
+                governoratesOrdersCount: data.totalGovOrders,
+                totalCost: 0,
+                paidAmount: 0,
+                deliveryCost: 0,
+                clientNet: 0,
+                deliveryAgentNet: data.totalCommission,
+                companyNet: 0,
+                branchNet: 0,
+              },
+            },
+          },
+          select: {id: true},
+        });
+
+        // Each batch is a separate, smaller statement in the same transaction.
+        for (
+          let offset = 0;
+          offset < orderIDs.length;
+          offset += CONNECT_BATCH_SIZE
+        ) {
+          const batch = orderIDs.slice(offset, offset + CONNECT_BATCH_SIZE);
+
+          await tx.employeeReport.update({
+            where: {id: report.id},
+            data: {
+              orders: {
+                connect: batch.map((id) => ({id})),
+              },
+            },
+            select: {id: true},
+          });
+        }
+
+        return report;
+      },
+      {
+        maxWait: 10000,
+        timeout: 60000,
+      },
+    );
+
+    // Preserve the existing withdrawal call after the report transaction commits.
+    // This is a separate database operation; see README for its existing failure behavior.
     if (createdReport) {
       await transactionsRepository.createTransaction({
         companyID: loggedInUser.companyID!!,
@@ -270,6 +280,7 @@ export class EmployeeClientCommissionRepository {
         },
       });
     }
+
     return {
       id: createdReport.id,
       data,
