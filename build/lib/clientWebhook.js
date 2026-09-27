@@ -35,7 +35,6 @@ const notifyClientWebhook = async (params) => {
             }),
             signal: controller.signal,
         });
-        console.log(res);
         clearTimeout(timeout);
         if (!res.ok) {
             console.error(`[webhook] ${client.webhookUrl} returned ${res.status} for ${receiptNumber}`);

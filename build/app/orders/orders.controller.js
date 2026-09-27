@@ -419,6 +419,7 @@ class OrdersController {
         });
         const orderInquiryEmployees = await ordersService.getOrderInquiryEmployees({
             params: params,
+            loggedInUser,
         });
         res.status(200).json({
             status: "success",
@@ -442,6 +443,7 @@ class OrdersController {
         });
         const orderInquiryEmployees = await ordersService.getOrderInquiryEmployees({
             params: params,
+            loggedInUser,
         });
         res.status(200).json({
             status: "success",

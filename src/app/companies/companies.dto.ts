@@ -25,6 +25,11 @@ export const CompanyCreateSchema = z.preprocess(
         if (val === "false") return false;
         return val;
       }, z.boolean().optional()),
+      showSupportNumbers: z.preprocess((val) => {
+        if (val === "true") return true;
+        if (val === "false") return false;
+        return val;
+      }, z.boolean().optional()),
       isExternal: z.preprocess((val) => {
         if (val === "true") return true;
         if (val === "false") return false;
@@ -89,6 +94,11 @@ export const CompanyUpdateSchema = z
       return val;
     }, z.boolean().optional()),
     isExternal: z.preprocess((val) => {
+      if (val === "true") return true;
+      if (val === "false") return false;
+      return val;
+    }, z.boolean().optional()),
+    showSupportNumbers: z.preprocess((val) => {
       if (val === "true") return true;
       if (val === "false") return false;
       return val;

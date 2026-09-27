@@ -366,6 +366,7 @@ model Company {
   targetCompanyId           Int?
   webhookUrl                String?
   activeProfit              Boolean                     @default(false)
+  showSupportNumbers        Boolean                     @default(true)
   automaticUpdates          AutomaticUpdate[]
   banners                   Banner[]
   branches                  Branch[]

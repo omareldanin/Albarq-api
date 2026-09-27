@@ -12,6 +12,7 @@ class CompaniesRepository {
                 logo: data.companyData.companyData.logo,
                 registrationText: data.companyData.companyData.registrationText,
                 activeProfit: data.companyData.companyData.activeProfit,
+                showSupportNumbers: data.companyData.companyData.showSupportNumbers,
                 governoratesDeliveryCosts: data.companyData.companyData.governoratesDeliveryCosts,
                 isExternal: data.loggedInUser.role === "COMPANY_MANAGER" ||
                     data.companyData.companyData.isExternal
@@ -120,6 +121,7 @@ class CompaniesRepository {
                 registrationText: data.companyData.registrationText,
                 governoratesDeliveryCosts: data.companyData.governoratesDeliveryCosts,
                 activeProfit: data.companyData.activeProfit,
+                showSupportNumbers: data.companyData.showSupportNumbers,
                 isExternal: data.companyData.isExternal ? true : false,
                 targetCompanyId: data.companyData.companyID
                     ? +data.companyData.companyID

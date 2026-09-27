@@ -4854,7 +4854,11 @@ export class OrdersRepository {
     return chatMembers;
   }
 
-  async getOrderInquiryEmployees(data: {orderID: string | undefined}) {
+  async getOrderInquiryEmployees(data: {
+    orderID: string | undefined;
+    loggedInUser?: loggedInUserType;
+  }) {
+    let company_id: number | undefined = undefined;
     const order = await prisma.order.findUnique({
       where: {
         id: data.orderID,
@@ -4866,9 +4870,15 @@ export class OrdersRepository {
         locationId: true,
         status: true,
         governorate: true,
+        forwardedFrom: {
+          select: {
+            showSupportNumbers: true,
+          },
+        },
         client: {
           select: {
             branchId: true,
+            companyId: true,
           },
         },
         deliveryAgent: {
@@ -4896,11 +4906,20 @@ export class OrdersRepository {
       role: string;
     }[] = [];
 
+    if (
+      data.loggedInUser &&
+      data.loggedInUser?.companyID !== order.companyId &&
+      !order.forwardedFrom?.showSupportNumbers
+    ) {
+      company_id = data.loggedInUser?.companyID || undefined;
+    }
+
     (
       await prisma.employee.findMany({
         where: {
           AND: [
             {deleted: false},
+            {companyId: company_id},
             {role: "INQUIRY_EMPLOYEE"},
             {
               OR: [

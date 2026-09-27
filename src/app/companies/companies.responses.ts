@@ -10,4 +10,5 @@ export const companySelect = {
   targetCompanyId: true,
   governoratesDeliveryCosts: true,
   activeProfit: true,
+  showSupportNumbers: true,
 } satisfies Prisma.CompanySelect;

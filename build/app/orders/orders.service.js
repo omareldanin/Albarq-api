@@ -2128,6 +2128,7 @@ class OrdersService {
     getOrderInquiryEmployees = async (data) => {
         const orderInquiryEmployees = await ordersRepository.getOrderInquiryEmployees({
             orderID: data.params.orderID,
+            loggedInUser: data.loggedInUser,
         });
         return orderInquiryEmployees;
     };

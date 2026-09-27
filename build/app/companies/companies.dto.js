@@ -27,6 +27,13 @@ exports.CompanyCreateSchema = zod_1.z.preprocess((data) => {
                 return false;
             return val;
         }, zod_1.z.boolean().optional()),
+        showSupportNumbers: zod_1.z.preprocess((val) => {
+            if (val === "true")
+                return true;
+            if (val === "false")
+                return false;
+            return val;
+        }, zod_1.z.boolean().optional()),
         isExternal: zod_1.z.preprocess((val) => {
             if (val === "true")
                 return true;
@@ -80,6 +87,13 @@ exports.CompanyUpdateSchema = zod_1.z
         return val;
     }, zod_1.z.boolean().optional()),
     isExternal: zod_1.z.preprocess((val) => {
+        if (val === "true")
+            return true;
+        if (val === "false")
+            return false;
+        return val;
+    }, zod_1.z.boolean().optional()),
+    showSupportNumbers: zod_1.z.preprocess((val) => {
         if (val === "true")
             return true;
         if (val === "false")

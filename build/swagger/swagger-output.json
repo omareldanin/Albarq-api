@@ -7524,6 +7524,11 @@
                                     "boolean"
                                 ]
                             },
+                            "showSupportNumbers": {
+                                "type": [
+                                    "boolean"
+                                ]
+                            },
                             "isExternal": {
                                 "type": [
                                     "boolean"
@@ -7690,6 +7695,11 @@
                         ]
                     },
                     "isExternal": {
+                        "type": [
+                            "boolean"
+                        ]
+                    },
+                    "showSupportNumbers": {
                         "type": [
                             "boolean"
                         ]

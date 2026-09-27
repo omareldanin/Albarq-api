@@ -473,6 +473,7 @@ export class OrdersController {
     });
     const orderInquiryEmployees = await ordersService.getOrderInquiryEmployees({
       params: params,
+      loggedInUser,
     });
 
     res.status(200).json({
@@ -499,6 +500,7 @@ export class OrdersController {
     });
     const orderInquiryEmployees = await ordersService.getOrderInquiryEmployees({
       params: params,
+      loggedInUser,
     });
 
     res.status(200).json({

@@ -33,6 +33,7 @@ export const notifyClientWebhook = async (params: {
     if (!mapped) return;
 
     const controller = new AbortController();
+
     const timeout = setTimeout(() => controller.abort(), 10_000);
 
     const res = await fetch(client.webhookUrl, {
@@ -48,7 +49,6 @@ export const notifyClientWebhook = async (params: {
       }),
       signal: controller.signal,
     });
-    console.log(res);
 
     clearTimeout(timeout);
 

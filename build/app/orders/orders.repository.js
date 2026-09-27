@@ -4041,6 +4041,7 @@ class OrdersRepository {
         return chatMembers;
     }
     async getOrderInquiryEmployees(data) {
+        let company_id = undefined;
         const order = await db_1.prisma.order.findUnique({
             where: {
                 id: data.orderID,
@@ -4052,9 +4053,15 @@ class OrdersRepository {
                 locationId: true,
                 status: true,
                 governorate: true,
+                forwardedFrom: {
+                    select: {
+                        showSupportNumbers: true,
+                    },
+                },
                 client: {
                     select: {
                         branchId: true,
+                        companyId: true,
                     },
                 },
                 deliveryAgent: {
@@ -4073,10 +4080,16 @@ class OrdersRepository {
             throw new AppError_1.AppError("الطلب غير موجود", 404);
         }
         const orderInquiryEmployees = [];
+        if (data.loggedInUser &&
+            data.loggedInUser?.companyID !== order.companyId &&
+            !order.forwardedFrom?.showSupportNumbers) {
+            company_id = data.loggedInUser?.companyID || undefined;
+        }
         (await db_1.prisma.employee.findMany({
             where: {
                 AND: [
                     { deleted: false },
+                    { companyId: company_id },
                     { role: "INQUIRY_EMPLOYEE" },
                     {
                         OR: [
