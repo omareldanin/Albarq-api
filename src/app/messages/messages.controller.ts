@@ -16,6 +16,7 @@ type InquiryScope = {
   inquiryLocationsIDs?: number[];
   inquiryBranchesIDs?: number[];
   inquiryStoresIDs?: number[];
+  inquiryCompaniesIDs?: number[];
 };
 export class MessagesController {
   private resolveInquiryScope = async (
@@ -44,6 +45,9 @@ export class MessagesController {
         : undefined,
       inquiryStoresIDs: stuff.inquiryStores?.length
         ? stuff.inquiryStores
+        : undefined,
+      inquiryCompaniesIDs: stuff.inquiryCompanies?.length
+        ? stuff.inquiryCompanies
         : undefined,
     };
   };
@@ -109,12 +113,17 @@ export class MessagesController {
           },
           {OR: this.buildInquiryBranchOR(user, scope)},
           {storeId: inquiryStoresIDs ? {in: inquiryStoresIDs} : undefined},
-          {
-            OR: [
-              {companyId: user.companyID},
-              {forwardedFromId: user.companyID},
-            ],
-          },
+          scope.inquiryCompaniesIDs
+            ? {
+                companyId: user.companyID,
+                forwardedFromId: {in: scope.inquiryCompaniesIDs},
+              }
+            : {
+                OR: [
+                  {companyId: user.companyID},
+                  {forwardedFromId: user.companyID},
+                ],
+              },
           {
             locationId: scope.inquiryLocationsIDs
               ? {in: scope.inquiryLocationsIDs}
@@ -742,6 +751,7 @@ export class MessagesController {
         managedStores: true,
         inquiryBranches: true,
         inquiryGovernorates: true,
+        inquiryCompanies: true,
         inquiryStatuses: true,
         inquiryLocations: true,
         inquiryStores: true,
@@ -762,6 +772,7 @@ export class MessagesController {
 
     // scoping
     const scope = await this.resolveInquiryScope(user);
+
     const inquiryStoresIDs = isClientAssistant
       ? employee?.inquiryStores.map((s) => s.storeId)
       : scope.inquiryStoresIDs;

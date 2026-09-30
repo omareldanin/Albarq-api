@@ -3741,16 +3741,18 @@ class OrdersRepository {
                                             },
                                         },
                                     ]
-                                    : [
-                                        {
-                                            branchId: data.loggedInUser.branchId,
-                                        },
-                                        {
-                                            client: {
+                                    : data.filters.inquiryCompaniesIDs
+                                        ? []
+                                        : [
+                                            {
                                                 branchId: data.loggedInUser.branchId,
                                             },
-                                        },
-                                    ],
+                                            {
+                                                client: {
+                                                    branchId: data.loggedInUser.branchId,
+                                                },
+                                            },
+                                        ],
                     },
                 ],
             }
