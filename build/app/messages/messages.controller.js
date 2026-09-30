@@ -55,6 +55,9 @@ class MessagesController {
         if (orderType === "forwarded" && user.mainRepository && hasBranches) {
             return [{ client: { branchId: { in: inquiryBranchesIDs } } }];
         }
+        if (scope.inquiryCompaniesIDs?.length) {
+            return [];
+        }
         return [{ branchId: user.branchId }, { client: { branchId: user.branchId } }];
     };
     buildOrderWhere = (params) => {
