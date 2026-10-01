@@ -6,6 +6,7 @@ const branches_repository_1 = require("../branches/branches.repository");
 const db_1 = require("../../database/db");
 const AppError_1 = require("../../lib/AppError");
 const governerates_1 = require("../../lib/governerates");
+const locations_repository_1 = require("../locations/locations.repository");
 const ordersRepository = new orders_repository_1.OrdersRepository();
 const branchesRepository = new branches_repository_1.BranchesRepository();
 class OrdersService {
@@ -36,6 +37,7 @@ class OrdersService {
                 },
             });
             for (const order of data.orderOrOrdersData) {
+                let locationID = order.locationID;
                 let clientId = 0;
                 let deliveryCost = 0;
                 let storeId = 0;
@@ -107,8 +109,18 @@ class OrdersService {
                     storeId = checkStore.id;
                 }
                 let branchID = undefined;
+                if (!locationID) {
+                    const locations = await db_1.prisma.location.findMany({
+                        where: {
+                            governorate: order.governorate,
+                            companyId: company?.targetCompanyId,
+                        },
+                    });
+                    locationID =
+                        locations.find((l) => l.name === locations_repository_1.governorateArabicNames[order.governorate])?.id ?? locations[0].id;
+                }
                 const branch = await branchesRepository.getBranchByLocation({
-                    locationID: order.locationID,
+                    locationID: locationID,
                 });
                 if (!branch) {
                     throw new AppError_1.AppError("لا يوجد فرع مرتبط بالموقع", 500);

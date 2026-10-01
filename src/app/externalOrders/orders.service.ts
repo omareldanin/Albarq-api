@@ -7,6 +7,7 @@ import {AppError} from "../../lib/AppError";
 import {Governorate} from "@prisma/client";
 import {OrdersFiltersType} from "../orders/orders.dto";
 import {fromExternalCode} from "../../lib/governerates";
+import {governorateArabicNames} from "../locations/locations.repository";
 
 const ordersRepository = new OrdersRepository();
 const branchesRepository = new BranchesRepository();
@@ -31,6 +32,7 @@ export class OrdersService {
   }) => {
     if (Array.isArray(data.orderOrOrdersData)) {
       const createdOrders = [];
+
       const company = await prisma.company.findUnique({
         where: {
           id: data.loggedInUser.id,
@@ -43,6 +45,7 @@ export class OrdersService {
       });
 
       for (const order of data.orderOrOrdersData) {
+        let locationID = order.locationID;
         let clientId: number = 0;
         let deliveryCost: number = 0;
         let storeId: number = 0;
@@ -119,8 +122,21 @@ export class OrdersService {
 
         let branchID = undefined;
 
+        if (!locationID) {
+          const locations = await prisma.location.findMany({
+            where: {
+              governorate: order.governorate,
+              companyId: company?.targetCompanyId,
+            },
+          });
+          locationID =
+            locations.find(
+              (l) => l.name === governorateArabicNames[order.governorate],
+            )?.id ?? locations[0].id;
+        }
+
         const branch = await branchesRepository.getBranchByLocation({
-          locationID: order.locationID,
+          locationID: locationID,
         });
 
         if (!branch) {
