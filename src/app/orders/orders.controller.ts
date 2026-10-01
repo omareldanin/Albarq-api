@@ -560,7 +560,7 @@ export class OrdersController {
     const loggedInUser = res.locals.user as loggedInUserType;
     const orderData = OrderUpdateSchema.parse(req.body);
 
-    const order = await ordersService.updateOrder({
+    const order = await ordersService.updateOrderForClient({
       params: params,
       orderData: orderData,
       loggedInUser: loggedInUser,

@@ -1004,7 +1004,7 @@ class OrdersService {
             }
             data.orderData.branchID = branch.id;
         }
-        const newOrder = await ordersRepository.updateOrder({
+        const newOrder = await ordersRepository.updateOrderForClient({
             orderID: oldOrderData.id,
             loggedInUser: data.loggedInUser,
             orderData: data.orderData,

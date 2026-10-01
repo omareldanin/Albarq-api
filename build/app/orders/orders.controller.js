@@ -493,7 +493,7 @@ class OrdersController {
         };
         const loggedInUser = res.locals.user;
         const orderData = orders_dto_1.OrderUpdateSchema.parse(req.body);
-        const order = await ordersService.updateOrder({
+        const order = await ordersService.updateOrderForClient({
             params: params,
             orderData: orderData,
             loggedInUser: loggedInUser,
