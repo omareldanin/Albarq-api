@@ -102,7 +102,7 @@ export const OrderUpdateSchema = z
     type: z.string().optional(),
     forwardedBranchId: z.number().optional(),
     receivedBranchId: z.number().optional(),
-    governorate: z.nativeEnum(Governorate),
+    governorate: GovernorateSchema,
     locationID: z.coerce.number(),
     storeID: z.coerce.number(),
   })

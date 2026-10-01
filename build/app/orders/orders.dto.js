@@ -76,7 +76,7 @@ exports.OrderUpdateSchema = zod_1.z
     type: zod_1.z.string().optional(),
     forwardedBranchId: zod_1.z.number().optional(),
     receivedBranchId: zod_1.z.number().optional(),
-    governorate: zod_1.z.nativeEnum(client_1.Governorate),
+    governorate: governerates_1.GovernorateSchema,
     locationID: zod_1.z.coerce.number(),
     storeID: zod_1.z.coerce.number(),
 })
