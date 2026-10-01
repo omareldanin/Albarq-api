@@ -262,6 +262,8 @@ isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.Permission.CHANGE_ORDER_RECEIPT_NUMBER,
     client_1.Permission.CHANGE_ORDER_RECEPIENT_NUMBER,
 ]), ordersController.updateOrder);
+router.route("/orders/update/:orderID").patch(upload.none(), // Handles form-data without files
+isApiClient_1.isApiClient, (0, isAutherized_1.isAutherized)([...Object.values(client_1.ClientRole)]), ordersController.updateOrderForCLient);
 router
     .route("/orders/changeClient/:orderID")
     .patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([...Object.values(client_1.AdminRole), ...Object.values(client_1.EmployeeRole)], [client_1.Permission.CHANGE_ORDER_CLIENT]), ordersController.changeOrderClient);
@@ -323,12 +325,17 @@ router
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
 ]), ordersController.addReturnedOrderToRepository);
+router
+    .route("/orders/:orderID/delete")
+    .delete(isApiClient_1.isApiClient, (0, isAutherized_1.isAutherized)([client_1.ClientRole.CLIENT]), ordersController.deactivateOrder);
 router.route("/orders/:orderID").delete(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
 ]), ordersController.deleteOrder);
-router.route("/orders/:orderID/deactivate").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
+router
+    .route("/orders/:orderID/deactivate")
+    .patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,

@@ -3152,6 +3152,81 @@ class OrdersRepository {
         });
         return (0, orders_responses_1.orderReform)(order);
     }
+    async updateOrderForClient(data, orderData) {
+        // Calculate order costs
+        let profits = undefined;
+        let companyNet = orderData?.companyNet;
+        let clientNet = orderData?.clientNet;
+        let newDeliveryCost = orderData?.deliveryCost
+            ? orderData?.deliveryCost
+            : orderData?.oldDeliveryCost;
+        let oldDeliveryCost = orderData?.deliveryCost
+            ? orderData?.deliveryCost
+            : orderData?.oldDeliveryCost;
+        if (data.orderData.governorate) {
+            newDeliveryCost = await this.getDeliverCost(orderData?.client.id, data.orderData.governorate || orderData.governorate, data.orderData.branchID ? data.orderData.branchID : orderData.branch.id);
+            profits = await this.getProfits(orderData);
+        }
+        const deliveryCost = newDeliveryCost
+            ? newDeliveryCost
+            : (orderData?.deliveryCost || 0);
+        clientNet = orderData
+            ? +orderData?.paidAmount - deliveryCost
+            : -deliveryCost;
+        const order = await db_1.prisma.order.update({
+            where: {
+                id: data.orderID,
+            },
+            data: {
+                quantity: data.orderData.quantity,
+                totalCost: data.orderData.totalCost,
+                receiptNumber: data.orderData.receiptNumber,
+                governorate: data.orderData.governorate
+                    ? data.orderData.governorate
+                    : undefined,
+                location: data.orderData.locationID
+                    ? {
+                        connect: {
+                            id: data.orderData.locationID,
+                        },
+                    }
+                    : undefined,
+                clientNet: clientNet,
+                deliveryCost: newDeliveryCost,
+                oldDeliveryCost: oldDeliveryCost,
+                deliveryAgentNet: profits?.deliveryAgentCost,
+                insideBranchNet: profits?.insideProfit,
+                forwardedBranchNet: profits?.forwardedProfit,
+                receivingBranchNet: profits?.receivingBranchNet,
+                companyNet: companyNet,
+                recipientName: data.orderData.recipientName,
+                recipientPhones: data.orderData.recipientPhones
+                    ? data.orderData.recipientPhones
+                    : data.orderData.recipientPhone
+                        ? [data.orderData.recipientPhone]
+                        : undefined,
+                recipientAddress: data.orderData.recipientAddress,
+                notes: data.orderData.notes,
+                details: data.orderData.details,
+                branch: data.orderData.branchID
+                    ? {
+                        connect: {
+                            id: data.orderData.branchID,
+                        },
+                    }
+                    : undefined,
+                store: data.orderData.storeID
+                    ? {
+                        connect: {
+                            id: data.orderData.storeID,
+                        },
+                    }
+                    : undefined,
+            },
+            select: orders_responses_1.orderSelect,
+        });
+        return (0, orders_responses_1.orderReform)(order);
+    }
     async deleteOrder(data) {
         const deletedOrder = await db_1.prisma.order.delete({
             where: {

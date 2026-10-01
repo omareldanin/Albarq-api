@@ -973,6 +973,47 @@ class OrdersService {
         }
         return newOrder;
     };
+    updateOrderForClient = async (data) => {
+        if (data.loggedInUser.role !== "CLIENT") {
+            throw new AppError_1.AppError("ليس لديك صلاحية تعديل الطلب", 403);
+        }
+        if (data.orderData.totalCost && data.orderData.totalCost < 0) {
+            throw new AppError_1.AppError("غير مصرح لك تعديل طلبات بالسالب", 400);
+        }
+        let oldOrderData = await ordersRepository.getOrderById({
+            orderID: data.params.orderID,
+        });
+        if (!oldOrderData) {
+            oldOrderData = await ordersRepository.getOrderByReceiptNumber({
+                orderReceiptNumber: data.params.orderID,
+            });
+            if (!oldOrderData) {
+                throw new AppError_1.AppError("الطلب غير موجود", 404);
+            }
+        }
+        if (oldOrderData.status !== "REGISTERED" &&
+            oldOrderData.status !== "READY_TO_SEND") {
+            throw new AppError_1.AppError("لا يمكن تغيير حالة الطلب بعد الاستلام", 400);
+        }
+        if (data.orderData.governorate && data.orderData.locationID) {
+            const branch = await branchesRepository.getBranchByLocation({
+                locationID: data.orderData.locationID,
+            });
+            if (!branch) {
+                throw new AppError_1.AppError("لا يوجد فرع مرتبط بالموقع", 500);
+            }
+            data.orderData.branchID = branch.id;
+        }
+        const newOrder = await ordersRepository.updateOrder({
+            orderID: oldOrderData.id,
+            loggedInUser: data.loggedInUser,
+            orderData: data.orderData,
+        }, oldOrderData);
+        if (!newOrder) {
+            throw new AppError_1.AppError("فشل تحديث الطلب", 500);
+        }
+        return newOrder;
+    };
     resenOrderByClient = async (data) => {
         const order = await db_1.prisma.order.findFirst({
             where: {

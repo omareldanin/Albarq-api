@@ -589,6 +589,13 @@ router.route("/orders/:orderID").patch(
   ordersController.updateOrder,
 );
 
+router.route("/orders/update/:orderID").patch(
+  upload.none(), // Handles form-data without files
+  isApiClient,
+  isAutherized([...Object.values(ClientRole)]),
+  ordersController.updateOrderForCLient,
+);
+
 router
   .route("/orders/changeClient/:orderID")
   .patch(
@@ -713,6 +720,15 @@ router
         #swagger.tags = ['Orders Routes']
     */
   );
+
+router
+  .route("/orders/:orderID/delete")
+  .delete(
+    isApiClient,
+    isAutherized([ClientRole.CLIENT]),
+    ordersController.deactivateOrder,
+  );
+
 router.route("/orders/:orderID").delete(
   isLoggedIn,
   isAutherized([
@@ -726,23 +742,22 @@ router.route("/orders/:orderID").delete(
     */
 );
 
-router.route("/orders/:orderID/deactivate").patch(
-  isLoggedIn,
-  isAutherized(
-    [
-      EmployeeRole.COMPANY_MANAGER,
-      AdminRole.ADMIN,
-      AdminRole.ADMIN_ASSISTANT,
-      ClientRole.CLIENT,
-      EmployeeRole.CLIENT_ASSISTANT,
-    ],
-    [Permission.DELETE_ORDER],
-  ),
-  ordersController.deactivateOrder,
-  /*
-        #swagger.tags = ['Orders Routes']
-    */
-);
+router
+  .route("/orders/:orderID/deactivate")
+  .patch(
+    isLoggedIn,
+    isAutherized(
+      [
+        EmployeeRole.COMPANY_MANAGER,
+        AdminRole.ADMIN,
+        AdminRole.ADMIN_ASSISTANT,
+        ClientRole.CLIENT,
+        EmployeeRole.CLIENT_ASSISTANT,
+      ],
+      [Permission.DELETE_ORDER],
+    ),
+    ordersController.deactivateOrder,
+  );
 
 router.route("/orders/:orderID/reactivate").patch(
   isLoggedIn,

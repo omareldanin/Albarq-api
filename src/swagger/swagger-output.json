@@ -2245,6 +2245,40 @@
         }
       }
     },
+    "/api/v1/orders/update/{orderID}": {
+      "patch": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "orderID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/v1/orders/changeClient/{orderID}": {
       "patch": {
         "description": "",
@@ -2450,11 +2484,42 @@
         }
       }
     },
+    "/api/v1/orders/{orderID}/delete": {
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "orderID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/v1/orders/{orderID}/deactivate": {
       "patch": {
-        "tags": [
-          "Orders Routes"
-        ],
         "description": "",
         "parameters": [
           {

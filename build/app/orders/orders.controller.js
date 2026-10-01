@@ -487,6 +487,22 @@ class OrdersController {
             data: order,
         });
     });
+    updateOrderForCLient = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const params = {
+            orderID: req.params.orderID,
+        };
+        const loggedInUser = res.locals.user;
+        const orderData = orders_dto_1.OrderUpdateSchema.parse(req.body);
+        const order = await ordersService.updateOrder({
+            params: params,
+            orderData: orderData,
+            loggedInUser: loggedInUser,
+        });
+        res.status(200).json({
+            status: "success",
+            data: order,
+        });
+    });
     changeOrderClient = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const loggedInUser = res.locals.user;
         const orderData = orders_dto_1.OrderUpdateSchema.parse(req.body);
