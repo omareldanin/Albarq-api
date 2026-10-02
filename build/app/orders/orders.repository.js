@@ -4279,9 +4279,7 @@ class OrdersRepository {
                 !inquiryEmployee.inquiryStatuses.includes(order?.status)) {
                 return;
             }
-            if (inquiryEmployee.inquiryCompanies.length > 0 &&
-                order?.forwardedFrom !== null &&
-                !inquiryCompany) {
+            if (inquiryEmployee.inquiryCompanies.length > 0 && !inquiryCompany) {
                 return;
             }
             if (inquiryEmployee.inquiryGovernorates.length > 0 &&
