@@ -455,6 +455,11 @@ export class MessagesController {
         locationId: true,
         status: true,
         governorate: true,
+        forwardedFrom: {
+          select: {
+            id: true,
+          },
+        },
         client: {
           select: {
             branchId: true,
@@ -595,6 +600,7 @@ export class MessagesController {
           inquiryLocations: true,
           inquiryStores: true,
           inquiryDeliveryAgents: true,
+          inquiryCompanies: true,
           role: true,
         },
       })
@@ -608,6 +614,12 @@ export class MessagesController {
       const inquiryDelivery = inquiryEmployee.inquiryDeliveryAgents.find(
         (e) => e.deliveryAgentId === order.deliveryAgent?.id,
       );
+      const inquiryCompany = inquiryEmployee.inquiryCompanies.find(
+        (e) => e.companyId === order.forwardedFrom?.id,
+      );
+      if (inquiryEmployee.inquiryCompanies.length > 0 && !inquiryCompany) {
+        return;
+      }
       if (
         inquiryEmployee.inquiryStatuses.length > 0 &&
         !inquiryEmployee.inquiryStatuses.includes(order?.status)

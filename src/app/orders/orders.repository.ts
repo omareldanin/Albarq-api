@@ -5198,6 +5198,11 @@ export class OrdersRepository {
         locationId: true,
         status: true,
         governorate: true,
+        forwardedFrom: {
+          select: {
+            id: true,
+          },
+        },
         client: {
           select: {
             branchId: true,
@@ -5335,6 +5340,7 @@ export class OrdersRepository {
           inquiryLocations: true,
           inquiryStores: true,
           inquiryDeliveryAgents: true,
+          inquiryCompanies: true,
           role: true,
         },
       })
@@ -5348,6 +5354,12 @@ export class OrdersRepository {
       const inquiryDelivery = inquiryEmployee.inquiryDeliveryAgents.find(
         (e) => e.deliveryAgentId === order.deliveryAgent?.id,
       );
+      const inquiryCompany = inquiryEmployee.inquiryCompanies.find(
+        (e) => e.companyId === order.forwardedFrom?.id,
+      );
+      if (inquiryEmployee.inquiryCompanies.length > 0 && !inquiryCompany) {
+        return;
+      }
       if (
         inquiryEmployee.inquiryStatuses.length > 0 &&
         !inquiryEmployee.inquiryStatuses.includes(order?.status)
