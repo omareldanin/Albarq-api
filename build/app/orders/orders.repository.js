@@ -4152,7 +4152,7 @@ class OrdersRepository {
             throw new AppError_1.AppError("الطلب غير موجود", 404);
         }
         const orderInquiryEmployees = [];
-        if (data.loggedInUser &&
+        if (data.loggedInUser?.role === "CLIENT" &&
             data.loggedInUser?.companyID !== order.companyId &&
             !order.forwardedFrom?.showSupportNumbers) {
             company_id = data.loggedInUser?.companyID || undefined;

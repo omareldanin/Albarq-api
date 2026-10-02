@@ -5006,7 +5006,7 @@ export class OrdersRepository {
     }[] = [];
 
     if (
-      data.loggedInUser &&
+      data.loggedInUser?.role === "CLIENT" &&
       data.loggedInUser?.companyID !== order.companyId &&
       !order.forwardedFrom?.showSupportNumbers
     ) {
