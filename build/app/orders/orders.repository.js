@@ -4280,7 +4280,7 @@ class OrdersRepository {
                 return;
             }
             if (inquiryEmployee.inquiryCompanies.length > 0 &&
-                order?.forwardedFrom &&
+                order?.forwardedFrom !== null &&
                 !inquiryCompany) {
                 return;
             }

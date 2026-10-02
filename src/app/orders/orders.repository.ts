@@ -5143,6 +5143,7 @@ export class OrdersRepository {
       const inquiryDelivery = inquiryEmployee.inquiryDeliveryAgents.find(
         (e) => e.deliveryAgentId === order.deliveryAgent?.id,
       );
+
       if (
         inquiryEmployee.inquiryStatuses.length > 0 &&
         !inquiryEmployee.inquiryStatuses.includes(order?.status)
@@ -5151,7 +5152,7 @@ export class OrdersRepository {
       }
       if (
         inquiryEmployee.inquiryCompanies.length > 0 &&
-        order?.forwardedFrom &&
+        order?.forwardedFrom !== null &&
         !inquiryCompany
       ) {
         return;
