@@ -515,6 +515,9 @@ export class OrdersRepository {
             },
           ],
         },
+        {
+          deleted: false,
+        },
         // Filter by orderID
         {
           id: data.filters.orderID,
