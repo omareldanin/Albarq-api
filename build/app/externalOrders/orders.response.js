@@ -24,6 +24,17 @@ exports.orderSelectApiKey = {
     createdAt: true,
     updatedAt: true,
     governorate: true,
+    deliveryAgent: {
+        select: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    phone: true,
+                },
+            },
+        },
+    },
     location: {
         select: {
             id: true,

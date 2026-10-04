@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import {Prisma} from "@prisma/client";
 
 export const orderSelectApiKey = {
   id: true,
@@ -23,6 +23,17 @@ export const orderSelectApiKey = {
   createdAt: true,
   updatedAt: true,
   governorate: true,
+  deliveryAgent: {
+    select: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+        },
+      },
+    },
+  },
   location: {
     select: {
       id: true,
