@@ -23,7 +23,7 @@ exports.OrderCreateSchema = zod_1.z.object({
     details: zod_1.z.string().optional(),
     notes: zod_1.z.string().optional(),
     governorate: zod_1.z.nativeEnum(client_1.Governorate),
-    locationID: zod_1.z.coerce.number(),
+    locationID: zod_1.z.coerce.number().optional(),
     totalCost: zod_1.z.number(),
     quantity: zod_1.z.number().default(1),
 });

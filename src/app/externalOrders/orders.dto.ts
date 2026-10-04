@@ -21,7 +21,7 @@ export const OrderCreateSchema = z.object({
   details: z.string().optional(),
   notes: z.string().optional(),
   governorate: z.nativeEnum(Governorate),
-  locationID: z.coerce.number(),
+  locationID: z.coerce.number().optional(),
   totalCost: z.number(),
   quantity: z.number().default(1),
 });
