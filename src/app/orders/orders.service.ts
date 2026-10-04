@@ -1182,6 +1182,7 @@ export class OrdersService {
         const companyId = oldOrderData.company.id;
 
         const webhookUrl = oldOrderData.forwardedFrom?.webhookUrl;
+        const token = oldOrderData.forwardedFrom?.password;
 
         if (
           (oldOrderData.forwardedFromId === 84 ||
@@ -1249,6 +1250,7 @@ export class OrdersService {
             await axios.post(webhookUrl, payload, {
               headers: {
                 "Content-Type": "application/json",
+                ...(token && {Authorization: `Bearer ${token}`}),
               },
               timeout: 10000,
             });
