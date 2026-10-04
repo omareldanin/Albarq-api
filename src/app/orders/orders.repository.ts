@@ -57,7 +57,7 @@ type UpdatedOrderCosts = {
 const clean = (v: unknown): string | undefined => {
   if (v === null || v === undefined) return undefined;
 
-  const s = String(v).trim().replace(/^0+/, "");
+  const s = String(v).trim();
 
   if (!s || ["nan", "undefined", "null"].includes(s.toLowerCase())) {
     return undefined;
