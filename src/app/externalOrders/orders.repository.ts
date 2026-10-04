@@ -198,7 +198,7 @@ export class OrdersRepository {
 
         details: data.orderData.details,
       },
-      select: orderSelect,
+      select: orderSelectApiKey,
     });
 
     return order;

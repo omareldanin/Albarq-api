@@ -164,7 +164,7 @@ class OrdersRepository {
                 notes: data.orderData.notes,
                 details: data.orderData.details,
             },
-            select: orders_responses_1.orderSelect,
+            select: orders_response_1.orderSelectApiKey,
         });
         return order;
     }
