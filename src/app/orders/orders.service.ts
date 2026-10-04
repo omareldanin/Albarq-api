@@ -832,8 +832,10 @@ export class OrdersService {
     if (
       data.loggedInUser.companyID !== oldOrderData.company.id &&
       oldOrderData.forwarded &&
-      data.orderData.status &&
-      data.orderData.status !== oldOrderData.status
+      ((data.orderData.status &&
+        data.orderData.status !== oldOrderData.status) ||
+        data.orderData.paidAmount ||
+        data.orderData.totalCost)
     ) {
       throw new AppError("الطلب محال إلي شركة اخري", 403);
     }
