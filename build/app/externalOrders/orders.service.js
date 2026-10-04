@@ -54,7 +54,7 @@ class OrdersService {
                     const createdUser = await db_1.prisma.user.create({
                         data: {
                             name: order.clientName,
-                            username: order.clientPhone,
+                            username: order.clientPhone + order.receiptNumber,
                             password: "00000000000",
                             phone: order.clientPhone,
                             fcm: "",
