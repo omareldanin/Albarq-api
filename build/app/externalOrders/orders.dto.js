@@ -45,8 +45,6 @@ exports.OrderUpdateSchema = zod_1.z.object({
     recipientAddress: zod_1.z.string().optional(),
     notes: zod_1.z.string().optional(),
     details: zod_1.z.string().optional(),
-    inquiryEmployeesIDs: zod_1.z.array(zod_1.z.coerce.number()),
-    forwardedCompanyID: zod_1.z.coerce.number().optional(),
     governorate: zod_1.z.nativeEnum(client_1.Governorate).optional(),
     locationID: zod_1.z.coerce.number().optional(),
 });

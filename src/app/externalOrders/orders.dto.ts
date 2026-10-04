@@ -47,8 +47,6 @@ export const OrderUpdateSchema = z.object({
   recipientAddress: z.string().optional(),
   notes: z.string().optional(),
   details: z.string().optional(),
-  inquiryEmployeesIDs: z.array(z.coerce.number()),
-  forwardedCompanyID: z.coerce.number().optional(),
   governorate: z.nativeEnum(Governorate).optional(),
   locationID: z.coerce.number().optional(),
 });
