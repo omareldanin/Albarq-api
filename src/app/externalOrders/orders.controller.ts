@@ -5,6 +5,7 @@ import {OrdersFiltersSchema} from "../orders/orders.dto";
 import {
   OrderCreateSchema,
   OrderCreateType,
+  OrderUpdateSchema,
   ShipmentSchema,
   ShipmentType,
 } from "./orders.dto";
@@ -32,6 +33,25 @@ export class OrdersController {
     res.status(200).json({
       status: "success",
       data: createdOrderOrOrders,
+    });
+  });
+
+  updateOrder = catchAsync(async (req, res) => {
+    const params = {
+      orderID: req.params.orderID,
+    };
+    const loggedInUser = res.locals.user as loggedInUserType;
+    const orderData = OrderUpdateSchema.parse(req.body);
+
+    const order = await ordersService.updateOrderForClient({
+      params: params,
+      orderData: orderData,
+      loggedInUser: loggedInUser,
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: order,
     });
   });
 
@@ -116,6 +136,53 @@ export class OrdersController {
     });
   });
 
+  getAllReportssApiKey = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    const filters = OrdersFiltersSchema.parse({
+      search: req.query.search,
+      sort: req.query.sort,
+      page: req.query.page,
+      size: req.query.size,
+      confirmed: req.query.confirmed,
+      startDate: req.query.start_date,
+      endDate: req.query.end_date,
+      startDeliveryDate: req.query.delivery_start_date,
+      endDeliveryDate: req.query.delivery_end_date,
+      deliveryDate: req.query.delivery_date,
+      governorate: req.query.governorate,
+      statuses: req.query.statuses,
+      status: req.query.status,
+      deliveryType: req.query.delivery_type,
+      storeID: req.query.store_id,
+      locationID: req.query.location_id,
+      receiptNumber: req.query.receipt_number,
+      receiptNumbers: req.query.receipt_numbers,
+      recipientName: req.query.recipient_name,
+      recipientPhone: req.query.recipient_phone,
+      recipientAddress: req.query.recipient_address,
+      clientReport: req.query.client_report,
+      orderID: req.query.order_id,
+      printed: req.query.printed,
+    });
+
+    const {reports, page, pagesCount, count} =
+      await ordersService.getAllReports({
+        loggedInUser: loggedInUser,
+        filters: filters,
+      });
+
+    res.status(200).json({
+      status: "success",
+      count,
+      page: page,
+      pagesCount: pagesCount,
+      data: {
+        reports: reports,
+      },
+    });
+  });
+
   getOrderByIdApiKey = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
 
@@ -151,6 +218,23 @@ export class OrdersController {
     });
 
     res.status(200).json(locations);
+  });
+
+  deleteOrder = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    const params = {
+      orderID: req.params.orderID,
+      loggedInUser,
+    };
+
+    await ordersService.deleteOrder({
+      params: params,
+    });
+
+    res.status(200).json({
+      status: "success",
+    });
   });
 
   getOrderStatues = catchAsync(async (_req, res) => {

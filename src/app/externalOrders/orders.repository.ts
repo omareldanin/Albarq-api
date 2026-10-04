@@ -3,7 +3,7 @@ import {prisma} from "../../database/db";
 import {loggedInUserType} from "../../types/user";
 import {OrdersFiltersType, OrderTimelinePieceType} from "../orders/orders.dto";
 import {orderSelect} from "../orders/orders.responses";
-import {OrderCreateType, ShipmentType} from "./orders.dto";
+import {OrderCreateType, OrderUpdateType, ShipmentType} from "./orders.dto";
 import {orderSelectApiKey} from "./orders.response";
 import {fromExternalCode} from "../../lib/governerates";
 import {AppError} from "../../lib/AppError";
@@ -157,6 +157,122 @@ export class OrdersRepository {
     });
 
     return createdOrder;
+  }
+
+  async updateOrder(data: {
+    orderID: string;
+    loggedInUser: loggedInUserType;
+    orderData: OrderUpdateType;
+  }) {
+    // Add Additional costs
+
+    // Create order
+    const order = await prisma.order.update({
+      where: {
+        id: data.orderID,
+      },
+      data: {
+        quantity: data.orderData.quantity,
+        totalCost: data.orderData.totalCost,
+        paidAmount: data.orderData.paidAmount,
+        receiptNumber: data.orderData.receiptNumber,
+        governorate: data.orderData.governorate
+          ? data.orderData.governorate
+          : undefined,
+        location: data.orderData.locationID
+          ? {
+              connect: {
+                id: data.orderData.locationID,
+              },
+            }
+          : undefined,
+
+        recipientName: data.orderData.recipientName,
+        recipientPhones: data.orderData.recipientPhones
+          ? data.orderData.recipientPhones
+          : data.orderData.recipientPhone
+            ? [data.orderData.recipientPhone]
+            : undefined,
+        recipientAddress: data.orderData.recipientAddress,
+        notes: data.orderData.notes,
+        currentLocation: data.orderData.currentLocation,
+        status: data.orderData.status,
+        confirmed: data.orderData.forwardedCompanyID
+          ? false
+          : data.orderData.confirmed,
+        details: data.orderData.details,
+        receivedAt: data.orderData.received ? new Date() : undefined,
+        deliveryDate: data.orderData.deliveryAgentID
+          ? new Date()
+          : data.orderData.deliveryDate,
+
+        company: data.orderData.forwardedCompanyID
+          ? {
+              connect: {
+                id: data.orderData.forwardedCompanyID,
+              },
+            }
+          : undefined,
+        forwarded: data.orderData.forwardedCompanyID ? true : undefined,
+        forwardedBy: data.orderData.forwardedCompanyID
+          ? {
+              connect: {
+                id: data.loggedInUser.id,
+              },
+            }
+          : undefined,
+        forwardedAt: data.orderData.forwardedCompanyID ? new Date() : undefined,
+        forwardedFrom: data.orderData.forwardedCompanyID
+          ? {
+              connect: {
+                id: data.loggedInUser.companyID as number,
+              },
+            }
+          : undefined,
+        processed: data.orderData.processed,
+        processedBy: data.orderData.processed
+          ? {connect: {id: data.loggedInUser.id}}
+          : undefined,
+        deliveryAgent:
+          // unlink delivery agent if null
+          data.orderData.deliveryAgentID === null
+            ? {
+                disconnect: true,
+              }
+            : data.orderData.deliveryAgentID !== undefined
+              ? {
+                  connect: {
+                    id: data.orderData.deliveryAgentID,
+                  },
+                }
+              : undefined,
+
+        repository: data.orderData.repositoryID
+          ? {
+              connect: {
+                id: data.orderData.repositoryID,
+              },
+            }
+          : undefined,
+        branch: data.orderData.branchID
+          ? {
+              connect: {
+                id: data.orderData.branchID,
+              },
+            }
+          : undefined,
+        client: data.orderData.clientID
+          ? {
+              connect: {
+                id: data.orderData.clientID,
+              },
+            }
+          : undefined,
+      },
+      select: orderSelect,
+    });
+
+    return order;
   }
 
   async createOrderv2(data: {
@@ -488,6 +604,72 @@ export class OrdersRepository {
       pagesCount: paginatedOrders.pagesCount,
       count: paginatedOrders.dataCount,
     };
+  }
+
+  async getAllReportsPaginatedApiKey(data: {
+    filters: OrdersFiltersType;
+    loggedInUser: loggedInUserType | undefined;
+  }) {
+    let startDate = new Date();
+    let endDate = new Date();
+
+    if (data.filters.startDate) {
+      startDate = new Date(data.filters.startDate);
+      startDate.setUTCDate(startDate.getUTCDate() - 1);
+      startDate.setHours(21, 0, 0, 0);
+    }
+    if (data.filters.endDate) {
+      endDate = new Date(data.filters.endDate);
+      endDate.setHours(21, 0, 0, 0);
+    }
+
+    const paginatedReports = await prisma.report.findManyPaginated(
+      {
+        where: {
+          deleted: false,
+          type: "COMPANY",
+          companyReport: {
+            companyId: data.loggedInUser?.id,
+          },
+        },
+        orderBy: {
+          [data.filters.sort.split(":")[0]]:
+            data.filters.sort.split(":")[1] === "desc" ? "desc" : "asc",
+        },
+        select: {
+          id: true,
+          status: true,
+          baghdadOrdersCount: true,
+          governoratesOrdersCount: true,
+          totalCost: true,
+          companyNet: true,
+          url: true,
+          createdAt: true,
+        },
+      },
+      {
+        page: data.filters.page,
+        withCount: true,
+        size: data.filters.size,
+      },
+    );
+
+    const ordersReformed = paginatedReports.data;
+
+    return {
+      reports: ordersReformed,
+      pagesCount: paginatedReports.pagesCount,
+      count: paginatedReports.dataCount,
+    };
+  }
+
+  async deleteOrder(data: {orderID: string}) {
+    const deletedOrder = await prisma.order.delete({
+      where: {
+        id: data.orderID,
+      },
+    });
+    return deletedOrder;
   }
 
   async updateOrderTimeline(data: {

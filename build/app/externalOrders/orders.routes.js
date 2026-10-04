@@ -16,6 +16,9 @@ router
     .route("/company/forward-orders")
     .get(isApiCompany_1.isApiCompany, preventDuplicateRequests_1.preventDuplicateRequests, ordersController.getAllOrdersApiKey);
 router
+    .route("/company/reports")
+    .get(isApiCompany_1.isApiCompany, preventDuplicateRequests_1.preventDuplicateRequests, ordersController.getAllReportssApiKey);
+router
     .route("/company/locations")
     .get(isApiCompany_1.isApiCompany, preventDuplicateRequests_1.preventDuplicateRequests, ordersController.publicGetAllLocations);
 router
@@ -27,5 +30,11 @@ router
 router
     .route("/company/forward-orders/:orderID")
     .get(isApiCompany_1.isApiCompany, preventDuplicateRequests_1.preventDuplicateRequests, ordersController.getOrderByIdApiKey);
+router
+    .route("/company/forward-orders/:orderID")
+    .patch(isApiCompany_1.isApiCompany, preventDuplicateRequests_1.preventDuplicateRequests, ordersController.updateOrder);
+router
+    .route("/company/forward-orders/:orderID")
+    .delete(isApiCompany_1.isApiCompany, preventDuplicateRequests_1.preventDuplicateRequests, ordersController.deleteOrder);
 exports.default = router;
 //# sourceMappingURL=orders.routes.js.map

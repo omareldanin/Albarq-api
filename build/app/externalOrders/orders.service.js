@@ -309,12 +309,70 @@ class OrdersService {
             orders: orders,
         };
     };
+    getAllReports = async (data) => {
+        let size = data.filters.size || 200;
+        const { reports, pagesCount, count } = await ordersRepository.getAllReportsPaginatedApiKey({
+            filters: {
+                ...data.filters,
+                size,
+            },
+            loggedInUser: data.loggedInUser,
+        });
+        return {
+            count,
+            page: data.filters.page,
+            pagesCount: pagesCount,
+            reports: reports,
+        };
+    };
     getOrderByIdApiKey = async (data) => {
         const order = await ordersRepository.getOrderByIdApiKey({
             orderID: data.params.orderID,
             forwardedFrom: data.params.forwardedFrom,
         });
         return order;
+    };
+    updateOrderForClient = async (data) => {
+        let oldOrderData = await ordersRepository.getOrderByIdApiKey({
+            orderID: data.params.orderID,
+            forwardedFrom: data.loggedInUser.id,
+        });
+        if (!oldOrderData) {
+            throw new AppError_1.AppError("الطلب غير موجود", 404);
+        }
+        if (oldOrderData.secondaryStatus !== "SEND_TO_COMPANY") {
+            throw new AppError_1.AppError("لا يمكنك مسح الطلب بعد تأكيده", 404);
+        }
+        const newOrder = await ordersRepository.updateOrder({
+            orderID: oldOrderData.id,
+            loggedInUser: data.loggedInUser,
+            orderData: data.orderData,
+        });
+        if (!newOrder) {
+            throw new AppError_1.AppError("فشل تحديث الطلب", 500);
+        }
+        return newOrder;
+    };
+    deleteOrder = async (data) => {
+        const order = await db_1.prisma.order.findUnique({
+            where: {
+                id: data.params.orderID,
+                forwardedFromId: data.params.loggedInUser.id,
+            },
+            select: {
+                secondaryStatus: true,
+                status: true,
+            },
+        });
+        if (!order) {
+            throw new AppError_1.AppError("الطلب غير موجود", 404);
+        }
+        if (order.secondaryStatus !== "SEND_TO_COMPANY") {
+            throw new AppError_1.AppError("لا يمكنك مسح الطلب بعد تأكيده", 404);
+        }
+        await ordersRepository.deleteOrder({
+            orderID: data.params.orderID,
+        });
     };
 }
 exports.OrdersService = OrdersService;

@@ -1,5 +1,5 @@
 import {loggedInUserType} from "../../types/user";
-import {OrderCreateType, ShipmentType} from "./orders.dto";
+import {OrderCreateType, OrderUpdateType, ShipmentType} from "./orders.dto";
 import {OrdersRepository} from "./orders.repository";
 import {BranchesRepository} from "../branches/branches.repository";
 import {prisma} from "../../database/db";
@@ -379,6 +379,29 @@ export class OrdersService {
     };
   };
 
+  getAllReports = async (data: {
+    filters: OrdersFiltersType;
+    loggedInUser: loggedInUserType;
+  }) => {
+    let size = data.filters.size || 200;
+
+    const {reports, pagesCount, count} =
+      await ordersRepository.getAllReportsPaginatedApiKey({
+        filters: {
+          ...data.filters,
+          size,
+        },
+        loggedInUser: data.loggedInUser,
+      });
+
+    return {
+      count,
+      page: data.filters.page,
+      pagesCount: pagesCount,
+      reports: reports,
+    };
+  };
+
   getOrderByIdApiKey = async (data: {
     params: {
       orderID: string;
@@ -391,5 +414,67 @@ export class OrdersService {
     });
 
     return order;
+  };
+  updateOrderForClient = async (data: {
+    params: {
+      orderID: string;
+    };
+    loggedInUser: loggedInUserType;
+    orderData: OrderUpdateType;
+  }) => {
+    let oldOrderData = await ordersRepository.getOrderByIdApiKey({
+      orderID: data.params.orderID,
+      forwardedFrom: data.loggedInUser.id,
+    });
+
+    if (!oldOrderData) {
+      throw new AppError("الطلب غير موجود", 404);
+    }
+
+    if (oldOrderData.secondaryStatus !== "SEND_TO_COMPANY") {
+      throw new AppError("لا يمكنك مسح الطلب بعد تأكيده", 404);
+    }
+
+    const newOrder = await ordersRepository.updateOrder({
+      orderID: oldOrderData.id,
+      loggedInUser: data.loggedInUser,
+      orderData: data.orderData,
+    });
+
+    if (!newOrder) {
+      throw new AppError("فشل تحديث الطلب", 500);
+    }
+
+    return newOrder;
+  };
+
+  deleteOrder = async (data: {
+    params: {
+      orderID: string;
+      loggedInUser: loggedInUserType;
+    };
+  }) => {
+    const order = await prisma.order.findUnique({
+      where: {
+        id: data.params.orderID,
+        forwardedFromId: data.params.loggedInUser.id,
+      },
+      select: {
+        secondaryStatus: true,
+        status: true,
+      },
+    });
+
+    if (!order) {
+      throw new AppError("الطلب غير موجود", 404);
+    }
+
+    if (order.secondaryStatus !== "SEND_TO_COMPANY") {
+      throw new AppError("لا يمكنك مسح الطلب بعد تأكيده", 404);
+    }
+
+    await ordersRepository.deleteOrder({
+      orderID: data.params.orderID,
+    });
   };
 }

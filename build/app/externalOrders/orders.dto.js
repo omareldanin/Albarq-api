@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateShipmentsSchema = exports.ShipmentSchema = exports.OrderCreateSchema = void 0;
+exports.CreateShipmentsSchema = exports.ShipmentSchema = exports.OrderUpdateSchema = exports.OrderCreateSchema = void 0;
 const client_1 = require("@prisma/client");
 const zod_1 = require("zod");
 exports.OrderCreateSchema = zod_1.z.object({
@@ -27,10 +27,49 @@ exports.OrderCreateSchema = zod_1.z.object({
     totalCost: zod_1.z.number(),
     quantity: zod_1.z.number().default(1),
 });
+exports.OrderUpdateSchema = zod_1.z.object({
+    quantity: zod_1.z.coerce.number(),
+    weight: zod_1.z.coerce.number(),
+    totalCost: zod_1.z.coerce.number(),
+    paidAmount: zod_1.z.coerce.number(),
+    receiptNumber: zod_1.z.string(),
+    processed: zod_1.z.coerce.boolean(),
+    confirmed: zod_1.z.coerce.boolean(),
+    received: zod_1.z.coerce.boolean(),
+    discount: zod_1.z.coerce.number(),
+    status: zod_1.z.nativeEnum(client_1.OrderStatus),
+    deliveryAgentID: zod_1.z.coerce.number().or(zod_1.z.literal(null)).optional(),
+    oldDeliveryAgentId: zod_1.z.coerce.number().or(zod_1.z.literal(null)).optional(),
+    deliveryDate: zod_1.z.coerce.date(),
+    recipientName: zod_1.z.string(),
+    recipientPhones: zod_1.z
+        .preprocess((val) => {
+        if (typeof val === "string") {
+            return val.split(",").map((s) => s.trim());
+        }
+        return val;
+    }, zod_1.z.array(zod_1.z.string().min(6)))
+        .optional(),
+    recipientPhone: zod_1.z.string().min(6),
+    recipientAddress: zod_1.z.string(),
+    notes: zod_1.z.string(),
+    details: zod_1.z.string(),
+    repositoryID: zod_1.z.coerce.number(),
+    branchID: zod_1.z.coerce.number(),
+    currentLocation: zod_1.z.string(),
+    clientID: zod_1.z.coerce.number(),
+    inquiryEmployeesIDs: zod_1.z.array(zod_1.z.coerce.number()),
+    forwardedCompanyID: zod_1.z.coerce.number().optional(),
+    governorate: zod_1.z.nativeEnum(client_1.Governorate),
+    locationID: zod_1.z.coerce.number(),
+});
 exports.ShipmentSchema = zod_1.z.object({
     shipment_id: zod_1.z.number(),
     shipment_number: zod_1.z.string(),
-    receiver_name: zod_1.z.string().nullish().transform((v) => v || "غير معرف"),
+    receiver_name: zod_1.z
+        .string()
+        .nullish()
+        .transform((v) => v || "غير معرف"),
     receiver_phone_1: zod_1.z.string(),
     governorate_code: zod_1.z.string(),
     city_name: zod_1.z.string(),

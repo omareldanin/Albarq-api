@@ -25,6 +25,14 @@ router
   );
 
 router
+  .route("/company/reports")
+  .get(
+    isApiCompany,
+    preventDuplicateRequests,
+    ordersController.getAllReportssApiKey,
+  );
+
+router
   .route("/company/locations")
   .get(
     isApiCompany,
@@ -47,4 +55,11 @@ router
     preventDuplicateRequests,
     ordersController.getOrderByIdApiKey,
   );
+
+router
+  .route("/company/forward-orders/:orderID")
+  .patch(isApiCompany, preventDuplicateRequests, ordersController.updateOrder);
+router
+  .route("/company/forward-orders/:orderID")
+  .delete(isApiCompany, preventDuplicateRequests, ordersController.deleteOrder);
 export default router;
