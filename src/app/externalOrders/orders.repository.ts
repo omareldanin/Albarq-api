@@ -664,9 +664,13 @@ export class OrdersRepository {
   }
 
   async deleteOrder(data: {orderID: string}) {
-    const deletedOrder = await prisma.order.delete({
+    const deletedOrder = await prisma.order.update({
       where: {
         id: data.orderID,
+      },
+      data: {
+        deleted: true,
+        deletedAt: new Date(),
       },
     });
     return deletedOrder;

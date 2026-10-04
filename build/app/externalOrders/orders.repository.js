@@ -585,9 +585,13 @@ class OrdersRepository {
         };
     }
     async deleteOrder(data) {
-        const deletedOrder = await db_1.prisma.order.delete({
+        const deletedOrder = await db_1.prisma.order.update({
             where: {
                 id: data.orderID,
+            },
+            data: {
+                deleted: true,
+                deletedAt: new Date(),
             },
         });
         return deletedOrder;
