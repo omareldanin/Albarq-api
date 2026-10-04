@@ -28,20 +28,11 @@ exports.OrderCreateSchema = zod_1.z.object({
     quantity: zod_1.z.number().default(1),
 });
 exports.OrderUpdateSchema = zod_1.z.object({
-    quantity: zod_1.z.coerce.number(),
-    weight: zod_1.z.coerce.number(),
-    totalCost: zod_1.z.coerce.number(),
-    paidAmount: zod_1.z.coerce.number(),
-    receiptNumber: zod_1.z.string(),
-    processed: zod_1.z.coerce.boolean(),
-    confirmed: zod_1.z.coerce.boolean(),
-    received: zod_1.z.coerce.boolean(),
-    discount: zod_1.z.coerce.number(),
-    status: zod_1.z.nativeEnum(client_1.OrderStatus),
-    deliveryAgentID: zod_1.z.coerce.number().or(zod_1.z.literal(null)).optional(),
-    oldDeliveryAgentId: zod_1.z.coerce.number().or(zod_1.z.literal(null)).optional(),
-    deliveryDate: zod_1.z.coerce.date(),
-    recipientName: zod_1.z.string(),
+    quantity: zod_1.z.coerce.number().optional(),
+    totalCost: zod_1.z.coerce.number().optional(),
+    paidAmount: zod_1.z.coerce.number().optional(),
+    receiptNumber: zod_1.z.string().optional(),
+    recipientName: zod_1.z.string().optional(),
     recipientPhones: zod_1.z
         .preprocess((val) => {
         if (typeof val === "string") {
@@ -50,18 +41,14 @@ exports.OrderUpdateSchema = zod_1.z.object({
         return val;
     }, zod_1.z.array(zod_1.z.string().min(6)))
         .optional(),
-    recipientPhone: zod_1.z.string().min(6),
-    recipientAddress: zod_1.z.string(),
-    notes: zod_1.z.string(),
-    details: zod_1.z.string(),
-    repositoryID: zod_1.z.coerce.number(),
-    branchID: zod_1.z.coerce.number(),
-    currentLocation: zod_1.z.string(),
-    clientID: zod_1.z.coerce.number(),
+    recipientPhone: zod_1.z.string().min(6).optional(),
+    recipientAddress: zod_1.z.string().optional(),
+    notes: zod_1.z.string().optional(),
+    details: zod_1.z.string().optional(),
     inquiryEmployeesIDs: zod_1.z.array(zod_1.z.coerce.number()),
     forwardedCompanyID: zod_1.z.coerce.number().optional(),
-    governorate: zod_1.z.nativeEnum(client_1.Governorate),
-    locationID: zod_1.z.coerce.number(),
+    governorate: zod_1.z.nativeEnum(client_1.Governorate).optional(),
+    locationID: zod_1.z.coerce.number().optional(),
 });
 exports.ShipmentSchema = zod_1.z.object({
     shipment_id: zod_1.z.number(),

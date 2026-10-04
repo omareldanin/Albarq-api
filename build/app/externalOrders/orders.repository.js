@@ -162,77 +162,7 @@ class OrdersRepository {
                         : undefined,
                 recipientAddress: data.orderData.recipientAddress,
                 notes: data.orderData.notes,
-                currentLocation: data.orderData.currentLocation,
-                status: data.orderData.status,
-                confirmed: data.orderData.forwardedCompanyID
-                    ? false
-                    : data.orderData.confirmed,
                 details: data.orderData.details,
-                receivedAt: data.orderData.received ? new Date() : undefined,
-                deliveryDate: data.orderData.deliveryAgentID
-                    ? new Date()
-                    : data.orderData.deliveryDate,
-                company: data.orderData.forwardedCompanyID
-                    ? {
-                        connect: {
-                            id: data.orderData.forwardedCompanyID,
-                        },
-                    }
-                    : undefined,
-                forwarded: data.orderData.forwardedCompanyID ? true : undefined,
-                forwardedBy: data.orderData.forwardedCompanyID
-                    ? {
-                        connect: {
-                            id: data.loggedInUser.id,
-                        },
-                    }
-                    : undefined,
-                forwardedAt: data.orderData.forwardedCompanyID ? new Date() : undefined,
-                forwardedFrom: data.orderData.forwardedCompanyID
-                    ? {
-                        connect: {
-                            id: data.loggedInUser.companyID,
-                        },
-                    }
-                    : undefined,
-                processed: data.orderData.processed,
-                processedBy: data.orderData.processed
-                    ? { connect: { id: data.loggedInUser.id } }
-                    : undefined,
-                deliveryAgent: 
-                // unlink delivery agent if null
-                data.orderData.deliveryAgentID === null
-                    ? {
-                        disconnect: true,
-                    }
-                    : data.orderData.deliveryAgentID !== undefined
-                        ? {
-                            connect: {
-                                id: data.orderData.deliveryAgentID,
-                            },
-                        }
-                        : undefined,
-                repository: data.orderData.repositoryID
-                    ? {
-                        connect: {
-                            id: data.orderData.repositoryID,
-                        },
-                    }
-                    : undefined,
-                branch: data.orderData.branchID
-                    ? {
-                        connect: {
-                            id: data.orderData.branchID,
-                        },
-                    }
-                    : undefined,
-                client: data.orderData.clientID
-                    ? {
-                        connect: {
-                            id: data.orderData.clientID,
-                        },
-                    }
-                    : undefined,
             },
             select: orders_responses_1.orderSelect,
         });

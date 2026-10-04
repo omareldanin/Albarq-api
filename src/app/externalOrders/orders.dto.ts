@@ -27,20 +27,11 @@ export const OrderCreateSchema = z.object({
 });
 
 export const OrderUpdateSchema = z.object({
-  quantity: z.coerce.number(),
-  weight: z.coerce.number(),
-  totalCost: z.coerce.number(),
-  paidAmount: z.coerce.number(),
-  receiptNumber: z.string(),
-  processed: z.coerce.boolean(),
-  confirmed: z.coerce.boolean(),
-  received: z.coerce.boolean(),
-  discount: z.coerce.number(),
-  status: z.nativeEnum(OrderStatus),
-  deliveryAgentID: z.coerce.number().or(z.literal(null)).optional(),
-  oldDeliveryAgentId: z.coerce.number().or(z.literal(null)).optional(),
-  deliveryDate: z.coerce.date(),
-  recipientName: z.string(),
+  quantity: z.coerce.number().optional(),
+  totalCost: z.coerce.number().optional(),
+  paidAmount: z.coerce.number().optional(),
+  receiptNumber: z.string().optional(),
+  recipientName: z.string().optional(),
   recipientPhones: z
     .preprocess(
       (val) => {
@@ -52,18 +43,14 @@ export const OrderUpdateSchema = z.object({
       z.array(z.string().min(6)),
     )
     .optional(),
-  recipientPhone: z.string().min(6),
-  recipientAddress: z.string(),
-  notes: z.string(),
-  details: z.string(),
-  repositoryID: z.coerce.number(),
-  branchID: z.coerce.number(),
-  currentLocation: z.string(),
-  clientID: z.coerce.number(),
+  recipientPhone: z.string().min(6).optional(),
+  recipientAddress: z.string().optional(),
+  notes: z.string().optional(),
+  details: z.string().optional(),
   inquiryEmployeesIDs: z.array(z.coerce.number()),
   forwardedCompanyID: z.coerce.number().optional(),
-  governorate: z.nativeEnum(Governorate),
-  locationID: z.coerce.number(),
+  governorate: z.nativeEnum(Governorate).optional(),
+  locationID: z.coerce.number().optional(),
 });
 
 export type OrderCreateType = z.infer<typeof OrderCreateSchema>;
