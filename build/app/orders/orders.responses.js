@@ -360,6 +360,7 @@ exports.orderSelectApiKey = {
     createdAt: true,
     updatedAt: true,
     governorate: true,
+    clientId: true,
     location: {
         select: {
             id: true,

@@ -630,12 +630,17 @@ export class OrdersService {
     params: {
       orderID: string;
     };
+    loggedInUser: loggedInUserType;
   }) => {
     const order = await ordersRepository.getOrderByIdApiKey({
       orderID: data.params.orderID,
     });
 
-    return order;
+    if (order?.clientId !== data.loggedInUser.id) {
+      throw new AppError("الطلب غير موجود", 404);
+    } else {
+      return order;
+    }
   };
 
   updateOrder = async (data: {

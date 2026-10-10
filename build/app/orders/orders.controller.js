@@ -459,6 +459,7 @@ class OrdersController {
         const loggedInUser = res.locals.user;
         const order = await ordersService.getOrderByIdApiKey({
             params: params,
+            loggedInUser,
         });
         const orderTimeline = await ordersService.getOrderTimeline({
             params: { orderID: params.orderID },

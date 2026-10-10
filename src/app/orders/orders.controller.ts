@@ -519,6 +519,7 @@ export class OrdersController {
 
     const order = await ordersService.getOrderByIdApiKey({
       params: params,
+      loggedInUser,
     });
 
     const orderTimeline = await ordersService.getOrderTimeline({
