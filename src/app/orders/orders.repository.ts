@@ -2853,10 +2853,11 @@ export class OrdersRepository {
     return orders.map(reportsOrderReform);
   }
 
-  async getOrderByIdApiKey(data: {orderID: string}) {
+  async getOrderByIdApiKey(data: {orderID: string; clientId: number}) {
     const order = await prisma.order.findUnique({
       where: {
         id: data.orderID,
+        clientId: data.clientId,
         deleted: false,
       },
       select: orderSelectApiKey,

@@ -2504,6 +2504,7 @@ class OrdersRepository {
         const order = await db_1.prisma.order.findUnique({
             where: {
                 id: data.orderID,
+                clientId: data.clientId,
                 deleted: false,
             },
             select: orders_responses_1.orderSelectApiKey,

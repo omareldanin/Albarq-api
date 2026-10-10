@@ -501,13 +501,12 @@ class OrdersService {
     getOrderByIdApiKey = async (data) => {
         const order = await ordersRepository.getOrderByIdApiKey({
             orderID: data.params.orderID,
+            clientId: data.loggedInUser.id,
         });
-        if (order?.clientId !== data.loggedInUser.id) {
+        if (!order) {
             throw new AppError_1.AppError("الطلب غير موجود", 404);
         }
-        else {
-            return order;
-        }
+        return order;
     };
     updateOrder = async (data) => {
         if (data.loggedInUser.role !== "COMPANY_MANAGER" &&
