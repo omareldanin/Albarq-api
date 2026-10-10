@@ -558,6 +558,10 @@ export class OrdersRepository {
     }
     let randomId = await this.generateUniqueOrderId();
 
+    if (data.orderData.forwardedCompanyID) {
+      secondaryStatus = "SEND_TO_COMPANY";
+      status = "IN_MAIN_REPOSITORY";
+    }
     // Create order
     const createdOrder = await prisma.order.create({
       data: {
@@ -614,9 +618,19 @@ export class OrdersRepository {
         },
         company: {
           connect: {
-            id: data.companyID,
+            id: data.orderData.forwardedCompanyID
+              ? data.orderData.forwardedCompanyID
+              : data.companyID,
           },
         },
+        forwardedFrom: data.orderData.forwardedCompanyID
+          ? {
+              connect: {
+                id: data.companyID,
+              },
+            }
+          : undefined,
+        forwarded: data.orderData.forwardedCompanyID ? true : false,
         client: {
           connect: {
             id: data.clientID,
