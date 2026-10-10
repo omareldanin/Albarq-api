@@ -631,6 +631,14 @@ export class OrdersRepository {
             }
           : undefined,
         forwarded: data.orderData.forwardedCompanyID ? true : false,
+        forwardedBy: data.orderData.forwardedCompanyID
+          ? {
+              connect: {
+                id: data.loggedInUser.id,
+              },
+            }
+          : undefined,
+        forwardedAt: data.orderData.forwardedCompanyID ? new Date() : undefined,
         client: {
           connect: {
             id: data.clientID,
