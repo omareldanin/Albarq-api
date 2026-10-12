@@ -414,7 +414,7 @@ export class OrdersController {
     const resolvedClient =
       secondaryStatus === "IN_REPOSITORY" && branchId
         ? {branchId: +branchId}
-        : forwardedBranchId
+        : forwardedBranchId && loggedInUser.mainRepository
           ? {branchId: +forwardedBranchId}
           : undefined;
 
