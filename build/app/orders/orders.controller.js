@@ -277,7 +277,8 @@ class OrdersController {
         });
     });
     getRepositoryOrders = (0, catchAsync_1.catchAsync)(async (req, res) => {
-        const { client_id, size, page, store_id, repository_id, to_repository_id, governorate, secondaryStatus, status, getIncoming, getOutComing, branchId, forChilds, } = req.query;
+        const { client_id, size, page, store_id, repository_id, to_repository_id, governorate, secondaryStatus, status, getIncoming, getOutComing, branchId, forChilds, forwarded_from_id, forOutPut, } = req.query;
+        console.log(req.query);
         const loggedInUser = res.locals.user;
         const user = await db_1.prisma.employee.findUnique({
             where: {
@@ -358,6 +359,20 @@ class OrdersController {
             : status;
         const results = await db_1.prisma.order.findManyPaginated({
             where: {
+                OR: forwarded_from_id
+                    ? [
+                        {
+                            companyId: loggedInUser.companyID,
+                            forwardedFromId: forwarded_from_id
+                                ? +forwarded_from_id
+                                : undefined,
+                        },
+                    ]
+                    : [
+                        {
+                            companyId: loggedInUser.companyID,
+                        },
+                    ],
                 deleted: false,
                 repositoryId: resolvedRepositoryId,
                 forwardedRepo: resolvedForwardedRepo,
@@ -369,6 +384,14 @@ class OrdersController {
                 governorate: governorate ? governorate : undefined,
                 forwardedBranchId: getIncoming && branchId ? +branchId : undefined,
                 branchId: resolvedBranchId,
+                CustomerOutput: forOutPut === "true" && store_id
+                    ? {
+                        none: {
+                            repositoryId: resolvedRepositoryId,
+                            storeId: store_id ? Number(store_id) : undefined,
+                        },
+                    }
+                    : undefined,
                 repository: forChilds === "true"
                     ? {
                         branch: {

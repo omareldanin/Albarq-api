@@ -300,7 +300,10 @@ export class OrdersController {
       getOutComing,
       branchId,
       forChilds,
+      forwarded_from_id,
+      forOutPut,
     } = req.query;
+    console.log(req.query);
 
     const loggedInUser = res.locals.user as loggedInUserType;
 
@@ -405,6 +408,21 @@ export class OrdersController {
     const results = await prisma.order.findManyPaginated(
       {
         where: {
+          OR: forwarded_from_id
+            ? [
+                {
+                  companyId: loggedInUser.companyID!!,
+
+                  forwardedFromId: forwarded_from_id
+                    ? +forwarded_from_id
+                    : undefined,
+                },
+              ]
+            : [
+                {
+                  companyId: loggedInUser.companyID!!,
+                },
+              ],
           deleted: false,
           repositoryId: resolvedRepositoryId,
           forwardedRepo: resolvedForwardedRepo,
@@ -416,6 +434,15 @@ export class OrdersController {
           governorate: governorate ? (governorate as Governorate) : undefined,
           forwardedBranchId: getIncoming && branchId ? +branchId : undefined,
           branchId: resolvedBranchId,
+          CustomerOutput:
+            forOutPut === "true" && store_id
+              ? {
+                  none: {
+                    repositoryId: resolvedRepositoryId,
+                    storeId: store_id ? Number(store_id) : undefined,
+                  },
+                }
+              : undefined,
           repository:
             forChilds === "true"
               ? {
