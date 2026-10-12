@@ -303,9 +303,10 @@ export class OrdersController {
       forwarded_from_id,
       forOutPut,
     } = req.query;
-    console.log(req.query);
 
     const loggedInUser = res.locals.user as loggedInUserType;
+
+    let forwardedBranchId: number | undefined = undefined;
 
     const user = await prisma.employee.findUnique({
       where: {
@@ -345,6 +346,21 @@ export class OrdersController {
 
     if (!returnRepo && status === "RETURNED") {
       throw new AppError("لا يوجد مخزن راوجع للفرع الخاص بك ", 404);
+    }
+
+    if (to_repository_id && forOutPut === "true") {
+      const branch = await prisma.branch.findFirst({
+        where: {
+          companyId: loggedInUser.companyID!!,
+          repositories: {
+            some: {
+              id: +to_repository_id,
+            },
+          },
+        },
+      });
+
+      forwardedBranchId = branch?.id;
     }
 
     if (
@@ -398,7 +414,9 @@ export class OrdersController {
     const resolvedClient =
       secondaryStatus === "IN_REPOSITORY" && branchId
         ? {branchId: +branchId}
-        : undefined;
+        : forwardedBranchId
+          ? {branchId: +forwardedBranchId}
+          : undefined;
 
     const resolvedStatus =
       status === "RETURNED"

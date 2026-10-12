@@ -278,8 +278,8 @@ class OrdersController {
     });
     getRepositoryOrders = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const { client_id, size, page, store_id, repository_id, to_repository_id, governorate, secondaryStatus, status, getIncoming, getOutComing, branchId, forChilds, forwarded_from_id, forOutPut, } = req.query;
-        console.log(req.query);
         const loggedInUser = res.locals.user;
+        let forwardedBranchId = undefined;
         const user = await db_1.prisma.employee.findUnique({
             where: {
                 id: loggedInUser.id,
@@ -310,6 +310,19 @@ class OrdersController {
         }
         if (!returnRepo && status === "RETURNED") {
             throw new AppError_1.AppError("لا يوجد مخزن راوجع للفرع الخاص بك ", 404);
+        }
+        if (to_repository_id && forOutPut === "true") {
+            const branch = await db_1.prisma.branch.findFirst({
+                where: {
+                    companyId: loggedInUser.companyID,
+                    repositories: {
+                        some: {
+                            id: +to_repository_id,
+                        },
+                    },
+                },
+            });
+            forwardedBranchId = branch?.id;
         }
         if (loggedInUser.role === "BRANCH_MANAGER" &&
             !repository_id &&
@@ -353,7 +366,9 @@ class OrdersController {
                 : undefined;
         const resolvedClient = secondaryStatus === "IN_REPOSITORY" && branchId
             ? { branchId: +branchId }
-            : undefined;
+            : forwardedBranchId
+                ? { branchId: +forwardedBranchId }
+                : undefined;
         const resolvedStatus = status === "RETURNED"
             ? { in: ["RETURNED", "PARTIALLY_RETURNED", "REPLACED"] }
             : status;
