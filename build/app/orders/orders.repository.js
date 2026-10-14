@@ -4184,7 +4184,13 @@ class OrdersRepository {
             where: {
                 AND: [
                     { deleted: false },
-                    { companyId: company_id },
+                    {
+                        companyId: company_id
+                            ? company_id
+                            : order.forwardedFrom
+                                ? { in: [order.companyId, order.forwardedFrom.id] }
+                                : order.companyId,
+                    },
                     { role: "INQUIRY_EMPLOYEE" },
                     {
                         OR: [
