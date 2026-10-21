@@ -4,6 +4,7 @@ exports.ClientsRepository = void 0;
 const db_1 = require("../../database/db");
 const clients_responses_1 = require("./clients.responses");
 const redis_1 = require("../../lib/redis");
+const clients_filters_1 = require("./clients.filters");
 class ClientsRepository {
     clientsCacheKey(filters) {
         return `clients:${JSON.stringify({
@@ -16,6 +17,9 @@ class ClientsRepository {
             governorate: filters.governorate ?? null,
             phone: filters.phone ?? null,
             name: filters.name ?? null,
+            created_from: filters.created_from ?? null,
+            created_to: filters.created_to ?? null,
+            activeProfit: filters.activeProfit ?? null,
             minified: filters.minified ?? false,
             role: filters.loggedInUser?.role ?? null,
             userID: filters.loggedInUser?.id ?? null, // VERY IMPORTANT
@@ -111,6 +115,7 @@ class ClientsRepository {
         }
         const where = {
             AND: [
+                (0, clients_filters_1.clientListFilterWhere)(filters),
                 { deleted: filters.deleted === "true" },
                 { company: { id: filters.companyID } },
                 {

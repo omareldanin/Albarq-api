@@ -1179,6 +1179,30 @@ export class OrdersService {
         });
       }
 
+      // Update total costr
+      if (
+        (data.orderData.totalCost || data.orderData.totalCost === 0) &&
+        +oldOrderData.totalCost !== +newOrder.totalCost
+      ) {
+        await ordersRepository.updateOrderTimeline({
+          orderID: oldOrderData.id,
+          data: {
+            type: "PAID_AMOUNT_CHANGE",
+            date: newOrder.updatedAt,
+            old: {
+              value: oldOrderData.totalCost,
+            },
+            new: {
+              value: newOrder.totalCost,
+            },
+            by: {
+              id: data.loggedInUser.id,
+              name: data.loggedInUser.name,
+            },
+            message: `تم تغيير المبلغ الكلي من ${oldOrderData.totalCost} إلى ${newOrder.totalCost}`,
+          },
+        });
+      }
       // Update status
       if (
         (oldOrderData.status !== newOrder.status ||
@@ -2815,13 +2839,22 @@ export class OrdersService {
     };
     loggedInUser: loggedInUserType;
   }) => {
+    const order = await ordersRepository.getOrderById({
+      orderID: data.params.orderID,
+    });
+
+    if (order?.hasDeliveredClientReport) {
+      throw new AppError("لا يمكن حذف الطلب بعد إنشاء كشف عميل", 403);
+    }
+
+    if (order?.forwarded) {
+      throw new AppError("لا يمكن حذف الطلب بعد إحالته لشركه اخري", 403);
+    }
+
     if (
       data.loggedInUser.role === "CLIENT" ||
       data.loggedInUser.role === "CLIENT_ASSISTANT"
     ) {
-      const order = await ordersRepository.getOrderStatus({
-        orderID: data.params.orderID,
-      });
       if (
         order?.status !== OrderStatus.REGISTERED &&
         order?.status !== OrderStatus.READY_TO_SEND
@@ -2829,6 +2862,7 @@ export class OrdersService {
         throw new AppError("لا يمكن حذف الطلب", 403);
       }
     }
+
     await ordersRepository.deactivateOrder({
       orderID: data.params.orderID,
       deletedByID: data.loggedInUser.id,

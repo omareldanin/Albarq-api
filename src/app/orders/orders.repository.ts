@@ -4994,6 +4994,7 @@ export class OrdersRepository {
         locationId: true,
         status: true,
         governorate: true,
+        forwarded: true,
         forwardedFrom: {
           select: {
             id: true,

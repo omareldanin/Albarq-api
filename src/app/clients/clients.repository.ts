@@ -4,6 +4,7 @@ import type {ClientCreateTypeWithUserID, ClientUpdateType} from "./clients.dto";
 import {clientReform, clientSelect} from "./clients.responses";
 import {loggedInUserType} from "../../types/user";
 import {redis} from "../../lib/redis";
+import {clientListFilterWhere, type ClientListFilters} from "./clients.filters";
 
 export class ClientsRepository {
   clientsCacheKey(filters: {
@@ -18,7 +19,7 @@ export class ClientsRepository {
     phone?: string;
     name?: string;
     loggedInUser?: loggedInUserType;
-  }) {
+  } & ClientListFilters) {
     return `clients:${JSON.stringify({
       page: filters.page,
       size: filters.size,
@@ -29,6 +30,9 @@ export class ClientsRepository {
       governorate: filters.governorate ?? null,
       phone: filters.phone ?? null,
       name: filters.name ?? null,
+      created_from: filters.created_from ?? null,
+      created_to: filters.created_to ?? null,
+      activeProfit: filters.activeProfit ?? null,
       minified: filters.minified ?? false,
       role: filters.loggedInUser?.role ?? null,
       userID: filters.loggedInUser?.id ?? null, // VERY IMPORTANT
@@ -112,7 +116,7 @@ export class ClientsRepository {
     phone?: string;
     name?: string;
     loggedInUser?: loggedInUserType;
-  }) {
+  } & ClientListFilters) {
     const cacheKey = this.clientsCacheKey(filters);
 
     // 1️⃣ FAST PATH – Redis
@@ -145,6 +149,7 @@ export class ClientsRepository {
 
     const where = {
       AND: [
+        clientListFilterWhere(filters),
         {deleted: filters.deleted === "true"},
         {company: {id: filters.companyID}},
         {

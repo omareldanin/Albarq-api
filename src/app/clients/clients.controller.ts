@@ -9,6 +9,7 @@ import {EmployeesRepository} from "../employees/employees.repository";
 import {sendNotification} from "../notifications/helpers/sendNotification";
 import {ClientCreateSchema, ClientUpdateSchema} from "./clients.dto";
 import {ClientsRepository} from "./clients.repository";
+import {ClientListFilterSchema} from "./clients.filters";
 import crypto from "crypto";
 import {prisma} from "../../database/db";
 
@@ -138,6 +139,7 @@ export class ClientsController {
       }
     }
 
+    const listFilters = ClientListFilterSchema.parse(req.query);
     const phone = req.query.phone as string | undefined;
 
     const name = req.query.name as string | undefined;
@@ -175,6 +177,7 @@ export class ClientsController {
         phone: phone,
         name: name,
         loggedInUser,
+        ...listFilters,
       });
 
     res.status(200).json({

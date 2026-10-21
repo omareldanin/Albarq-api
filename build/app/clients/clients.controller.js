@@ -47,6 +47,7 @@ const employees_repository_1 = require("../employees/employees.repository");
 const sendNotification_1 = require("../notifications/helpers/sendNotification");
 const clients_dto_1 = require("./clients.dto");
 const clients_repository_1 = require("./clients.repository");
+const clients_filters_1 = require("./clients.filters");
 const crypto_1 = __importDefault(require("crypto"));
 const db_1 = require("../../database/db");
 const clientsRepository = new clients_repository_1.ClientsRepository();
@@ -150,6 +151,7 @@ class ClientsController {
                 branchID = employee?.branch?.id;
             }
         }
+        const listFilters = clients_filters_1.ClientListFilterSchema.parse(req.query);
         const phone = req.query.phone;
         const name = req.query.name;
         const deleted = req.query.deleted || "false";
@@ -178,6 +180,7 @@ class ClientsController {
             phone: phone,
             name: name,
             loggedInUser,
+            ...listFilters,
         });
         res.status(200).json({
             status: "success",

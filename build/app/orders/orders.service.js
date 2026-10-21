@@ -911,6 +911,28 @@ class OrdersService {
                     },
                 });
             }
+            // Update total costr
+            if ((data.orderData.totalCost || data.orderData.totalCost === 0) &&
+                +oldOrderData.totalCost !== +newOrder.totalCost) {
+                await ordersRepository.updateOrderTimeline({
+                    orderID: oldOrderData.id,
+                    data: {
+                        type: "PAID_AMOUNT_CHANGE",
+                        date: newOrder.updatedAt,
+                        old: {
+                            value: oldOrderData.totalCost,
+                        },
+                        new: {
+                            value: newOrder.totalCost,
+                        },
+                        by: {
+                            id: data.loggedInUser.id,
+                            name: data.loggedInUser.name,
+                        },
+                        message: `تم تغيير المبلغ الكلي من ${oldOrderData.totalCost} إلى ${newOrder.totalCost}`,
+                    },
+                });
+            }
             // Update status
             if ((oldOrderData.status !== newOrder.status ||
                 newOrder.paidAmount !== oldOrderData.paidAmount) &&
@@ -2182,11 +2204,17 @@ class OrdersService {
         return orderInquiryEmployees;
     };
     deactivateOrder = async (data) => {
+        const order = await ordersRepository.getOrderById({
+            orderID: data.params.orderID,
+        });
+        if (order?.hasDeliveredClientReport) {
+            throw new AppError_1.AppError("لا يمكن حذف الطلب بعد إنشاء كشف عميل", 403);
+        }
+        if (order?.forwarded) {
+            throw new AppError_1.AppError("لا يمكن حذف الطلب بعد إحالته لشركه اخري", 403);
+        }
         if (data.loggedInUser.role === "CLIENT" ||
             data.loggedInUser.role === "CLIENT_ASSISTANT") {
-            const order = await ordersRepository.getOrderStatus({
-                orderID: data.params.orderID,
-            });
             if (order?.status !== client_1.OrderStatus.REGISTERED &&
                 order?.status !== client_1.OrderStatus.READY_TO_SEND) {
                 throw new AppError_1.AppError("لا يمكن حذف الطلب", 403);
