@@ -2847,8 +2847,8 @@ export class OrdersService {
       throw new AppError("لا يمكن حذف الطلب بعد إنشاء كشف عميل", 403);
     }
 
-    if (order?.forwarded) {
-      throw new AppError("لا يمكن حذف الطلب بعد إحالته لشركه اخري", 403);
+    if (order?.forwarded && order.secondaryStatus !== "SEND_TO_COMPANY") {
+      throw new AppError("لا يمكن حذف الطلب بعد تأكيده", 403);
     }
 
     if (
