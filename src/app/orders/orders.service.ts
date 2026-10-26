@@ -1187,13 +1187,13 @@ export class OrdersService {
         await ordersRepository.updateOrderTimeline({
           orderID: oldOrderData.id,
           data: {
-            type: "CURRENT_LOCATION_CHANGE",
+            type: "PAID_AMOUNT_CHANGE",
             date: newOrder.updatedAt,
             old: {
-              value: oldOrderData.receiptNumber,
+              value: +oldOrderData.receiptNumber,
             },
             new: {
-              value: newOrder.receiptNumber,
+              value: +newOrder.receiptNumber,
             },
             by: {
               id: data.loggedInUser.id,
