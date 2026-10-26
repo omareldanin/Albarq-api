@@ -754,7 +754,7 @@ router
         ClientRole.CLIENT,
         EmployeeRole.CLIENT_ASSISTANT,
       ],
-      [Permission.DELETE_ORDER],
+      [Permission.DELETE_ORDER, Permission.GENERAL_DELETE_ORDER],
     ),
     ordersController.deactivateOrder,
   );

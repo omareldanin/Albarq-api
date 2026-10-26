@@ -870,6 +870,7 @@ export class OrdersService {
           console.error("[webhook] unhandled:", err);
         });
       }
+
       if (
         (data.orderData.status && oldOrderData.status !== newOrder.status) ||
         (data.orderData.notes && data.orderData.notes !== oldOrderData.notes)
@@ -1175,6 +1176,30 @@ export class OrdersService {
               name: data.loggedInUser.name,
             },
             message: `تم تغيير المبلغ المدفوع من ${oldOrderData.paidAmount} إلى ${newOrder.paidAmount}`,
+          },
+        });
+      }
+
+      if (
+        data.orderData.receiptNumber &&
+        +oldOrderData.receiptNumber !== +newOrder.receiptNumber
+      ) {
+        await ordersRepository.updateOrderTimeline({
+          orderID: oldOrderData.id,
+          data: {
+            type: "CURRENT_LOCATION_CHANGE",
+            date: newOrder.updatedAt,
+            old: {
+              value: oldOrderData.receiptNumber,
+            },
+            new: {
+              value: newOrder.receiptNumber,
+            },
+            by: {
+              id: data.loggedInUser.id,
+              name: data.loggedInUser.name,
+            },
+            message: `تم تغيير رقم الوصل من ${oldOrderData.receiptNumber} إلى ${newOrder.receiptNumber}`,
           },
         });
       }
@@ -2847,7 +2872,12 @@ export class OrdersService {
       throw new AppError("لا يمكن حذف الطلب بعد إنشاء كشف عميل", 403);
     }
 
-    if (order?.forwarded && order.secondaryStatus !== "SEND_TO_COMPANY") {
+    if (
+      order?.forwarded &&
+      order.secondaryStatus !== "SEND_TO_COMPANY" &&
+      order.company.id !== order.client.id &&
+      !data.loggedInUser.permissions.includes("GENERAL_DELETE_ORDER")
+    ) {
       throw new AppError("لا يمكن حذف الطلب بعد تأكيده", 403);
     }
 
