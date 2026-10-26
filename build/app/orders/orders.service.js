@@ -916,19 +916,15 @@ class OrdersService {
                 await ordersRepository.updateOrderTimeline({
                     orderID: oldOrderData.id,
                     data: {
-                        type: "PAID_AMOUNT_CHANGE",
+                        type: "OTHER",
                         date: newOrder.updatedAt,
-                        old: {
-                            value: +oldOrderData.receiptNumber,
-                        },
-                        new: {
-                            value: +newOrder.receiptNumber,
-                        },
+                        old: null,
+                        new: null,
                         by: {
                             id: data.loggedInUser.id,
                             name: data.loggedInUser.name,
                         },
-                        message: `تم تغيير رقم الوصل من ${oldOrderData.receiptNumber} إلى ${newOrder.receiptNumber}`,
+                        message: `تم تغيير رقم الوصل من ${oldOrderData.receiptNumber} إلى ${newOrder.receiptNumber} بواسطة ${data.loggedInUser.name}`,
                     },
                 });
             }
