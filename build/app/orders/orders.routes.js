@@ -341,7 +341,7 @@ router
     client_1.AdminRole.ADMIN_ASSISTANT,
     client_1.ClientRole.CLIENT,
     client_1.EmployeeRole.CLIENT_ASSISTANT,
-], [client_1.Permission.DELETE_ORDER]), ordersController.deactivateOrder);
+], [client_1.Permission.DELETE_ORDER, client_1.Permission.GENERAL_DELETE_ORDER]), ordersController.deactivateOrder);
 router.route("/orders/:orderID/reactivate").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.AdminRole.ADMIN, client_1.AdminRole.ADMIN_ASSISTANT], [client_1.Permission.REACTIVE_ORDERS]), ordersController.reactivateOrder);
 exports.default = router;
 //# sourceMappingURL=orders.routes.js.map

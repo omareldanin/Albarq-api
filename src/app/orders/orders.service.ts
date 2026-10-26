@@ -1182,7 +1182,7 @@ export class OrdersService {
 
       if (
         data.orderData.receiptNumber &&
-        +oldOrderData.receiptNumber !== +newOrder.receiptNumber
+        oldOrderData.receiptNumber !== newOrder.receiptNumber
       ) {
         await ordersRepository.updateOrderTimeline({
           orderID: oldOrderData.id,
