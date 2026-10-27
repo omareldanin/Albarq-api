@@ -919,8 +919,28 @@ export class MessagesController {
       select: {
         id: true,
         receiptNumber: true,
+        status: true,
+        secondaryStatus: true,
       },
     });
+
+    if (
+      order?.status === "REGISTERED" ||
+      order?.status === "READY_TO_SEND" ||
+      order?.status === "IN_MAIN_REPOSITORY" ||
+      order?.status === "IN_GOV_REPOSITORY"
+    ) {
+      throw new AppError("الطلب قيد التجهيز", 400);
+    }
+
+    if (
+      (order?.status === "RETURNED" ||
+        order?.status === "REPLACED" ||
+        order?.status === "PARTIALLY_RETURNED") &&
+      order.secondaryStatus !== "WITH_AGENT"
+    ) {
+      throw new AppError("الطلب راجع وليس مع المندوب", 400);
+    }
 
     if (
       loggedInUser.role === "CLIENT_ASSISTANT" ||
