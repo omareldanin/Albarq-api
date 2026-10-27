@@ -937,7 +937,8 @@ export class MessagesController {
       (order?.status === "RETURNED" ||
         order?.status === "REPLACED" ||
         order?.status === "PARTIALLY_RETURNED") &&
-      order.secondaryStatus !== "WITH_AGENT"
+      order.secondaryStatus !== "WITH_AGENT" &&
+      loggedInUser.role === "CLIENT"
     ) {
       throw new AppError("الطلب راجع وليس مع المندوب", 400);
     }

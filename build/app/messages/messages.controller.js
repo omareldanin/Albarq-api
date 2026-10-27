@@ -743,7 +743,8 @@ class MessagesController {
         if ((order?.status === "RETURNED" ||
             order?.status === "REPLACED" ||
             order?.status === "PARTIALLY_RETURNED") &&
-            order.secondaryStatus !== "WITH_AGENT") {
+            order.secondaryStatus !== "WITH_AGENT" &&
+            loggedInUser.role === "CLIENT") {
             throw new AppError_1.AppError("الطلب راجع وليس مع المندوب", 400);
         }
         if (loggedInUser.role === "CLIENT_ASSISTANT" ||
