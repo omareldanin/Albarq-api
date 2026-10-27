@@ -68,6 +68,7 @@ router.route("/employees/:employeeID").delete(isLoggedIn_1.isLoggedIn, (0, isAut
 ]), employeesController.deleteEmployee);
 router.route("/employees/:employeeID/deactivate").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
+    client_1.EmployeeRole.BRANCH_MANAGER,
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
     client_1.EmployeeRole.CLIENT,

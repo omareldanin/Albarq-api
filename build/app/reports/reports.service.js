@@ -23,6 +23,10 @@ const reportsRepository = new reports_repository_1.ReportsRepository();
 const ordersRepository = new orders_repository_1.OrdersRepository();
 const employeesRepository = new employees_repository_1.EmployeesRepository();
 const transactionsRepository = new transaction_repository_1.TransactionsRepository();
+const receiptCollator = new Intl.Collator("en", {
+    numeric: true,
+    sensitivity: "base",
+});
 class ReportsService {
     applyOrderCostUpdates(orders, updates) {
         const map = new Map(updates.map((u) => [u.id, u]));
@@ -416,6 +420,18 @@ class ReportsService {
                 },
             }));
         }
+        orders.sort((a, b) => {
+            const receiptA = a?.receiptNumber?.trim() ?? "";
+            const receiptB = b?.receiptNumber?.trim() ?? "";
+            // Put missing or empty receipt numbers last.
+            if (!receiptA && !receiptB)
+                return 0;
+            if (!receiptA)
+                return 1;
+            if (!receiptB)
+                return -1;
+            return receiptCollator.compare(receiptA, receiptB);
+        });
         await Promise.all(timelinePromises);
         reportData.insideOrdersCount = insideOrdersCount;
         reportData.total = total;

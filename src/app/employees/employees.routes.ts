@@ -155,6 +155,7 @@ router.route("/employees/:employeeID/deactivate").patch(
   isLoggedIn,
   isAutherized([
     EmployeeRole.COMPANY_MANAGER,
+    EmployeeRole.BRANCH_MANAGER,
     AdminRole.ADMIN,
     AdminRole.ADMIN_ASSISTANT,
     EmployeeRole.CLIENT,

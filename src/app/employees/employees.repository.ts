@@ -740,7 +740,11 @@ export class EmployeesRepository {
     return true;
   }
 
-  async deactivateEmployee(data: {employeeID: number; deletedByID: number}) {
+  async deactivateEmployee(data: {
+    employeeID: number;
+    deletedByID: number;
+    branchId?: number;
+  }) {
     const keys = await redis.keys("employees:*");
     if (keys.length) {
       await redis.del(keys);

@@ -36,6 +36,11 @@ const ordersRepository = new OrdersRepository();
 const employeesRepository = new EmployeesRepository();
 const transactionsRepository = new TransactionsRepository();
 
+const receiptCollator = new Intl.Collator("en", {
+  numeric: true,
+  sensitivity: "base",
+});
+
 // const clientsRepository = new ClientsRepository();
 type UpdatedOrderCosts = {
   id: string;
@@ -538,6 +543,18 @@ export class ReportsService {
       );
     }
 
+    orders.sort((a, b) => {
+      const receiptA = a?.receiptNumber?.trim() ?? "";
+      const receiptB = b?.receiptNumber?.trim() ?? "";
+
+      // Put missing or empty receipt numbers last.
+      if (!receiptA && !receiptB) return 0;
+      if (!receiptA) return 1;
+      if (!receiptB) return -1;
+
+      return receiptCollator.compare(receiptA, receiptB);
+    });
+
     await Promise.all(timelinePromises);
 
     reportData.insideOrdersCount = insideOrdersCount;
@@ -545,6 +562,7 @@ export class ReportsService {
     reportData.insideTotal = insideTotal;
     reportData.baghdadTotal = baghdadTotal;
     reportData.otherTotal = otherTotal;
+
     const pdf = await generateReport(data.reportData.type, reportData, orders);
 
     return pdf;

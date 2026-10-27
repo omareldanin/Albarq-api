@@ -55,7 +55,6 @@
             <th>#</th>
             <th>رقم الوصل</th>
             <th>أنشئ في</th>
-            <th>الصفحة</th>
             <th>هاتف المستلم</th>
             <th>عنوان المستلم</th>
             <th>مبلغ الوصل</th>
@@ -71,11 +70,7 @@
               <td class="nowrap">{{inc @index}}</td>
               <td>{{receiptNumber}}</td>
               <td>{{date createdAt}}</td>
-              {{#if store}}
-                <td>{{store.name}}</td>
-              {{else}}
-                <td></td>
-              {{/if}}
+
               <td>{{mapPhones recipientPhones}}</td>
               <td>{{localizeGovernorate governorate}}
                 -
