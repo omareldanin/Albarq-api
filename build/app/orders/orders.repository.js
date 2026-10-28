@@ -602,72 +602,6 @@ class OrdersRepository {
                                     : undefined,
                             },
                             {
-                                branchReportId: data.filters.search
-                                    ? Number.isNaN(+data.filters.search)
-                                        ? undefined
-                                        : data.filters.search.length > 9
-                                            ? undefined
-                                            : +data.filters.search
-                                    : undefined,
-                            },
-                            {
-                                clientReport: data.filters.search
-                                    ? Number.isNaN(+data.filters.search)
-                                        ? undefined
-                                        : data.filters.search.length > 9
-                                            ? undefined
-                                            : {
-                                                some: {
-                                                    id: +data.filters.search,
-                                                },
-                                            }
-                                    : undefined,
-                            },
-                            {
-                                repositoryReport: data.filters.search
-                                    ? Number.isNaN(+data.filters.search)
-                                        ? undefined
-                                        : data.filters.search.length > 9
-                                            ? undefined
-                                            : {
-                                                some: {
-                                                    id: +data.filters.search,
-                                                },
-                                            }
-                                    : undefined,
-                            },
-                            {
-                                companyReport: data.filters.search
-                                    ? Number.isNaN(+data.filters.search)
-                                        ? undefined
-                                        : data.filters.search.length > 9
-                                            ? undefined
-                                            : {
-                                                some: {
-                                                    id: +data.filters.search,
-                                                },
-                                            }
-                                    : undefined,
-                            },
-                            {
-                                deliveryAgentReportId: data.filters.search
-                                    ? Number.isNaN(+data.filters.search)
-                                        ? undefined
-                                        : data.filters.search.length > 9
-                                            ? undefined
-                                            : +data.filters.search
-                                    : undefined,
-                            },
-                            {
-                                governorateReportId: data.filters.search
-                                    ? Number.isNaN(+data.filters.search)
-                                        ? undefined
-                                        : data.filters.search.length > 9
-                                            ? undefined
-                                            : +data.filters.search
-                                    : undefined,
-                            },
-                            {
                                 recipientName: {
                                     contains: data.filters.search,
                                     mode: "insensitive",
@@ -840,74 +774,20 @@ class OrdersRepository {
                     {
                         AND: [
                             data.filters.clientReport === "true"
-                                ? {
-                                    clientReport: {
-                                        some: {
-                                            report: {
-                                                deleted: false,
-                                            },
-                                        },
-                                    },
-                                }
+                                ? this.clientReportFilter(data.filters.delivered &&
+                                    data.filters.orderType === "forwarded"
+                                    ? "DELIVERED"
+                                    : data.filters.reportSecondaryStatus, true)
                                 : {},
-                            {
-                                OR: data.filters.clientReport === "false"
-                                    ? [
-                                        {
-                                            clientReport: {
-                                                none: {},
-                                            },
-                                        },
-                                        {
-                                            clientReport: {
-                                                some: {
-                                                    report: {
-                                                        deleted: true,
-                                                    },
-                                                },
-                                            },
-                                        },
-                                    ]
-                                    : undefined,
-                            },
+                            data.filters.clientReport === "false"
+                                ? this.clientReportFilter(data.filters.delivered
+                                    ? "DELIVERED"
+                                    : data.filters.reportSecondaryStatus, false)
+                                : {},
                         ],
                     },
                     // Filter by branchReport
-                    {
-                        AND: [
-                            data.filters.branchReport === "true"
-                                ? {
-                                    branchReport: {
-                                        some: {
-                                            report: {
-                                                deleted: false,
-                                            },
-                                        },
-                                    },
-                                }
-                                : {},
-                            {
-                                OR: data.filters.branchReport === "false"
-                                    ? [
-                                        {
-                                            branchReport: {
-                                                none: {},
-                                            },
-                                        },
-                                        {
-                                            branchReport: {
-                                                some: {
-                                                    report: {
-                                                        deleted: true,
-                                                    },
-                                                },
-                                            },
-                                        },
-                                    ]
-                                    : undefined,
-                            },
-                        ],
-                    },
+                    this.getBranchReportFilter(data.filters.branchReport),
                     // Filter by deliveryAgentReport
                     {
                         AND: [
@@ -982,72 +862,6 @@ class OrdersRepository {
                             {
                                 receiptNumber: data.filters.search
                                     ? data.filters.search
-                                    : undefined,
-                            },
-                            {
-                                branchReportId: data.filters.search
-                                    ? Number.isNaN(+data.filters.search)
-                                        ? undefined
-                                        : data.filters.search.length > 9
-                                            ? undefined
-                                            : +data.filters.search
-                                    : undefined,
-                            },
-                            {
-                                clientReport: data.filters.search
-                                    ? Number.isNaN(+data.filters.search)
-                                        ? undefined
-                                        : data.filters.search.length > 9
-                                            ? undefined
-                                            : {
-                                                some: {
-                                                    id: +data.filters.search,
-                                                },
-                                            }
-                                    : undefined,
-                            },
-                            {
-                                repositoryReport: data.filters.search
-                                    ? Number.isNaN(+data.filters.search)
-                                        ? undefined
-                                        : data.filters.search.length > 9
-                                            ? undefined
-                                            : {
-                                                some: {
-                                                    id: +data.filters.search,
-                                                },
-                                            }
-                                    : undefined,
-                            },
-                            {
-                                companyReport: data.filters.search
-                                    ? Number.isNaN(+data.filters.search)
-                                        ? undefined
-                                        : data.filters.search.length > 9
-                                            ? undefined
-                                            : {
-                                                some: {
-                                                    id: +data.filters.search,
-                                                },
-                                            }
-                                    : undefined,
-                            },
-                            {
-                                deliveryAgentReportId: data.filters.search
-                                    ? Number.isNaN(+data.filters.search)
-                                        ? undefined
-                                        : data.filters.search.length > 9
-                                            ? undefined
-                                            : +data.filters.search
-                                    : undefined,
-                            },
-                            {
-                                governorateReportId: data.filters.search
-                                    ? Number.isNaN(+data.filters.search)
-                                        ? undefined
-                                        : data.filters.search.length > 9
-                                            ? undefined
-                                            : +data.filters.search
                                     : undefined,
                             },
                             {

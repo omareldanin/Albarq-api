@@ -527,6 +527,10 @@ model Order {
   @@index([companyId, deleted, receivedAt])
   @@index([deliveryAgentId, deliveryDate])
   @@index([companyId, receiptNumber])
+  @@index([receiptNumber, deleted], map: "order_receipt_deleted_idx")
+  @@index([recipientPhones(ops: ArrayOps)], type: Gin, map: "order_recipient_phones_gin_idx")
+  @@index([recipientName(ops: raw("gin_trgm_ops"))], type: Gin, map: "order_recipient_name_trgm_idx")
+  @@index([recipientAddress(ops: raw("gin_trgm_ops"))], type: Gin, map: "order_recipient_address_trgm_idx")
   @@index([repositoryId, secondaryStatus, deleted])
   @@index([companyId, deleted, status, branchId, createdAt(sort: Desc)])
 }

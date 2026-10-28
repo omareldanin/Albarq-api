@@ -802,15 +802,6 @@ export class MessagesController {
       includeStatusAndDeleted: true,
     });
 
-    // const orderWhereBare = this.buildOrderWhere({
-    //   user,
-    //   employee,
-    //   scope,
-    //   status,
-    //   inquiryStoresIDs,
-    //   includeStatusAndDeleted: false,
-    // });
-
     // page of chats
     const chats = await this.fetchChatsPage({
       orderWhere: orderWhereFull,
@@ -1196,34 +1187,26 @@ export class MessagesController {
                         : undefined,
                     },
                     {
-                      branch: inquiryBranchesIDs
+                      branchId: inquiryBranchesIDs
                         ? {
-                            id: {
-                              in: inquiryBranchesIDs,
-                            },
+                            in: inquiryBranchesIDs,
                           }
                         : undefined,
                     },
                     {
-                      store: inquiryStoresIDs
+                      storeId: inquiryStoresIDs
                         ? {
-                            id: {
-                              in: inquiryStoresIDs,
-                            },
+                            in: inquiryStoresIDs,
                           }
                         : undefined,
                     },
                     {
-                      company: {
-                        id: user.companyID,
-                      },
+                      companyId: user.companyID,
                     },
                     {
-                      location: inquiryLocationsIDs
+                      locationId: inquiryLocationsIDs
                         ? {
-                            id: {
-                              in: inquiryLocationsIDs,
-                            },
+                            in: inquiryLocationsIDs,
                           }
                         : undefined,
                     },
@@ -1251,7 +1234,6 @@ export class MessagesController {
             },
           },
         },
-
         createdById: {
           not: user.id,
         },
@@ -1260,6 +1242,7 @@ export class MessagesController {
         id: true,
       },
     });
+
     if (!unseenMessages.length) return;
 
     await prisma.messageSeen.createMany({

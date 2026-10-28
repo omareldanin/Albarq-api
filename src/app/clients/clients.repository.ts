@@ -7,19 +7,21 @@ import {redis} from "../../lib/redis";
 import {clientListFilterWhere, type ClientListFilters} from "./clients.filters";
 
 export class ClientsRepository {
-  clientsCacheKey(filters: {
-    page: number;
-    size: number;
-    deleted?: string;
-    companyID?: number;
-    minified?: boolean;
-    storeID?: number;
-    branchID?: number;
-    governorate?: string;
-    phone?: string;
-    name?: string;
-    loggedInUser?: loggedInUserType;
-  } & ClientListFilters) {
+  clientsCacheKey(
+    filters: {
+      page: number;
+      size: number;
+      deleted?: string;
+      companyID?: number;
+      minified?: boolean;
+      storeID?: number;
+      branchID?: number;
+      governorate?: string;
+      phone?: string;
+      name?: string;
+      loggedInUser?: loggedInUserType;
+    } & ClientListFilters,
+  ) {
     return `clients:${JSON.stringify({
       page: filters.page,
       size: filters.size,
@@ -104,19 +106,21 @@ export class ClientsRepository {
     return clientReform(createdClient);
   }
 
-  async getAllClientsPaginated(filters: {
-    page: number;
-    size: number;
-    deleted?: string;
-    companyID?: number;
-    minified?: boolean;
-    storeID?: number;
-    branchID?: number;
-    governorate?: string;
-    phone?: string;
-    name?: string;
-    loggedInUser?: loggedInUserType;
-  } & ClientListFilters) {
+  async getAllClientsPaginated(
+    filters: {
+      page: number;
+      size: number;
+      deleted?: string;
+      companyID?: number;
+      minified?: boolean;
+      storeID?: number;
+      branchID?: number;
+      governorate?: string;
+      phone?: string;
+      name?: string;
+      loggedInUser?: loggedInUserType;
+    } & ClientListFilters,
+  ) {
     const cacheKey = this.clientsCacheKey(filters);
 
     // 1️⃣ FAST PATH – Redis
@@ -274,13 +278,6 @@ export class ClientsRepository {
         isExternal: data.clientData.isExternal,
         showDeliveryNumber: data.clientData.showDeliveryNumber,
         activeProfit: data.clientData.activeProfit,
-        // branch: data.clientData.branchID
-        //   ? {
-        //       connect: {
-        //         id: data.clientData.branchID,
-        //       },
-        //     }
-        //   : undefined,
         repository: data.clientData.repositoryID
           ? {
               connect: {
