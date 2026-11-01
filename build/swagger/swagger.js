@@ -21,6 +21,7 @@ const stores_dto_1 = require("../app/stores/stores.dto");
 const banners_dto_1 = require("../app/banners/banners.dto");
 const reports_dto_1 = require("../app/reports/reports.dto");
 const automaticUpdates_dto_1 = require("./../app/automatic-updates/automaticUpdates.dto");
+const employeeWallets_dto_1 = require("../app/employeeWallets/employeeWallets.dto");
 const doc = {
     info: {
         version: "1.0.0",
@@ -154,7 +155,10 @@ const doc = {
             ReportUpdateSchema: reports_dto_1.ReportUpdateOpenAPISchema,
             OrdersReceiptsCreateSchema: orders_dto_1.OrdersReceiptsCreateOpenAPISchema,
             AutomaticUpdateCreateSchema: automaticUpdates_dto_1.AutomaticUpdateCreateOpenAPISchema,
-            AutomaticUpdateUpdateSchema: automaticUpdates_dto_1.AutomaticUpdateUpdateOpenAPISchema
+            AutomaticUpdateUpdateSchema: automaticUpdates_dto_1.AutomaticUpdateUpdateOpenAPISchema,
+            EmployeeWalletCreateSchema: employeeWallets_dto_1.EmployeeWalletCreateOpenAPISchema,
+            EmployeeWalletTransactionCreateSchema: employeeWallets_dto_1.EmployeeWalletTransactionCreateOpenAPISchema,
+            EmployeeWalletUpdateSchema: employeeWallets_dto_1.EmployeeWalletUpdateOpenAPISchema
         }
     }
 };

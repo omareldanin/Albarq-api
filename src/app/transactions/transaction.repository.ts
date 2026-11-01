@@ -880,6 +880,7 @@ export class TransactionsRepository {
     return prisma.transaction.create({
       data: {
         ...rest,
+        approvedforMain: data.approved,
         company: {connect: {id: companyID}},
         createdBy: {connect: {id: createdByID}},
         ...(employeeID && {employee: {connect: {id: employeeID}}}),
@@ -949,33 +950,42 @@ export class TransactionsRepository {
     }
 
     const where: Prisma.TransactionWhereInput = {
-      companyId: companyID,
-      employeeId: employeeID,
-      type: type as never,
-      deleted: deleted ?? false,
-      ...((startDate || endDate) && {
-        createdAt: {
-          ...(startDate && {gte: startDate}),
-          ...(endDate && {lte: endDate}),
+      AND: [
+        {
+          companyId: companyID,
         },
-      }),
-      ...(applyBranchScope
-        ? {
-            approvedforMain: approved,
-            OR: [
-              {branchId: myBranchId},
-              {
-                report: {
-                  type: "BRANCH",
-                  branchReport: {forChildBranches: false},
-                },
-              },
-            ],
-          }
-        : {
-            approved,
-            branchId: myBranchId,
+        {employeeId: employeeID},
+        {type: type as never},
+        {deleted: deleted ?? false},
+        {forWallets: false},
+        {
+          ...((startDate || endDate) && {
+            createdAt: {
+              ...(startDate && {gte: startDate}),
+              ...(endDate && {lte: endDate}),
+            },
           }),
+        },
+        {
+          ...(applyBranchScope
+            ? {
+                approvedforMain: approved,
+                OR: [
+                  {branchId: myBranchId},
+                  {
+                    report: {
+                      type: "BRANCH",
+                      branchReport: {forChildBranches: false},
+                    },
+                  },
+                ],
+              }
+            : {
+                approved,
+                branchId: myBranchId,
+              }),
+        },
+      ],
     };
 
     const [transactions, count] = await Promise.all([
@@ -1227,60 +1237,71 @@ export class TransactionsRepository {
       prisma.transaction.aggregate({
         _sum: {paidAmount: true},
         where: {
-          companyId: filters.companyId,
-          deleted: false,
-          ...(applyBranchScope
-            ? {
-                approvedforMain: true,
-                OR: [
-                  {branchId: myBranchId, type: "DEPOSIT"},
-                  {
-                    type: "WITHDRAW",
-                    report: {
-                      type: "BRANCH",
-                      branchReport: {type: "received", forChildBranches: false},
-                    },
-                  },
-                ],
-              }
-            : {
-                approved: true,
-                type: "DEPOSIT",
-                branchId: myBranchId,
-              }),
+          AND: [
+            {companyId: filters.companyId},
+            {deleted: false},
+            {forWallets: false},
+            {
+              ...(applyBranchScope
+                ? {
+                    approvedforMain: true,
+                    OR: [
+                      {branchId: myBranchId, type: "DEPOSIT"},
+                      {
+                        type: "WITHDRAW",
+                        report: {
+                          type: "BRANCH",
+                          branchReport: {
+                            type: "received",
+                            forChildBranches: false,
+                          },
+                        },
+                      },
+                    ],
+                  }
+                : {
+                    approved: true,
+                    type: "DEPOSIT",
+                    branchId: myBranchId,
+                  }),
+            },
+          ],
         },
       }),
-
       prisma.transaction.aggregate({
         _sum: {paidAmount: true},
         where: {
-          companyId: filters.companyId,
-          deleted: false,
-          ...(applyBranchScope
-            ? {
-                approvedforMain: true,
-                OR: [
-                  {branchId: myBranchId, type: "WITHDRAW"},
-                  {
-                    type: "DEPOSIT",
-                    report: {
-                      type: "BRANCH",
-                      branchReport: {
-                        type: "forwarded",
-                        forChildBranches: false,
+          AND: [
+            {companyId: filters.companyId},
+            {deleted: false},
+            {forWallets: false},
+            {
+              ...(applyBranchScope
+                ? {
+                    approvedforMain: true,
+                    OR: [
+                      {branchId: myBranchId, type: "WITHDRAW"},
+                      {
+                        type: "DEPOSIT",
+                        report: {
+                          type: "BRANCH",
+                          branchReport: {
+                            type: "forwarded",
+                            forChildBranches: false,
+                          },
+                        },
                       },
-                    },
-                  },
-                ],
-              }
-            : {
-                approved: true,
-                type: "WITHDRAW",
-                branchId: myBranchId,
-              }),
+                    ],
+                  }
+                : {
+                    approved: true,
+                    type: "WITHDRAW",
+                    branchId: myBranchId,
+                  }),
+            },
+          ],
         },
       }),
-
       prisma.order.aggregate({
         _sum: {paidAmount: true, deliveryAgentNet: true},
         _count: {id: true},
@@ -1977,57 +1998,70 @@ export class TransactionsRepository {
       prisma.transaction.aggregate({
         _sum: {paidAmount: true},
         where: {
-          companyId: filters.companyId,
-          deleted: false,
-          ...(applyBranchScope
-            ? {
-                approvedforMain: false,
-                OR: [
-                  {branchId: myBranchId, type: "DEPOSIT"},
-                  {
-                    type: "WITHDRAW",
-                    report: {
-                      type: "BRANCH",
-                      branchReport: {type: "received", forChildBranches: false},
-                    },
-                  },
-                ],
-              }
-            : {
-                approved: false,
-                type: "DEPOSIT",
-                branchId: myBranchId,
-              }),
+          AND: [
+            {companyId: filters.companyId},
+            {deleted: false},
+            {forWallets: false},
+            {
+              ...(applyBranchScope
+                ? {
+                    approvedforMain: false,
+                    OR: [
+                      {branchId: myBranchId, type: "DEPOSIT"},
+                      {
+                        type: "WITHDRAW",
+                        report: {
+                          type: "BRANCH",
+                          branchReport: {
+                            type: "received",
+                            forChildBranches: false,
+                          },
+                        },
+                      },
+                    ],
+                  }
+                : {
+                    approved: false,
+                    type: "DEPOSIT",
+                    branchId: myBranchId,
+                  }),
+            },
+          ],
         },
       }),
 
       prisma.transaction.aggregate({
         _sum: {paidAmount: true},
         where: {
-          companyId: filters.companyId,
-          deleted: false,
-          ...(applyBranchScope
-            ? {
-                approvedforMain: false,
-                OR: [
-                  {branchId: myBranchId, type: "WITHDRAW"},
-                  {
-                    type: "DEPOSIT",
-                    report: {
-                      type: "BRANCH",
-                      branchReport: {
-                        type: "forwarded",
-                        forChildBranches: false,
+          AND: [
+            {companyId: filters.companyId},
+            {deleted: false},
+            {forWallets: false},
+            {
+              ...(applyBranchScope
+                ? {
+                    approvedforMain: false,
+                    OR: [
+                      {branchId: myBranchId, type: "WITHDRAW"},
+                      {
+                        type: "DEPOSIT",
+                        report: {
+                          type: "BRANCH",
+                          branchReport: {
+                            type: "forwarded",
+                            forChildBranches: false,
+                          },
+                        },
                       },
-                    },
-                  },
-                ],
-              }
-            : {
-                approvedforMain: false,
-                type: "WITHDRAW",
-                branchId: myBranchId,
-              }),
+                    ],
+                  }
+                : {
+                    approvedforMain: false,
+                    type: "WITHDRAW",
+                    branchId: myBranchId,
+                  }),
+            },
+          ],
         },
       }),
 
@@ -2399,6 +2433,7 @@ export class TransactionsRepository {
           companyId: companyID,
           approvedforMain: false,
           deleted: false,
+          forWallets: false,
         },
         data: {approvedforMain: true},
       });
@@ -2411,6 +2446,7 @@ export class TransactionsRepository {
         companyId: companyID,
         approved: false,
         deleted: false,
+        forWallets: false,
       },
       data: {approved: true},
     });
@@ -2460,6 +2496,7 @@ export class TransactionsRepository {
       where: {
         approved: false,
         deleted: false,
+        forWallets: false,
       },
       data: {approved: true},
     });
@@ -2468,6 +2505,7 @@ export class TransactionsRepository {
       where: {
         approvedforMain: false,
         deleted: false,
+        forWallets: false,
       },
       data: {approvedforMain: true},
     });

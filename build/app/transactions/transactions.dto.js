@@ -18,6 +18,7 @@ exports.TransactionCreateSchema = zod_1.z.object({
     receivingBranchNet: zod_1.z.number().optional().default(0),
     insideBranchNet: zod_1.z.number().optional().default(0),
     approved: zod_1.z.boolean().optional().default(false),
+    // approvedforMain: z.boolean().optional().default(false),
 });
 exports.TransactionUpdateSchema = exports.TransactionCreateSchema.partial();
 //# sourceMappingURL=transactions.dto.js.map

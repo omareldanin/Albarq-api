@@ -36,6 +36,7 @@ model User {
   ticketResponses  TicketResponse[]
   transactions     Transaction[]
   loginHistory     UsersLoginHistory[]
+  employeeWallets  EmployeeWallet[]
 
   @@index([name])
   @@index([phone])
@@ -99,6 +100,7 @@ model Employee {
   managedStores           Store[]
   tickets                 Ticket[]
   transactions            Transaction[]
+  employeeWallets         EmployeeWallet[]
 
   @@index([companyId])
   @@index([role])
@@ -147,6 +149,7 @@ model Client {
   sizes                     Size[]
   stores                    Store[]
   tickets                   Ticket[]
+  targetTransactions        Transaction[]             @relation("TransactionTargetClient")
 
   @@index([companyId])
   @@index([branchId])
@@ -205,8 +208,10 @@ model Branch {
   locations              Location[]
   orders                 Order[]
   repositories           Repository[]
-  transctions            Transaction[]
+  transctions            Transaction[]              @relation("TransactionBranch")
+  targetTransactions     Transaction[]              @relation("TransactionTargetBranch")
   dailyProfits           DailyProfit[]
+  employeeWallets        EmployeeWallet[]
 
   @@unique([name, companyId])
   @@index([companyId])
@@ -390,6 +395,7 @@ model Company {
   transactions              Transaction[]
   usersLoginHistory         UsersLoginHistory[]
   dailyProfits              DailyProfit[]
+  employeeWallets           EmployeeWallet[]
 }
 
 model InquiryEmployeesCompanies {
@@ -989,33 +995,50 @@ model ClosedStatus {
 }
 
 model Transaction {
-  id                 Int             @id @default(autoincrement())
-  type               TransactionType
-  for                String
-  employeeId         Int?
-  createdById        Int?
-  companyId          Int
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
-  paidAmount         Float           @default(0)
-  branchId           Int?
-  approved           Boolean         @default(false)
-  approvedforMain    Boolean         @default(false)
-  branchNet          Float           @default(0)
-  clientNet          Float           @default(0)
-  deleted            Boolean         @default(false)
-  deliveryAgentNet   Float           @default(0)
-  forwardedBranchNet Float           @default(0)
-  insideBranchNet    Float           @default(0)
-  receivingBranchNet Float           @default(0)
-  reportId           Int?            @unique
-  totalPaidAmount    Float           @default(0)
-  branch             Branch?         @relation(fields: [branchId], references: [id])
-  company            Company         @relation(fields: [companyId], references: [id])
-  createdBy          User?           @relation(fields: [createdById], references: [id])
-  employee           Employee?       @relation(fields: [employeeId], references: [id])
-  report             Report?         @relation(fields: [reportId], references: [id])
+  id   Int             @id @default(autoincrement())
+  type TransactionType
+  for  String
 
+  employeeId       Int?
+  createdById      Int?
+  employeeWalletId Int?
+  companyId        Int
+
+  deliveryAgentNet   Float @default(0)
+  forwardedBranchNet Float @default(0)
+  insideBranchNet    Float @default(0)
+  receivingBranchNet Float @default(0)
+  branchNet          Float @default(0)
+  clientNet          Float @default(0)
+  paidAmount         Float @default(0)
+
+  branchId        Int?
+  targetBranchId  Int?
+  targetClientId  Int?
+  forWallets      Boolean @default(false)
+  approved        Boolean @default(false)
+  approvedforMain Boolean @default(false)
+
+  deleted Boolean @default(false)
+
+  reportId        Int?  @unique
+  totalPaidAmount Float @default(0)
+
+  branch         Branch?         @relation("TransactionBranch", fields: [branchId], references: [id])
+  targetBranch   Branch?         @relation("TransactionTargetBranch", fields: [targetBranchId], references: [id])
+  targetClient   Client?         @relation("TransactionTargetClient", fields: [targetClientId], references: [id])
+  company        Company         @relation(fields: [companyId], references: [id])
+  createdBy      User?           @relation(fields: [createdById], references: [id])
+  employee       Employee?       @relation(fields: [employeeId], references: [id])
+  report         Report?         @relation(fields: [reportId], references: [id])
+  employeeWallet EmployeeWallet? @relation(fields: [employeeWalletId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeWalletId])
+  @@index([targetBranchId])
+  @@index([targetClientId])
   @@index([reportId, deleted, approved])
   @@index([companyId, deleted, createdAt(sort: Desc)])
   @@index([companyId, branchId, deleted, createdAt(sort: Desc)])
@@ -1064,6 +1087,30 @@ model UsersLoginHistory {
   @@index([companyId])
 }
 
+model EmployeeWallet {
+  id          Int  @id @default(autoincrement())
+  companyId   Int
+  branchId    Int
+  employeeId  Int?
+  createdById Int?
+
+  total   Float @default(0)
+  paid    Float @default(0)
+  pending Float @default(0)
+
+  createdBy User?     @relation(fields: [createdById], references: [id])
+  branch    Branch?   @relation(fields: [branchId], references: [id])
+  company   Company   @relation(fields: [companyId], references: [id])
+  employee  Employee? @relation(fields: [employeeId], references: [id])
+
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([companyId, branchId])
+  @@index([companyId, branchId, employeeId])
+}
+
 enum AdminRole {
   ADMIN
   ADMIN_ASSISTANT
@@ -1072,8 +1119,14 @@ enum AdminRole {
 enum TransactionType {
   DEPOSIT
   WITHDRAW
-  WITHDRAW_FROM_MAIN
-  DEPOSIT_FROM_MAIN
+  FROM_BRANCH
+  TO_BRANCH
+  FROM_WALLET
+  TO_WALLET
+  FROM_EMPLOYEE
+  TO_EMPLOYEE
+  FROM_CLIENT
+  TO_CLIENT
 }
 
 enum EmployeeRole {

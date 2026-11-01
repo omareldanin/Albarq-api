@@ -1,0 +1,72 @@
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>حركات القاصة {{walletID}}</title>
+    <style>
+      @font-face { font-family: WalletArabic; src: url(data:font/ttf;base64,{{{font}}}) format('truetype'); font-weight: 400; }
+                                  * { box-sizing: border-box; }
+                                  body { font-family: WalletArabic, serif; color: #182330; font-size: 14px; line-height: 1.5; margin: 12px; }
+                                  h1 { font-size: 26px; margin: 0 0 6px; color: #a52525; }
+                                  p { margin: 4px 0; }
+                                  header { border-bottom: 2px solid #a52525; padding-bottom: 12px; margin-bottom: 14px; }
+                                  .meta { color: #526070; }
+                                  .balances { display: flex; gap: 12px; margin: 12px 0; break-inside: avoid; }
+                                  .balance { flex: 1; border: 1px solid #dce2e7; background: #f5f7f9; border-radius: 6px; padding: 9px 14px; }
+                                  .value { display: block; font-size: 22px; direction: ltr; text-align: right; }
+                                  .filters { border: 1px solid #dce2e7; padding: 9px 14px; margin-bottom: 14px; break-inside: avoid; }
+                                  h2 { font-size: 17px; margin: 12px 0 7px; }
+                                  table { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 13px; }
+                                  thead { display: table-header-group; }
+                                  th { background: #edf1f5; font-weight: normal; }
+                                  th, td { padding: 7px 6px; border: 1px solid #dce2e7; text-align: right; vertical-align: top; overflow-wrap: anywhere; }
+                                  tr { break-inside: avoid; page-break-inside: avoid; }
+                                  .number { direction: ltr; text-align: right; }
+                                  .description { white-space: pre-wrap; }
+                                  .empty { text-align: center; padding: 28px; }
+                                  .note { color: #526070; font-size: 12px; margin-top: 10px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>كشف حركات القاصة #{{walletID}}</h1>
+      <p>{{company}} | الفرع: {{branch}} | الموظف: {{employee}}</p>
+      <p class="meta">تاريخ التصدير: {{exportedAt}} - بتوقيت بغداد</p>
+    </header>
+    <section class="balances">
+      <div class="balance">الرصيد المتاح<span
+          class="value"
+        >{{total}}</span></div>
+      <div class="balance">الرصيد المنفق<span
+          class="value"
+        >{{paid}}</span></div>
+      <div class="balance">قيد التجهيز<span
+          class="value"
+        >{{pending}}</span></div>
+    </section>
+    <h2>الحركات المطابقة: {{count}}</h2>
+    <table>
+      <colgroup><col style="width:6%" /><col style="width:15%" /><col
+          style="width:10%"
+        /><col style="width:23%" /><col style="width:10%" /><col
+          style="width:12%"
+        /><col style="width:12%" /><col style="width:12%" /></colgroup>
+      <thead><tr><th>رقم الحركة</th><th>التاريخ</th><th>النوع</th><th
+          >البيان</th><th>المبلغ</th><th>الفرع المستهدف</th><th>العميل المستهدف</th><th
+          >أضيفت بواسطة</th></tr></thead>
+      <tbody>
+        {{#each rows}}
+          <tr><td class="number">{{id}}</td><td>{{date}}</td><td
+            >{{type}}</td><td class="description">{{description}}</td><td
+              class="number"
+            >{{amount}}</td><td>{{targetBranch}}</td><td
+            >{{targetClient}}</td><td>{{createdBy}}</td></tr>
+        {{else}}
+          <tr><td colspan="8" class="empty">لا توجد حركات مطابقة للفلاتر
+              المحددة.</td></tr>
+        {{/each}}
+      </tbody>
+    </table>
+    <p class="note">يشمل هذا الكشف جميع الحركات المطابقة للفلاتر. الأرصدة
+      المعروضة هي أرصدة القاصة الحالية.</p>
+  </body>
+</html>

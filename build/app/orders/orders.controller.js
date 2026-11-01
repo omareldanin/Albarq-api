@@ -2127,6 +2127,24 @@ class OrdersController {
                 }),
             });
         }
+        db_1.prisma.customerOutput.findMany({
+            where: {
+                clientId: { not: null },
+                order: {
+                    hasReturnedClientReport: true,
+                },
+            },
+            select: {
+                id: true,
+                clientId: true,
+                companyId: true,
+                order: {
+                    select: {
+                        receiptNumber: true,
+                    },
+                },
+            },
+        });
     });
     getStatusOrdersStatisticsV2 = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const loggedInUser = res.locals.user;

@@ -2426,6 +2426,24 @@ export class OrdersController {
         }),
       });
     }
+    prisma.customerOutput.findMany({
+      where: {
+        clientId: {not: null},
+        order: {
+          hasReturnedClientReport: true,
+        },
+      },
+      select: {
+        id: true,
+        clientId: true,
+        companyId: true,
+        order: {
+          select: {
+            receiptNumber: true,
+          },
+        },
+      },
+    });
   });
 
   getStatusOrdersStatisticsV2 = catchAsync(async (req, res) => {

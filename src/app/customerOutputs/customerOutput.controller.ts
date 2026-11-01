@@ -104,6 +104,10 @@ export class CustomerOutputController {
         throw new AppError("قم بإدخال الطلب للمخزن اولا!", 404);
       }
 
+      if (type === "client" && order.hasReturnedClientReport) {
+        throw new AppError("هذا الطلب تم اخراجه في كشف راجع", 404);
+      }
+
       if (
         type === "company" &&
         order.forwardedFromId &&

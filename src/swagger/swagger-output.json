@@ -5986,6 +5986,660 @@
         }
       }
     },
+    "/api/v1/employee-wallets/mine/{walletID}/targets": {
+      "get": {
+        "tags": [
+          "Employee Wallets"
+        ],
+        "description": "Search names of eligible transaction targets in the wallet company.",
+        "parameters": [
+          {
+            "name": "walletID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "enum": [
+              "branch",
+              "client"
+            ],
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "default": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "default": 10,
+            "maximum": 100,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/employee-wallets/mine/{walletID}/transactions": {
+      "post": {
+        "tags": [
+          "Employee Wallets"
+        ],
+        "description": "Record an unapproved transaction in the authenticated employee wallet. FROM_BRANCH/TO_BRANCH require only targetBranchId; FROM_CLIENT/TO_CLIENT require only targetClientId. DEPOSIT/WITHDRAW accept neither target. Wallet balances are not recalculated.",
+        "parameters": [
+          {
+            "name": "walletID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Wallet transaction created"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployeeWalletTransactionCreateSchema"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Employee Wallets"
+        ],
+        "description": "Filtered transactions for a wallet assigned to the authenticated employee.",
+        "parameters": [
+          {
+            "name": "walletID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "default": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "default": 10,
+            "maximum": 100,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "format": "date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "format": "date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "target_branch_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "target_client_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "approved",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/employee-wallets/mine": {
+      "get": {
+        "tags": [
+          "Employee Wallets"
+        ],
+        "description": "Wallets assigned to the authenticated employee.",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/employee-wallets/mine/{walletID}/filters": {
+      "get": {
+        "tags": [
+          "Employee Wallets"
+        ],
+        "description": "Destination options from this employee-owned wallet only.",
+        "parameters": [
+          {
+            "name": "walletID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/employee-wallets/mine/{walletID}/transactions/pdf": {
+      "get": {
+        "tags": [
+          "Employee Wallets"
+        ],
+        "description": "PDF of all matching transactions for an employee-owned wallet.",
+        "parameters": [
+          {
+            "name": "walletID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "format": "date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "format": "date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "target_branch_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "target_client_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "approved",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PDF download",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/employee-wallets": {
+      "get": {
+        "tags": [
+          "Employee Wallets"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Employee Wallets"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployeeWalletCreateSchema"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/employee-wallets/{walletID}/transactions/pdf": {
+      "get": {
+        "tags": [
+          "Employee Wallets"
+        ],
+        "description": "Download all matching wallet transactions as an Arabic PDF.",
+        "parameters": [
+          {
+            "name": "walletID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "format": "date",
+            "description": "Inclusive start date in Baghdad time",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "format": "date",
+            "description": "Inclusive end date in Baghdad time",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "target_branch_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "target_client_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "approved",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PDF download",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/employee-wallets/{walletID}/transactions": {
+      "get": {
+        "tags": [
+          "Employee Wallets"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "walletID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "default": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "default": 10,
+            "maximum": 100,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "format": "date",
+            "description": "Inclusive start date in Baghdad time",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "format": "date",
+            "description": "Inclusive end date in Baghdad time",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "target_branch_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "target_client_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "approved",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/employee-wallets/{walletID}": {
+      "get": {
+        "tags": [
+          "Employee Wallets"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "walletID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Employee Wallets"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "walletID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Employee Wallets"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "walletID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployeeWalletUpdateSchema"
+              }
+            }
+          }
+        }
+      }
+    },
     "/v2/company/forward-orders": {
       "post": {
         "description": "",
@@ -9433,6 +10087,73 @@
             ]
           }
         }
+      },
+      "EmployeeWalletCreateSchema": {
+        "type": "object",
+        "properties": {
+          "employeeID": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647,
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "EmployeeWalletTransactionCreateSchema": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "DEPOSIT",
+              "WITHDRAW",
+              "FROM_BRANCH",
+              "TO_BRANCH",
+              "FROM_CLIENT",
+              "TO_CLIENT"
+            ]
+          },
+          "for": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "paidAmount": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "targetBranchId": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647
+          },
+          "targetClientId": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647
+          }
+        },
+        "required": [
+          "type",
+          "for",
+          "paidAmount"
+        ],
+        "additionalProperties": false
+      },
+      "EmployeeWalletUpdateSchema": {
+        "type": "object",
+        "properties": {
+          "employeeID": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647,
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "minProperties": 1
       }
     }
   }

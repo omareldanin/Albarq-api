@@ -2,6 +2,48 @@
 
 ## Features
 
+### Employee wallets
+
+Company and branch managers can manage employee wallets through `/api/v1/employee-wallets`.
+Company managers with `showTreatury` can access their company's wallets; branch managers can only access their own branch.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| POST | `/employee-wallets` | Create a wallet |
+| GET | `/employee-wallets` | List wallets, with `page`, `size` (1–100), `branch_id`, and `employee_id` filters |
+| GET | `/employee-wallets/:walletID` | Get a wallet and its transaction count |
+| PATCH | `/employee-wallets/:walletID` | Update wallet fields |
+| DELETE | `/employee-wallets/:walletID` | Delete a wallet without transaction history |
+| GET | `/employee-wallets/:walletID/transactions` | List linked, non-deleted transactions; accepts `page`, `size`, `type`, and `approved=true/false` |
+
+Create/update requests accept JSON or multipart form fields:
+
+```json
+{
+  "employeeID": 20
+}
+```
+
+On creation, the branch is taken from the authenticated user; `employeeID` is optional,
+and all balances default to zero in the database. Company and creator are taken from authentication.
+The branch must belong to the company; an assigned employee must be active and belong to that branch.
+`employeeID: null` clears the assignment. Multiple wallets per employee are allowed by the model.
+
+`total`, `paid`, and `pending` are read-only in this module. Create/update requests accept only
+`employeeID` and reject balance and branch fields. This module does not post or link transactions.
+PATCH changes the employee assignment and preserves the wallet branch. Wallets with any transaction history cannot be reassigned or deleted (409).
+Unknown or inaccessible wallets return 404. Lists return `status`, `data`, `page`, `count`, and `pagesCount`.
+
+The wallet migration is `20261101000000_add_employee_wallets`. Apply it using the project's normal
+`npm run prisma:deploy` workflow before serving these endpoints; then run `npm run prisma:generate`.
+This migration only adds wallet tables/relations and does not alter existing transaction enum values.
+
+Run the database-free regression tests with:
+
+```sh
+node --test -r ts-node/register/transpile-only spec/employeeWallets.test.ts
+```
+
 ## Links
 
 ## Technology Stack
@@ -122,3 +164,44 @@ If you have specific and substantial feedback or concerns about the content, we 
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
+### Wallet transaction filters
+
+`GET /employee-wallets/:walletID/transactions` supports `start_date` and `end_date`
+(`YYYY-MM-DD`, inclusive calendar days in Baghdad time), `target_branch_id`,
+`target_client_id`, `type`, `approved`, `page`, and `size` (maximum 100).
+Filters combine within the authorized wallet/company/branch scope. Responses include
+`targetBranch` (id/name) and `targetClient` (id/user.name), and pagination counts
+use the same filters. Wallet totals from `GET /employee-wallets/:walletID` remain
+independent of transaction filters.
+
+`GET /employee-wallets/:walletID/transactions/pdf` downloads an Arabic PDF of **all**
+matching transactions with the same filters (except `page` and `size`). It includes
+wallet details, current balances, the selected filters and repeated table headings.
+It requires the same wallet permissions as the list and does not store the report
+or change any balances. The client downloads it from the wallet details page.
+
+### Employee personal wallet
+
+Employees open **محفظتي** (`/wallet`) from the sidebar; login routing is unchanged.
+`GET /employee-wallets/mine` returns wallets assigned to the authenticated employee
+in their company, with an empty array when none are assigned. Multiple assignments
+can be selected in the client. Deleted employees cannot access wallet data.
+
+Personal transaction list endpoints use `/employee-wallets/mine/:walletID/transactions`
+and `/transactions/pdf` with the same transaction filters as the management page.
+`/employee-wallets/mine/:walletID/filters` returns destination options only from
+that wallet's nondeleted transactions. Every wallet-specific request verifies
+ownership before reading data. Management CRUD remains restricted to managers.
+
+Employees can create transactions with `POST /employee-wallets/mine/:walletID/transactions`.
+Accepted types: `DEPOSIT`, `WITHDRAW`, `FROM_BRANCH`, `TO_BRANCH`, `FROM_CLIENT`, `TO_CLIENT`.
+Supply a nonempty `for` description and positive finite `paidAmount`. Branch movements
+require `targetBranchId`; client movements require `targetClientId`; unrelated target
+fields are rejected. `/employee-wallets/mine/:walletID/targets?kind=branch|client&search=...`
+provides searchable, paginated company targets (id/name only).
+
+The server verifies wallet ownership and target company membership, rejects deleted
+clients, derives company/branch/creator/employee IDs, and records `forWallets=true`
+with both approval flags false. Creation runs in a serializable transaction and does
+not recalculate wallet balances; balance accounting remains deferred.

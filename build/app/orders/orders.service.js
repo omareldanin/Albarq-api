@@ -802,7 +802,7 @@ class OrdersService {
                             id: data.loggedInUser.id,
                             name: data.loggedInUser.name,
                         },
-                        message: `تم تعيين مندوب التوصيل ${newOrder.deliveryAgent?.name}`,
+                        message: `تم تعيين مندوب التوصيل ${newOrder.deliveryAgent?.name} بواسطة ${data.loggedInUser.name}`,
                     },
                 });
             }

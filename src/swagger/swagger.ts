@@ -42,6 +42,11 @@ import {
     AutomaticUpdateCreateOpenAPISchema,
     AutomaticUpdateUpdateOpenAPISchema
 } from "./../app/automatic-updates/automaticUpdates.dto";
+import {
+    EmployeeWalletCreateOpenAPISchema,
+    EmployeeWalletTransactionCreateOpenAPISchema,
+    EmployeeWalletUpdateOpenAPISchema
+} from "../app/employeeWallets/employeeWallets.dto";
 
 const doc = {
     info: {
@@ -176,7 +181,10 @@ const doc = {
             ReportUpdateSchema: ReportUpdateOpenAPISchema,
             OrdersReceiptsCreateSchema: OrdersReceiptsCreateOpenAPISchema,
             AutomaticUpdateCreateSchema: AutomaticUpdateCreateOpenAPISchema,
-            AutomaticUpdateUpdateSchema: AutomaticUpdateUpdateOpenAPISchema
+            AutomaticUpdateUpdateSchema: AutomaticUpdateUpdateOpenAPISchema,
+            EmployeeWalletCreateSchema: EmployeeWalletCreateOpenAPISchema,
+            EmployeeWalletTransactionCreateSchema: EmployeeWalletTransactionCreateOpenAPISchema,
+            EmployeeWalletUpdateSchema: EmployeeWalletUpdateOpenAPISchema
         }
     }
 };

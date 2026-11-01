@@ -16,6 +16,7 @@ export const TransactionCreateSchema = z.object({
   receivingBranchNet: z.number().optional().default(0),
   insideBranchNet: z.number().optional().default(0),
   approved: z.boolean().optional().default(false),
+  // approvedforMain: z.boolean().optional().default(false),
 });
 
 export const TransactionUpdateSchema = TransactionCreateSchema.partial();

@@ -90,6 +90,9 @@ class CustomerOutputController {
             if (order.secondaryStatus !== "IN_REPOSITORY") {
                 throw new AppError_1.AppError("قم بإدخال الطلب للمخزن اولا!", 404);
             }
+            if (type === "client" && order.hasReturnedClientReport) {
+                throw new AppError_1.AppError("هذا الطلب تم اخراجه في كشف راجع", 404);
+            }
             if (type === "company" &&
                 order.forwardedFromId &&
                 +companyId !== +order.forwardedFromId) {
