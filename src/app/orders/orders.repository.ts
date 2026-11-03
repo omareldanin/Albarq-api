@@ -450,6 +450,7 @@ export class OrdersRepository {
       select: {
         governoratesDeliveryCosts: true,
         branchId: true,
+        activeProfit: true,
       },
     });
 
@@ -543,7 +544,7 @@ export class OrdersRepository {
       cost: number;
     }[];
 
-    if (governoratesDeliveryCosts) {
+    if (governoratesDeliveryCosts && !client.activeProfit) {
       deliveryCost =
         governoratesDeliveryCosts.find(
           (governorateDeliveryCost: {
@@ -556,6 +557,7 @@ export class OrdersRepository {
           },
         )?.cost || 0;
     }
+
     let randomId = await this.generateUniqueOrderId();
 
     if (data.orderData.forwardedCompanyID) {
@@ -3194,20 +3196,6 @@ export class OrdersRepository {
       }
     }
 
-    // if (data.costs.reportType === ReportType.BRANCH) {
-    //   if (
-    //     !data.costs.baghdadDeliveryCost &&
-    //     !data.costs.governoratesDeliveryCost
-    //   ) {
-    //     await prisma.$executeRaw`
-    //           UPDATE "Order"
-    //           SET
-    //             "branchNet" = "paidAmount" - "deliveryCost"
-    //           WHERE id = ANY(${data.ordersIDs});
-    //         `;
-    //   }
-    // }
-
     /* ===============================
        DELIVERY AGENT REPORT
     =============================== */
@@ -3241,7 +3229,6 @@ export class OrdersRepository {
         }
 
         const companyNet = (order?.paidAmount || 0) - deliveryAgentNet;
-        console.log(companyNet);
 
         updatedOrders.push({
           id: order?.id!!,
@@ -3334,6 +3321,7 @@ export class OrdersRepository {
     let weight = (data.orderData.weight as number) || orderData?.weight || 0;
 
     if (
+      data.orderData.branchID ||
       data.orderData.governorate ||
       data.orderData.status === "DELIVERED" ||
       data.orderData.status === "REPLACED" ||

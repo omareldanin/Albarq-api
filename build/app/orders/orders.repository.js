@@ -295,6 +295,7 @@ class OrdersRepository {
             select: {
                 governoratesDeliveryCosts: true,
                 branchId: true,
+                activeProfit: true,
             },
         });
         const branch = await db_1.prisma.branch.findUnique({
@@ -372,7 +373,7 @@ class OrdersRepository {
         // Calculate delivery cost
         let deliveryCost = await this.getDeliverCost(data.clientID, data.orderData.governorate, branch?.isChild ? branch.parentBranchId : data.orderData.branchID);
         const governoratesDeliveryCosts = client.governoratesDeliveryCosts;
-        if (governoratesDeliveryCosts) {
+        if (governoratesDeliveryCosts && !client.activeProfit) {
             deliveryCost =
                 governoratesDeliveryCosts.find((governorateDeliveryCost) => {
                     return (governorateDeliveryCost.governorate === data.orderData.governorate);
@@ -2695,19 +2696,6 @@ class OrdersRepository {
                 }
             }
         }
-        // if (data.costs.reportType === ReportType.BRANCH) {
-        //   if (
-        //     !data.costs.baghdadDeliveryCost &&
-        //     !data.costs.governoratesDeliveryCost
-        //   ) {
-        //     await prisma.$executeRaw`
-        //           UPDATE "Order"
-        //           SET
-        //             "branchNet" = "paidAmount" - "deliveryCost"
-        //           WHERE id = ANY(${data.ordersIDs});
-        //         `;
-        //   }
-        // }
         /* ===============================
            DELIVERY AGENT REPORT
         =============================== */
@@ -2737,7 +2725,6 @@ class OrdersRepository {
                     }
                 }
                 const companyNet = (order?.paidAmount || 0) - deliveryAgentNet;
-                console.log(companyNet);
                 updatedOrders.push({
                     id: order?.id,
                     deliveryAgentNet,
@@ -2800,7 +2787,8 @@ class OrdersRepository {
             ? orderData?.deliveryCost
             : orderData?.oldDeliveryCost;
         let weight = data.orderData.weight || orderData?.weight || 0;
-        if (data.orderData.governorate ||
+        if (data.orderData.branchID ||
+            data.orderData.governorate ||
             data.orderData.status === "DELIVERED" ||
             data.orderData.status === "REPLACED" ||
             data.orderData.status === "PARTIALLY_RETURNED") {
