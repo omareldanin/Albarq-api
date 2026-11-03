@@ -4,17 +4,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>فاتورة</title>
     <style>
-      .receipt{ margin-top: 10px; position: relative; margin-bottom: 10px; } p{
-      margin: 10px 0 0; } .logo { width: 70px; position: absolute; top: 5px;
-      left: 10px; } .receipt div{ margin-top: 6px; font-weight: bold; font-size:
-      14px; } .footer{ display: flex;justify-content: space-between;
-      align-items: end; } .footer div{ font-weight: lighter !important; }
+      .receipt {
+        margin-top: 10px;
+        position: relative;
+        margin-bottom: 10px;
+      }
+      p {
+        margin: 10px 0 0;
+      }
+      .logo {
+        width: 70px;
+        position: absolute;
+        top: 5px;
+        left: 10px;
+      }
+      .receipt div {
+        margin-top: 6px;
+        font-weight: bold;
+        font-size: 14px;
+      }
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+      }
+      .footer div {
+        font-weight: lighter !important;
+      }
     </style>
   </head>
   <body style="direction: rtl">
     {{#each receipts}}
       <div class="receipt">
-        <img src="{{branch.companyLogo}}" class="logo" />
+        {{#if branch.companyLogo}}
+          <img src="{{branch.companyLogo}}" class="logo" />
+        {{/if}}
         <p>{{branch.name}}</p>
         <div>
           <span>رقم الوصل :</span>

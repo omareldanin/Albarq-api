@@ -13,7 +13,9 @@ const generatePDF = async (html, css, options = {
     const page = await browser.newPage();
     try {
         await page.emulateMediaType("print");
-        await page.setContent(html);
+        await page.setContent(html, {
+            waitUntil: "load",
+        });
         css && (await page.addStyleTag({ content: css }));
         const pdf = await page.pdf({
             width: "100mm",

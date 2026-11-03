@@ -75,6 +75,7 @@
     "puppeteer": "^22.10.0",
     "qrcode": "^1.5.4",
     "qrcode-svg": "^1.1.0",
+    "sharp": "^0.35.5",
     "socket.io": "^4.8.1",
     "swagger-autogen": "^2.23.7",
     "swagger-themes": "^1.4.3",
