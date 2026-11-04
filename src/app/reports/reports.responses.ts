@@ -1,9 +1,31 @@
 import type {Prisma} from "@prisma/client";
 
-export const reportSelect = {
+const reportAgentSelect = {
+  receivingAgentId: true,
+  agent: {select: {user: {select: {id: true, name: true}}}},
+} satisfies Prisma.ClientReportSelect;
+
+export const reportDeliverySelect = {
   id: true,
   status: true,
   confirmed: true,
+  delivered: true,
+  deliveredAt: true,
+  clientReport: {select: reportAgentSelect},
+} satisfies Prisma.ReportSelect;
+
+export const reportDeliveryReform = (
+  report: Prisma.ReportGetPayload<{select: typeof reportDeliverySelect}>,
+) => ({
+  ...report,
+  clientReport: report.clientReport && {
+    receivingAgentId: report.clientReport.receivingAgentId,
+    agent: report.clientReport.agent?.user ?? null,
+  },
+});
+
+export const reportSelect = {
+  ...reportDeliverySelect,
   createdBy: {
     select: {
       id: true,
@@ -51,6 +73,7 @@ export const reportSelect = {
   },
   clientReport: {
     select: {
+      ...reportAgentSelect,
       id: true,
       secondaryType: true,
       repository: {
@@ -215,9 +238,7 @@ export const reportSelect = {
 } satisfies Prisma.ReportSelect;
 
 export const AllreportSelect = {
-  id: true,
-  status: true,
-  confirmed: true,
+  ...reportDeliverySelect,
   createdBy: {
     select: {
       id: true,
@@ -245,6 +266,7 @@ export const AllreportSelect = {
   updatedAt: true,
   clientReport: {
     select: {
+      ...reportAgentSelect,
       id: true,
       secondaryType: true,
       repository: {
@@ -417,6 +439,8 @@ export const reportReform = (
             : "DELIVERED",
     clientReport: report.clientReport && {
       reportNumber: report.clientReport.id,
+      receivingAgentId: report.clientReport.receivingAgentId,
+      agent: report.clientReport.agent?.user ?? null,
       clientReportOrders: report.clientReport.orders ?? [],
       client: report.clientReport.client.user,
       store: report.clientReport.store,
@@ -505,6 +529,8 @@ export const AllreportReform = (
             : "DELIVERED",
     clientReport: report.clientReport && {
       reportNumber: report.clientReport.id,
+      receivingAgentId: report.clientReport.receivingAgentId,
+      agent: report.clientReport.agent?.user ?? null,
       client: report.clientReport.client.user,
       store: report.clientReport.store,
       branch: report.clientReport.client.branch,

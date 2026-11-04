@@ -4216,6 +4216,174 @@
         }
       }
     },
+    "/api/v1/reports/{reportID}/deliver": {
+      "patch": {
+        "tags": [
+          "Reports Routes"
+        ],
+        "summary": "Record delivery and set the client report agent",
+        "description": "Requires an active RECEIVING_AGENT in the same company. The first delivery sets clientReport.agent to the authenticated employee; prior assignment is not required. No request body is required; only an empty object is accepted. Payment and confirmation are unchanged. Repeated calls preserve the first delivery time and agent.",
+        "parameters": [
+          {
+            "name": "reportID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "minimum": 1
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delivery recorded, or the report was already delivered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number",
+                          "example": 123
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "UNPAID"
+                        },
+                        "confirmed": {
+                          "type": "boolean",
+                          "example": false
+                        },
+                        "delivered": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "deliveredAt": {
+                          "type": "string",
+                          "example": "2026-11-04T12:00:00.000Z"
+                        },
+                        "clientReport": {
+                          "type": "object",
+                          "properties": {
+                            "receivingAgentId": {
+                              "type": "number",
+                              "example": 20
+                            },
+                            "agent": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "number",
+                                  "example": 20
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "example": "مندوب الاستلام"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number",
+                          "example": 123
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "UNPAID"
+                        },
+                        "confirmed": {
+                          "type": "boolean",
+                          "example": false
+                        },
+                        "delivered": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "deliveredAt": {
+                          "type": "string",
+                          "example": "2026-11-04T12:00:00.000Z"
+                        },
+                        "clientReport": {
+                          "type": "object",
+                          "properties": {
+                            "receivingAgentId": {
+                              "type": "number",
+                              "example": 20
+                            },
+                            "agent": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "number",
+                                  "example": 20
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "example": "مندوب الاستلام"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid report ID or nonempty request body"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Requires an active receiving agent with valid company context"
+          },
+          "404": {
+            "description": "Report missing, deleted, not a client report, or outside the company"
+          }
+        }
+      }
+    },
     "/api/v1/reports/{reportID}/deactivate": {
       "patch": {
         "tags": [

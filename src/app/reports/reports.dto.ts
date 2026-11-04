@@ -10,12 +10,17 @@ import {
 import {z} from "zod";
 import {OrdersFiltersSchema} from "../orders/orders.dto";
 
-export const ReportReceiptParamsSchema = z.object({
+export const ReportParamsSchema = z.object({
   reportID: z
     .string()
     .regex(/^[1-9]\d*$/)
     .pipe(z.coerce.number().int().max(2147483647)),
 });
+
+export const ReportReceiptParamsSchema = ReportParamsSchema;
+
+// The delivery action accepts no client-controlled status or audit fields.
+export const ReportDeliveryBodySchema = z.object({}).strict();
 
 export const ReportCreateBaseSchema = z.object({
   ordersIDs: z.array(z.coerce.string()).min(1).or(z.literal("*")),

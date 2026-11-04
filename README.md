@@ -49,6 +49,59 @@ copy includes the receipt template and embedded Arabic font.
 node --test -r ts-node/register/transpile-only spec/reportReceipts.test.ts
 ```
 
+### Receiving-agent report delivery
+
+`PATCH /api/v1/reports/:reportID/deliver` records delivery of a client report.
+Use the report ID from its receipt QR and authenticate as an active `RECEIVING_AGENT`
+in the same company. Prior assignment is not required: the first successful delivery
+sets `clientReport.agent` (stored as `receivingAgentId`) to the authenticated employee.
+Only client reports support this operation.
+Omit the request body or send `{}`; custom delivery, agent, payment, confirmation,
+or timestamp fields are rejected.
+
+```sh
+curl -X PATCH -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:3000/api/v1/reports/123/deliver"
+```
+
+```json
+{
+  "status": "success",
+  "data": {
+    "id": 123,
+    "status": "UNPAID",
+    "confirmed": false,
+    "delivered": true,
+    "deliveredAt": "2026-11-04T12:00:00.000Z",
+    "clientReport": {
+      "receivingAgentId": 20,
+      "agent": {"id": 20, "name": "مندوب الاستلام"}
+    }
+  }
+}
+```
+
+Delivery records the authenticated agent through the existing client-report relation
+and the server time; it does not write or return `deliveredBy`. Payment status, client
+confirmation, order statuses, and balances remain unchanged. Repeated or concurrent
+calls preserve the first delivery record and return 200. Report list and detail
+responses also include `delivered`, `deliveredAt`, `clientReport.receivingAgentId`,
+and `clientReport.agent` (id/name). A retry, including one by a different receiving
+agent in the company, leaves the original agent and timestamp intact.
+
+Missing authentication returns 401; other roles or invalid agent/company context
+return 403, including deleted employees or employees whose current role/company
+no longer matches their token. Invalid IDs or a nonempty body return 400. Missing,
+deleted, other-company, and non-client reports return 404.
+
+The database must have the `Report.delivered` and `Report.deliveredAt` fields from
+the Prisma schema. Sync those fields using the project's database deployment workflow
+before running this version, then regenerate Prisma (`npm run prisma:generate`).
+
+```sh
+node --test -r ts-node/register/transpile-only spec/reportDelivery.test.ts
+```
+
 ### Employee wallets
 
 Company and branch managers can manage employee wallets through `/api/v1/employee-wallets`.

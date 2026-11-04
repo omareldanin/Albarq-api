@@ -1046,6 +1046,16 @@ export class ReportsService {
     // throw new AppError("لا يمكن عمل تقرير لهذا النوع من التقارير", 400);
   }
 
+  async deliverReport(data: {
+    params: {reportID: number};
+    loggedInUser: loggedInUserType;
+  }) {
+    return reportsRepository.deliverReport({
+      reportID: data.params.reportID,
+      loggedInUser: data.loggedInUser,
+    });
+  }
+
   async updateReport(data: {
     params: {reportID: number};
     loggedInUser: loggedInUserType;

@@ -3,6 +3,8 @@ import type {loggedInUserType} from "../../types/user";
 import {
   ReportCreateOrdersFiltersSchema,
   ReportCreateSchema,
+  ReportDeliveryBodySchema,
+  ReportParamsSchema,
   ReportReceiptParamsSchema,
   ReportUpdateSchema,
   ReportsFiltersSchema,
@@ -287,6 +289,15 @@ export class ReportController {
     res.setHeader("Accept-Ranges", "none"); // prevents chunking on some setups
     res.removeHeader("ETag"); // VERY IMPORTANT
     res.end(pdfBuffer); // fastest
+  });
+
+  deliverReport = catchAsync(async (req, res) => {
+    const params = ReportParamsSchema.parse(req.params);
+    ReportDeliveryBodySchema.parse(req.body ?? {});
+    const loggedInUser: loggedInUserType = res.locals.user;
+    const report = await reportsService.deliverReport({params, loggedInUser});
+
+    res.json({status: "success", data: report});
   });
 
   updateReport = catchAsync(async (req, res) => {

@@ -31,6 +31,7 @@ model User {
   notifications    Notification[]
   deletedOrders    Order[]             @relation("deletedBy")
   deletedReports   Report[]            @relation("deletedBy")
+  deliveredReports Report[]            @relation("reportsDeliveredBy")
   deletedStores    Store[]             @relation("deletedBy")
   tickets          Ticket[]
   ticketResponses  TicketResponse[]
@@ -697,6 +698,9 @@ model Report {
   companyId               Int
   status                  ReportStatus         @default(UNPAID)
   confirmed               Boolean              @default(false)
+  delivered               Boolean              @default(false)
+  deliveredAt             DateTime?
+  deliveredById           Int?
   deleted                 Boolean              @default(false)
   deletedAt               DateTime?
   deletedById             Int?
@@ -719,6 +723,7 @@ model Report {
   governorateReport       GovernorateReport?
   company                 Company              @relation(fields: [companyId], references: [id])
   deletedBy               User?                @relation("deletedBy", fields: [deletedById], references: [id])
+  deliveredBy             User?                @relation("reportsDeliveredBy", fields: [deliveredById], references: [id], onDelete: SetNull)
   createdBy               Employee             @relation(fields: [employeeId], references: [id])
   repositoryReport        RepositoryReport?
   transaction             Transaction?

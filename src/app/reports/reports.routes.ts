@@ -199,6 +199,26 @@ router.route("/reports/pdf").post(
     */
 );
 
+router.route("/reports/:reportID/deliver").patch(
+  isLoggedIn,
+  isAutherized([EmployeeRole.RECEIVING_AGENT]),
+  reportController.deliverReport,
+  /*
+        #swagger.tags = ['Reports Routes']
+        #swagger.summary = 'Record delivery and set the client report agent'
+        #swagger.description = 'Requires an active RECEIVING_AGENT in the same company. The first delivery sets clientReport.agent to the authenticated employee; prior assignment is not required. No request body is required; only an empty object is accepted. Payment and confirmation are unchanged. Repeated calls preserve the first delivery time and agent.'
+        #swagger.parameters['reportID'] = { in: 'path', required: true, type: 'integer', minimum: 1 }
+        #swagger.responses[200] = {
+            description: 'Delivery recorded, or the report was already delivered',
+            schema: { status: 'success', data: { id: 123, status: 'UNPAID', confirmed: false, delivered: true, deliveredAt: '2026-11-04T12:00:00.000Z', clientReport: { receivingAgentId: 20, agent: { id: 20, name: 'مندوب الاستلام' } } } }
+        }
+        #swagger.responses[400] = { description: 'Invalid report ID or nonempty request body' }
+        #swagger.responses[401] = { description: 'Authentication required' }
+        #swagger.responses[403] = { description: 'Requires an active receiving agent with valid company context' }
+        #swagger.responses[404] = { description: 'Report missing, deleted, not a client report, or outside the company' }
+    */
+);
+
 router.route("/reports/:reportID").patch(
   isLoggedIn,
   isAutherized([

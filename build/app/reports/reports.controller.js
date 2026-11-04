@@ -242,6 +242,13 @@ class ReportController {
         res.removeHeader("ETag"); // VERY IMPORTANT
         res.end(pdfBuffer); // fastest
     });
+    deliverReport = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const params = reports_dto_1.ReportParamsSchema.parse(req.params);
+        reports_dto_1.ReportDeliveryBodySchema.parse(req.body ?? {});
+        const loggedInUser = res.locals.user;
+        const report = await reportsService.deliverReport({ params, loggedInUser });
+        res.json({ status: "success", data: report });
+    });
     updateReport = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const loggedInUser = res.locals.user;
         const reportData = reports_dto_1.ReportUpdateSchema.parse(req.body);

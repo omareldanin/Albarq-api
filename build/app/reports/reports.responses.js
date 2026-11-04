@@ -1,10 +1,28 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AllreportReform = exports.reportReform = exports.AllreportSelect = exports.reportSelect = void 0;
-exports.reportSelect = {
+exports.AllreportReform = exports.reportReform = exports.AllreportSelect = exports.reportSelect = exports.reportDeliveryReform = exports.reportDeliverySelect = void 0;
+const reportAgentSelect = {
+    receivingAgentId: true,
+    agent: { select: { user: { select: { id: true, name: true } } } },
+};
+exports.reportDeliverySelect = {
     id: true,
     status: true,
     confirmed: true,
+    delivered: true,
+    deliveredAt: true,
+    clientReport: { select: reportAgentSelect },
+};
+const reportDeliveryReform = (report) => ({
+    ...report,
+    clientReport: report.clientReport && {
+        receivingAgentId: report.clientReport.receivingAgentId,
+        agent: report.clientReport.agent?.user ?? null,
+    },
+});
+exports.reportDeliveryReform = reportDeliveryReform;
+exports.reportSelect = {
+    ...exports.reportDeliverySelect,
     createdBy: {
         select: {
             id: true,
@@ -52,6 +70,7 @@ exports.reportSelect = {
     },
     clientReport: {
         select: {
+            ...reportAgentSelect,
             id: true,
             secondaryType: true,
             repository: {
@@ -215,9 +234,7 @@ exports.reportSelect = {
     },
 };
 exports.AllreportSelect = {
-    id: true,
-    status: true,
-    confirmed: true,
+    ...exports.reportDeliverySelect,
     createdBy: {
         select: {
             id: true,
@@ -245,6 +262,7 @@ exports.AllreportSelect = {
     updatedAt: true,
     clientReport: {
         select: {
+            ...reportAgentSelect,
             id: true,
             secondaryType: true,
             repository: {
@@ -410,6 +428,8 @@ const reportReform = (report) => {
                     : "DELIVERED",
         clientReport: report.clientReport && {
             reportNumber: report.clientReport.id,
+            receivingAgentId: report.clientReport.receivingAgentId,
+            agent: report.clientReport.agent?.user ?? null,
             clientReportOrders: report.clientReport.orders ?? [],
             client: report.clientReport.client.user,
             store: report.clientReport.store,
@@ -491,6 +511,8 @@ const AllreportReform = (report) => {
                     : "DELIVERED",
         clientReport: report.clientReport && {
             reportNumber: report.clientReport.id,
+            receivingAgentId: report.clientReport.receivingAgentId,
+            agent: report.clientReport.agent?.user ?? null,
             client: report.clientReport.client.user,
             store: report.clientReport.store,
             branch: report.clientReport.client.branch,

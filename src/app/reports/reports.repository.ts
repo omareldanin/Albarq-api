@@ -10,6 +10,8 @@ import type {
 import {
   AllreportReform,
   AllreportSelect,
+  reportDeliveryReform,
+  reportDeliverySelect,
   reportReform,
   reportSelect,
 } from "./reports.responses";
@@ -648,6 +650,70 @@ export class ReportsRepository {
       select: reportSelect,
     });
     return reportReform(report);
+  }
+
+  async deliverReport(data: {
+    reportID: number;
+    loggedInUser: loggedInUserType;
+  }) {
+    const user = data.loggedInUser;
+    if (
+      user.role !== "RECEIVING_AGENT" ||
+      !Number.isInteger(user.id) ||
+      user.id <= 0 ||
+      !user.companyID ||
+      !Number.isInteger(user.companyID) ||
+      user.companyID <= 0
+    ) {
+      throw new AppError("ليس مصرح لك بتسليم هذا الكشف", 403);
+    }
+
+    const where: Prisma.ReportWhereInput = {
+      id: data.reportID,
+      companyId: user.companyID,
+      type: "CLIENT",
+      deleted: false,
+    };
+
+    return prisma.$transaction(async (tx) => {
+      const agent = await tx.employee.findFirst({
+        where: {
+          id: user.id,
+          companyId: user.companyID,
+          role: "RECEIVING_AGENT",
+          deleted: false,
+        },
+        select: {id: true},
+      });
+      if (!agent) {
+        throw new AppError("ليس مصرح لك بتسليم هذا الكشف", 403);
+      }
+
+      const delivery = await tx.report.updateMany({
+        where: {...where, delivered: false},
+        data: {
+          delivered: true,
+          deliveredAt: new Date(),
+        },
+      });
+
+      // Only the first delivery records its agent. A retry must not replace it.
+      if (delivery.count > 0) {
+        await tx.clientReport.update({
+          where: {id: data.reportID},
+          data: {agent: {connect: {id: user.id}}},
+        });
+      }
+
+      const report = await tx.report.findFirst({
+        where,
+        select: reportDeliverySelect,
+      });
+      if (!report) {
+        throw new AppError("الكشف غير موجود أو غير متاح للتسليم", 404);
+      }
+      return reportDeliveryReform(report);
+    });
   }
 
   async updateReport(data: {reportID: number; reportData: ReportUpdateType}) {

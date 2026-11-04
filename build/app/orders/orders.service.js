@@ -620,13 +620,14 @@ class OrdersService {
             }
             data.orderData.branchID = branch.id;
         }
-        if ((data.orderData.status &&
-            oldOrderData.status === "DELIVERED" &&
-            !data.loggedInUser.permissions.includes("CHANGE_CLOSED_ORDER_STATUS")) ||
-            (data.orderData.status &&
-                oldOrderData.clientReport.find((r) => r.secondaryType === "RETURNED") &&
-                !data.loggedInUser.permissions.includes("CHANGE_CLOSED_ORDER_STATUS"))) {
-            throw new AppError_1.AppError("لا يمكنك تغيير حاله طلبيه مغلقه", 500);
+        if (data.orderData.status &&
+            (oldOrderData.status === "DELIVERED" ||
+                oldOrderData.clientReport.some((r) => r.secondaryType === "RETURNED")) &&
+            !data.loggedInUser.permissions.includes("CHANGE_CLOSED_ORDER_STATUS") &&
+            !(oldOrderData.status === "DELIVERED" &&
+                data.orderData.status === "PARTIALLY_RETURNED" &&
+                data.loggedInUser.permissions.includes("UPADE_DELIVERED_TO_PARTIAL"))) {
+            throw new AppError_1.AppError("لا يمكنك تغيير حالة طلبية مغلقة", 403);
         }
         if (data.orderData.branchID) {
             if (oldOrderData.client.branchId !== data.orderData.branchID) {

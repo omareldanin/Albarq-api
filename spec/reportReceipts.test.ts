@@ -46,6 +46,7 @@ const manager: loggedInUserType = {
 };
 const rawReport: NonNullable<Parameters<typeof AllreportReform>[0]> = {
   id: 123, type: "CLIENT", status: "UNPAID", confirmed: false,
+  delivered: false, deliveredAt: null,
   createdAt: new Date("2026-11-04T21:30:00Z"), updatedAt: new Date("2026-11-04T21:30:00Z"),
   createdBy: {id: 5, branchId: 10, user: {id: 5, name: "ساحب الكشف الأصلي"}},
   baghdadOrdersCount: 12, governoratesOrdersCount: 8,
@@ -55,6 +56,7 @@ const rawReport: NonNullable<Parameters<typeof AllreportReform>[0]> = {
   company: {id: 1, name: "شركة البرق", logo: ""},
   employeeReport: null, governorateReport: null,
   clientReport: {
+    receivingAgentId: null, agent: null,
     id: 123, secondaryType: "DELIVERED", repository: null,
     client: {user: {id: 20, name: "أحمد محمد", phone: "07700000000"}, branch: {id: 10, name: "بغداد"}},
     store: {id: 4, name: "متجر النور"}, baghdadDeliveryCost: 0, governoratesDeliveryCost: 0,

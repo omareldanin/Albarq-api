@@ -807,16 +807,19 @@ export class OrdersService {
     }
 
     if (
-      (data.orderData.status &&
+      data.orderData.status &&
+      (oldOrderData.status === "DELIVERED" ||
+        oldOrderData.clientReport.some(
+          (r) => r.secondaryType === "RETURNED",
+        )) &&
+      !data.loggedInUser.permissions.includes("CHANGE_CLOSED_ORDER_STATUS") &&
+      !(
         oldOrderData.status === "DELIVERED" &&
-        !data.loggedInUser.permissions.includes(
-          "CHANGE_CLOSED_ORDER_STATUS",
-        )) ||
-      (data.orderData.status &&
-        oldOrderData.clientReport.find((r) => r.secondaryType === "RETURNED") &&
-        !data.loggedInUser.permissions.includes("CHANGE_CLOSED_ORDER_STATUS"))
+        data.orderData.status === "PARTIALLY_RETURNED" &&
+        data.loggedInUser.permissions.includes("UPADE_DELIVERED_TO_PARTIAL")
+      )
     ) {
-      throw new AppError("لا يمكنك تغيير حاله طلبيه مغلقه", 500);
+      throw new AppError("لا يمكنك تغيير حالة طلبية مغلقة", 403);
     }
 
     if (data.orderData.branchID) {

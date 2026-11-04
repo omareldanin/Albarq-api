@@ -557,6 +557,59 @@ class ReportsRepository {
         });
         return (0, reports_responses_1.reportReform)(report);
     }
+    async deliverReport(data) {
+        const user = data.loggedInUser;
+        if (user.role !== "RECEIVING_AGENT" ||
+            !Number.isInteger(user.id) ||
+            user.id <= 0 ||
+            !user.companyID ||
+            !Number.isInteger(user.companyID) ||
+            user.companyID <= 0) {
+            throw new AppError_1.AppError("ليس مصرح لك بتسليم هذا الكشف", 403);
+        }
+        const where = {
+            id: data.reportID,
+            companyId: user.companyID,
+            type: "CLIENT",
+            deleted: false,
+        };
+        return db_1.prisma.$transaction(async (tx) => {
+            const agent = await tx.employee.findFirst({
+                where: {
+                    id: user.id,
+                    companyId: user.companyID,
+                    role: "RECEIVING_AGENT",
+                    deleted: false,
+                },
+                select: { id: true },
+            });
+            if (!agent) {
+                throw new AppError_1.AppError("ليس مصرح لك بتسليم هذا الكشف", 403);
+            }
+            const delivery = await tx.report.updateMany({
+                where: { ...where, delivered: false },
+                data: {
+                    delivered: true,
+                    deliveredAt: new Date(),
+                },
+            });
+            // Only the first delivery records its agent. A retry must not replace it.
+            if (delivery.count > 0) {
+                await tx.clientReport.update({
+                    where: { id: data.reportID },
+                    data: { agent: { connect: { id: user.id } } },
+                });
+            }
+            const report = await tx.report.findFirst({
+                where,
+                select: reports_responses_1.reportDeliverySelect,
+            });
+            if (!report) {
+                throw new AppError_1.AppError("الكشف غير موجود أو غير متاح للتسليم", 404);
+            }
+            return (0, reports_responses_1.reportDeliveryReform)(report);
+        });
+    }
     async updateReport(data) {
         const report = await db_1.prisma.report.update({
             where: {

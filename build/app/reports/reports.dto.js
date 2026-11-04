@@ -1,17 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ReportsReportPDFCreateSchema = exports.ReportsFiltersOpenAPISchema = exports.ReportsFiltersSchema = exports.ReportUpdateOpenAPISchema = exports.ReportUpdateSchema = exports.ReportCreateOrdersFiltersSchema = exports.ReportCreateOpenAPISchema = exports.ReportCreateSchema = exports.ReportCreateBaseSchema = exports.ReportReceiptParamsSchema = void 0;
+exports.ReportsReportPDFCreateSchema = exports.ReportsFiltersOpenAPISchema = exports.ReportsFiltersSchema = exports.ReportUpdateOpenAPISchema = exports.ReportUpdateSchema = exports.ReportCreateOrdersFiltersSchema = exports.ReportCreateOpenAPISchema = exports.ReportCreateSchema = exports.ReportCreateBaseSchema = exports.ReportDeliveryBodySchema = exports.ReportReceiptParamsSchema = exports.ReportParamsSchema = void 0;
 // // import { generateMock } from "@anatine/zod-mock";
 const zod_openapi_1 = require("@anatine/zod-openapi");
 const client_1 = require("@prisma/client");
 const zod_1 = require("zod");
 const orders_dto_1 = require("../orders/orders.dto");
-exports.ReportReceiptParamsSchema = zod_1.z.object({
+exports.ReportParamsSchema = zod_1.z.object({
     reportID: zod_1.z
         .string()
         .regex(/^[1-9]\d*$/)
         .pipe(zod_1.z.coerce.number().int().max(2147483647)),
 });
+exports.ReportReceiptParamsSchema = exports.ReportParamsSchema;
+// The delivery action accepts no client-controlled status or audit fields.
+exports.ReportDeliveryBodySchema = zod_1.z.object({}).strict();
 exports.ReportCreateBaseSchema = zod_1.z.object({
     ordersIDs: zod_1.z.array(zod_1.z.coerce.string()).min(1).or(zod_1.z.literal("*")),
 });

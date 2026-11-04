@@ -54,6 +54,7 @@ router.route("/reports/pdf").post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.is
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
 ]), reportController.getReportsReportPDF);
+router.route("/reports/:reportID/deliver").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.RECEIVING_AGENT]), reportController.deliverReport);
 router.route("/reports/:reportID").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     ...Object.values(client_1.AdminRole),
     ...Object.values(client_1.EmployeeRole),

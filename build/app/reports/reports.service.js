@@ -830,6 +830,12 @@ class ReportsService {
         // }
         // throw new AppError("لا يمكن عمل تقرير لهذا النوع من التقارير", 400);
     }
+    async deliverReport(data) {
+        return reportsRepository.deliverReport({
+            reportID: data.params.reportID,
+            loggedInUser: data.loggedInUser,
+        });
+    }
     async updateReport(data) {
         if (data.reportData.confirmed === false &&
             (data.loggedInUser.role === "CLIENT" ||
