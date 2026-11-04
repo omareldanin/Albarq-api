@@ -2,6 +2,53 @@
 
 ## Features
 
+### Report receipts
+
+`GET /api/v1/reports/:reportID/receipt/pdf` returns a printable Arabic A5 portrait
+PDF for an existing `CLIENT`, `BRANCH`, `DELIVERY_AGENT`, `COMPANY`, or `REPOSITORY`
+report. Authenticate using the normal Bearer token or JWT cookie.
+
+The receipt displays the report company’s saved logo at the top (when available) and includes رقم الكشف، التاريخ، نوع الكشف، العميل/الفرع/المندوب/الشركة/المخزن،
+المتجر، ساحب الكشف، إجمالي عدد الطلبات، عدد طلبات بغداد، عدد طلبات المحافظات، والمبلغ المستحق بالدينار العراقي.
+The date is the report creation time in Baghdad; ساحب الكشف is the original creator.
+The QR code contains only the decimal report ID (for example `123`), so scanning it
+can open the corresponding report in the frontend. The store row appears only on client
+receipts, with `-` if the client report has no store. Total orders equals the saved
+Baghdad count plus the saved province count. PDF rendering waits for the logo to load.
+
+Counts and amounts come from the saved report. Amount due follows the existing
+report PDF: `clientNet` for clients and repositories, `branchNet` for branches,
+and `companyNet` for companies and delivery agents (the amount the agent settles
+with the company, rather than the agent's commission).
+
+`POST /api/v1/reports` still returns the full report PDF and now also returns
+browser-readable `X-Report-ID` and `X-Report-Receipt-URL` response headers. After
+creation, the frontend can fetch that URL with authentication, open the PDF blob,
+and print it. Existing reports can use their ID from the report list.
+
+```sh
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:3000/api/v1/reports/123/receipt/pdf" \
+  --output report-123-receipt.pdf
+```
+
+The response uses `Content-Type: application/pdf`,
+`Content-Disposition: inline; filename="report-123-receipt.pdf"`, and
+`Cache-Control: private, no-store`. Administrators can access all reports;
+company managers and main-repository staff are scoped to their company. Clients
+and authorized client assistants can access their client's reports; delivery
+agents can access their own reports. Other staff are scoped by branch, with
+repository staff also scoped to their repository for repository receipts.
+Missing, deleted, and out-of-scope reports return 404. Invalid IDs and unsupported
+report types return 400; unauthorized roles or missing access context return 403.
+
+No database migration or new dependency is required. The standard static asset
+copy includes the receipt template and embedded Arabic font.
+
+```sh
+node --test -r ts-node/register/transpile-only spec/reportReceipts.test.ts
+```
+
 ### Employee wallets
 
 Company and branch managers can manage employee wallets through `/api/v1/employee-wallets`.

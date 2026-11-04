@@ -15,6 +15,7 @@ import {EmployeesRepository} from "../employees/employees.repository";
 import {sendNotification} from "../notifications/helpers/sendNotification";
 import {OrdersRepository} from "../orders/orders.repository";
 import {generateReport} from "./helpers/generateReport";
+import {generateReportReceiptPDF} from "./helpers/generateReportReceipt";
 import {generateReportsReport} from "./helpers/generateReportsReport";
 import type {
   ReportCreateOrdersFiltersType,
@@ -565,7 +566,7 @@ export class ReportsService {
 
     const pdf = await generateReport(data.reportData.type, reportData, orders);
 
-    return pdf;
+    return {pdf, reportID: report.id};
   }
 
   async getAllReports(data: {
@@ -691,6 +692,17 @@ export class ReportsService {
     });
 
     return Buffer.from(response.data);
+  }
+
+  async getReportReceiptPDF(data: {
+    params: {reportID: number};
+    loggedInUser: loggedInUserType;
+  }) {
+    const report = await reportsRepository.getReportForReceipt({
+      reportID: data.params.reportID,
+      loggedInUser: data.loggedInUser,
+    });
+    return generateReportReceiptPDF(report);
   }
 
   async getReportPDF(data: {

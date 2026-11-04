@@ -4082,6 +4082,58 @@
                 }
             }
         },
+        "/api/v1/reports/{reportID}/receipt/pdf": {
+            "get": {
+                "tags": [
+                    "Reports Routes"
+                ],
+                "summary": "Print an Arabic report receipt with a report-ID QR code",
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "reportID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "minimum": 1
+                    },
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A5 portrait receipt PDF. Supports CLIENT, BRANCH, DELIVERY_AGENT, COMPANY and REPOSITORY.",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid report ID or unsupported report type"
+                    },
+                    "401": {
+                        "description": "Authentication required"
+                    },
+                    "403": {
+                        "description": "Report access is not permitted"
+                    },
+                    "404": {
+                        "description": "Report not found, deleted or outside the user scope"
+                    }
+                }
+            }
+        },
         "/api/v1/reports/{reportID}/pdf": {
             "get": {
                 "tags": [
@@ -7022,7 +7074,8 @@
                             "ADMIN",
                             "ADMIN_ASSISTANT",
                             "MAIN_EMERGENCY_EMPLOYEE",
-                            "EMPLOYEE_CLIENT_ASSISTANT"
+                            "EMPLOYEE_CLIENT_ASSISTANT",
+                            "RECEIVING_AGENTS_MANAGER"
                         ]
                     },
                     "permissions": {
@@ -7084,7 +7137,8 @@
                                 "REACTIVE_CLIENT",
                                 "REACTIVE_EMPLOYEE",
                                 "CREATE_EMPLOYEE_REPORT",
-                                "DELETE_EMPLOYEE_REPORT"
+                                "DELETE_EMPLOYEE_REPORT",
+                                "UPADE_DELIVERED_TO_PARTIAL"
                             ]
                         }
                     },
@@ -7443,7 +7497,8 @@
                             "ADMIN",
                             "ADMIN_ASSISTANT",
                             "MAIN_EMERGENCY_EMPLOYEE",
-                            "EMPLOYEE_CLIENT_ASSISTANT"
+                            "EMPLOYEE_CLIENT_ASSISTANT",
+                            "RECEIVING_AGENTS_MANAGER"
                         ]
                     },
                     "permissions": {
@@ -7505,7 +7560,8 @@
                                 "REACTIVE_CLIENT",
                                 "REACTIVE_EMPLOYEE",
                                 "CREATE_EMPLOYEE_REPORT",
-                                "DELETE_EMPLOYEE_REPORT"
+                                "DELETE_EMPLOYEE_REPORT",
+                                "UPADE_DELIVERED_TO_PARTIAL"
                             ]
                         }
                     },

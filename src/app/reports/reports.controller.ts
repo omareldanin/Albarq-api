@@ -3,6 +3,7 @@ import type {loggedInUserType} from "../../types/user";
 import {
   ReportCreateOrdersFiltersSchema,
   ReportCreateSchema,
+  ReportReceiptParamsSchema,
   ReportUpdateSchema,
   ReportsFiltersSchema,
   ReportsReportPDFCreateSchema,
@@ -50,7 +51,7 @@ export class ReportController {
       forwarededForReport: req.query.forwarededForReport,
     });
 
-    const pdf = await reportsService.createReport({
+    const {pdf, reportID} = await reportsService.createReport({
       loggedInUser,
       reportData,
       ordersFilters,
@@ -60,6 +61,15 @@ export class ReportController {
     // Set headers for a PDF response
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "attachment; filename=generated.pdf");
+    res.setHeader("X-Report-ID", String(reportID));
+    res.setHeader(
+      "X-Report-Receipt-URL",
+      `${req.baseUrl}/reports/${reportID}/receipt/pdf`,
+    );
+    res.setHeader(
+      "Access-Control-Expose-Headers",
+      "X-Report-ID, X-Report-Receipt-URL",
+    );
     console.log("PDF size:", pdfBuffer.length);
 
     res.send(pdfBuffer);
@@ -175,6 +185,24 @@ export class ReportController {
       status: "success",
       data: report,
     });
+  });
+
+  getReportReceiptPDF = catchAsync(async (req, res) => {
+    const params = ReportReceiptParamsSchema.parse(req.params);
+    const loggedInUser: loggedInUserType = res.locals.user;
+    const pdf = await reportsService.getReportReceiptPDF({
+      params,
+      loggedInUser,
+    });
+    const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="report-${params.reportID}-receipt.pdf"`,
+    );
+    res.setHeader("Cache-Control", "private, no-store");
+    res.send(pdfBuffer);
   });
 
   getReportPDF = catchAsync(async (req, res) => {

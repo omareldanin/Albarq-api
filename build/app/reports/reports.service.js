@@ -13,6 +13,7 @@ const employees_repository_1 = require("../employees/employees.repository");
 const sendNotification_1 = require("../notifications/helpers/sendNotification");
 const orders_repository_1 = require("../orders/orders.repository");
 const generateReport_1 = require("./helpers/generateReport");
+const generateReportReceipt_1 = require("./helpers/generateReportReceipt");
 const generateReportsReport_1 = require("./helpers/generateReportsReport");
 const reports_repository_1 = require("./reports.repository");
 const db_1 = require("../../database/db");
@@ -439,7 +440,7 @@ class ReportsService {
         reportData.baghdadTotal = baghdadTotal;
         reportData.otherTotal = otherTotal;
         const pdf = await (0, generateReport_1.generateReport)(data.reportData.type, reportData, orders);
-        return pdf;
+        return { pdf, reportID: report.id };
     }
     async getAllReports(data) {
         let company;
@@ -548,6 +549,13 @@ class ReportsService {
             timeout: 15000,
         });
         return Buffer.from(response.data);
+    }
+    async getReportReceiptPDF(data) {
+        const report = await reportsRepository.getReportForReceipt({
+            reportID: data.params.reportID,
+            loggedInUser: data.loggedInUser,
+        });
+        return (0, generateReportReceipt_1.generateReportReceiptPDF)(report);
     }
     async getReportPDF(data) {
         const reportData = await reportsRepository.getReport({

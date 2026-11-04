@@ -1,3 +1,4 @@
+import type {PDFOptions, WaitForOptions} from "puppeteer";
 import {AppError} from "./AppError";
 import {Logger} from "./logger";
 import {getBrowser} from "./puppeteerInstance";
@@ -5,24 +6,24 @@ import {getBrowser} from "./puppeteerInstance";
 export const generatePDF = async (
   html: string,
   css?: string,
-  options = {landscape: true}
+  options: Pick<PDFOptions, "landscape" | "format"> & Pick<WaitForOptions, "waitUntil"> = {landscape: true}
 ) => {
   const browser = await getBrowser();
   const page = await browser.newPage();
   try {
-    // Use fast loading mode
+    // Receipt PDFs wait for the company logo; other callers keep the fast default.
     await page.setContent(
       `
       <style>${css ?? ""}</style>
       ${html}
     `,
       {
-        waitUntil: "domcontentloaded", // MUCH FASTER
+        waitUntil: options.waitUntil ?? "domcontentloaded",
       }
     );
 
     const pdf = await page.pdf({
-      format: "A4",
+      format: options.format ?? "A4",
       landscape: options.landscape,
       printBackground: true,
       margin: {

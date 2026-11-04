@@ -14,6 +14,7 @@ import {
   reportSelect,
 } from "./reports.responses";
 import {recomputeReportFlags} from "../orders/helpers/recomputeReportFlags";
+import {reportReceiptScope} from "./helpers/reportReceiptScope";
 
 export class ReportsRepository {
   async createReport(data: {
@@ -142,7 +143,11 @@ export class ReportsRepository {
               orders: {connect: ordersIDs.map((id) => ({id}))},
               baghdadDeliveryCost: reportData.baghdadDeliveryCost,
               governoratesDeliveryCost: reportData.governoratesDeliveryCost,
-              receivingAgentId: reportData.receivingAgentId,
+              agent: reportData.receivingAgentId
+                ? {
+                    connect: {id: reportData.receivingAgentId},
+                  }
+                : undefined,
               report,
             },
           });
@@ -616,6 +621,23 @@ export class ReportsRepository {
       select: reportSelect,
     });
     return reports.map(reportReform);
+  }
+
+  async getReportForReceipt(data: {
+    reportID: number;
+    loggedInUser: loggedInUserType;
+  }) {
+    const report = await prisma.report.findFirst({
+      where: {
+        id: data.reportID,
+        deleted: false,
+        AND: [reportReceiptScope(data.loggedInUser)],
+      },
+      // Receipt summaries use saved totals and do not load individual orders.
+      select: AllreportSelect,
+    });
+    if (!report) throw new AppError("الكشف المطلوب غير موجود", 404);
+    return AllreportReform(report)!;
   }
 
   async getReport(data: {reportID: number}) {

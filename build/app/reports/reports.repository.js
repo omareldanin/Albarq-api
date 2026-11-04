@@ -6,6 +6,7 @@ const db_1 = require("../../database/db");
 const AppError_1 = require("../../lib/AppError");
 const reports_responses_1 = require("./reports.responses");
 const recomputeReportFlags_1 = require("../orders/helpers/recomputeReportFlags");
+const reportReceiptScope_1 = require("./helpers/reportReceiptScope");
 class ReportsRepository {
     async createReport(data) {
         const orders = {
@@ -103,7 +104,11 @@ class ReportsRepository {
                         orders: { connect: ordersIDs.map((id) => ({ id })) },
                         baghdadDeliveryCost: reportData.baghdadDeliveryCost,
                         governoratesDeliveryCost: reportData.governoratesDeliveryCost,
-                        receivingAgentId: reportData.receivingAgentId,
+                        agent: reportData.receivingAgentId
+                            ? {
+                                connect: { id: reportData.receivingAgentId },
+                            }
+                            : undefined,
                         report,
                     },
                 });
@@ -528,6 +533,20 @@ class ReportsRepository {
             select: reports_responses_1.reportSelect,
         });
         return reports.map(reports_responses_1.reportReform);
+    }
+    async getReportForReceipt(data) {
+        const report = await db_1.prisma.report.findFirst({
+            where: {
+                id: data.reportID,
+                deleted: false,
+                AND: [(0, reportReceiptScope_1.reportReceiptScope)(data.loggedInUser)],
+            },
+            // Receipt summaries use saved totals and do not load individual orders.
+            select: reports_responses_1.AllreportSelect,
+        });
+        if (!report)
+            throw new AppError_1.AppError("الكشف المطلوب غير موجود", 404);
+        return (0, reports_responses_1.AllreportReform)(report);
     }
     async getReport(data) {
         const report = await db_1.prisma.report.findUnique({

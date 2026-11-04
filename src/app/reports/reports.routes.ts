@@ -137,6 +137,29 @@ router.route("/reports/:reportID").get(
     */
 );
 
+router.route("/reports/:reportID/receipt/pdf").get(
+  isLoggedIn,
+  isAutherized([
+    ...Object.values(AdminRole),
+    ...Object.values(EmployeeRole),
+    ...Object.values(ClientRole),
+  ]),
+  reportController.getReportReceiptPDF,
+  /*
+        #swagger.tags = ['Reports Routes']
+        #swagger.summary = 'Print an Arabic report receipt with a report-ID QR code'
+        #swagger.parameters['reportID'] = { in: 'path', required: true, type: 'integer', minimum: 1 }
+        #swagger.responses[200] = {
+            description: 'A5 portrait receipt PDF. Supports CLIENT, BRANCH, DELIVERY_AGENT, COMPANY and REPOSITORY.',
+            content: { 'application/pdf': { schema: { type: 'string', format: 'binary' } } }
+        }
+        #swagger.responses[400] = { description: 'Invalid report ID or unsupported report type' }
+        #swagger.responses[401] = { description: 'Authentication required' }
+        #swagger.responses[403] = { description: 'Report access is not permitted' }
+        #swagger.responses[404] = { description: 'Report not found, deleted or outside the user scope' }
+    */
+);
+
 router.route("/reports/:reportID/pdf").get(
   isLoggedIn,
   isAutherized([

@@ -10,6 +10,13 @@ import {
 import {z} from "zod";
 import {OrdersFiltersSchema} from "../orders/orders.dto";
 
+export const ReportReceiptParamsSchema = z.object({
+  reportID: z
+    .string()
+    .regex(/^[1-9]\d*$/)
+    .pipe(z.coerce.number().int().max(2147483647)),
+});
+
 export const ReportCreateBaseSchema = z.object({
   ordersIDs: z.array(z.coerce.string()).min(1).or(z.literal("*")),
 });
