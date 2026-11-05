@@ -443,6 +443,16 @@ class ReportsService {
         return { pdf, reportID: report.id };
     }
     async getAllReports(data) {
+        if (data.loggedInUser.role === client_1.EmployeeRole.RECEIVING_AGENT) {
+            return reportsRepository.getReceivingAgentReportsPaginated({
+                loggedInUser: data.loggedInUser,
+                filters: {
+                    page: data.filters.page,
+                    size: data.filters.size,
+                    secondaryType: data.filters.secondaryType,
+                },
+            });
+        }
         let company;
         if (Object.keys(client_1.AdminRole).includes(data.loggedInUser.role)) {
             company = data.filters.company ? +data.filters.company : undefined;
@@ -512,14 +522,6 @@ class ReportsService {
             !Number.isNaN(+data.filters.page) &&
             +data.filters.page > 0) {
             page = +data.filters.page;
-        }
-        if (data.loggedInUser.role === "RECEIVING_AGENT") {
-            return {
-                page: 1,
-                pagesCount: 1,
-                reports: [],
-                reportsMetaData: {},
-            };
         }
         const { reports, reportsMetaData, pagesCount } = await reportsRepository.getAllReportsPaginated({
             filters: {

@@ -43,6 +43,13 @@ router.route("/reports").get(
   reportController.getAllReports,
   /*
         #swagger.tags = ['Reports Routes']
+        #swagger.description = 'Receiving agents see only their assigned, unconfirmed, non-deleted client reports in their company. Their page size is capped at 100; totals use the same scope as the returned/ delivered report list.'
+
+        #swagger.parameters['secondaryReportType'] = {
+            in: 'query',
+            description: 'Report subtype: DELIVERED (واصل) or RETURNED (راجع). For receiving agents this filters their assigned client reports.',
+            required: false
+        }
 
         #swagger.parameters['page'] = {
             in: 'query',

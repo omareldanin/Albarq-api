@@ -219,6 +219,68 @@ class ReportsRepository {
         }
         throw new AppError_1.AppError("Invalid report type", 400);
     }
+    async getReceivingAgentReportsPaginated(data) {
+        const user = data.loggedInUser;
+        if (user.role !== "RECEIVING_AGENT" ||
+            !Number.isInteger(user.id) || user.id <= 0 ||
+            !user.companyID || !Number.isInteger(user.companyID) || user.companyID <= 0) {
+            throw new AppError_1.AppError("ليس مصرح لك بعرض هذه الكشوفات", 403);
+        }
+        const agent = await db_1.prisma.employee.findFirst({
+            where: { id: user.id, companyId: user.companyID, role: "RECEIVING_AGENT", deleted: false },
+            select: { id: true },
+        });
+        if (!agent)
+            throw new AppError_1.AppError("ليس مصرح لك بعرض هذه الكشوفات", 403);
+        const page = Number.isSafeInteger(data.filters.page) && data.filters.page > 0
+            ? data.filters.page : 1;
+        const size = Number.isSafeInteger(data.filters.size) && data.filters.size > 0
+            ? Math.min(data.filters.size, 100) : 10;
+        // Match the receiving-agent statistics; delivery and payment are separate.
+        const where = {
+            type: "CLIENT",
+            companyId: user.companyID,
+            deleted: false,
+            confirmed: false,
+            clientReport: {
+                receivingAgentId: user.id,
+                secondaryType: data.filters.secondaryType,
+            },
+        };
+        const [paginated, totals] = await Promise.all([
+            db_1.prisma.report.findManyPaginated({ where, orderBy: { id: "desc" }, select: reports_responses_1.AllreportSelect }, { page, size, withCount: true }),
+            db_1.prisma.report.aggregate({
+                where,
+                _count: { id: true },
+                _sum: {
+                    totalCost: true,
+                    paidAmount: true,
+                    deliveryCost: true,
+                    baghdadOrdersCount: true,
+                    governoratesOrdersCount: true,
+                    clientNet: true,
+                    deliveryAgentNet: true,
+                    companyNet: true,
+                },
+            }),
+        ]);
+        return {
+            page,
+            pagesCount: paginated.pagesCount,
+            reports: paginated.data.map(reports_responses_1.AllreportReform),
+            reportsMetaData: {
+                reportsCount: totals._count.id,
+                totalCost: totals._sum.totalCost ?? 0,
+                paidAmount: totals._sum.paidAmount ?? 0,
+                deliveryCost: totals._sum.deliveryCost ?? 0,
+                baghdadOrdersCount: totals._sum.baghdadOrdersCount ?? 0,
+                governoratesOrdersCount: totals._sum.governoratesOrdersCount ?? 0,
+                clientNet: totals._sum.clientNet ?? 0,
+                deliveryAgentNet: totals._sum.deliveryAgentNet ?? 0,
+                companyNet: totals._sum.companyNet ?? 0,
+            },
+        };
+    }
     async getAllReportsPaginated(data) {
         let startDate = new Date();
         let endDate = new Date();

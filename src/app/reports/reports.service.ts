@@ -573,6 +573,17 @@ export class ReportsService {
     loggedInUser: loggedInUserType;
     filters: ReportsFiltersType;
   }) {
+    if (data.loggedInUser.role === EmployeeRole.RECEIVING_AGENT) {
+      return reportsRepository.getReceivingAgentReportsPaginated({
+        loggedInUser: data.loggedInUser,
+        filters: {
+          page: data.filters.page,
+          size: data.filters.size,
+          secondaryType: data.filters.secondaryType,
+        },
+      });
+    }
+
     let company: number | undefined;
 
     if (Object.keys(AdminRole).includes(data.loggedInUser.role)) {
@@ -646,15 +657,6 @@ export class ReportsService {
       +data.filters.page > 0
     ) {
       page = +data.filters.page;
-    }
-
-    if (data.loggedInUser.role === "RECEIVING_AGENT") {
-      return {
-        page: 1,
-        pagesCount: 1,
-        reports: [],
-        reportsMetaData: {},
-      };
     }
 
     const {reports, reportsMetaData, pagesCount} =

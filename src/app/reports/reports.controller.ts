@@ -109,7 +109,6 @@ export class ReportController {
 
     if (
       loggedInUser.role === "INQUIRY_EMPLOYEE" ||
-      loggedInUser.role === "RECEIVING_AGENT" ||
       loggedInUser.role === "EMPLOYEE_CLIENT_ASSISTANT" ||
       (loggedInUser.role === "CLIENT_ASSISTANT" &&
         !loggedInUser.permissions.includes("MANAGE_REPORTS"))
