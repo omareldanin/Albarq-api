@@ -86,32 +86,35 @@ export class BranchesRepository {
     // ORIGINAL LOGIC (unchanged)
     // -----------------------------
     const where = {
-          AND: [
+      AND: [
+        {
+          id: filters.getAll
+            ? undefined
+            : filters.branchID
+              ? filters.branchID
+              : undefined,
+        },
+        {
+          companyId: filters.companyID,
+        },
+        {governorate: filters.governorate},
+        {
+          locations: filters.locationID
+            ? {
+                some: {
+                  id: filters.locationID,
+                },
+              }
+            : undefined,
+        },
+        {
+          OR: [
             {
-              id: filters.getAll
-                ? undefined
-                : filters.branchID
-                  ? filters.branchID
-                  : undefined,
+              parentBranchId: filters.branchID ? filters.branchID : undefined,
             },
-            {
-              companyId: filters.companyID,
-            },
-            {governorate: filters.governorate},
-            {
-              locations: filters.locationID
-                ? {
-                    some: {
-                      id: filters.locationID,
-                    },
-                  }
-                : undefined,
-            },
-          {
-          parentBranchId: filters.branchID ? filters.branchID : undefined,
-          },
           ],
-     
+        },
+      ],
     } satisfies Prisma.BranchWhereInput;
 
     let result;
