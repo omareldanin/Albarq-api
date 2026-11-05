@@ -122,23 +122,49 @@ test("Arabic HTML embeds assets, escapes names, and uses the original creator an
   assert.match(html, /data:font\/ttf;base64,/);
   assert.match(html, /data:image\/png;base64,/);
   assert.match(html, /&lt;img/);
-  assert.doesNotMatch(html, /<img src="https:/);
+  assert.doesNotMatch(html, /<img\s+src="https:/);
   assert.match(html, /05\/11\/2026, 00:30/);
   assert.match(html, /ساحب الكشف الأصلي/);
   assert.match(html, /متجر النور/);
   assert.match(html, /790,000/);
-  assert.match(html, /<header>\s*<img class="company-logo" src="https:\/\/cdn\.example\.com\/company-logo\.png\?v&#x3D;1&amp;size&#x3D;small"/);
-  assert.match(html, /إجمالي عدد الطلبات:<\/th><td><bdi dir="ltr">20<\/bdi>/);
+  assert.match(html, /<header>[\s\S]*class="qr-block"[\s\S]*class="brand"[\s\S]*<img\s+class="company-logo"\s+src="https:\/\/cdn\.example\.com\/company-logo\.png\?v&#x3D;1&amp;size&#x3D;small"[\s\S]*<\/header>/);
+  const qrCodes = [...html.matchAll(/<img\s+class="qr"\s+src="([^"]+)"/g)];
+  assert.equal(qrCodes.length, 2);
+  assert.equal(qrCodes[0][1], qrCodes[1][1]);
+  assert.match(html, /<footer class="receipt-footer">\s*<img\s+class="qr"/);
+  assert.match(html, /نوع البريد:<\/th><td>واصل<\/td>/);
+  assert.match(html, /إجمالي عدد الطلبات:<\/th><td><bdi\s+dir="ltr"\s*>20<\/bdi>/);
 });
 
 test("missing stores render a placeholder and unrelated report stores are not shown", async () => {
   const report = receipt();
   report.clientReport!.store = null;
+  report.clientReport!.secondaryType = "RETURNED";
   assert.match(await renderReportReceipt(report), /المتجر:<\/th><td>-<\/td>/);
+  assert.match(await renderReportReceipt(report), /نوع البريد:<\/th><td>راجع<\/td>/);
   for (const type of ["BRANCH", "DELIVERY_AGENT", "COMPANY", "REPOSITORY"] as const) {
     const html = await renderReportReceipt(receipt({type}));
     assert.doesNotMatch(html, /المتجر:|متجر النور/);
-    assert.doesNotMatch(html, /<img class="company-logo"/);
+    assert.doesNotMatch(html, /نوع البريد:/);
+    assert.doesNotMatch(html, /<img\s+class="company-logo"/);
+  }
+});
+
+test("returned receipts hide the amount while retaining order counts and both QR codes", async () => {
+  for (const type of ["CLIENT", "COMPANY", "REPOSITORY"] as const) {
+    const report = receipt({
+      type,
+      clientReport: {...rawReport.clientReport!, secondaryType: "RETURNED"},
+      companyReport: {...rawReport.companyReport!, secondaryType: "RETURNED"},
+      repositoryReport: {...rawReport.repositoryReport!, secondaryType: "RETURNED"},
+    });
+    const html = await renderReportReceipt(report);
+    assert.doesNotMatch(html, /<div class="amount">|المبلغ المستحق:|د\.ع/);
+    assert.match(html, /إجمالي عدد الطلبات:/);
+    assert.match(html, /عدد طلبات بغداد:/);
+    assert.match(html, /عدد طلبات المحافظات:/);
+    assert.equal((html.match(/<img\s+class="qr"/g) ?? []).length, 2);
+    assert.match(await renderReportReceipt(receipt({type})), /<div class="amount">/);
   }
 });
 

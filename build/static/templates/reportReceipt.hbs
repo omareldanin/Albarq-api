@@ -6,35 +6,56 @@
       @font-face {
         font-family: "Cairo";
         src: url("data:font/ttf;base64,{{font}}") format("truetype");
-        font-weight: 100 900;
-        font-style: normal;
-      }
-      * { box-sizing: border-box; }
-      body { margin: 0; padding: 5mm; color: #161616; font-family: "Cairo", sans-serif; font-size: 12px; line-height: 1.65; }
-      header { text-align: center; border-bottom: 2px solid #222; padding-bottom: 8px; margin-bottom: 10px; }
-      .company-logo { display: block; width: 120px; height: 48px; object-fit: contain; margin: 0 auto 6px; }
-      .company { margin: 0 0 4px; font-size: 13px; overflow-wrap: anywhere; }
-      h1 { margin: 0; font-size: 23px; font-weight: 800; }
-      table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-      th, td { padding: 5px 0; vertical-align: top; border-bottom: 1px solid #ddd; overflow-wrap: anywhere; }
-      th { text-align: right; width: 46%; font-weight: 600; }
-      td { text-align: left; font-weight: 700; padding-right: 12px; }
-      bdi { unicode-bidi: isolate; }
-      .amount { margin: 12px 0 8px; padding: 10px 12px; border: 2px solid #222; display: flex; align-items: center; justify-content: space-between; gap: 12px; break-inside: avoid; }
-      .amount strong { font-size: 22px; }
-      .currency { font-size: 12px; font-weight: 400; white-space: nowrap; }
-      footer { text-align: center; break-inside: avoid; }
-      .qr { width: 100px; height: 100px; display: block; margin: 0 auto; }
-      .scan { margin: 0; font-size: 10px; }
-      .report-id { margin: 2px 0 0; font-size: 12px; font-weight: 700; }
+                    font-weight: 100 900;
+                    font-style: normal;
+                  }
+                  * { box-sizing: border-box; }
+                  body { margin: 0; padding: 5mm; color: #161616; font-family: "Cairo", sans-serif; font-size: 12px; line-height: 1.65; }
+                  header { text-align: center; border-bottom: 2px solid #222; padding-bottom: 8px; margin-bottom: 10px; }
+                  .header-top { display: flex; direction: ltr; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
+                  .brand { flex: 1; min-width: 0; direction: rtl; text-align: right; }
+                  .company-logo { display: block; width: 120px; height: 60px; object-fit: contain; margin: 0 0 6px auto; }
+                  .company { margin: 0 0 4px; font-size: 13px; overflow-wrap: anywhere; }
+                  h1 { margin: 0; font-size: 23px; font-weight: 800; }
+                  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+                  th, td { padding: 5px 0; vertical-align: top; border-bottom: 1px solid #ddd; overflow-wrap: anywhere; }
+                  th { text-align: right; width: 46%; font-weight: 600; }
+                  td { text-align: left; font-weight: 700; padding-right: 12px; }
+                  bdi { unicode-bidi: isolate; }
+                  .amount { margin: 12px 0 8px; padding: 10px 12px; border: 2px solid #222; display: flex; align-items: center; justify-content: space-between; gap: 12px; break-inside: avoid; }
+                  .amount strong { font-size: 22px; }
+                  .currency { font-size: 12px; font-weight: 400; white-space: nowrap; }
+                  .qr-block { flex: 0 0 110px; direction: rtl; text-align: center; break-inside: avoid; }
+                  .qr { width: 100px; height: 100px; display: block; margin: 0 auto; }
+                  .receipt-footer { margin-top: 8px; text-align: center; break-inside: avoid; }
+                  .receipt-footer .qr { width: 88px; height: 88px; }
+                  .scan { margin: 0; font-size: 10px; }
+                  .report-id { margin: 2px 0 0; font-size: 12px; font-weight: 700; }
     </style>
   </head>
   <body>
     <header>
-      {{#if companyLogo}}
-        <img class="company-logo" src="{{companyLogo}}" alt="شعار {{company}}" />
-      {{/if}}
-      <p class="company">{{company}}</p>
+      <div class="header-top">
+        <div class="qr-block">
+          <img
+            class="qr"
+            src="{{qrCode}}"
+            alt="رمز QR لرقم الكشف {{reportID}}"
+          />
+          <p class="scan">امسح الرمز لقراءة رقم الكشف</p>
+          <p class="report-id"><bdi dir="ltr">{{reportID}}</bdi></p>
+        </div>
+        <div class="brand">
+          {{#if companyLogo}}
+            <img
+              class="company-logo"
+              src="{{companyLogo}}"
+              alt="شعار {{company}}"
+            />
+          {{/if}}
+          <p class="company">{{company}}</p>
+        </div>
+      </div>
       <h1>إيصال كشف</h1>
     </header>
     <main>
@@ -43,12 +64,17 @@
           <tr><th>رقم الكشف:</th><td><bdi dir="ltr">{{reportID}}</bdi></td></tr>
           <tr><th>التاريخ:</th><td><bdi dir="ltr">{{date}}</bdi></td></tr>
           <tr><th>نوع الكشف:</th><td>{{reportType}}</td></tr>
+          {{#if isClientReport}}
+            <tr><th>نوع البريد:</th><td>{{clientSecondaryType}}</td></tr>
+          {{/if}}
           <tr><th>{{entityLabel}}:</th><td>{{entityName}}</td></tr>
           {{#if isClientReport}}
             <tr><th>المتجر:</th><td>{{store}}</td></tr>
           {{/if}}
           <tr><th>ساحب الكشف:</th><td>{{createdBy}}</td></tr>
-          <tr><th>إجمالي عدد الطلبات:</th><td><bdi dir="ltr">{{totalOrdersCount}}</bdi></td></tr>
+          <tr><th>إجمالي عدد الطلبات:</th><td><bdi
+                dir="ltr"
+              >{{totalOrdersCount}}</bdi></td></tr>
           <tr><th>عدد طلبات بغداد:</th><td><bdi
                 dir="ltr"
               >{{baghdadOrdersCount}}</bdi></td></tr>
@@ -57,16 +83,16 @@
               >{{governoratesOrdersCount}}</bdi></td></tr>
         </tbody>
       </table>
-      <div class="amount">
-        <span>المبلغ المستحق:</span>
-        <strong><bdi dir="ltr">{{amountDue}}</bdi>
-          <span class="currency">د.ع</span></strong>
-      </div>
+      {{#if showAmountDue}}
+        <div class="amount">
+          <span>المبلغ المستحق:</span>
+          <strong><bdi dir="ltr">{{amountDue}}</bdi>
+            <span class="currency">د.ع</span></strong>
+        </div>
+      {{/if}}
     </main>
-    <footer>
+    <footer class="receipt-footer">
       <img class="qr" src="{{qrCode}}" alt="رمز QR لرقم الكشف {{reportID}}" />
-      <p class="scan">امسح الرمز لقراءة رقم الكشف</p>
-      <p class="report-id"><bdi dir="ltr">{{reportID}}</bdi></p>
     </footer>
   </body>
 </html>

@@ -80,6 +80,12 @@ export async function renderReportReceipt(report: ReceiptReport) {
     entityLabel: details.label,
     entityName: details.name || "-",
     isClientReport: report.type === "CLIENT",
+    clientSecondaryType:
+      report.clientReport?.secondaryType === "DELIVERED"
+        ? "واصل"
+        : report.clientReport?.secondaryType === "RETURNED"
+          ? "راجع"
+          : "-",
     store:
       report.type === "CLIENT" ? report.clientReport?.store?.name || "-" : "-",
     createdBy: report.createdBy.name,
@@ -88,6 +94,7 @@ export async function renderReportReceipt(report: ReceiptReport) {
     totalOrdersCount:
       report.baghdadOrdersCount + report.governoratesOrdersCount,
     amountDue: details.amount.toLocaleString("en-GB"),
+    showAmountDue: report.secondaryType !== "RETURNED",
     qrCode,
   });
 }

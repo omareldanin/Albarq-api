@@ -82,12 +82,18 @@ async function renderReportReceipt(report) {
         entityLabel: details.label,
         entityName: details.name || "-",
         isClientReport: report.type === "CLIENT",
+        clientSecondaryType: report.clientReport?.secondaryType === "DELIVERED"
+            ? "واصل"
+            : report.clientReport?.secondaryType === "RETURNED"
+                ? "راجع"
+                : "-",
         store: report.type === "CLIENT" ? report.clientReport?.store?.name || "-" : "-",
         createdBy: report.createdBy.name,
         baghdadOrdersCount: report.baghdadOrdersCount,
         governoratesOrdersCount: report.governoratesOrdersCount,
         totalOrdersCount: report.baghdadOrdersCount + report.governoratesOrdersCount,
         amountDue: details.amount.toLocaleString("en-GB"),
+        showAmountDue: report.secondaryType !== "RETURNED",
         qrCode,
     });
 }

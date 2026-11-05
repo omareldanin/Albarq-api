@@ -8,14 +8,17 @@
 PDF for an existing `CLIENT`, `BRANCH`, `DELIVERY_AGENT`, `COMPANY`, or `REPOSITORY`
 report. Authenticate using the normal Bearer token or JWT cookie.
 
-The receipt displays the report company’s saved logo at the top (when available) and includes رقم الكشف، التاريخ، نوع الكشف، العميل/الفرع/المندوب/الشركة/المخزن،
+The receipt displays the report company’s saved logo at the top right (when available)
+and the report-ID QR at the top left and again at the bottom. It includes رقم الكشف، التاريخ، نوع الكشف، العميل/الفرع/المندوب/الشركة/المخزن،
 المتجر، ساحب الكشف، إجمالي عدد الطلبات، عدد طلبات بغداد، عدد طلبات المحافظات، والمبلغ المستحق بالدينار العراقي.
 The date is the report creation time in Baghdad; ساحب الكشف is the original creator.
 The QR code contains only the decimal report ID (for example `123`), so scanning it
 can open the corresponding report in the frontend. The store row appears only on client
-receipts, with `-` if the client report has no store. Total orders equals the saved
+receipts, with `-` if the client report has no store. Client receipts also show
+نوع البريد as واصل (`DELIVERED`) or راجع (`RETURNED`). Total orders equals the saved
 Baghdad count plus the saved province count. PDF rendering waits for the logo to load.
 
+Returned (`RETURNED`) receipts hide the amount-due section and keep all order counts.
 Counts and amounts come from the saved report. Amount due follows the existing
 report PDF: `clientNet` for clients and repositories, `branchNet` for branches,
 and `companyNet` for companies and delivery agents (the amount the agent settles
