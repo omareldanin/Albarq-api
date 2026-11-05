@@ -281,7 +281,7 @@ router.route("/orders/v2/clientStatistics").get(
     ...Object.values(EmployeeRole),
     ...Object.values(ClientRole),
   ]),
-  ordersController.getCLientOrdersStatistics,
+  ordersController.getCLientOrdersStatisticsV2,
 );
 
 router.route("/orders/statusStatistics").get(
