@@ -314,7 +314,7 @@ model Repository {
   CustomerOutput    CustomerOutput[]
   employees         Employee[]
   Order             Order[]
-  branch            Branch             @relation(fields: [branchId], references: [id])
+  branch            Branch             @relation(fields: [branchId], references: [id], onDelete: Cascade)
   company           Company            @relation(fields: [companyId], references: [id])
   repositoryReports RepositoryReport[]
 }
@@ -616,7 +616,7 @@ model ClientOrderReceipt {
   storeId       Int?
   paperReceipt  Boolean  @default(false)
   notes         String?  @default("")
-  branch        Branch   @relation(fields: [branchId], references: [id])
+  branch        Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
   store         Store?   @relation(fields: [storeId], references: [id])
   order         Order?
 
