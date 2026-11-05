@@ -86,8 +86,6 @@ export class BranchesRepository {
     // ORIGINAL LOGIC (unchanged)
     // -----------------------------
     const where = {
-      OR: [
-        {
           AND: [
             {
               id: filters.getAll
@@ -109,12 +107,11 @@ export class BranchesRepository {
                   }
                 : undefined,
             },
-          ],
-        },
-        {
+          {
           parentBranchId: filters.branchID ? filters.branchID : undefined,
-        },
-      ],
+          },
+          ],
+     
     } satisfies Prisma.BranchWhereInput;
 
     let result;
