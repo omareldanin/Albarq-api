@@ -2115,7 +2115,7 @@ export class OrdersController {
         deleted: false,
         status:
           loggedInUser.role === "RECEIVING_AGENT" && status === "REGISTERED"
-            ? "READY_TO_SEND"
+            ? "WITH_RECEIVING_AGENT"
             : status === "RETURNED"
               ? {in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"]}
               : (status as OrderStatus),
@@ -2151,6 +2151,86 @@ export class OrdersController {
                       in: inquiryClientsIDs || [],
                     },
                   },
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: ordersStatisticsByStatus.map((status) => {
+        return {
+          count: status._count.id,
+          clientId: status.clientId,
+          clientName: clients.find((client) => +client.id === +status.clientId)
+            ?.user.name,
+        };
+      }),
+    });
+  });
+
+  getCLientOrdersStatisticsV2 = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+    const status = req.query.status;
+
+    let inquiryClientsIDs: number[] = [];
+    const inquiryEmployeeStuff =
+      await employeesRepository.getInquiryEmployeeStuff({
+        employeeID: loggedInUser.id,
+      });
+
+    inquiryClientsIDs =
+      inquiryEmployeeStuff.inquiryClients &&
+      inquiryEmployeeStuff.inquiryClients.length > 0
+        ? inquiryEmployeeStuff.inquiryClients
+        : [];
+
+    const clients = await prisma.client.findMany({
+      where: {
+        companyId: loggedInUser.companyID!,
+      },
+      select: {
+        id: true,
+        user: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    const ordersStatisticsByStatus = await prisma.order.groupBy({
+      by: ["clientId"],
+      _count: {
+        id: true,
+      },
+      where: {
+        deleted: false,
+        deliveryAgentId:
+          loggedInUser.role === "RECEIVING_AGENT" &&
+          (status === "REGISTERED" || status === "WITH_RECEIVING_AGENT")
+            ? loggedInUser.id
+            : undefined,
+        status:
+          loggedInUser.role === "RECEIVING_AGENT" && status === "REGISTERED"
+            ? "WITH_RECEIVING_AGENT"
+            : status === "RETURNED"
+              ? {in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"]}
+              : (status as OrderStatus),
+        client:
+          loggedInUser.role === "REPOSITORIY_EMPLOYEE"
+            ? {
+                branchId: loggedInUser.branchId,
+              }
+            : status === "REGISTERED"
+              ? {
+                  id: {
+                    notIn: inquiryClientsIDs,
+                  },
+                }
+              : {
+                  id: {
+                    in: inquiryClientsIDs,
+                  },
+                },
       },
     });
 

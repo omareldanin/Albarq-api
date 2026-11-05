@@ -1632,6 +1632,25 @@
                 }
             }
         },
+        "/api/v1/orders/v2/clientStatistics": {
+            "get": {
+                "description": "",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/orders/statusStatistics": {
             "get": {
                 "description": "",

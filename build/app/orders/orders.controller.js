@@ -1839,7 +1839,7 @@ class OrdersController {
             where: {
                 deleted: false,
                 status: loggedInUser.role === "RECEIVING_AGENT" && status === "REGISTERED"
-                    ? "READY_TO_SEND"
+                    ? "WITH_RECEIVING_AGENT"
                     : status === "RETURNED"
                         ? { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] }
                         : status,
@@ -1873,6 +1873,76 @@ class OrdersController {
                                     in: inquiryClientsIDs || [],
                                 },
                             },
+            },
+        });
+        res.status(200).json({
+            status: "success",
+            data: ordersStatisticsByStatus.map((status) => {
+                return {
+                    count: status._count.id,
+                    clientId: status.clientId,
+                    clientName: clients.find((client) => +client.id === +status.clientId)
+                        ?.user.name,
+                };
+            }),
+        });
+    });
+    getCLientOrdersStatisticsV2 = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const loggedInUser = res.locals.user;
+        const status = req.query.status;
+        let inquiryClientsIDs = [];
+        const inquiryEmployeeStuff = await employeesRepository.getInquiryEmployeeStuff({
+            employeeID: loggedInUser.id,
+        });
+        inquiryClientsIDs =
+            inquiryEmployeeStuff.inquiryClients &&
+                inquiryEmployeeStuff.inquiryClients.length > 0
+                ? inquiryEmployeeStuff.inquiryClients
+                : [];
+        const clients = await db_1.prisma.client.findMany({
+            where: {
+                companyId: loggedInUser.companyID,
+            },
+            select: {
+                id: true,
+                user: {
+                    select: {
+                        name: true,
+                    },
+                },
+            },
+        });
+        const ordersStatisticsByStatus = await db_1.prisma.order.groupBy({
+            by: ["clientId"],
+            _count: {
+                id: true,
+            },
+            where: {
+                deleted: false,
+                deliveryAgentId: loggedInUser.role === "RECEIVING_AGENT" &&
+                    (status === "REGISTERED" || status === "WITH_RECEIVING_AGENT")
+                    ? loggedInUser.id
+                    : undefined,
+                status: loggedInUser.role === "RECEIVING_AGENT" && status === "REGISTERED"
+                    ? "WITH_RECEIVING_AGENT"
+                    : status === "RETURNED"
+                        ? { in: ["RETURNED", "REPLACED", "PARTIALLY_RETURNED"] }
+                        : status,
+                client: loggedInUser.role === "REPOSITORIY_EMPLOYEE"
+                    ? {
+                        branchId: loggedInUser.branchId,
+                    }
+                    : status === "REGISTERED"
+                        ? {
+                            id: {
+                                notIn: inquiryClientsIDs,
+                            },
+                        }
+                        : {
+                            id: {
+                                in: inquiryClientsIDs,
+                            },
+                        },
             },
         });
         res.status(200).json({
