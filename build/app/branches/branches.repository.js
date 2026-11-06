@@ -63,13 +63,6 @@ class BranchesRepository {
         const where = {
             AND: [
                 {
-                    id: filters.getAll
-                        ? undefined
-                        : filters.branchID
-                            ? filters.branchID
-                            : undefined,
-                },
-                {
                     companyId: filters.companyID,
                 },
                 { governorate: filters.governorate },
@@ -86,6 +79,13 @@ class BranchesRepository {
                     OR: [
                         {
                             parentBranchId: filters.branchID ? filters.branchID : undefined,
+                        },
+                        {
+                            id: filters.getAll
+                                ? undefined
+                                : filters.branchID
+                                    ? filters.branchID
+                                    : undefined,
                         },
                     ],
                 },

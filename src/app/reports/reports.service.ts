@@ -160,7 +160,11 @@ export class ReportsService {
     if (data.reportData.ordersIDs === "*") {
       orders = (
         await ordersRepository.getAllOrdersPaginated({
-          filters: {...data.ordersFilters, size: 10000},
+          filters: {
+            ...data.ordersFilters,
+            size: 10000,
+            branchID: data.loggedInUser.branchId,
+          },
           loggedInUser: data.loggedInUser,
           forReport: true,
         })
