@@ -111,7 +111,6 @@ class ReportsService {
                 filters: {
                     ...data.ordersFilters,
                     size: 10000,
-                    branchID: data.loggedInUser.branchId,
                 },
                 loggedInUser: data.loggedInUser,
                 forReport: true,
