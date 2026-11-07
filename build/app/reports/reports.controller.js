@@ -75,6 +75,7 @@ class ReportController {
             repositoryID: req.query.repository_id,
             branchID: req.query.branch_id,
             deliveryAgentID: req.query.delivery_agent_id,
+            receivingAgentID: req.query.receiving_agent_id,
             companyID: req.query.company_id,
             clientID: req.query.client_id,
             createdByID: req.query.created_by_id,

@@ -293,6 +293,7 @@ export const ReportUpdateOpenAPISchema = generateSchema(ReportUpdateSchema);
 /* --------------------------------------------------------------- */
 
 export const ReportsFiltersSchema = z.object({
+  receivingAgentID: z.coerce.number().int().positive().safe().optional(),
   page: z.coerce.number().optional().default(1),
   size: z.coerce.number().optional().default(10),
   company: z.coerce.number().optional(),

@@ -227,6 +227,7 @@ exports.ReportUpdateOpenAPISchema = (0, zod_openapi_1.generateSchema)(exports.Re
 // export const ReportUpdateMock = generateMock(ReportUpdateSchema);
 /* --------------------------------------------------------------- */
 exports.ReportsFiltersSchema = zod_1.z.object({
+    receivingAgentID: zod_1.z.coerce.number().int().positive().safe().optional(),
     page: zod_1.z.coerce.number().optional().default(1),
     size: zod_1.z.coerce.number().optional().default(10),
     company: zod_1.z.coerce.number().optional(),

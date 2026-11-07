@@ -275,6 +275,7 @@ exports.OrdersFiltersSchema = zod_1.z.object({
     createdBy: zod_1.z.coerce.number().optional(),
     deliveryAgentID: zod_1.z.coerce.number().optional(),
     receiveingAgentID: zod_1.z.coerce.number().optional(),
+    receivingAgentID: zod_1.z.coerce.number().int().positive().safe().optional(),
     clientOrderReceiptId: zod_1.z.coerce.number().optional(),
     companyID: zod_1.z.coerce.number().optional(),
     automaticUpdateID: zod_1.z.coerce.number().optional(),

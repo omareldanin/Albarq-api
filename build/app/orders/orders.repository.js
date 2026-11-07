@@ -591,7 +591,7 @@ class OrdersRepository {
             childBranchs = branchs.map((b) => b.id);
         }
         const branchScope = [data.filters.branchID, ...childBranchs].filter((id) => id != null);
-        const where = data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
+        let where = data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
             ? {
                 AND: [
                     // Search by receiptNumber, recipientName, recipientPhone, recipientAddress
@@ -1252,61 +1252,63 @@ class OrdersRepository {
                         forwarded: data.filters.forwarded,
                     },
                     {
-                        OR: data.filters.orderType && data.filters.orderType !== "inside"
-                            ? []
-                            : data.filters.governorate &&
-                                data.filters.governorateReport === "false"
-                                ? [
-                                    {
-                                        branch: {
-                                            governorate: data.filters.governorate,
-                                        },
-                                    },
-                                ]
-                                : data.loggedInUser?.role !== "DELIVERY_AGENT"
+                        OR: data.additionalWhere && data.loggedInUser?.role === "RECEIVING_AGENTS_MANAGER"
+                            ? undefined
+                            : data.filters.orderType && data.filters.orderType !== "inside"
+                                ? []
+                                : data.filters.governorate &&
+                                    data.filters.governorateReport === "false"
                                     ? [
                                         {
-                                            branch: data.filters.inquiryBranchesIDs
-                                                ? {
-                                                    id: {
-                                                        in: data.filters.inquiryBranchesIDs,
-                                                    },
-                                                }
-                                                : {
-                                                    id: data.filters.branchID,
-                                                },
-                                        },
-                                        {
-                                            branch: data.filters.inquiryBranchesIDs
-                                                ? {
-                                                    parentBranchId: {
-                                                        in: data.filters.inquiryBranchesIDs,
-                                                    },
-                                                }
-                                                : {
-                                                    parentBranchId: data.filters.branchID,
-                                                },
-                                        },
-                                        {
-                                            client: data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-                                                !data.loggedInUser?.mainRepository
-                                                ? {
-                                                    branchId: data.loggedInUser?.branchId,
-                                                }
-                                                : undefined,
-                                        },
-                                        {
-                                            client: data.loggedInUser?.role !== "COMPANY_MANAGER" &&
-                                                !data.loggedInUser?.mainRepository
-                                                ? {
-                                                    branch: {
-                                                        parentBranchId: data.loggedInUser?.branchId,
-                                                    },
-                                                }
-                                                : undefined,
+                                            branch: {
+                                                governorate: data.filters.governorate,
+                                            },
                                         },
                                     ]
-                                    : undefined,
+                                    : data.loggedInUser?.role !== "DELIVERY_AGENT"
+                                        ? [
+                                            {
+                                                branch: data.filters.inquiryBranchesIDs
+                                                    ? {
+                                                        id: {
+                                                            in: data.filters.inquiryBranchesIDs,
+                                                        },
+                                                    }
+                                                    : {
+                                                        id: data.filters.branchID,
+                                                    },
+                                            },
+                                            {
+                                                branch: data.filters.inquiryBranchesIDs
+                                                    ? {
+                                                        parentBranchId: {
+                                                            in: data.filters.inquiryBranchesIDs,
+                                                        },
+                                                    }
+                                                    : {
+                                                        parentBranchId: data.filters.branchID,
+                                                    },
+                                            },
+                                            {
+                                                client: data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                                                    !data.loggedInUser?.mainRepository
+                                                    ? {
+                                                        branchId: data.loggedInUser?.branchId,
+                                                    }
+                                                    : undefined,
+                                            },
+                                            {
+                                                client: data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                                                    !data.loggedInUser?.mainRepository
+                                                    ? {
+                                                        branch: {
+                                                            parentBranchId: data.loggedInUser?.branchId,
+                                                        },
+                                                    }
+                                                    : undefined,
+                                            },
+                                        ]
+                                        : undefined,
                     },
                     {
                         governorate: data.filters.governorate &&
@@ -1508,6 +1510,9 @@ class OrdersRepository {
                     },
                 ],
             };
+        if (data.additionalWhere) {
+            where = { AND: [where, data.additionalWhere] };
+        }
         if (data.filters.minified === true || data.filters.forMobile === true) {
             const paginatedOrders = await db_1.prisma.order.findManyPaginated({
                 where: data.loggedInUser?.role === "RECEIVING_AGENT" &&
@@ -1615,7 +1620,8 @@ class OrdersRepository {
                                             },
                                         },
                                     ]
-                                    : data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                                    : !(data.loggedInUser?.role === "RECEIVING_AGENTS_MANAGER" && data.additionalWhere) &&
+                                        data.loggedInUser?.role !== "COMPANY_MANAGER" &&
                                         data.loggedInUser?.role !== "CLIENT" &&
                                         data.loggedInUser?.role !== "RECEIVING_AGENT" &&
                                         data.loggedInUser?.role !== "CLIENT_ASSISTANT" &&

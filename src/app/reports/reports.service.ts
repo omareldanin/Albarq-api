@@ -1,3 +1,4 @@
+import {getReceivingManagerReports} from "../orders/receivingAgentManager";
 import {
   AdminRole,
   ClientRole,
@@ -576,6 +577,9 @@ export class ReportsService {
     loggedInUser: loggedInUserType;
     filters: ReportsFiltersType;
   }) {
+    if (data.loggedInUser.role === "RECEIVING_AGENTS_MANAGER") {
+      return getReceivingManagerReports(data.loggedInUser, data.filters);
+    }
     if (data.loggedInUser.role === EmployeeRole.RECEIVING_AGENT) {
       return reportsRepository.getReceivingAgentReportsPaginated({
         loggedInUser: data.loggedInUser,

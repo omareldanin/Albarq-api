@@ -52,11 +52,23 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const csv_parser_1 = __importDefault(require("csv-parser"));
 const ExcelJS = __importStar(require("exceljs"));
+const receivingAgentManager_1 = require("./receivingAgentManager");
 const XlsxPopulate = require("xlsx-populate");
 const employeesRepository = new employees_repository_1.EmployeesRepository();
 const ordersService = new orders_service_1.OrdersService();
 const ordersRepository = new orders_repository_1.OrdersRepository();
 class OrdersController {
+    getReceivingManagerAgents = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const status = receivingAgentManager_1.managerStatusSchema.parse(req.query.status);
+        const data = await (0, receivingAgentManager_1.getReceivingManagerAgents)(res.locals.user, status);
+        res.status(200).json({ status: "success", data });
+    });
+    getReceivingManagerClients = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const status = receivingAgentManager_1.managerOrderStatusSchema.parse(req.query.status);
+        const agentId = receivingAgentManager_1.managerAgentIdSchema.parse(req.query.receiving_agent_id);
+        const data = await (0, receivingAgentManager_1.getReceivingManagerClients)(res.locals.user, status, agentId);
+        res.status(200).json({ status: "success", data });
+    });
     createOrder = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const loggedInUser = res.locals.user;
         let orderOrOrders;
@@ -92,6 +104,7 @@ class OrdersController {
         const filters = orders_dto_1.OrdersFiltersSchema.parse({
             clientID: req.query.client_id,
             deliveryAgentID: req.query.delivery_agent_id,
+            receivingAgentID: req.query.receiving_agent_id,
             companyID: req.query.company_id,
             automaticUpdateID: req.query.automatic_update_id,
             search: req.query.search,

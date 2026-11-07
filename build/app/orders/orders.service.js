@@ -22,6 +22,7 @@ const locations_repository_1 = require("../locations/locations.repository");
 const axios_1 = __importDefault(require("axios"));
 const updateGeniStatus_1 = require("../../lib/updateGeniStatus");
 const clientWebhook_1 = require("../../lib/clientWebhook");
+const receivingAgentManager_1 = require("./receivingAgentManager");
 const ordersRepository = new orders_repository_1.OrdersRepository();
 const employeesRepository = new employees_repository_1.EmployeesRepository();
 const clientsRepository = new clients_repository_1.ClientsRepository();
@@ -266,6 +267,27 @@ class OrdersService {
         return createdOrder;
     };
     getAllOrders = async (data) => {
+        if (data.filters.receivingAgentID !== undefined) {
+            const status = receivingAgentManager_1.managerOrderStatusSchema.parse(data.filters.status);
+            const scope = (0, receivingAgentManager_1.receivingManagerOrderWhere)(data.loggedInUser, status, data.filters.receivingAgentID);
+            const page = Number.isSafeInteger(data.filters.page) && data.filters.page > 0
+                ? data.filters.page : 1;
+            const size = Number.isSafeInteger(data.filters.size) && data.filters.size > 0
+                ? Math.min(data.filters.size, 100) : 20;
+            const result = await ordersRepository.getAllOrdersPaginated({
+                loggedInUser: data.loggedInUser,
+                // Receiving scope is based on the agent/client's branch, not the order's destination branch.
+                filters: {
+                    ...data.filters, page, size, status,
+                    branchID: undefined,
+                    companyID: data.loggedInUser.companyID,
+                    deliveryAgentID: undefined,
+                    deleted: false,
+                },
+                additionalWhere: scope,
+            });
+            return { ...result, page, where: scope };
+        }
         const clientID = data.loggedInUser.role === "CLIENT"
             ? data.loggedInUser.id
             : data.loggedInUser.role === "CLIENT_ASSISTANT"
@@ -2070,106 +2092,7 @@ class OrdersService {
             };
         }
         if (data.loggedInUser.role === "RECEIVING_AGENTS_MANAGER") {
-            const returnedCount = await db_1.prisma.report.aggregate({
-                _sum: {
-                    baghdadOrdersCount: true,
-                    governoratesOrdersCount: true,
-                },
-                _count: {
-                    id: true,
-                },
-                where: {
-                    deleted: false,
-                    confirmed: false,
-                    clientReport: {
-                        secondaryType: "RETURNED",
-                        client: {
-                            branchId: data.loggedInUser.branchId,
-                        },
-                        agent: {
-                            branchId: data.loggedInUser.branchId,
-                        },
-                    },
-                },
-            });
-            const deliveredCount = await db_1.prisma.report.aggregate({
-                _sum: {
-                    baghdadOrdersCount: true,
-                    governoratesOrdersCount: true,
-                },
-                _count: {
-                    id: true,
-                },
-                where: {
-                    deleted: false,
-                    confirmed: false,
-                    clientReport: {
-                        secondaryType: "DELIVERED",
-                        client: {
-                            branchId: data.loggedInUser.branchId,
-                        },
-                        agent: {
-                            branchId: data.loggedInUser.branchId,
-                        },
-                    },
-                },
-            });
-            const readyToSend = await db_1.prisma.order.count({
-                where: {
-                    deleted: false,
-                    status: "READY_TO_SEND",
-                    companyId: data.loggedInUser.companyID,
-                    client: {
-                        branchId: data.loggedInUser.branchId,
-                        ReceivingAgentClients: {
-                            some: {},
-                        },
-                    },
-                },
-            });
-            const withReceingAgentClients = await db_1.prisma.order.count({
-                where: {
-                    deleted: false,
-                    status: "WITH_RECEIVING_AGENT",
-                    companyId: data.loggedInUser.companyID,
-                    deliveryAgent: {
-                        branchId: data.loggedInUser.branchId,
-                    },
-                },
-            });
-            let total = 0;
-            let rCount = (returnedCount._sum.baghdadOrdersCount ?? 0) +
-                (returnedCount._sum.governoratesOrdersCount ?? 0);
-            let dCount = (deliveredCount._sum.baghdadOrdersCount ?? 0) +
-                (deliveredCount._sum.governoratesOrdersCount ?? 0);
-            return {
-                ordersStatisticsByStatus: [
-                    {
-                        status: "WITH_RECEIVING_AGENT",
-                        totalCost: total,
-                        count: withReceingAgentClients,
-                        name: "مع مندوب الاستلام",
-                    },
-                    {
-                        status: "READY_TO_SEND",
-                        totalCost: total,
-                        count: readyToSend,
-                        name: "جاهز للشحن",
-                    },
-                    {
-                        status: "RETURNED",
-                        totalCost: total,
-                        count: rCount,
-                        name: "كشوفات الراجع",
-                    },
-                    {
-                        status: "DELIVERED",
-                        totalCost: total,
-                        count: dCount,
-                        name: "كشوفات الواصل",
-                    },
-                ],
-            };
+            return (0, receivingAgentManager_1.getReceivingManagerStatistics)(data.loggedInUser);
         }
         let statistics = await ordersRepository.getOrdersStatisticsV2({
             filters: {

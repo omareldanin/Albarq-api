@@ -47,6 +47,12 @@ import {
 } from "../../lib/updateGeniStatus";
 import {notifyClientWebhook} from "../../lib/clientWebhook";
 
+import {
+  getReceivingManagerStatistics,
+  managerOrderStatusSchema,
+  receivingManagerOrderWhere,
+} from "./receivingAgentManager";
+
 const ordersRepository = new OrdersRepository();
 const employeesRepository = new EmployeesRepository();
 const clientsRepository = new ClientsRepository();
@@ -343,6 +349,29 @@ export class OrdersService {
     filters: OrdersFiltersType;
     loggedInUser: loggedInUserType;
   }) => {
+    if (data.filters.receivingAgentID !== undefined) {
+      const status = managerOrderStatusSchema.parse(data.filters.status);
+      const scope = receivingManagerOrderWhere(
+        data.loggedInUser, status, data.filters.receivingAgentID,
+      );
+      const page = Number.isSafeInteger(data.filters.page) && data.filters.page > 0
+        ? data.filters.page : 1;
+      const size = Number.isSafeInteger(data.filters.size) && data.filters.size > 0
+        ? Math.min(data.filters.size, 100) : 20;
+      const result = await ordersRepository.getAllOrdersPaginated({
+        loggedInUser: data.loggedInUser,
+        // Receiving scope is based on the agent/client's branch, not the order's destination branch.
+        filters: {
+          ...data.filters, page, size, status,
+          branchID: undefined,
+          companyID: data.loggedInUser.companyID!,
+          deliveryAgentID: undefined,
+          deleted: false,
+        },
+        additionalWhere: scope,
+      });
+      return {...result, page, where: scope};
+    }
     const clientID =
       data.loggedInUser.role === "CLIENT"
         ? data.loggedInUser.id
@@ -2649,113 +2678,7 @@ export class OrdersService {
     }
 
     if (data.loggedInUser.role === "RECEIVING_AGENTS_MANAGER") {
-      const returnedCount = await prisma.report.aggregate({
-        _sum: {
-          baghdadOrdersCount: true,
-          governoratesOrdersCount: true,
-        },
-        _count: {
-          id: true,
-        },
-        where: {
-          deleted: false,
-          confirmed: false,
-          clientReport: {
-            secondaryType: "RETURNED",
-            client: {
-              branchId: data.loggedInUser.branchId,
-            },
-            agent: {
-              branchId: data.loggedInUser.branchId,
-            },
-          },
-        },
-      });
-
-      const deliveredCount = await prisma.report.aggregate({
-        _sum: {
-          baghdadOrdersCount: true,
-          governoratesOrdersCount: true,
-        },
-        _count: {
-          id: true,
-        },
-        where: {
-          deleted: false,
-          confirmed: false,
-          clientReport: {
-            secondaryType: "DELIVERED",
-            client: {
-              branchId: data.loggedInUser.branchId,
-            },
-            agent: {
-              branchId: data.loggedInUser.branchId,
-            },
-          },
-        },
-      });
-
-      const readyToSend = await prisma.order.count({
-        where: {
-          deleted: false,
-          status: "READY_TO_SEND",
-          companyId: data.loggedInUser.companyID,
-          client: {
-            branchId: data.loggedInUser.branchId,
-            ReceivingAgentClients: {
-              some: {},
-            },
-          },
-        },
-      });
-
-      const withReceingAgentClients = await prisma.order.count({
-        where: {
-          deleted: false,
-          status: "WITH_RECEIVING_AGENT",
-          companyId: data.loggedInUser.companyID,
-          deliveryAgent: {
-            branchId: data.loggedInUser.branchId,
-          },
-        },
-      });
-
-      let total = 0;
-      let rCount =
-        (returnedCount._sum.baghdadOrdersCount ?? 0) +
-        (returnedCount._sum.governoratesOrdersCount ?? 0);
-      let dCount =
-        (deliveredCount._sum.baghdadOrdersCount ?? 0) +
-        (deliveredCount._sum.governoratesOrdersCount ?? 0);
-
-      return {
-        ordersStatisticsByStatus: [
-          {
-            status: "WITH_RECEIVING_AGENT",
-            totalCost: total,
-            count: withReceingAgentClients,
-            name: "مع مندوب الاستلام",
-          },
-          {
-            status: "READY_TO_SEND",
-            totalCost: total,
-            count: readyToSend,
-            name: "جاهز للشحن",
-          },
-          {
-            status: "RETURNED",
-            totalCost: total,
-            count: rCount,
-            name: "كشوفات الراجع",
-          },
-          {
-            status: "DELIVERED",
-            totalCost: total,
-            count: dCount,
-            name: "كشوفات الواصل",
-          },
-        ],
-      };
+      return getReceivingManagerStatistics(data.loggedInUser);
     }
 
     let statistics = await ordersRepository.getOrdersStatisticsV2({

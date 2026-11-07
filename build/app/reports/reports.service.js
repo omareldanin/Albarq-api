@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReportsService = void 0;
+const receivingAgentManager_1 = require("../orders/receivingAgentManager");
 const client_1 = require("@prisma/client");
 const AppError_1 = require("../../lib/AppError");
 // import { OrderTimelineType } from "../orders/orders.dto";
@@ -446,6 +447,9 @@ class ReportsService {
         return { pdf, reportID: report.id };
     }
     async getAllReports(data) {
+        if (data.loggedInUser.role === "RECEIVING_AGENTS_MANAGER") {
+            return (0, receivingAgentManager_1.getReceivingManagerReports)(data.loggedInUser, data.filters);
+        }
         if (data.loggedInUser.role === client_1.EmployeeRole.RECEIVING_AGENT) {
             return reportsRepository.getReceivingAgentReportsPaginated({
                 loggedInUser: data.loggedInUser,

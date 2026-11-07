@@ -239,6 +239,19 @@ router.route("/orders/statistics").get(
   ordersController.getOrdersStatisticsV2,
 );
 
+router.get(
+  "/orders/receiving-agent-manager/agents",
+  isLoggedIn,
+  isAutherized([EmployeeRole.RECEIVING_AGENTS_MANAGER]),
+  ordersController.getReceivingManagerAgents,
+);
+router.get(
+  "/orders/receiving-agent-manager/clients",
+  isLoggedIn,
+  isAutherized([EmployeeRole.RECEIVING_AGENTS_MANAGER]),
+  ordersController.getReceivingManagerClients,
+);
+
 router.route("/orders/v2/statistics").get(
   isLoggedIn,
   isAutherized([

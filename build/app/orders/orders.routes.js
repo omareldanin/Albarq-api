@@ -70,6 +70,8 @@ router.route("/orders/statistics").get(isLoggedIn_1.isLoggedIn, (0, isAutherized
     ...Object.values(client_1.EmployeeRole),
     ...Object.values(client_1.ClientRole),
 ]), ordersController.getOrdersStatisticsV2);
+router.get("/orders/receiving-agent-manager/agents", isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.RECEIVING_AGENTS_MANAGER]), ordersController.getReceivingManagerAgents);
+router.get("/orders/receiving-agent-manager/clients", isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.RECEIVING_AGENTS_MANAGER]), ordersController.getReceivingManagerClients);
 router.route("/orders/v2/statistics").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,

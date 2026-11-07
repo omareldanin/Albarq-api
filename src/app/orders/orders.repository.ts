@@ -760,6 +760,7 @@ export class OrdersRepository {
     filters: OrdersFiltersType | ReportCreateOrdersFiltersType;
     loggedInUser: loggedInUserType | undefined;
     forReport?: boolean;
+    additionalWhere?: Prisma.OrderWhereInput;
   }) {
     let startDate = new Date();
     let endDate = new Date();
@@ -798,7 +799,7 @@ export class OrdersRepository {
       (id): id is number => id != null,
     );
 
-    const where =
+    let where: Prisma.OrderWhereInput =
       data.loggedInUser?.role === "INQUIRY_EMPLOYEE"
         ? ({
             AND: [
@@ -1523,7 +1524,9 @@ export class OrdersRepository {
               },
               {
                 OR:
-                  data.filters.orderType && data.filters.orderType !== "inside"
+                  data.additionalWhere && data.loggedInUser?.role === "RECEIVING_AGENTS_MANAGER"
+                    ? undefined
+                    : data.filters.orderType && data.filters.orderType !== "inside"
                     ? []
                     : data.filters.governorate &&
                         data.filters.governorateReport === "false"
@@ -1787,6 +1790,10 @@ export class OrdersRepository {
             ],
           } satisfies Prisma.OrderWhereInput);
 
+    if (data.additionalWhere) {
+      where = {AND: [where, data.additionalWhere]};
+    }
+
     if (data.filters.minified === true || data.filters.forMobile === true) {
       const paginatedOrders = await prisma.order.findManyPaginated(
         {
@@ -1897,7 +1904,8 @@ export class OrdersRepository {
                                 },
                               },
                             ]
-                          : data.loggedInUser?.role !== "COMPANY_MANAGER" &&
+                          : !(data.loggedInUser?.role === "RECEIVING_AGENTS_MANAGER" && data.additionalWhere) &&
+                              data.loggedInUser?.role !== "COMPANY_MANAGER" &&
                               data.loggedInUser?.role !== "CLIENT" &&
                               data.loggedInUser?.role !== "RECEIVING_AGENT" &&
                               data.loggedInUser?.role !== "CLIENT_ASSISTANT" &&

@@ -38,6 +38,14 @@ import path from "path";
 import csv from "csv-parser";
 import * as ExcelJS from "exceljs";
 
+import {
+  getReceivingManagerAgents,
+  getReceivingManagerClients,
+  managerAgentIdSchema,
+  managerOrderStatusSchema,
+  managerStatusSchema,
+} from "./receivingAgentManager";
+
 const XlsxPopulate = require("xlsx-populate");
 
 const employeesRepository = new EmployeesRepository();
@@ -47,6 +55,23 @@ const ordersService = new OrdersService();
 const ordersRepository = new OrdersRepository();
 
 export class OrdersController {
+  getReceivingManagerAgents = catchAsync(async (req, res) => {
+    const status = managerStatusSchema.parse(req.query.status);
+    const data = await getReceivingManagerAgents(
+      res.locals.user as loggedInUserType, status,
+    );
+    res.status(200).json({status: "success", data});
+  });
+
+  getReceivingManagerClients = catchAsync(async (req, res) => {
+    const status = managerOrderStatusSchema.parse(req.query.status);
+    const agentId = managerAgentIdSchema.parse(req.query.receiving_agent_id);
+    const data = await getReceivingManagerClients(
+      res.locals.user as loggedInUserType, status, agentId,
+    );
+    res.status(200).json({status: "success", data});
+  });
+
   createOrder = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
     let orderOrOrders: OrderCreateType | OrderCreateType[];
@@ -88,6 +113,7 @@ export class OrdersController {
     const filters = OrdersFiltersSchema.parse({
       clientID: req.query.client_id,
       deliveryAgentID: req.query.delivery_agent_id,
+      receivingAgentID: req.query.receiving_agent_id,
       companyID: req.query.company_id,
       automaticUpdateID: req.query.automatic_update_id,
       search: req.query.search,

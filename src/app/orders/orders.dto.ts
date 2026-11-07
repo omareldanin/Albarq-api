@@ -332,6 +332,7 @@ export const OrdersFiltersSchema = z.object({
   createdBy: z.coerce.number().optional(),
   deliveryAgentID: z.coerce.number().optional(),
   receiveingAgentID: z.coerce.number().optional(),
+  receivingAgentID: z.coerce.number().int().positive().safe().optional(),
   clientOrderReceiptId: z.coerce.number().optional(),
   companyID: z.coerce.number().optional(),
   automaticUpdateID: z.coerce.number().optional(),
