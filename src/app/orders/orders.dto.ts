@@ -293,6 +293,11 @@ export type OrderChatNotificationCreateType = z.infer<
 
 /* --------------------------------------------------------------- */
 
+export const ReceivingManagerAgentFilterSchema = z.union([
+  z.literal("unassigned"),
+  z.coerce.number().int().positive().safe(),
+]);
+
 export const OrdersFiltersSchema = z.object({
   confirmed: z.preprocess((val) => {
     if (val === "true") return true;
@@ -332,7 +337,7 @@ export const OrdersFiltersSchema = z.object({
   createdBy: z.coerce.number().optional(),
   deliveryAgentID: z.coerce.number().optional(),
   receiveingAgentID: z.coerce.number().optional(),
-  receivingAgentID: z.coerce.number().int().positive().safe().optional(),
+  receivingAgentID: ReceivingManagerAgentFilterSchema.optional(),
   clientOrderReceiptId: z.coerce.number().optional(),
   companyID: z.coerce.number().optional(),
   automaticUpdateID: z.coerce.number().optional(),

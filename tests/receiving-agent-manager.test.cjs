@@ -17,15 +17,19 @@ const agent = (id, branchId = 10, companyId = 1) => ({
   user: { id, name: `Agent ${id}` },
 });
 const agents = [agent(1), agent(2), agent(3, 20), agent(4, 10, 2)];
-const client = (id, branchId = 10) => ({
+const client = (id, branchId = 10, companyId = 1) => ({
   id,
   branchId,
-  companyId: 1,
+  companyId,
   user: { id, name: `Client ${id}` },
   company: { name: "Company" },
   branch: { id: branchId },
 });
-const clients = [client(101), client(102), client(103), client(104, 20)];
+const clients = [
+  client(101), client(102), client(103), client(104, 20),
+  client(105), client(106), client(107), client(108, 20),
+  client(109, 10, 2), client(110),
+];
 const assignments = [
   [1, 101],
   [2, 101],
@@ -60,6 +64,16 @@ const orders = [
   order("r5", 104, "READY_TO_SEND"),
   order("r6", 101, "READY_TO_SEND", null, { deleted: true }),
   order("r7", 101, "READY_TO_SEND", null, { companyId: 2 }),
+  order("r8", 105, "READY_TO_SEND"),
+  // Unassigned refers to the client's receiving assignments, not deliveryAgentId.
+  order("r9", 105, "READY_TO_SEND", 1, { branchId: null, branch: null }),
+  order("r10", 106, "READY_TO_SEND"),
+  order("r11", 105, "READY_TO_SEND", null, { deleted: true }),
+  order("r12", 105, "READY_TO_SEND", null, { companyId: 2 }),
+  order("r13", 108, "READY_TO_SEND"),
+  order("r14", 109, "READY_TO_SEND"),
+  order("r15", 110, "READY_TO_SEND", null, { deleted: true }),
+  order("r16", 107, "REGISTERED"),
   order("w1", 101, "WITH_RECEIVING_AGENT", 1),
   order("w2", 101, "WITH_RECEIVING_AGENT", 1),
   order("w3", 102, "WITH_RECEIVING_AGENT", 2),
@@ -128,6 +142,8 @@ function matches(row, condition) {
     if (key === "not") return !matches(row, value);
     if (key === "some")
       return Array.isArray(row) && row.some((r) => matches(r, value));
+    if (key === "none")
+      return Array.isArray(row) && !row.some((r) => matches(r, value));
     if (row == null) return false;
     return matches(row[key], value);
   });
@@ -200,6 +216,7 @@ stub("../src/app/messages/messages.controller", {
   MessagesController: class {},
 });
 const manager = require("../src/app/orders/receivingAgentManager");
+const { OrdersFiltersSchema, ReceivingManagerAgentFilterSchema } = require("../src/app/orders/orders.dto");
 const { OrdersRepository } = require("../src/app/orders/orders.repository");
 
 for (const invalid of [
@@ -218,7 +235,7 @@ for (const invalid of [
 }
 test("invalid IDs and unsupported statuses are rejected", () => {
   for (const id of ["0", "-1", "1.5", "abc", "9007199254740992"])
-    assert.equal(manager.managerAgentIdSchema.safeParse(id).success, false);
+    assert.equal(ReceivingManagerAgentFilterSchema.safeParse(id).success, false);
   assert.equal(
     manager.managerStatusSchema.safeParse("REGISTERED").success,
     false
@@ -236,7 +253,7 @@ test("dashboard counts stay aligned with grouped counts and exclude other scopes
     ),
     {
       WITH_RECEIVING_AGENT: 4,
-      READY_TO_SEND: 3,
+      READY_TO_SEND: 6,
       RETURNED: 10,
       DELIVERED: 10,
     }
@@ -251,7 +268,8 @@ test("ready orders follow client assignments, with unique overall total for shar
       [1, 2],
     ]
   );
-  assert.equal(result.totalCount, 3);
+  assert.equal(result.totalCount, 6);
+  assert.equal(result.unassignedCount, 3);
   assert.equal(result.hasSharedClients, true);
   const clients = await manager.getReceivingManagerClients(
     user,
@@ -289,6 +307,32 @@ test("with-agent counts use the assigned agent, never the manager ID or the orde
       [101, 2],
       [104, 1],
     ]
+  );
+});
+test("unassigned clients include only scoped clients with undeleted ready orders and no assignments", async () => {
+  const result = await manager.getReceivingManagerClients(user, "READY_TO_SEND", "unassigned");
+  assert.deepEqual(result.map((c) => [c.clientId, c.count]), [[105, 2], [106, 1]]);
+  const groups = await manager.getReceivingManagerAgents(user, "READY_TO_SEND");
+  assert.equal(groups.unassignedCount, result.reduce((sum, c) => sum + c.count, 0));
+  assert.deepEqual(
+    manager.receivingManagerOrderWhere(user, "READY_TO_SEND", "unassigned").client.ReceivingAgentClients,
+    {none: {}},
+  );
+  assert.equal((await manager.getReceivingManagerAgents({...user, branchId: 999}, "READY_TO_SEND")).unassignedCount, 0);
+});
+test("the unassigned filter is accepted on order routes and rejected for with-agent orders", () => {
+  assert.equal(ReceivingManagerAgentFilterSchema.parse("unassigned"), "unassigned");
+  assert.equal(ReceivingManagerAgentFilterSchema.parse("2"), 2);
+  assert.equal(OrdersFiltersSchema.parse({receivingAgentID: "unassigned"}).receivingAgentID, "unassigned");
+  for (const invalid of ["0", "-1", "1.5", "none", "9007199254740992", undefined])
+    assert.equal(ReceivingManagerAgentFilterSchema.safeParse(invalid).success, false);
+  assert.throws(
+    () => manager.receivingManagerOrderWhere(user, "WITH_RECEIVING_AGENT", "unassigned"),
+    (e) => e.statusCode === 400,
+  );
+  assert.throws(
+    () => manager.receivingManagerOrderWhere({...user, role: "RECEIVING_AGENT"}, "READY_TO_SEND", "unassigned"),
+    (e) => e.statusCode === 403,
   );
 });
 test("reports group by receiving agent and add saved order counts, retaining report counts separately", async () => {
@@ -369,6 +413,12 @@ test("order detail query keeps the selected agent and client while allowing a di
     ["WITH_RECEIVING_AGENT", 1, 104, ["w5"]],
     ["WITH_RECEIVING_AGENT", 3, 103, []],
     ["READY_TO_SEND", 1, 102, []],
+    ["READY_TO_SEND", "unassigned", 105, ["r8", "r9"]],
+    ["READY_TO_SEND", "unassigned", 106, ["r10"]],
+    ["READY_TO_SEND", "unassigned", 101, []],
+    ["READY_TO_SEND", "unassigned", 103, []],
+    ["READY_TO_SEND", "unassigned", 108, []],
+    ["READY_TO_SEND", "unassigned", 109, []],
   ]) {
     const result = await repository.getAllOrdersPaginated({
       loggedInUser: user,

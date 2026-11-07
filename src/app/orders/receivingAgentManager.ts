@@ -4,6 +4,7 @@ import {prisma} from "../../database/db";
 import {AppError} from "../../lib/AppError";
 import type {loggedInUserType} from "../../types/user";
 import type {ReportsFiltersType} from "../reports/reports.dto";
+import type {OrdersFiltersType} from "./orders.dto";
 import {AllreportReform, AllreportSelect} from "../reports/reports.responses";
 
 export const managerOrderStatusSchema = z.enum([
@@ -16,9 +17,9 @@ export const managerStatusSchema = z.enum([
   "RETURNED",
   "DELIVERED",
 ]);
-export const managerAgentIdSchema = z.coerce.number().int().positive().safe();
 type ManagerOrderStatus = z.infer<typeof managerOrderStatusSchema>;
 type ManagerStatus = z.infer<typeof managerStatusSchema>;
+type ManagerAgentFilter = NonNullable<OrdersFiltersType["receivingAgentID"]>;
 
 export function receivingManagerScope(user: loggedInUserType) {
   if (
@@ -36,9 +37,19 @@ export function receivingManagerScope(user: loggedInUserType) {
 export function receivingManagerOrderWhere(
   user: loggedInUserType,
   status: ManagerOrderStatus,
-  agentId?: number,
+  agentId?: ManagerAgentFilter,
 ): Prisma.OrderWhereInput {
   const scope = receivingManagerScope(user);
+  if (agentId === "unassigned") {
+    if (status !== "READY_TO_SEND")
+      throw new AppError("العملاء بدون مندوب متاحون للطلبات الجاهزة للشحن فقط", 400);
+    return {
+      companyId: scope.companyId,
+      deleted: false,
+      status,
+      client: {...scope, ReceivingAgentClients: {none: {}}},
+    };
+  }
   const agent = {...scope, ...(agentId === undefined ? {} : {id: agentId})};
   return {
     companyId: scope.companyId,
@@ -49,7 +60,14 @@ export function receivingManagerOrderWhere(
       : {
           client: {
             ...scope,
-            ReceivingAgentClients: {some: {receivingAgent: agent}},
+            ...(agentId === undefined
+              ? {
+                  OR: [
+                    {ReceivingAgentClients: {some: {receivingAgent: agent}}},
+                    {ReceivingAgentClients: {none: {}}},
+                  ],
+                }
+              : {ReceivingAgentClients: {some: {receivingAgent: agent}}}),
           },
         }),
   };
@@ -252,6 +270,12 @@ export async function getReceivingManagerAgents(
   }
   return {
     agents: sortAgents([...groups.values()]),
+    // The query includes clients with an in-scope assignment or no assignments
+    // at all. Clients assigned only outside this branch are not unassigned.
+    unassignedCount: counts.reduce(
+      (sum, row) => sum + (seenClients.has(row.clientId) ? 0 : row._count.id),
+      0,
+    ),
     // Count each order once even when its client is assigned to several agents.
     totalCount: counts.reduce((sum, row) => sum + row._count.id, 0),
     hasSharedClients,
@@ -261,7 +285,7 @@ export async function getReceivingManagerAgents(
 export async function getReceivingManagerClients(
   user: loggedInUserType,
   status: ManagerOrderStatus,
-  agentId: number,
+  agentId: ManagerAgentFilter,
 ) {
   const counts = await prisma.order.groupBy({
     by: ["clientId"],

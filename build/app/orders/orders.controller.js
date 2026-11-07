@@ -65,7 +65,7 @@ class OrdersController {
     });
     getReceivingManagerClients = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const status = receivingAgentManager_1.managerOrderStatusSchema.parse(req.query.status);
-        const agentId = receivingAgentManager_1.managerAgentIdSchema.parse(req.query.receiving_agent_id);
+        const agentId = orders_dto_1.ReceivingManagerAgentFilterSchema.parse(req.query.receiving_agent_id);
         const data = await (0, receivingAgentManager_1.getReceivingManagerClients)(res.locals.user, status, agentId);
         res.status(200).json({ status: "success", data });
     });

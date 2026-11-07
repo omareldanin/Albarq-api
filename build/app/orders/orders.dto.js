@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OrdersReportPDFCreateSchema = exports.OrdersStatisticsFiltersOpenAPISchema = exports.OrdersStatisticsFiltersSchema = exports.OrdersFiltersOpenAPISchema = exports.OrdersFiltersSchema = exports.OrderChatNotificationCreateSchema = exports.OrderTimelineFiltersSchema = exports.OrderTimelinePieceSchema = exports.OrderTimelinePieceBaseSchema = exports.OrdersReceiptsCreateOpenAPISchema = exports.OrdersReceiptsCreateSchema = exports.OrderRepositoryConfirmByReceiptNumberOpenAPISchema = exports.OrderRepositoryConfirmByReceiptNumberSchema = exports.OrderUpdateOpenAPISchema = exports.OrderUpdateSchema = exports.OrderCreateOpenAPISchema = exports.OrderCreateSchema = void 0;
+exports.OrdersReportPDFCreateSchema = exports.OrdersStatisticsFiltersOpenAPISchema = exports.OrdersStatisticsFiltersSchema = exports.OrdersFiltersOpenAPISchema = exports.OrdersFiltersSchema = exports.ReceivingManagerAgentFilterSchema = exports.OrderChatNotificationCreateSchema = exports.OrderTimelineFiltersSchema = exports.OrderTimelinePieceSchema = exports.OrderTimelinePieceBaseSchema = exports.OrdersReceiptsCreateOpenAPISchema = exports.OrdersReceiptsCreateSchema = exports.OrderRepositoryConfirmByReceiptNumberOpenAPISchema = exports.OrderRepositoryConfirmByReceiptNumberSchema = exports.OrderUpdateOpenAPISchema = exports.OrderUpdateSchema = exports.OrderCreateOpenAPISchema = exports.OrderCreateSchema = void 0;
 // // import { generateMock } from "@anatine/zod-mock";
 const zod_openapi_1 = require("@anatine/zod-openapi");
 const client_1 = require("@prisma/client");
@@ -224,6 +224,10 @@ exports.OrderChatNotificationCreateSchema = zod_1.z.object({
 // );
 // export const OrderChatNotificationCreateMock = generateMock(ChatNotificationCreateSchema);
 /* --------------------------------------------------------------- */
+exports.ReceivingManagerAgentFilterSchema = zod_1.z.union([
+    zod_1.z.literal("unassigned"),
+    zod_1.z.coerce.number().int().positive().safe(),
+]);
 exports.OrdersFiltersSchema = zod_1.z.object({
     confirmed: zod_1.z.preprocess((val) => {
         if (val === "true")
@@ -275,7 +279,7 @@ exports.OrdersFiltersSchema = zod_1.z.object({
     createdBy: zod_1.z.coerce.number().optional(),
     deliveryAgentID: zod_1.z.coerce.number().optional(),
     receiveingAgentID: zod_1.z.coerce.number().optional(),
-    receivingAgentID: zod_1.z.coerce.number().int().positive().safe().optional(),
+    receivingAgentID: exports.ReceivingManagerAgentFilterSchema.optional(),
     clientOrderReceiptId: zod_1.z.coerce.number().optional(),
     companyID: zod_1.z.coerce.number().optional(),
     automaticUpdateID: zod_1.z.coerce.number().optional(),

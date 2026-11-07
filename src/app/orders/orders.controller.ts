@@ -9,6 +9,7 @@ import {
   OrderTimelineFiltersSchema,
   OrderUpdateSchema,
   OrdersFiltersSchema,
+  ReceivingManagerAgentFilterSchema,
   OrdersReceiptsCreateSchema,
   OrdersReportPDFCreateSchema,
   OrdersStatisticsFiltersSchema,
@@ -41,7 +42,6 @@ import * as ExcelJS from "exceljs";
 import {
   getReceivingManagerAgents,
   getReceivingManagerClients,
-  managerAgentIdSchema,
   managerOrderStatusSchema,
   managerStatusSchema,
 } from "./receivingAgentManager";
@@ -65,7 +65,7 @@ export class OrdersController {
 
   getReceivingManagerClients = catchAsync(async (req, res) => {
     const status = managerOrderStatusSchema.parse(req.query.status);
-    const agentId = managerAgentIdSchema.parse(req.query.receiving_agent_id);
+    const agentId = ReceivingManagerAgentFilterSchema.parse(req.query.receiving_agent_id);
     const data = await getReceivingManagerClients(
       res.locals.user as loggedInUserType, status, agentId,
     );

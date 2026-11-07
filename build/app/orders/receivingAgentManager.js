@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.managerAgentIdSchema = exports.managerStatusSchema = exports.managerOrderStatusSchema = void 0;
+exports.managerStatusSchema = exports.managerOrderStatusSchema = void 0;
 exports.receivingManagerScope = receivingManagerScope;
 exports.receivingManagerOrderWhere = receivingManagerOrderWhere;
 exports.receivingManagerReportWhere = receivingManagerReportWhere;
@@ -22,7 +22,6 @@ exports.managerStatusSchema = zod_1.z.enum([
     "RETURNED",
     "DELIVERED",
 ]);
-exports.managerAgentIdSchema = zod_1.z.coerce.number().int().positive().safe();
 function receivingManagerScope(user) {
     if (user.role !== "RECEIVING_AGENTS_MANAGER" ||
         !Number.isSafeInteger(user.companyID) ||
@@ -35,6 +34,16 @@ function receivingManagerScope(user) {
 }
 function receivingManagerOrderWhere(user, status, agentId) {
     const scope = receivingManagerScope(user);
+    if (agentId === "unassigned") {
+        if (status !== "READY_TO_SEND")
+            throw new AppError_1.AppError("العملاء بدون مندوب متاحون للطلبات الجاهزة للشحن فقط", 400);
+        return {
+            companyId: scope.companyId,
+            deleted: false,
+            status,
+            client: { ...scope, ReceivingAgentClients: { none: {} } },
+        };
+    }
     const agent = { ...scope, ...(agentId === undefined ? {} : { id: agentId }) };
     return {
         companyId: scope.companyId,
@@ -45,7 +54,14 @@ function receivingManagerOrderWhere(user, status, agentId) {
             : {
                 client: {
                     ...scope,
-                    ReceivingAgentClients: { some: { receivingAgent: agent } },
+                    ...(agentId === undefined
+                        ? {
+                            OR: [
+                                { ReceivingAgentClients: { some: { receivingAgent: agent } } },
+                                { ReceivingAgentClients: { none: {} } },
+                            ],
+                        }
+                        : { ReceivingAgentClients: { some: { receivingAgent: agent } } }),
                 },
             }),
     };
@@ -217,6 +233,9 @@ async function getReceivingManagerAgents(user, status) {
     }
     return {
         agents: sortAgents([...groups.values()]),
+        // The query includes clients with an in-scope assignment or no assignments
+        // at all. Clients assigned only outside this branch are not unassigned.
+        unassignedCount: counts.reduce((sum, row) => sum + (seenClients.has(row.clientId) ? 0 : row._count.id), 0),
         // Count each order once even when its client is assigned to several agents.
         totalCount: counts.reduce((sum, row) => sum + row._count.id, 0),
         hasSharedClients,
