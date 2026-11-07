@@ -2069,6 +2069,102 @@ class OrdersService {
                 ],
             };
         }
+        if (data.loggedInUser.role === "RECEIVING_AGENTS_MANAGER") {
+            const returnedCount = await db_1.prisma.report.aggregate({
+                _sum: {
+                    baghdadOrdersCount: true,
+                    governoratesOrdersCount: true,
+                },
+                _count: {
+                    id: true,
+                },
+                where: {
+                    deleted: false,
+                    confirmed: false,
+                    clientReport: {
+                        secondaryType: "RETURNED",
+                        agent: {
+                            branchId: data.loggedInUser.branchId,
+                        },
+                    },
+                },
+            });
+            const deliveredCount = await db_1.prisma.report.aggregate({
+                _sum: {
+                    baghdadOrdersCount: true,
+                    governoratesOrdersCount: true,
+                },
+                _count: {
+                    id: true,
+                },
+                where: {
+                    deleted: false,
+                    confirmed: false,
+                    clientReport: {
+                        secondaryType: "DELIVERED",
+                        agent: {
+                            branchId: data.loggedInUser.branchId,
+                        },
+                    },
+                },
+            });
+            const readyToSend = await db_1.prisma.order.count({
+                where: {
+                    deleted: false,
+                    status: "READY_TO_SEND",
+                    companyId: data.loggedInUser.companyID,
+                    client: {
+                        ReceivingAgentClients: {
+                            some: {},
+                        },
+                    },
+                },
+            });
+            const withReceingAgentClients = await db_1.prisma.order.count({
+                where: {
+                    deleted: false,
+                    status: "WITH_RECEIVING_AGENT",
+                    deliveryAgentId: data.loggedInUser.id,
+                    companyId: data.loggedInUser.companyID,
+                    deliveryAgent: {
+                        branchId: data.loggedInUser.branchId,
+                    },
+                },
+            });
+            let total = 0;
+            let rCount = (returnedCount._sum.baghdadOrdersCount ?? 0) +
+                (returnedCount._sum.governoratesOrdersCount ?? 0);
+            let dCount = (deliveredCount._sum.baghdadOrdersCount ?? 0) +
+                (deliveredCount._sum.governoratesOrdersCount ?? 0);
+            return {
+                ordersStatisticsByStatus: [
+                    {
+                        status: "WITH_RECEIVING_AGENT",
+                        totalCost: total,
+                        count: withReceingAgentClients,
+                        name: "مع مندوب الاستلام",
+                    },
+                    {
+                        status: "READY_TO_SEND",
+                        totalCost: total,
+                        count: readyToSend,
+                        name: "جاهز للشحن",
+                    },
+                    {
+                        status: "RETURNED",
+                        totalCost: total,
+                        count: rCount,
+                        name: "كشوفات الراجع",
+                    },
+                    {
+                        status: "DELIVERED",
+                        totalCost: total,
+                        count: dCount,
+                        name: "كشوفات الواصل",
+                    },
+                ],
+            };
+        }
         let statistics = await ordersRepository.getOrdersStatisticsV2({
             filters: {
                 ...data.filters,
