@@ -676,6 +676,7 @@ class ReportsRepository {
         const report = await db_1.prisma.report.update({
             where: {
                 id: data.reportID,
+                AND: data.scope,
             },
             data: {
                 status: data.reportData.status,

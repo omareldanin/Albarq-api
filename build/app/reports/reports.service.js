@@ -21,6 +21,7 @@ const db_1 = require("../../database/db");
 const axios_1 = __importDefault(require("axios"));
 const generateBranchClientsReport_1 = require("./helpers/generateBranchClientsReport");
 const transaction_repository_1 = require("../transactions/transaction.repository");
+const reportReceiptScope_1 = require("./helpers/reportReceiptScope");
 const reportsRepository = new reports_repository_1.ReportsRepository();
 const ordersRepository = new orders_repository_1.OrdersRepository();
 const employeesRepository = new employees_repository_1.EmployeesRepository();
@@ -846,16 +847,36 @@ class ReportsService {
         });
     }
     async updateReport(data) {
-        if (data.reportData.confirmed === false &&
-            (data.loggedInUser.role === "CLIENT" ||
-                data.loggedInUser.role === "CLIENT_ASSISTANT")) {
+        const isClient = data.loggedInUser.role === "CLIENT" ||
+            data.loggedInUser.role === "CLIENT_ASSISTANT";
+        if (data.reportData.confirmed === false && isClient) {
             throw new AppError_1.AppError("لا يمكنك إلغاء تأكيد التقرير", 400);
         }
-        const report = await reportsRepository.updateReport({
-            reportID: data.params.reportID,
-            reportData: data.reportData,
-        });
-        return report;
+        if (isClient &&
+            (data.reportData.confirmed !== true ||
+                data.reportData.status !== undefined ||
+                data.reportData.repositoryID !== undefined)) {
+            throw new AppError_1.AppError("يمكن للعميل تأكيد استلام الكشف فقط", 403);
+        }
+        // Include ownership in the UPDATE itself, not just a prior read.
+        const scope = isClient
+            ? { ...(0, reportReceiptScope_1.reportReceiptScope)(data.loggedInUser), deleted: false }
+            : undefined;
+        try {
+            return await reportsRepository.updateReport({
+                reportID: data.params.reportID,
+                reportData: data.reportData,
+                scope,
+            });
+        }
+        catch (error) {
+            if (isClient &&
+                error instanceof client_1.Prisma.PrismaClientKnownRequestError &&
+                error.code === "P2025") {
+                throw new AppError_1.AppError("الكشف غير موجود أو لا يخص حسابك", 404);
+            }
+            throw error;
+        }
     }
     async deleteReport(data) {
         await reportsRepository.deleteReport({

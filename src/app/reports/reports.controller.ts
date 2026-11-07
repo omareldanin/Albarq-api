@@ -303,7 +303,7 @@ export class ReportController {
   updateReport = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
     const reportData = ReportUpdateSchema.parse(req.body);
-    const params = {reportID: +req.params.reportID};
+    const params = ReportParamsSchema.parse(req.params);
 
     const report = await reportsService.updateReport({
       params: params,

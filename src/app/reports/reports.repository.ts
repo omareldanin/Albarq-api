@@ -789,10 +789,15 @@ export class ReportsRepository {
     });
   }
 
-  async updateReport(data: {reportID: number; reportData: ReportUpdateType}) {
+  async updateReport(data: {
+    reportID: number;
+    reportData: ReportUpdateType;
+    scope?: Prisma.ReportWhereInput;
+  }) {
     const report = await prisma.report.update({
       where: {
         id: data.reportID,
+        AND: data.scope,
       },
       data: {
         status: data.reportData.status,

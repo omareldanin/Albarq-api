@@ -5,6 +5,7 @@ import {
   EmployeeRole,
   type Order,
   OrderTimeline,
+  Prisma,
   ReportType,
 } from "@prisma/client";
 import {AppError} from "../../lib/AppError";
@@ -32,6 +33,7 @@ import axios from "axios";
 import {generateBranchClientsReport} from "./helpers/generateBranchClientsReport";
 import {reportsOrderReform} from "../orders/reportsOrders.response";
 import {TransactionsRepository} from "../transactions/transaction.repository";
+import {reportReceiptScope} from "./helpers/reportReceiptScope";
 
 const reportsRepository = new ReportsRepository();
 const ordersRepository = new OrdersRepository();
@@ -1070,20 +1072,42 @@ export class ReportsService {
     loggedInUser: loggedInUserType;
     reportData: ReportUpdateType;
   }) {
-    if (
-      data.reportData.confirmed === false &&
-      (data.loggedInUser.role === "CLIENT" ||
-        data.loggedInUser.role === "CLIENT_ASSISTANT")
-    ) {
+    const isClient =
+      data.loggedInUser.role === "CLIENT" ||
+      data.loggedInUser.role === "CLIENT_ASSISTANT";
+    if (data.reportData.confirmed === false && isClient) {
       throw new AppError("لا يمكنك إلغاء تأكيد التقرير", 400);
     }
 
-    const report = await reportsRepository.updateReport({
-      reportID: data.params.reportID,
-      reportData: data.reportData,
-    });
+    if (
+      isClient &&
+      (data.reportData.confirmed !== true ||
+        data.reportData.status !== undefined ||
+        data.reportData.repositoryID !== undefined)
+    ) {
+      throw new AppError("يمكن للعميل تأكيد استلام الكشف فقط", 403);
+    }
 
-    return report;
+    // Include ownership in the UPDATE itself, not just a prior read.
+    const scope = isClient
+      ? {...reportReceiptScope(data.loggedInUser), deleted: false}
+      : undefined;
+    try {
+      return await reportsRepository.updateReport({
+        reportID: data.params.reportID,
+        reportData: data.reportData,
+        scope,
+      });
+    } catch (error) {
+      if (
+        isClient &&
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new AppError("الكشف غير موجود أو لا يخص حسابك", 404);
+      }
+      throw error;
+    }
   }
 
   async deleteReport(data: {params: {reportID: number}}) {
