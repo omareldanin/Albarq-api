@@ -2131,7 +2131,6 @@ class OrdersService {
                 where: {
                     deleted: false,
                     status: "WITH_RECEIVING_AGENT",
-                    deliveryAgentId: data.loggedInUser.id,
                     companyId: data.loggedInUser.companyID,
                     deliveryAgent: {
                         branchId: data.loggedInUser.branchId,
