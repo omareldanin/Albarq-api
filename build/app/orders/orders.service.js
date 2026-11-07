@@ -2083,6 +2083,9 @@ class OrdersService {
                     confirmed: false,
                     clientReport: {
                         secondaryType: "RETURNED",
+                        client: {
+                            branchId: data.loggedInUser.branchId,
+                        },
                         agent: {
                             branchId: data.loggedInUser.branchId,
                         },
@@ -2102,6 +2105,9 @@ class OrdersService {
                     confirmed: false,
                     clientReport: {
                         secondaryType: "DELIVERED",
+                        client: {
+                            branchId: data.loggedInUser.branchId,
+                        },
                         agent: {
                             branchId: data.loggedInUser.branchId,
                         },
@@ -2114,6 +2120,7 @@ class OrdersService {
                     status: "READY_TO_SEND",
                     companyId: data.loggedInUser.companyID,
                     client: {
+                        branchId: data.loggedInUser.branchId,
                         ReceivingAgentClients: {
                             some: {},
                         },
