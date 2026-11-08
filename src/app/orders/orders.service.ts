@@ -826,7 +826,7 @@ export class OrdersService {
       oldOrderData.status !== "READY_TO_SEND" &&
       oldOrderData.status !== "REGISTERED"
     ) {
-      throw new AppError("لقد تم اضافه هذا الطلب مسبقا", 403);
+      throw new AppError("ليس لديك صلاحية تغيير مبلغ الوصل", 403);
     }
 
     if (

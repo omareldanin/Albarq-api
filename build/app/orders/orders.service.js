@@ -634,7 +634,7 @@ class OrdersService {
             !data.loggedInUser.mainRepository &&
             oldOrderData.status !== "READY_TO_SEND" &&
             oldOrderData.status !== "REGISTERED") {
-            throw new AppError_1.AppError("لقد تم اضافه هذا الطلب مسبقا", 403);
+            throw new AppError_1.AppError("ليس لديك صلاحية تغيير مبلغ الوصل", 403);
         }
         if (data.orderData.status === "WITH_RECEIVING_AGENT" &&
             data.loggedInUser.role === "RECEIVING_AGENT") {
