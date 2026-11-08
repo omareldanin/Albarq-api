@@ -271,14 +271,19 @@ class OrdersService {
             const status = receivingAgentManager_1.managerOrderStatusSchema.parse(data.filters.status);
             const scope = (0, receivingAgentManager_1.receivingManagerOrderWhere)(data.loggedInUser, status, data.filters.receivingAgentID);
             const page = Number.isSafeInteger(data.filters.page) && data.filters.page > 0
-                ? data.filters.page : 1;
+                ? data.filters.page
+                : 1;
             const size = Number.isSafeInteger(data.filters.size) && data.filters.size > 0
-                ? Math.min(data.filters.size, 100) : 20;
+                ? Math.min(data.filters.size, 100)
+                : 20;
             const result = await ordersRepository.getAllOrdersPaginated({
                 loggedInUser: data.loggedInUser,
                 // Receiving scope is based on the agent/client's branch, not the order's destination branch.
                 filters: {
-                    ...data.filters, page, size, status,
+                    ...data.filters,
+                    page,
+                    size,
+                    status,
                     branchID: undefined,
                     companyID: data.loggedInUser.companyID,
                     deliveryAgentID: undefined,
@@ -623,6 +628,12 @@ class OrdersService {
         }
         if (data.orderData.status === oldOrderData.status &&
             data.loggedInUser.role === "RECEIVING_AGENT") {
+            throw new AppError_1.AppError("لقد تم اضافه هذا الطلب مسبقا", 403);
+        }
+        if (data.orderData.totalCost &&
+            !data.loggedInUser.mainRepository &&
+            oldOrderData.status !== "READY_TO_SEND" &&
+            oldOrderData.status !== "REGISTERED") {
             throw new AppError_1.AppError("لقد تم اضافه هذا الطلب مسبقا", 403);
         }
         if (data.orderData.status === "WITH_RECEIVING_AGENT" &&

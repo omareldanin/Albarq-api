@@ -57,7 +57,9 @@ export class StoresRepository {
       },
       select: storeSelect,
     });
+
     const keys = await redis.keys("client-stores:*");
+
     if (keys.length) {
       await redis.del(keys);
     }
@@ -81,6 +83,7 @@ export class StoresRepository {
 
     // 1️⃣ Try Redis first
     const cached = await redis.get(cacheKey);
+
     if (cached) {
       return JSON.parse(cached) as {
         stores: any[];

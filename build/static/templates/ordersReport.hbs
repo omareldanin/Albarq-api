@@ -41,6 +41,7 @@
             <th>رقم الوصل</th>
             <th>أنشئ في</th>
             <th>اسم الصفحة</th>
+            <th>اسم المستلم</th>
             <th>هاتف المستلم</th>
             <th>عنوان المستلم</th>
             <th>مبلغ الوصل</th>
@@ -58,6 +59,7 @@
               {{else}}
                 <td></td>
               {{/if}}
+              <td>{{recipientName}}</td>
               <td>{{mapPhones recipientPhones}}</td>
               <td>{{localizeGovernorate governorate}}
                 -
