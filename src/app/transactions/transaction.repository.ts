@@ -923,7 +923,11 @@ export class TransactionsRepository {
 
     let myBranchId = loggedInUser?.branchId;
 
-    if (applyBranchScope && !loggedInUser.showTreatury) {
+    if (
+      applyBranchScope &&
+      !loggedInUser.showTreatury &&
+      loggedInUser.companyID === 16
+    ) {
       throw new AppError("ليس مصرح لك الاطلاع علي الارباح", 401);
     }
 
@@ -1037,7 +1041,11 @@ export class TransactionsRepository {
     let applyBranchScope =
       loggedInUser?.role === "COMPANY_MANAGER" || loggedInUser?.mainRepository;
 
-    if (applyBranchScope && !loggedInUser.showTreatury) {
+    if (
+      applyBranchScope &&
+      !loggedInUser.showTreatury &&
+      loggedInUser?.companyID === 16
+    ) {
       throw new AppError("ليس مصرح لك الاطلاع علي الارباح", 401);
     }
     const {page, size, companyId, branchId, startDay, endDay} = params;
@@ -1161,7 +1169,11 @@ export class TransactionsRepository {
       filters.loggedInUser?.role === "COMPANY_MANAGER" ||
       filters.loggedInUser?.mainRepository;
 
-    if (applyBranchScope && !filters.loggedInUser?.showTreatury) {
+    if (
+      applyBranchScope &&
+      !filters.loggedInUser?.showTreatury &&
+      filters.loggedInUser?.companyID === 16
+    ) {
       throw new AppError("ليس مصرح لك الاطلاع علي الارباح", 401);
     }
     let myBranchId = filters.loggedInUser?.branchId;
@@ -1948,7 +1960,11 @@ export class TransactionsRepository {
       filters.loggedInUser?.role === "COMPANY_MANAGER" ||
       filters.loggedInUser?.mainRepository;
 
-    if (applyBranchScope && !filters.loggedInUser?.showTreatury) {
+    if (
+      applyBranchScope &&
+      !filters.loggedInUser?.showTreatury &&
+      filters.loggedInUser?.companyID === 16
+    ) {
       throw new AppError("ليس مصرح لك الاطلاع علي الارباح", 401);
     }
     let myBranchId = filters.loggedInUser?.branchId;
@@ -2362,7 +2378,11 @@ export class TransactionsRepository {
 
     let myBranchId = filters.loggedInUser?.branchId;
 
-    if (applyBranchScope && !filters.loggedInUser?.showTreatury) {
+    if (
+      applyBranchScope &&
+      !filters.loggedInUser?.showTreatury &&
+      filters.loggedInUser?.companyID === 16
+    ) {
       throw new AppError("ليس مصرح لك الاطلاع علي الارباح", 401);
     }
     if (filters.loggedInUser?.role === "COMPANY_MANAGER") {

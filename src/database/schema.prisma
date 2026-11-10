@@ -1088,7 +1088,7 @@ model UsersLoginHistory {
   createdAt DateTime @default(now())
   companyId Int
   company   Company  @relation(fields: [companyId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([companyId])

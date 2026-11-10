@@ -688,7 +688,9 @@ class TransactionsRepository {
     getAllTransactionsPaginated = async ({ page, size, companyID, employeeID, type, approved, deleted, startDate, endDate, targetBranch, }, loggedInUser) => {
         let applyBranchScope = loggedInUser?.role === "COMPANY_MANAGER" || loggedInUser?.mainRepository;
         let myBranchId = loggedInUser?.branchId;
-        if (applyBranchScope && !loggedInUser.showTreatury) {
+        if (applyBranchScope &&
+            !loggedInUser.showTreatury &&
+            loggedInUser.companyID === 16) {
             throw new AppError_1.AppError("ليس مصرح لك الاطلاع علي الارباح", 401);
         }
         if (loggedInUser?.role === "COMPANY_MANAGER") {
@@ -780,7 +782,9 @@ class TransactionsRepository {
     };
     getAllDailyProfits = async (params, loggedInUser) => {
         let applyBranchScope = loggedInUser?.role === "COMPANY_MANAGER" || loggedInUser?.mainRepository;
-        if (applyBranchScope && !loggedInUser.showTreatury) {
+        if (applyBranchScope &&
+            !loggedInUser.showTreatury &&
+            loggedInUser?.companyID === 16) {
             throw new AppError_1.AppError("ليس مصرح لك الاطلاع علي الارباح", 401);
         }
         const { page, size, companyId, branchId, startDay, endDay } = params;
@@ -876,7 +880,9 @@ class TransactionsRepository {
         let childBranchs = [];
         let applyBranchScope = filters.loggedInUser?.role === "COMPANY_MANAGER" ||
             filters.loggedInUser?.mainRepository;
-        if (applyBranchScope && !filters.loggedInUser?.showTreatury) {
+        if (applyBranchScope &&
+            !filters.loggedInUser?.showTreatury &&
+            filters.loggedInUser?.companyID === 16) {
             throw new AppError_1.AppError("ليس مصرح لك الاطلاع علي الارباح", 401);
         }
         let myBranchId = filters.loggedInUser?.branchId;
@@ -1599,7 +1605,9 @@ class TransactionsRepository {
     async getDailyStatistics(filters) {
         let applyBranchScope = filters.loggedInUser?.role === "COMPANY_MANAGER" ||
             filters.loggedInUser?.mainRepository;
-        if (applyBranchScope && !filters.loggedInUser?.showTreatury) {
+        if (applyBranchScope &&
+            !filters.loggedInUser?.showTreatury &&
+            filters.loggedInUser?.companyID === 16) {
             throw new AppError_1.AppError("ليس مصرح لك الاطلاع علي الارباح", 401);
         }
         let myBranchId = filters.loggedInUser?.branchId;
@@ -1968,7 +1976,9 @@ class TransactionsRepository {
         let applyBranchScope = filters.loggedInUser?.role === "COMPANY_MANAGER" ||
             filters.loggedInUser?.mainRepository;
         let myBranchId = filters.loggedInUser?.branchId;
-        if (applyBranchScope && !filters.loggedInUser?.showTreatury) {
+        if (applyBranchScope &&
+            !filters.loggedInUser?.showTreatury &&
+            filters.loggedInUser?.companyID === 16) {
             throw new AppError_1.AppError("ليس مصرح لك الاطلاع علي الارباح", 401);
         }
         if (filters.loggedInUser?.role === "COMPANY_MANAGER") {
