@@ -895,6 +895,7 @@ export class OrdersService {
 
     if (
       data.orderData.paidAmount &&
+      !data.loggedInUser.permissions?.includes("CHANGE_CLOSED_ORDER_PAID") &&
       data.orderData.paidAmount !== oldOrderData.paidAmount &&
       (oldOrderData.hasDeliveredClientReport ||
         oldOrderData.hasMainForwardedReport ||
