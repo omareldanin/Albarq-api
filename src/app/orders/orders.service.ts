@@ -856,9 +856,7 @@ export class OrdersService {
     if (
       data.orderData.status &&
       (oldOrderData.status === "DELIVERED" ||
-        oldOrderData.clientReport.some(
-          (r) => r.secondaryType === "RETURNED",
-        )) &&
+        oldOrderData.hasReturnedClientReport) &&
       !data.loggedInUser.permissions.includes("CHANGE_CLOSED_ORDER_STATUS") &&
       !(
         oldOrderData.status === "DELIVERED" &&
@@ -893,6 +891,22 @@ export class OrdersService {
         data.orderData.totalCost)
     ) {
       throw new AppError("الطلب محال إلي شركة اخري", 403);
+    }
+
+    if (
+      data.orderData.paidAmount &&
+      data.orderData.paidAmount !== oldOrderData.paidAmount &&
+      (oldOrderData.hasDeliveredClientReport ||
+        oldOrderData.hasMainForwardedReport ||
+        oldOrderData.companyReport.some(
+          (r) =>
+            (r.secondaryType === "RETURNED" ||
+              r.secondaryType === "DELIVERED") &&
+            r.deleted === false,
+        ) ||
+        oldOrderData.hasMainReceivedReport)
+    ) {
+      data.orderData.paidAmount = oldOrderData.paidAmount;
     }
 
     const newOrder = await ordersRepository.updateOrder(
