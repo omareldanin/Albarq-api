@@ -46,33 +46,73 @@ class ReceivingReportsRepository {
         }
     }
     /**
-     * Saves the agent's received orders (status WITH_RECEIVING_AGENT) that are not in a
-     * receiving report yet. Orders are split into one report per client so each client
-     * only ever sees its own orders.
+     * Whose orders a creator may report, and which agent the report names.
+     * A receiving agent reports its clients' orders; a client reports its own orders,
+     * naming its receiving agent when exactly one is assigned to it.
+     */
+    createScope = async (user, data) => {
+        const companyId = user.companyID;
+        const notAllowed = () => new AppError_1.AppError("ليس مصرح لك القيام بهذا الفعل", 403);
+        if (!companyId || !Number.isInteger(user.id) || user.id <= 0)
+            throw notAllowed();
+        if (user.role === "RECEIVING_AGENT") {
+            const agent = await db_1.prisma.employee.findFirst({
+                where: { id: user.id, companyId, role: "RECEIVING_AGENT", deleted: false },
+                select: { id: true, inquiryClients: { select: { clientId: true } } }
+            });
+            if (!agent)
+                throw notAllowed();
+            // Same rule as the agent's orders list: no assigned clients means every company client.
+            const assignedClients = agent.inquiryClients.map((item) => item.clientId);
+            if (data.clientID && assignedClients.length > 0 && !assignedClients.includes(data.clientID)) {
+                throw new AppError_1.AppError("هذا العميل غير مرتبط بك", 403);
+            }
+            return {
+                companyId,
+                clientId: data.clientID ?? (assignedClients.length > 0 ? { in: assignedClients } : undefined),
+                receivingAgentId: agent.id
+            };
+        }
+        if (user.role === "CLIENT") {
+            if (data.clientID && data.clientID !== user.id)
+                throw notAllowed();
+            const client = await db_1.prisma.client.findFirst({
+                where: { id: user.id, companyId, deleted: false },
+                select: { id: true }
+            });
+            if (!client)
+                throw notAllowed();
+            const agents = await db_1.prisma.receivingAgentClients.findMany({
+                where: {
+                    clientId: client.id,
+                    receivingAgent: { companyId, role: "RECEIVING_AGENT", deleted: false }
+                },
+                select: { agentId: true },
+                take: 2
+            });
+            return {
+                companyId,
+                clientId: client.id,
+                receivingAgentId: agents.length === 1 ? agents[0].agentId : null
+            };
+        }
+        throw notAllowed();
+    };
+    /**
+     * Saves received orders (status WITH_RECEIVING_AGENT) that are not in a receiving
+     * report yet. Orders are split into one report per client so each client only ever
+     * sees its own orders.
      */
     createReports = async (user, data) => {
-        if (user.role !== "RECEIVING_AGENT" || !user.companyID) {
-            throw new AppError_1.AppError("ليس مصرح لك القيام بهذا الفعل", 403);
-        }
-        const agent = await db_1.prisma.employee.findFirst({
-            where: { id: user.id, companyId: user.companyID, role: "RECEIVING_AGENT", deleted: false },
-            select: { id: true, inquiryClients: { select: { clientId: true } } }
-        });
-        if (!agent)
-            throw new AppError_1.AppError("ليس مصرح لك القيام بهذا الفعل", 403);
-        // Same rule as the agent's orders list: no assigned clients means every company client.
-        const assignedClients = agent.inquiryClients.map((item) => item.clientId);
-        if (data.clientID && assignedClients.length > 0 && !assignedClients.includes(data.clientID)) {
-            throw new AppError_1.AppError("هذا العميل غير مرتبط بك", 403);
-        }
+        const scope = await this.createScope(user, data);
         const orders = await db_1.prisma.order.findMany({
             where: {
-                companyId: user.companyID,
+                companyId: scope.companyId,
                 deleted: false,
                 status: "WITH_RECEIVING_AGENT",
                 receivingReportOrder: { is: null },
                 id: data.ordersIDs ? { in: data.ordersIDs } : undefined,
-                clientId: data.clientID ?? (assignedClients.length > 0 ? { in: assignedClients } : undefined)
+                clientId: scope.clientId
             },
             select: { id: true, clientId: true, governorate: true, totalCost: true },
             orderBy: { createdAt: "asc" },
@@ -95,9 +135,9 @@ class ReceivingReportsRepository {
                 const baghdad = clientOrders.filter((order) => order.governorate === "BAGHDAD").length;
                 return db_1.prisma.receivingReport.create({
                     data: {
-                        companyId: user.companyID,
+                        companyId: scope.companyId,
                         clientId,
-                        receivingAgentId: agent.id,
+                        receivingAgentId: scope.receivingAgentId,
                         ordersCount: clientOrders.length,
                         baghdadOrdersCount: baghdad,
                         governoratesOrdersCount: clientOrders.length - baghdad,
