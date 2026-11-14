@@ -1,0 +1,84 @@
+<html lang="ar" dir="rtl">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>كشف استلام</title>
+  </head>
+
+  <body class="px-20">
+    <header>
+      <table>
+        <tr>
+          <td style="width: 33%;">كشف استلام رقم:
+            <span>{{report.id}}</span></td>
+          <td style="width: 33%;">التاريخ:
+            <span>{{date report.createdAt}}</span></td>
+          <td style="width: 33%;" rowspan="4"><img
+              src="{{report.company.logo}}"
+            /></td>
+        </tr>
+        <tr>
+          <td style="width: 33%;">العميل:
+            <span>{{report.client.name}}</span></td>
+          <td style="width: 33%;">مندوب الاستلام:
+            <span>{{#if report.receivingAgent}}{{report.receivingAgent.name}}{{/if}}</span></td>
+        </tr>
+        <tr>
+          <td style="width: 33%;">عدد الطلبيات:
+            <span>{{report.ordersCount}}</span></td>
+          <td style="width: 33%;">مجموع المبالغ:
+            <span>{{currency report.totalCost}}</span></td>
+        </tr>
+        <tr>
+          <td style="width: 33%;">عدد طلبيات بغداد:
+            <span>{{report.baghdadOrdersCount}}</span></td>
+          <td style="width: 33%;">عدد طلبيات المحافظات:
+            <span>{{report.governoratesOrdersCount}}</span></td>
+        </tr>
+      </table>
+    </header>
+    <main>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>رقم الوصل</th>
+            <th>أنشئ في</th>
+            <th>اسم الصفحة</th>
+            <th>اسم المستلم</th>
+            <th>هاتف المستلم</th>
+            <th>عنوان المستلم</th>
+            <th>مبلغ الوصل</th>
+            <th>الملاحظات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each orders}}
+            <tr>
+              <td class="nowrap">{{inc @index}}</td>
+              <td>{{receiptNumber}}</td>
+              <td>{{date createdAt}}</td>
+              {{#if store}}
+                <td>{{store.name}}</td>
+              {{else}}
+                <td></td>
+              {{/if}}
+              <td>{{recipientName}}</td>
+              <td>{{mapPhones recipientPhones}}</td>
+              <td>{{localizeGovernorate governorate}}
+                -
+                {{location.name}}
+                -
+                {{recipientAddress}}</td>
+              <td>{{currency totalCost}}</td>
+              <td>{{notes}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </main>
+    <section class="watermark">{{report.company.name}}</section>
+  </body>
+
+</html>

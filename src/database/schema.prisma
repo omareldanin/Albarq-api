@@ -103,6 +103,7 @@ model Employee {
   transactions            Transaction[]
   employeeWallets         EmployeeWallet[]
   clientReports           ClientReport[]
+  receivingReports        ReceivingReport[]
 
   @@index([companyId])
   @@index([role])
@@ -152,6 +153,7 @@ model Client {
   stores                    Store[]
   tickets                   Ticket[]
   targetTransactions        Transaction[]             @relation("TransactionTargetClient")
+  receivingReports          ReceivingReport[]
 
   @@index([companyId])
   @@index([branchId])
@@ -398,6 +400,7 @@ model Company {
   usersLoginHistory         UsersLoginHistory[]
   dailyProfits              DailyProfit[]
   employeeWallets           EmployeeWallet[]
+  receivingReports          ReceivingReport[]
 }
 
 model InquiryEmployeesCompanies {
@@ -513,6 +516,7 @@ model Order {
   clientReport           ClientReport[]           @relation("ClientReportToOrder")
   companyReport          CompanyReport[]          @relation("CompanyReportToOrder")
   repositoryReport       RepositoryReport[]       @relation("OrderToRepositoryReport")
+  receivingReportOrder   ReceivingReportOrder?
 
   @@index([deleted, confirmed, status, governorate, createdAt])
   @@index([branchReportId])
@@ -1116,6 +1120,36 @@ model EmployeeWallet {
 
   @@index([companyId, branchId])
   @@index([companyId, branchId, employeeId])
+}
+
+/// كشف استلام: orders a receiving agent picked up from one client.
+model ReceivingReport {
+  id                      Int                    @id @default(autoincrement())
+  companyId               Int
+  clientId                Int
+  receivingAgentId        Int?
+  ordersCount             Int                    @default(0)
+  baghdadOrdersCount      Int                    @default(0)
+  governoratesOrdersCount Int                    @default(0)
+  totalCost               Float                  @default(0)
+  createdAt               DateTime               @default(now())
+  company                 Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  client                  Client                 @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  receivingAgent          Employee?              @relation(fields: [receivingAgentId], references: [id], onDelete: SetNull)
+  orders                  ReceivingReportOrder[]
+
+  @@index([companyId, clientId, createdAt(sort: Desc)])
+  @@index([companyId, receivingAgentId, createdAt(sort: Desc)])
+}
+
+/// An order can belong to at most one receiving report (orderId is the key).
+model ReceivingReportOrder {
+  orderId  String          @id
+  reportId Int
+  order    Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  report   ReceivingReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId])
 }
 
 enum AdminRole {

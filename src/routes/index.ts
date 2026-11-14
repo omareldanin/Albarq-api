@@ -28,6 +28,7 @@ import externalOrders from "../app/externalOrders/orders.routes";
 import clientDeliveryCost from "../app/clientDeliveryCost/clientBranchCost.routes";
 import employeeCommissions from "../app/employeeCommissions/employeeCommission.routes";
 import employeeWallets from "../app/employeeWallets/employeeWallets.routes";
+import receivingReports from "../app/receivingReports/receivingReports.routes";
 
 import {catchAsync} from "../lib/catchAsync";
 import {upload} from "../middlewares/upload";
@@ -63,6 +64,7 @@ router.use("/", externalOrders);
 router.use("/", clientDeliveryCost);
 router.use("/", employeeCommissions);
 router.use("/", employeeWallets);
+router.use("/", receivingReports);
 
 /*******************************************************************************
  * TEST ROUTES
