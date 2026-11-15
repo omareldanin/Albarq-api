@@ -1669,6 +1669,114 @@ class OrdersService {
             data.filters.clientReport !== true) {
             clientReport = false;
         }
+        if (data.loggedInUser.role === "RECEIVING_AGENT") {
+            const returnedCount = await db_1.prisma.report.aggregate({
+                _sum: {
+                    baghdadOrdersCount: true,
+                    governoratesOrdersCount: true,
+                },
+                _count: {
+                    id: true,
+                },
+                where: {
+                    deleted: false,
+                    confirmed: false,
+                    clientReport: {
+                        secondaryType: "RETURNED",
+                        receivingAgentId: data.loggedInUser.id,
+                    },
+                },
+            });
+            const deliveredCount = await db_1.prisma.report.aggregate({
+                _sum: {
+                    baghdadOrdersCount: true,
+                    governoratesOrdersCount: true,
+                },
+                _count: {
+                    id: true,
+                },
+                where: {
+                    deleted: false,
+                    confirmed: false,
+                    clientReport: {
+                        secondaryType: "DELIVERED",
+                        receivingAgentId: data.loggedInUser.id,
+                    },
+                },
+            });
+            const readyToSend = await db_1.prisma.order.count({
+                where: {
+                    deleted: false,
+                    status: "READY_TO_SEND",
+                    companyId: data.loggedInUser.companyID,
+                    clientId: { in: inquiryClientsIDs || [] },
+                },
+            });
+            const withReceingAgentClients = await db_1.prisma.order.count({
+                where: {
+                    deleted: false,
+                    status: "WITH_RECEIVING_AGENT",
+                    deliveryAgentId: data.loggedInUser.id,
+                    companyId: data.loggedInUser.companyID,
+                    clientId: { in: inquiryClientsIDs || [] },
+                },
+            });
+            const withReceingAgentNotClients = await db_1.prisma.order.count({
+                where: {
+                    deleted: false,
+                    status: "WITH_RECEIVING_AGENT",
+                    deliveryAgentId: data.loggedInUser.id,
+                    companyId: data.loggedInUser.companyID,
+                    clientId: inquiryClientsIDs && inquiryClientsIDs?.length > 0
+                        ? { notIn: inquiryClientsIDs }
+                        : undefined,
+                },
+            });
+            let total = 0;
+            let rCount = (returnedCount._sum.baghdadOrdersCount ?? 0) +
+                (returnedCount._sum.governoratesOrdersCount ?? 0);
+            let dCount = (deliveredCount._sum.baghdadOrdersCount ?? 0) +
+                (deliveredCount._sum.governoratesOrdersCount ?? 0);
+            return {
+                ordersStatisticsByStatus: [
+                    {
+                        status: "WITH_RECEIVING_AGENT",
+                        totalCost: total,
+                        count: withReceingAgentClients,
+                        name: "مع مندوب الاستلام",
+                        icon: (0, orders_responses_1.getStatusIcon)(data.loggedInUser.companyID, orders_responses_1.OrderStatusData["WITH_RECEIVING_AGENT"].icon),
+                    },
+                    {
+                        status: "READY_TO_SEND",
+                        totalCost: total,
+                        count: readyToSend,
+                        name: "جاهز للشحن",
+                        icon: (0, orders_responses_1.getStatusIcon)(data.loggedInUser.companyID, orders_responses_1.OrderStatusData["READY_TO_SEND"].icon),
+                    },
+                    {
+                        status: "REGISTERED",
+                        totalCost: total,
+                        count: withReceingAgentNotClients,
+                        name: "عملاء غير محالين",
+                        icon: (0, orders_responses_1.getStatusIcon)(data.loggedInUser.companyID, orders_responses_1.OrderStatusData["WITH_RECEIVING_AGENT"].icon),
+                    },
+                    {
+                        status: "RETURNED",
+                        totalCost: total,
+                        count: rCount,
+                        name: "كشوفات الراجع",
+                        icon: (0, orders_responses_1.getStatusIcon)(data.loggedInUser.companyID, orders_responses_1.OrderStatusData["RETURNED"].icon),
+                    },
+                    {
+                        status: "DELIVERED",
+                        totalCost: total,
+                        count: dCount,
+                        name: "كشوفات الواصل",
+                        icon: (0, orders_responses_1.getStatusIcon)(data.loggedInUser.companyID, orders_responses_1.OrderStatusData["DELIVERED"].icon),
+                    },
+                ],
+            };
+        }
         let statistics = await ordersRepository.getOrdersStatisticsV2({
             filters: {
                 ...data.filters,
@@ -1688,42 +1796,6 @@ class OrdersService {
             },
             loggedInUser: data.loggedInUser,
         });
-        if (data.loggedInUser.role === "RECEIVING_AGENT") {
-            const returnedCount = await db_1.prisma.report.aggregate({
-                _sum: {
-                    baghdadOrdersCount: true,
-                    governoratesOrdersCount: true,
-                },
-                _count: {
-                    id: true,
-                },
-                where: {
-                    deleted: false,
-                    confirmed: false,
-                    clientReport: {
-                        secondaryType: "RETURNED",
-                        receivingAgentId: data.loggedInUser.id,
-                    },
-                },
-            });
-            let total = 0;
-            let count = (returnedCount._sum.baghdadOrdersCount ?? 0) +
-                (returnedCount._sum.governoratesOrdersCount ?? 0);
-            return {
-                ...statistics,
-                ordersStatisticsByStatus: [
-                    ...statistics.ordersStatisticsByStatus.filter((status) => status.status === "READY_TO_SEND" ||
-                        status.status === "WITH_RECEIVING_AGENT"),
-                    {
-                        status: "RETURNED",
-                        totalCost: total,
-                        count: count,
-                        name: "الرواجع",
-                        icon: (0, orders_responses_1.getStatusIcon)(data.loggedInUser.companyID, orders_responses_1.OrderStatusData["RETURNED"].icon),
-                    },
-                ],
-            };
-        }
         if (data.loggedInUser.role === "INQUIRY_EMPLOYEE") {
             const employee = await db_1.prisma.employee.findUnique({
                 where: {
