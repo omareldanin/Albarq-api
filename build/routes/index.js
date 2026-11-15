@@ -34,6 +34,7 @@ const clientBranchCost_routes_1 = __importDefault(require("../app/clientDelivery
 const employeeCommission_routes_1 = __importDefault(require("../app/employeeCommissions/employeeCommission.routes"));
 const employeeWallets_routes_1 = __importDefault(require("../app/employeeWallets/employeeWallets.routes"));
 const receivingReports_routes_1 = __importDefault(require("../app/receivingReports/receivingReports.routes"));
+const clientProcessing_routes_1 = __importDefault(require("../app/clientProcessing/clientProcessing.routes"));
 const catchAsync_1 = require("../lib/catchAsync");
 const upload_1 = require("../middlewares/upload");
 const router = (0, express_1.Router)();
@@ -67,6 +68,7 @@ router.use("/", clientBranchCost_routes_1.default);
 router.use("/", employeeCommission_routes_1.default);
 router.use("/", employeeWallets_routes_1.default);
 router.use("/", receivingReports_routes_1.default);
+router.use("/", clientProcessing_routes_1.default);
 /*******************************************************************************
  * TEST ROUTES
  * TODO: Remove these routes

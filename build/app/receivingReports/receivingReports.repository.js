@@ -17,7 +17,7 @@ const receivingReportOrderSelect = {
     totalCost: true,
     notes: true,
     store: { select: { name: true } },
-    location: { select: { name: true } }
+    location: { select: { name: true } },
 };
 const receiptCollator = new Intl.Collator("en", { numeric: true });
 class ReceivingReportsRepository {
@@ -34,12 +34,16 @@ class ReceivingReportsRepository {
                     throw forbidden();
                 return { companyId, clientId: user.clientId };
             case "RECEIVING_AGENT":
-                return { companyId, receivingAgentId: user.id, clientId: filters?.client_id };
+                return {
+                    companyId,
+                    receivingAgentId: user.id,
+                    clientId: filters?.client_id,
+                };
             case "COMPANY_MANAGER":
                 return {
                     companyId,
                     clientId: filters?.client_id,
-                    receivingAgentId: filters?.receiving_agent_id
+                    receivingAgentId: filters?.receiving_agent_id,
                 };
             default:
                 throw forbidden();
@@ -57,20 +61,28 @@ class ReceivingReportsRepository {
             throw notAllowed();
         if (user.role === "RECEIVING_AGENT") {
             const agent = await db_1.prisma.employee.findFirst({
-                where: { id: user.id, companyId, role: "RECEIVING_AGENT", deleted: false },
-                select: { id: true, inquiryClients: { select: { clientId: true } } }
+                where: {
+                    id: user.id,
+                    companyId,
+                    role: "RECEIVING_AGENT",
+                    deleted: false,
+                },
+                select: { id: true, inquiryClients: { select: { clientId: true } } },
             });
             if (!agent)
                 throw notAllowed();
             // Same rule as the agent's orders list: no assigned clients means every company client.
             const assignedClients = agent.inquiryClients.map((item) => item.clientId);
-            if (data.clientID && assignedClients.length > 0 && !assignedClients.includes(data.clientID)) {
+            if (data.clientID &&
+                assignedClients.length > 0 &&
+                !assignedClients.includes(data.clientID)) {
                 throw new AppError_1.AppError("هذا العميل غير مرتبط بك", 403);
             }
             return {
                 companyId,
-                clientId: data.clientID ?? (assignedClients.length > 0 ? { in: assignedClients } : undefined),
-                receivingAgentId: agent.id
+                clientId: data.clientID ??
+                    (assignedClients.length > 0 ? { in: assignedClients } : undefined),
+                receivingAgentId: agent.id,
             };
         }
         if (user.role === "CLIENT") {
@@ -78,22 +90,22 @@ class ReceivingReportsRepository {
                 throw notAllowed();
             const client = await db_1.prisma.client.findFirst({
                 where: { id: user.id, companyId, deleted: false },
-                select: { id: true }
+                select: { id: true },
             });
             if (!client)
                 throw notAllowed();
             const agents = await db_1.prisma.receivingAgentClients.findMany({
                 where: {
                     clientId: client.id,
-                    receivingAgent: { companyId, role: "RECEIVING_AGENT", deleted: false }
+                    receivingAgent: { companyId, role: "RECEIVING_AGENT", deleted: false },
                 },
                 select: { agentId: true },
-                take: 2
+                take: 2,
             });
             return {
                 companyId,
                 clientId: client.id,
-                receivingAgentId: agents.length === 1 ? agents[0].agentId : null
+                receivingAgentId: agents.length === 1 ? agents[0].agentId : null,
             };
         }
         throw notAllowed();
@@ -112,11 +124,11 @@ class ReceivingReportsRepository {
                 status: "WITH_RECEIVING_AGENT",
                 receivingReportOrder: { is: null },
                 id: data.ordersIDs ? { in: data.ordersIDs } : undefined,
-                clientId: scope.clientId
+                clientId: scope.clientId,
             },
             select: { id: true, clientId: true, governorate: true, totalCost: true },
             orderBy: { createdAt: "asc" },
-            take: MAX_ORDERS_PER_REQUEST + 1
+            take: MAX_ORDERS_PER_REQUEST + 1,
         });
         if (orders.length === 0) {
             throw new AppError_1.AppError("لا توجد طلبات جديدة لعمل كشف استلام", 400);
@@ -142,16 +154,19 @@ class ReceivingReportsRepository {
                         baghdadOrdersCount: baghdad,
                         governoratesOrdersCount: clientOrders.length - baghdad,
                         totalCost: clientOrders.reduce((sum, order) => sum + (order.totalCost || 0), 0),
-                        orders: { create: clientOrders.map((order) => ({ orderId: order.id })) }
+                        orders: {
+                            create: clientOrders.map((order) => ({ orderId: order.id })),
+                        },
                     },
-                    select: receivingReports_responses_1.receivingReportSelect
+                    select: receivingReports_responses_1.receivingReportSelect,
                 });
             }));
             return reports.map(receivingReports_responses_1.receivingReportReform);
         }
         catch (error) {
             // Another request put one of these orders in a report first (orderId is unique).
-            if (error instanceof client_1.Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+            if (error instanceof client_1.Prisma.PrismaClientKnownRequestError &&
+                error.code === "P2002") {
                 throw new AppError_1.AppError("بعض الطلبات أضيفت إلى كشف استلام آخر، أعد المحاولة", 409);
             }
             throw error;
@@ -159,13 +174,17 @@ class ReceivingReportsRepository {
     };
     getReports = async (user, filters) => {
         // Calendar dates follow Baghdad time; include the entire selected end day.
-        const from = filters.start_date ? new Date(`${filters.start_date}T00:00:00+03:00`) : undefined;
-        const until = filters.end_date ? new Date(`${filters.end_date}T00:00:00+03:00`) : undefined;
+        const from = filters.start_date
+            ? new Date(`${filters.start_date}T00:00:00+03:00`)
+            : undefined;
+        const until = filters.end_date
+            ? new Date(`${filters.end_date}T00:00:00+03:00`)
+            : undefined;
         if (until)
             until.setUTCDate(until.getUTCDate() + 1);
         const where = {
             ...this.viewScope(user, filters),
-            createdAt: from || until ? { gte: from, lt: until } : undefined
+            createdAt: from || until ? { gte: from, lt: until } : undefined,
         };
         const [reports, totals] = await Promise.all([
             db_1.prisma.receivingReport.findMany({
@@ -173,7 +192,7 @@ class ReceivingReportsRepository {
                 orderBy: { id: "desc" },
                 skip: (filters.page - 1) * filters.size,
                 take: filters.size,
-                select: receivingReports_responses_1.receivingReportSelect
+                select: receivingReports_responses_1.receivingReportSelect,
             }),
             db_1.prisma.receivingReport.aggregate({
                 where,
@@ -182,9 +201,9 @@ class ReceivingReportsRepository {
                     ordersCount: true,
                     baghdadOrdersCount: true,
                     governoratesOrdersCount: true,
-                    totalCost: true
-                }
-            })
+                    totalCost: true,
+                },
+            }),
         ]);
         return {
             page: filters.page,
@@ -196,9 +215,9 @@ class ReceivingReportsRepository {
                     ordersCount: totals._sum.ordersCount ?? 0,
                     baghdadOrdersCount: totals._sum.baghdadOrdersCount ?? 0,
                     governoratesOrdersCount: totals._sum.governoratesOrdersCount ?? 0,
-                    totalCost: totals._sum.totalCost ?? 0
-                }
-            }
+                    totalCost: totals._sum.totalCost ?? 0,
+                },
+            },
         };
     };
     /** A single report with its orders, for the PDF. */
@@ -208,15 +227,18 @@ class ReceivingReportsRepository {
             select: {
                 ...receivingReports_responses_1.receivingReportSelect,
                 company: { select: { name: true, logo: true } },
-                orders: { select: { order: { select: receivingReportOrderSelect } } }
-            }
+                orders: { select: { order: { select: receivingReportOrderSelect } } },
+            },
         });
         if (!report)
             throw new AppError_1.AppError("كشف الاستلام غير موجود", 404);
         const orders = report.orders
             .map((item) => item.order)
             .sort((a, b) => receiptCollator.compare(a.receiptNumber, b.receiptNumber));
-        return { report: { ...(0, receivingReports_responses_1.receivingReportReform)(report), company: report.company }, orders };
+        return {
+            report: { ...(0, receivingReports_responses_1.receivingReportReform)(report), company: report.company },
+            orders,
+        };
     };
 }
 exports.ReceivingReportsRepository = ReceivingReportsRepository;

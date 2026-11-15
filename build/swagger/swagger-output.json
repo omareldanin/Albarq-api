@@ -7079,6 +7079,124 @@
                 }
             }
         },
+        "/api/v1/client-processing/orders": {
+            "get": {
+                "tags": [
+                    "Client Processing"
+                ],
+                "description": "The client\\'s orders with status PROCESSING. state=pending lists not processed orders, state=processed lists processed or confirmed ones (with the latest client processing). counts has both totals.",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "state",
+                        "in": "query",
+                        "enum": [
+                            "pending",
+                            "processed"
+                        ],
+                        "default": "pending",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "default": 1,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "default": 10,
+                        "maximum": 50,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/v1/client-processing/orders/{orderID}": {
+            "patch": {
+                "tags": [
+                    "Client Processing"
+                ],
+                "description": "Client processes an order in PROCESSING: sets processingStatus=processed, clientNotes, and a new first phone for CHANGE_PHONE, then adds an ORDER_PROCESS timeline entry and notifies the delivery agent and inquiry employees. The order status is not changed.",
+                "parameters": [
+                    {
+                        "name": "orderID",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Order is not in PROCESSING, or invalid phone"
+                    },
+                    "409": {
+                        "description": "Order status changed meanwhile"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "action"
+                                ],
+                                "properties": {
+                                    "action": {
+                                        "type": "string",
+                                        "enum": [
+                                            "CONTACTED_REDELIVER",
+                                            "CONTACT_WHATSAPP",
+                                            "SEND_SMS",
+                                            "CHANGE_PHONE",
+                                            "OTHER"
+                                        ]
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "maxLength": 300,
+                                        "description": "Required for OTHER"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "description": "Required for CHANGE_PHONE, 07XXXXXXXXX"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v2/company/forward-orders": {
             "post": {
                 "description": "",
