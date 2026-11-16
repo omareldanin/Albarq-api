@@ -1152,6 +1152,19 @@ model ReceivingReportOrder {
   @@index([reportId])
 }
 
+/// Latest store version per platform; drives the in-app update dialog.
+model AppVersion {
+  id            Int         @id @default(autoincrement())
+  platform      AppPlatform @unique
+  latestVersion String
+  /// Installed versions below this must update (forced update dialog).
+  minVersion    String      @default("0.0.0")
+  storeUrl      String
+  releaseNotes  String      @default("")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
 enum AdminRole {
   ADMIN
   ADMIN_ASSISTANT
@@ -1360,4 +1373,9 @@ enum OrderTimelineType {
   ORDER_CREATION
   ORDER_CONFIRMATION
   ORDER_PROCESS
+}
+
+enum AppPlatform {
+  IOS
+  ANDROID
 }

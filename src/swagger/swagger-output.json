@@ -7079,6 +7079,135 @@
         }
       }
     },
+    "/api/v1/app-version": {
+      "get": {
+        "tags": [
+          "App Version"
+        ],
+        "summary": "Latest store version (public, used by the mobile app)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "platform",
+            "in": "query",
+            "enum": [
+              "ios",
+              "android"
+            ],
+            "description": "Omit to get both platforms",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "App Version"
+        ],
+        "summary": "Set the latest / minimum version for a platform",
+        "description": "Call after the new build is live on the store. Installed versions below latestVersion get an optional update dialog; below minVersion the dialog cannot be dismissed. storeUrl is required the first time a platform is added.",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "platform",
+                  "latestVersion"
+                ],
+                "properties": {
+                  "platform": {
+                    "type": "string",
+                    "enum": [
+                      "IOS",
+                      "ANDROID"
+                    ]
+                  },
+                  "latestVersion": {
+                    "type": "string",
+                    "example": "2.4.0"
+                  },
+                  "minVersion": {
+                    "type": "string",
+                    "example": "2.0.0"
+                  },
+                  "storeUrl": {
+                    "type": "string",
+                    "example": "https://play.google.com/store/apps/details?id=com.delivery.iq"
+                  },
+                  "releaseNotes": {
+                    "type": "string",
+                    "example": "تحسينات في المحادثة والكشوفات"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/app-version/notify": {
+      "post": {
+        "tags": [
+          "App Version"
+        ],
+        "summary": "Push \"update available\" to all users",
+        "description": "Sends to every active user. Call once the version is live on both stores. Tapping the notification opens the store when the device has an update.",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/client-processing/orders": {
       "get": {
         "tags": [

@@ -29,6 +29,7 @@ import clientDeliveryCost from "../app/clientDeliveryCost/clientBranchCost.route
 import employeeCommissions from "../app/employeeCommissions/employeeCommission.routes";
 import employeeWallets from "../app/employeeWallets/employeeWallets.routes";
 import receivingReports from "../app/receivingReports/receivingReports.routes";
+import appVersions from "../app/appVersions/appVersions.routes";
 import clientProcessing from "../app/clientProcessing/clientProcessing.routes";
 
 import {catchAsync} from "../lib/catchAsync";
@@ -66,6 +67,7 @@ router.use("/", clientDeliveryCost);
 router.use("/", employeeCommissions);
 router.use("/", employeeWallets);
 router.use("/", receivingReports);
+router.use("/", appVersions);
 router.use("/", clientProcessing);
 
 /*******************************************************************************
