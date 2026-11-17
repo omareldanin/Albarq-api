@@ -14,7 +14,7 @@ let lastSecond = 0;
 export class ClientReceiptController {
   generateOrderId() {
     const now = new Date(
-      new Date().toLocaleString("en-US", {timeZone: "Asia/Baghdad"})
+      new Date().toLocaleString("en-US", {timeZone: "Asia/Baghdad"}),
     );
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
@@ -34,7 +34,7 @@ export class ClientReceiptController {
   createReceipts = catchAsync(async (req, res) => {
     // 1. Validate all input at once
     const receipts: clientReceiptCreateType[] = req.body.map((r: unknown) =>
-      clientReceiptCreateSchema.parse(r)
+      clientReceiptCreateSchema.parse(r),
     );
 
     // ==== Extract storeIds & prefetch stores ====
@@ -54,9 +54,11 @@ export class ClientReceiptController {
       });
 
       storesMap = Object.fromEntries(
-        stores.map((s) => [s.id, {branchId: s.client.branchId!!}])
+        stores.map((s) => [s.id, {branchId: s.client.branchId!!}]),
       );
     }
+    console.log(receipts);
+    console.log(storesMap);
 
     // ==== Generate unique receipt IDs in memory FAST ====
     const usedIds = new Set<string>();
@@ -121,7 +123,7 @@ export class ClientReceiptController {
 
     // ==== Now generate PDF ====
     const pdf = await generateReceipts(
-      createdReceipt.map((r) => receiptReform(r))
+      createdReceipt.map((r) => receiptReform(r)),
     );
     const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
 

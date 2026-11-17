@@ -42,6 +42,8 @@ class ClientReceiptController {
             });
             storesMap = Object.fromEntries(stores.map((s) => [s.id, { branchId: s.client.branchId }]));
         }
+        console.log(receipts);
+        console.log(storesMap);
         // ==== Generate unique receipt IDs in memory FAST ====
         const usedIds = new Set();
         const generateFastUniqueId = () => {

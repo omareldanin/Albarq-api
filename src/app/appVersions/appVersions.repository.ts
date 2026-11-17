@@ -65,8 +65,8 @@ export class AppVersionsRepository {
         fcm: {startsWith: "Expo"},
         OR: [
           {admin: {isNot: null}},
-          {employee: {deleted: false}},
-          {client: {deleted: false}},
+          {employee: {deleted: false, companyId: 75}},
+          {client: {deleted: false, companyId: 75}},
         ],
       },
       select: {fcm: true},

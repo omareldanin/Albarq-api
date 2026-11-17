@@ -12,6 +12,7 @@ import {ClientsRepository} from "./clients.repository";
 import {ClientListFilterSchema} from "./clients.filters";
 import crypto from "crypto";
 import {prisma} from "../../database/db";
+import {z} from "zod";
 
 const clientsRepository = new ClientsRepository();
 const employeesRepository = new EmployeesRepository();
@@ -46,12 +47,39 @@ export class ClientsController {
       12,
     );
 
-    const createdClient = await clientsRepository.createClient(companyID, {
-      ...rest,
-      password: hashedPassword,
-      userID: currentUser.id,
-      avatar,
-    });
+    // Optional: link the new client to a receiving agent of the same company.
+    const receivingAgentID =
+      req.body.receivingAgentID !== undefined &&
+      req.body.receivingAgentID !== null &&
+      req.body.receivingAgentID !== ""
+        ? z.coerce.number().int().positive().parse(req.body.receivingAgentID)
+        : undefined;
+
+    if (receivingAgentID) {
+      const receivingAgent = await prisma.employee.findFirst({
+        where: {
+          id: receivingAgentID,
+          role: EmployeeRole.RECEIVING_AGENT,
+          companyId: companyID,
+          deleted: false,
+        },
+        select: {id: true},
+      });
+      if (!receivingAgent) {
+        throw new AppError("مندوب الاستلام المحدد غير موجود", 400);
+      }
+    }
+
+    const createdClient = await clientsRepository.createClient(
+      companyID,
+      {
+        ...rest,
+        password: hashedPassword,
+        userID: currentUser.id,
+        avatar,
+      },
+      {receivingAgentID},
+    );
 
     res.status(200).json({
       status: "success",

@@ -41,7 +41,11 @@ export class ClientsRepository {
     })}`;
   }
 
-  async createClient(companyID: number, data: ClientCreateTypeWithUserID) {
+  async createClient(
+    companyID: number,
+    data: ClientCreateTypeWithUserID,
+    options: {receivingAgentID?: number} = {},
+  ) {
     const keys = await redis.keys("clients:*");
     if (keys.length) {
       await redis.del(keys);
@@ -100,9 +104,29 @@ export class ClientsRepository {
           },
         },
         governoratesDeliveryCosts: data.governoratesDeliveryCosts,
+        ReceivingAgentClients: options.receivingAgentID
+          ? {
+              create: {
+                receivingAgent: {
+                  connect: {
+                    id: options.receivingAgentID,
+                  },
+                },
+              },
+            }
+          : undefined,
       },
       select: clientSelect,
     });
+
+    if (options.receivingAgentID) {
+      // Employee responses include the agent's assigned clients.
+      const employeeKeys = await redis.keys("employees:*");
+      if (employeeKeys.length) {
+        await redis.del(employeeKeys);
+      }
+    }
+
     return clientReform(createdClient);
   }
 

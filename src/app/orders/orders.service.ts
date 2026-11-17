@@ -727,16 +727,6 @@ export class OrdersService {
       }
     }
 
-    if (
-      (oldOrderData.hasDeliveredClientReport ||
-        oldOrderData.hasMainForwardedReport ||
-        oldOrderData.hasMainReceivedReport) &&
-      data.orderData.paidAmount &&
-      !data.loggedInUser.showTreatury
-    ) {
-      throw new AppError("ليس لديك صلاحية تعديل المبلغ المدفوع", 403);
-    }
-
     // update order paid amount if new status is delivered or partially returned or replaced
     if (
       oldOrderData?.status !== data.orderData.status &&

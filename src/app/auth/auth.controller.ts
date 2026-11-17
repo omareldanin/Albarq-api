@@ -86,7 +86,6 @@ export class AuthController {
       token: token,
       refreshToken: refreshToken,
     });
-
     if (user.fcm) {
       await usersRepository.updateUser({
         userID: returnedUser.id,

@@ -50,6 +50,7 @@ const clients_repository_1 = require("./clients.repository");
 const clients_filters_1 = require("./clients.filters");
 const crypto_1 = __importDefault(require("crypto"));
 const db_1 = require("../../database/db");
+const zod_1 = require("zod");
 const clientsRepository = new clients_repository_1.ClientsRepository();
 const employeesRepository = new employees_repository_1.EmployeesRepository();
 // const branchesRepository = new BranchesRepository();
@@ -72,12 +73,32 @@ class ClientsController {
         }
         // hash the password
         const hashedPassword = bcrypt.hashSync(password + config_1.env.PASSWORD_SALT, 12);
+        // Optional: link the new client to a receiving agent of the same company.
+        const receivingAgentID = req.body.receivingAgentID !== undefined &&
+            req.body.receivingAgentID !== null &&
+            req.body.receivingAgentID !== ""
+            ? zod_1.z.coerce.number().int().positive().parse(req.body.receivingAgentID)
+            : undefined;
+        if (receivingAgentID) {
+            const receivingAgent = await db_1.prisma.employee.findFirst({
+                where: {
+                    id: receivingAgentID,
+                    role: client_1.EmployeeRole.RECEIVING_AGENT,
+                    companyId: companyID,
+                    deleted: false,
+                },
+                select: { id: true },
+            });
+            if (!receivingAgent) {
+                throw new AppError_1.AppError("مندوب الاستلام المحدد غير موجود", 400);
+            }
+        }
         const createdClient = await clientsRepository.createClient(companyID, {
             ...rest,
             password: hashedPassword,
             userID: currentUser.id,
             avatar,
-        });
+        }, { receivingAgentID });
         res.status(200).json({
             status: "success",
             data: createdClient,

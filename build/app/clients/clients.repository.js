@@ -25,7 +25,7 @@ class ClientsRepository {
             userID: filters.loggedInUser?.id ?? null, // VERY IMPORTANT
         })}`;
     }
-    async createClient(companyID, data) {
+    async createClient(companyID, data, options = {}) {
         const keys = await redis_1.redis.keys("clients:*");
         if (keys.length) {
             await redis_1.redis.del(keys);
@@ -82,9 +82,27 @@ class ClientsRepository {
                     },
                 },
                 governoratesDeliveryCosts: data.governoratesDeliveryCosts,
+                ReceivingAgentClients: options.receivingAgentID
+                    ? {
+                        create: {
+                            receivingAgent: {
+                                connect: {
+                                    id: options.receivingAgentID,
+                                },
+                            },
+                        },
+                    }
+                    : undefined,
             },
             select: clients_responses_1.clientSelect,
         });
+        if (options.receivingAgentID) {
+            // Employee responses include the agent's assigned clients.
+            const employeeKeys = await redis_1.redis.keys("employees:*");
+            if (employeeKeys.length) {
+                await redis_1.redis.del(employeeKeys);
+            }
+        }
         return (0, clients_responses_1.clientReform)(createdClient);
     }
     async getAllClientsPaginated(filters) {
