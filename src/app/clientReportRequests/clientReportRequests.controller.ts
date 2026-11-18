@@ -40,6 +40,15 @@ export class ClientReportRequestsController {
         res.status(200).json({ status: "success", ...result });
     });
 
+    getRequestPdf = catchAsync(async (req, res) => {
+        const { requestID } = ReportRequestParamsSchema.parse(req.params);
+        const pdf = await repository.getRequestPdf(user(res), requestID);
+        const pdfBuffer = Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `inline; filename=account-request-${requestID}.pdf`);
+        res.send(pdfBuffer);
+    });
+
     approveRequest = catchAsync(async (req, res) => {
         const { requestID } = ReportRequestParamsSchema.parse(req.params);
         const data = await repository.approveRequest(user(res), requestID);

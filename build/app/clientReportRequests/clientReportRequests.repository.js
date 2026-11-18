@@ -7,23 +7,29 @@ const AppError_1 = require("../../lib/AppError");
 const logger_1 = require("../../lib/logger");
 const clientLoans_repository_1 = require("../clientLoans/clientLoans.repository");
 const sendNotification_1 = require("../notifications/helpers/sendNotification");
+const orders_repository_1 = require("../orders/orders.repository");
 const reports_dto_1 = require("../reports/reports.dto");
 const reports_service_1 = require("../reports/reports.service");
+const requestReportPdf_1 = require("./requestReportPdf");
 const reportsService = new reports_service_1.ReportsService();
+const ordersRepository = new orders_repository_1.OrdersRepository();
 const clientLoansRepository = new clientLoans_repository_1.ClientLoansRepository();
 // Same orders the dashboard puts in a delivered client report.
-const REPORT_STATUSES = [
-    "DELIVERED",
-    "PARTIALLY_RETURNED",
-    "REPLACED",
-];
+const REPORT_STATUSES = ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"];
 const eligibleOrders = (clientId) => ({
     clientId,
     deleted: false,
     confirmed: true,
     status: { in: [...REPORT_STATUSES] },
-    hasDeliveredClientReport: false,
+    hasDeliveredClientReport: false
 });
+/**
+ * The request's orders that can still go in its report. Requests sent before the
+ * snapshot existed (no orderIds) fall back to all eligible orders.
+ */
+const requestOrders = (request) => request.orderIds.length
+    ? { id: { in: request.orderIds }, ...eligibleOrders(request.clientId) }
+    : eligibleOrders(request.clientId);
 const requestSelect = {
     id: true,
     status: true,
@@ -40,10 +46,10 @@ const requestSelect = {
         select: {
             id: true,
             user: { select: { name: true, phone: true } },
-            branch: { select: { id: true, name: true } },
-        },
+            branch: { select: { id: true, name: true } }
+        }
     },
-    reviewedBy: { select: { id: true, name: true } },
+    reviewedBy: { select: { id: true, name: true } }
 };
 const requestReform = (request) => ({
     ...request,
@@ -52,16 +58,13 @@ const requestReform = (request) => ({
         id: request.client.id,
         name: request.client.user.name,
         phone: request.client.user.phone,
-        branch: request.client.branch,
-    },
+        branch: request.client.branch
+    }
 });
 const formatAmount = (value) => new Intl.NumberFormat("en-US").format(value);
 class ClientReportRequestsRepository {
     clientID(user) {
-        if (user.role !== "CLIENT" ||
-            !user.companyID ||
-            !Number.isInteger(user.id) ||
-            user.id <= 0) {
+        if (user.role !== "CLIENT" || !user.companyID || !Number.isInteger(user.id) || user.id <= 0) {
             throw new AppError_1.AppError("ليس مصرح لك القيام بهذا الفعل", 403);
         }
         return user.id;
@@ -84,22 +87,17 @@ class ClientReportRequestsRepository {
             db_1.prisma.order.aggregate({
                 where: eligibleOrders(clientId),
                 _count: { id: true },
-                _sum: { clientNet: true, totalCost: true },
+                _sum: { clientNet: true, totalCost: true }
             }),
             clientLoansRepository.getOpenLoans(clientId),
             db_1.prisma.report.count({
-                where: {
-                    type: "CLIENT",
-                    deleted: false,
-                    confirmed: false,
-                    clientReport: { secondaryType: "DELIVERED", clientId },
-                },
+                where: { type: "CLIENT", deleted: false, confirmed: false, clientReport: { clientId } }
             }),
             db_1.prisma.clientReportRequest.findFirst({
                 where: { clientId, status: "PENDING" },
                 select: requestSelect,
-                orderBy: { id: "desc" },
-            }),
+                orderBy: { id: "desc" }
+            })
         ]);
         const ordersCount = orders._count.id;
         const clientNet = orders._sum.clientNet ?? 0;
@@ -123,7 +121,7 @@ class ClientReportRequestsRepository {
             unconfirmedReports,
             pendingRequest: pending ? requestReform(pending) : null,
             canRequest: blockReason === null,
-            blockReason,
+            blockReason
         };
     };
     createRequest = async (user, data) => {
@@ -133,23 +131,32 @@ class ClientReportRequestsRepository {
             throw new AppError_1.AppError(preview.blockReason ?? "لا يمكن طلب حساب الآن", 400);
         const client = await db_1.prisma.client.findFirst({
             where: { id: clientId, deleted: false },
-            select: { companyId: true, branchId: true, user: { select: { name: true } } },
+            select: { companyId: true, branchId: true, user: { select: { name: true } } }
         });
         if (!client)
             throw new AppError_1.AppError("العميل غير موجود", 404);
+        // Keep the exact orders asked for: the PDF and the approved report use these.
+        const orders = await db_1.prisma.order.findMany({
+            where: eligibleOrders(clientId),
+            select: { id: true, clientNet: true }
+        });
+        if (orders.length === 0)
+            throw new AppError_1.AppError("لا توجد طلبات واصلة لعمل كشف حساب", 400);
+        const clientNet = orders.reduce((sum, order) => sum + (order.clientNet || 0), 0);
         const request = await db_1.prisma.clientReportRequest.create({
             data: {
                 companyId: client.companyId,
                 clientId,
                 receiveMethod: data.receiveMethod,
                 note: data.note ?? "",
-                ordersCount: preview.ordersCount,
-                clientNet: preview.clientNet,
+                ordersCount: orders.length,
+                clientNet,
                 loansTotal: preview.loansTotal,
+                orderIds: orders.map((order) => order.id)
             },
-            select: requestSelect,
+            select: requestSelect
         });
-        void this.notifyReviewers(client, request.id, preview.ordersCount);
+        void this.notifyReviewers(client, request.id, orders.length);
         return requestReform(request);
     };
     getMyRequests = async (user) => {
@@ -158,7 +165,7 @@ class ClientReportRequestsRepository {
             where: { clientId },
             orderBy: { id: "desc" },
             take: 20,
-            select: requestSelect,
+            select: requestSelect
         });
         return requests.map(requestReform);
     };
@@ -166,7 +173,7 @@ class ClientReportRequestsRepository {
         const clientId = this.clientID(user);
         const updated = await db_1.prisma.clientReportRequest.updateMany({
             where: { id: requestID, clientId, status: "PENDING" },
-            data: { status: "CANCELLED" },
+            data: { status: "CANCELLED" }
         });
         if (updated.count === 0)
             throw new AppError_1.AppError("لا يمكن إلغاء هذا الطلب", 400);
@@ -175,7 +182,7 @@ class ClientReportRequestsRepository {
         const where = {
             ...this.reviewScope(user),
             status: filters.status,
-            clientId: filters.client_id,
+            clientId: filters.client_id
         };
         const [requests, count, pending] = await Promise.all([
             db_1.prisma.clientReportRequest.findMany({
@@ -183,50 +190,101 @@ class ClientReportRequestsRepository {
                 orderBy: { id: "desc" },
                 skip: (filters.page - 1) * filters.size,
                 take: filters.size,
-                select: requestSelect,
+                select: requestSelect
             }),
             db_1.prisma.clientReportRequest.count({ where }),
-            db_1.prisma.clientReportRequest.count({
-                where: { ...this.reviewScope(user), status: "PENDING" },
-            }),
+            db_1.prisma.clientReportRequest.count({ where: { ...this.reviewScope(user), status: "PENDING" } })
         ]);
         return {
             page: filters.page,
             pagesCount: Math.max(1, Math.ceil(count / filters.size)),
-            data: { requests: requests.map(requestReform), pendingCount: pending },
+            data: { requests: requests.map(requestReform), pendingCount: pending }
         };
     };
     /**
+     * The request as a delivered client report PDF, marked as a draft, so the reviewer
+     * and the client can check its orders before approval.
+     */
+    getRequestPdf = async (user, requestID) => {
+        const scope = user.role === "CLIENT" ? { clientId: this.clientID(user) } : this.reviewScope(user);
+        const request = await db_1.prisma.clientReportRequest.findFirst({
+            where: { id: requestID, ...scope },
+            select: {
+                id: true,
+                status: true,
+                receiveMethod: true,
+                createdAt: true,
+                reportIds: true,
+                orderIds: true,
+                clientId: true,
+                company: { select: { name: true, logo: true } },
+                client: { select: { branchId: true, user: { select: { name: true } } } }
+            }
+        });
+        if (!request)
+            throw new AppError_1.AppError("الطلب غير موجود", 404);
+        // Pending: what approval would put in the report. Reviewed: the orders asked for.
+        const rows = await db_1.prisma.order.findMany({
+            where: request.status === "PENDING"
+                ? requestOrders(request)
+                : { id: { in: request.orderIds }, deleted: false },
+            select: { id: true, store: { select: { name: true } } }
+        });
+        if (rows.length === 0)
+            throw new AppError_1.AppError("لا توجد طلبات في طلب الحساب هذا", 400);
+        const [orders, loans] = await Promise.all([
+            ordersRepository.getOrdersByIDForReports({ ordersIDs: rows.map((row) => row.id) }),
+            request.status === "PENDING"
+                ? clientLoansRepository.getOpenLoans(request.clientId)
+                : Promise.resolve({ total: 0 })
+        ]);
+        return (0, requestReportPdf_1.generateRequestReportPdf)({
+            request,
+            company: request.company,
+            client: { name: request.client.user.name, branchId: request.client.branchId },
+            storeNames: [...new Set(rows.map((row) => row.store.name))],
+            orders: orders.filter((order) => Boolean(order)),
+            loansTotal: loans.total
+        });
+    };
+    /**
      * Approves a request by making the client's delivered report now, one per store,
-     * through the regular report service (so loans, costs and treasury work as usual).
+     * from the orders the client asked for, through the regular report service
+     * (so loans, costs and treasury work as usual).
      */
     approveRequest = async (user, requestID) => {
         const request = await db_1.prisma.clientReportRequest.findFirst({
             where: { id: requestID, ...this.reviewScope(user) },
-            select: { id: true, status: true, clientId: true, receiveMethod: true },
+            select: { id: true, status: true, clientId: true, receiveMethod: true, orderIds: true }
         });
         if (!request)
             throw new AppError_1.AppError("الطلب غير موجود", 404);
         // Claim it so two reviewers cannot approve the same request.
         const claimed = await db_1.prisma.clientReportRequest.updateMany({
             where: { id: request.id, status: "PENDING" },
-            data: { status: "APPROVED", reviewedById: user.id, reviewedAt: new Date() },
+            data: { status: "APPROVED", reviewedById: user.id, reviewedAt: new Date() }
         });
         if (claimed.count === 0)
             throw new AppError_1.AppError("تمت مراجعة هذا الطلب مسبقاً", 409);
-        const receivingAgentId = request.receiveMethod === "RECEIVING_AGENT"
-            ? await this.receivingAgentOf(request.clientId)
-            : undefined;
-        // Bigger stores first, so open loans are deducted from the report that can cover them.
-        const stores = await db_1.prisma.order.groupBy({
-            by: ["storeId"],
-            where: eligibleOrders(request.clientId),
-            _sum: { clientNet: true },
-            orderBy: { _sum: { clientNet: "desc" } },
+        const receivingAgentId = request.receiveMethod === "RECEIVING_AGENT" ? await this.receivingAgentOf(request.clientId) : undefined;
+        const orders = await db_1.prisma.order.findMany({
+            where: requestOrders(request),
+            select: { id: true, storeId: true, clientNet: true }
         });
+        // Orders asked for that were deleted, changed status or reported since.
+        const skipped = request.orderIds.length ? request.orderIds.length - orders.length : 0;
+        // One report per store; bigger stores first, so open loans are deducted from the report that can cover them.
+        const byStore = new Map();
+        for (const order of orders) {
+            const store = byStore.get(order.storeId) ?? { ids: [], net: 0 };
+            store.ids.push(order.id);
+            store.net += order.clientNet || 0;
+            byStore.set(order.storeId, store);
+        }
+        const stores = [...byStore.entries()].sort((a, b) => b[1].net - a[1].net);
         const reportIds = [];
         const failures = [];
-        for (const store of stores) {
+        for (const [storeId, store] of stores) {
             try {
                 const { reportID } = await reportsService.createReport({
                     loggedInUser: user,
@@ -234,21 +292,21 @@ class ClientReportRequestsRepository {
                         type: "CLIENT",
                         secondaryType: "DELIVERED",
                         clientID: request.clientId,
-                        storeID: store.storeId,
+                        storeID: storeId,
                         receivingAgentId,
-                        ordersIDs: "*",
+                        ordersIDs: store.ids
                     },
                     ordersFilters: reports_dto_1.ReportCreateOrdersFiltersSchema.parse({
                         type: "CLIENT",
                         clientID: request.clientId,
-                        storeID: store.storeId,
+                        storeID: storeId,
                         statuses: REPORT_STATUSES.join(","),
                         clientReport: "false",
                         delivered: "true",
                         confirmed: "true",
                         sort: "branchId:asc",
-                        minified: false,
-                    }),
+                        minified: false
+                    })
                 });
                 reportIds.push(reportID);
             }
@@ -262,33 +320,28 @@ class ClientReportRequestsRepository {
             // Nothing was made: put the request back for another try.
             await db_1.prisma.clientReportRequest.update({
                 where: { id: request.id },
-                data: { status: "PENDING", reviewedById: null, reviewedAt: null },
+                data: { status: "PENDING", reviewedById: null, reviewedAt: null }
             });
-            throw new AppError_1.AppError(failures[0] ?? "لا توجد طلبات لعمل الكشف", 400);
+            throw new AppError_1.AppError(failures[0] ?? "لم تعد طلبات هذا الطلب متاحة لعمل كشف (حُذفت أو دخلت كشفاً آخر)، يمكنك رفضه", 400);
         }
         const approved = await db_1.prisma.clientReportRequest.update({
             where: { id: request.id },
             data: { reportIds },
-            select: requestSelect,
+            select: requestSelect
         });
         void this.notifyClient(request.clientId, "تمت الموافقة على طلب الحساب", `تم إنشاء كشف الحساب رقم ${reportIds.join("، ")}`);
-        return { request: requestReform(approved), failures };
+        return { request: requestReform(approved), failures, skipped };
     };
     rejectRequest = async (user, requestID, reason) => {
         const request = await db_1.prisma.clientReportRequest.findFirst({
             where: { id: requestID, ...this.reviewScope(user) },
-            select: { id: true, clientId: true },
+            select: { id: true, clientId: true }
         });
         if (!request)
             throw new AppError_1.AppError("الطلب غير موجود", 404);
         const updated = await db_1.prisma.clientReportRequest.updateMany({
             where: { id: request.id, status: "PENDING" },
-            data: {
-                status: "REJECTED",
-                rejectReason: reason,
-                reviewedById: user.id,
-                reviewedAt: new Date(),
-            },
+            data: { status: "REJECTED", rejectReason: reason, reviewedById: user.id, reviewedAt: new Date() }
         });
         if (updated.count === 0)
             throw new AppError_1.AppError("تمت مراجعة هذا الطلب مسبقاً", 409);
@@ -297,12 +350,9 @@ class ClientReportRequestsRepository {
     /** The client's receiving agent, when exactly one is assigned. */
     async receivingAgentOf(clientId) {
         const agents = await db_1.prisma.receivingAgentClients.findMany({
-            where: {
-                clientId,
-                receivingAgent: { role: "RECEIVING_AGENT", deleted: false },
-            },
+            where: { clientId, receivingAgent: { role: "RECEIVING_AGENT", deleted: false } },
             select: { agentId: true },
-            take: 2,
+            take: 2
         });
         return agents.length === 1 ? agents[0].agentId : undefined;
     }
@@ -314,17 +364,15 @@ class ClientReportRequestsRepository {
                     deleted: false,
                     OR: [
                         { role: "COMPANY_MANAGER" },
-                        ...(client.branchId
-                            ? [{ role: client_1.EmployeeRole.BRANCH_MANAGER, branchId: client.branchId }]
-                            : []),
-                    ],
+                        ...(client.branchId ? [{ role: client_1.EmployeeRole.BRANCH_MANAGER, branchId: client.branchId }] : [])
+                    ]
                 },
-                select: { id: true },
+                select: { id: true }
             });
             await Promise.all(reviewers.map((reviewer) => (0, sendNotification_1.sendNotification)({
                 userID: reviewer.id,
                 title: "طلب حساب جديد",
-                content: `طلب العميل ${client.user.name} كشف حساب (${ordersCount} طلب) - طلب رقم ${requestID}`,
+                content: `طلب العميل ${client.user.name} كشف حساب (${ordersCount} طلب) - طلب رقم ${requestID}`
             })));
         }
         catch (error) {

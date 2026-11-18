@@ -222,3 +222,6 @@ footer {
 .rh-due-final { margin-top: 2px; padding-top: 2px; border-top: 1px dashed var(--rh-color); color: var(--rh-color); }
 .rh--blue { --rh-color: #1d4ed8; --rh-soft: #eff6ff; }
 .rh-tag { display: inline-block; margin-inline-start: 6px; padding: 0 10px; border-radius: 999px; font-size: 13px; background: var(--rh-soft); color: var(--rh-color); vertical-align: middle; }
+
+/* Client report request (طلب حساب) preview */
+.rh-draft { margin: -6px 0 14px; padding: 8px 14px; border: 1px dashed #b45309; border-radius: 10px; background: #fef3e2; color: #92400e; font-size: 13px; font-weight: 700; text-align: center; }

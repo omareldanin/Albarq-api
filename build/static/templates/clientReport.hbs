@@ -23,10 +23,16 @@
           {{else}}
             كشف الراجع للعميل
           {{/if}}
+          {{#if reportData.draft}}<span class="rh-tag">مسودة للمراجعة</span>{{/if}}
         </div>
         <div class="rh-number">
-          <div class="rh-label">رقم الكشف</div>
-          <div class="rh-number-value">{{reportData.id}}</div>
+          {{#if reportData.draft}}
+            <div class="rh-label">رقم طلب الحساب</div>
+            <div class="rh-number-value">{{reportData.draft.requestId}}</div>
+          {{else}}
+            <div class="rh-label">رقم الكشف</div>
+            <div class="rh-number-value">{{reportData.id}}</div>
+          {{/if}}
           <div class="rh-label">{{date reportData.createdAt}}</div>
         </div>
       </div>
@@ -41,8 +47,13 @@
           <span class="rh-value">{{reportData.clientReport.store.name}}</span>
         </div>
         <div class="rh-info-item">
-          <span class="rh-label">ساحب الكشف</span>
-          <span class="rh-value">{{reportData.createdBy.name}}</span>
+          {{#if reportData.draft}}
+            <span class="rh-label">طريقة الاستلام</span>
+            <span class="rh-value">{{reportData.draft.receiveMethod}}</span>
+          {{else}}
+            <span class="rh-label">ساحب الكشف</span>
+            <span class="rh-value">{{reportData.createdBy.name}}</span>
+          {{/if}}
         </div>
       </div>
 
@@ -88,6 +99,9 @@
         {{/if}}
       </div>
     </header>
+    {{#if reportData.draft}}
+      <div class="rh-draft">{{reportData.draft.message}}</div>
+    {{/if}}
     <main>
       <table>
         <thead>

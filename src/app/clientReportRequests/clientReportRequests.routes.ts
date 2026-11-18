@@ -47,6 +47,20 @@ router.patch(
     /* #swagger.tags = ['Client Report Requests'] */
 );
 
+// Both sides: the request as a draft delivered report PDF
+router.get(
+    "/client-report-requests/:requestID/pdf",
+    isLoggedIn,
+    isAutherized(
+        [ClientRole.CLIENT, EmployeeRole.COMPANY_MANAGER, EmployeeRole.BRANCH_MANAGER, EmployeeRole.ACCOUNTANT],
+        [Permission.CREATE_CLIENT_REPORT]
+    ),
+    controller.getRequestPdf
+    /* #swagger.tags = ['Client Report Requests']
+       #swagger.description = 'The delivered client report template filled with the orders the client asked for, marked as a draft (nothing is saved). Pending: the orders approval would report and the open loans it would deduct. Clients see only their own requests.'
+       #swagger.produces = ['application/pdf'] */
+);
+
 // Dashboard side: review
 router.get(
     "/client-report-requests",

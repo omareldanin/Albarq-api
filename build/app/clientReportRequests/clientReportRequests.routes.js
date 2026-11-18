@@ -26,6 +26,12 @@ router.post("/client-report-requests", isLoggedIn_1.isLoggedIn, client, upload_1
 router.patch("/client-report-requests/:requestID/cancel", isLoggedIn_1.isLoggedIn, client, controller.cancelRequest
 /* #swagger.tags = ['Client Report Requests'] */
 );
+// Both sides: the request as a draft delivered report PDF
+router.get("/client-report-requests/:requestID/pdf", isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.ClientRole.CLIENT, client_1.EmployeeRole.COMPANY_MANAGER, client_1.EmployeeRole.BRANCH_MANAGER, client_1.EmployeeRole.ACCOUNTANT], [client_1.Permission.CREATE_CLIENT_REPORT]), controller.getRequestPdf
+/* #swagger.tags = ['Client Report Requests']
+   #swagger.description = 'The delivered client report template filled with the orders the client asked for, marked as a draft (nothing is saved). Pending: the orders approval would report and the open loans it would deduct. Clients see only their own requests.'
+   #swagger.produces = ['application/pdf'] */
+);
 // Dashboard side: review
 router.get("/client-report-requests", isLoggedIn_1.isLoggedIn, reviewers, controller.getRequests
 /* #swagger.tags = ['Client Report Requests']
