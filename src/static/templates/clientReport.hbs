@@ -11,87 +11,82 @@
   </head>
 
   <body class="px-20">
-    <header>
-      <table>
-        <tr>
-          <td style="width: 25%">رقم الكشف: <span>{{reportData.id}}</span></td>
+    <header class="rh rh--{{colorizeTitle reportData.clientReport.secondaryType}}">
+      <div class="rh-top">
+        <div class="rh-brand">
+          <img src="{{reportData.company.logo}}" />
+          <div class="rh-company">{{reportData.company.name}}</div>
+        </div>
+        <div class="rh-title">
           {{#if (eq reportData.clientReport.secondaryType)}}
-            <td
-              style="width: 25%;font-size:15px"
-              class="{{colorizeTitle reportData.clientReport.secondaryType}}"
-            >كشف الواصل للعميل</td>
+            كشف الواصل للعميل
           {{else}}
-            <td
-              style="width: 25%;font-size:15px"
-              class="{{colorizeTitle reportData.clientReport.secondaryType}}"
-            >كشف الراجع للعميل</td>
+            كشف الراجع للعميل
           {{/if}}
-          <td style="width: 25%">عدد طلبيات بغداد:
-            <span>{{reportData.baghdadOrdersCount}}</span></td>
+        </div>
+        <div class="rh-number">
+          <div class="rh-label">رقم الكشف</div>
+          <div class="rh-number-value">{{reportData.id}}</div>
+          <div class="rh-label">{{date reportData.createdAt}}</div>
+        </div>
+      </div>
 
-          <td style="width: 25%">الاجمالي:
-            <span>{{currency reportData.baghdadTotal}}</span></td>
+      <div class="rh-info">
+        <div class="rh-info-item">
+          <span class="rh-label">العميل</span>
+          <span class="rh-value">{{reportData.clientReport.client.name}}</span>
+        </div>
+        <div class="rh-info-item">
+          <span class="rh-label">الصفحة</span>
+          <span class="rh-value">{{reportData.clientReport.store.name}}</span>
+        </div>
+        <div class="rh-info-item">
+          <span class="rh-label">ساحب الكشف</span>
+          <span class="rh-value">{{reportData.createdBy.name}}</span>
+        </div>
+      </div>
 
-          <td style="width: 25%" rowspan="3"><img
-              src="{{reportData.company.logo}}"
-            /></td>
-        </tr>
-        <tr>
-          <td style="width: 25%">التاريخ:
-            <span>{{date reportData.createdAt}}</span></td>
-          <td style="width: 25%">العميل:
-            <span>{{reportData.clientReport.client.name}}</span></td>
-          <td style="width: 25%">عدد طلبيات المحافظات:
-            <span>{{reportData.governoratesOrdersCount}}</span></td>
-          <td style="width: 25%">الاجمالي:
-            <span>{{currency reportData.otherTotal}}</span></td>
-
-          <td style="width: 25%">
-          </td>
-        </tr>
-
-        <tr>
-          {{#if (eq reportData.clientReport.secondaryType)}}
-            <td style="width: 25%">إجمالي المبلغ المستحق :
-              <span>{{currency reportData.clientNet}}</span>
-              {{#if reportData.loansDeduction}}
-                <span style="display: block">خصم السلف:
-                  {{currency reportData.loansDeduction}}</span>
-                <span style="display: block">الصافي بعد الخصم:
-                  {{currency reportData.clientDue}}</span>
-              {{/if}}
-            </td>
-          {{else}}
-            <td style="width: 25%"></td>
-          {{/if}}
-          <td style="width: 25%">الصفحة:
-            <span>{{reportData.clientReport.store.name}}</span></td>
-          <td style="width: 25%">عدد البريد الداخلي:
-            <span>{{reportData.insideOrdersCount}}</span></td>
-          <td style="width: 25%">الاجمالي:
-            <span>{{currency reportData.insideTotal}}</span></td>
-
-          <td style="width: 25%"></td>
-        </tr>
-        <tr>
-          <td style="width: 25%"></td>
-          <td style="width: 25%">
-            <span style="display: block;color:#000;font-size:11px">ساحب الكشف :
-              {{reportData.createdBy.name}}
-            </span>
-          </td>
-
-          <td style="width: 25%">عدد الطلبيات:
-            <span>{{add
-                reportData.baghdadOrdersCount
-                reportData.governoratesOrdersCount
-              }}</span></td>
-          <td style="width: 25%">الاجمالي:
-            <span>{{currency reportData.total}}</span></td>
-
-          <td style="width: 25%"></td>
-        </tr>
-      </table>
+      <div class="rh-stats">
+        <div class="rh-stat">
+          <div class="rh-label">طلبيات بغداد</div>
+          <div class="rh-stat-count">{{reportData.baghdadOrdersCount}}</div>
+          <div class="rh-stat-total">{{currency reportData.baghdadTotal}}</div>
+        </div>
+        <div class="rh-stat">
+          <div class="rh-label">طلبيات المحافظات</div>
+          <div class="rh-stat-count">{{reportData.governoratesOrdersCount}}</div>
+          <div class="rh-stat-total">{{currency reportData.otherTotal}}</div>
+        </div>
+        <div class="rh-stat">
+          <div class="rh-label">البريد الداخلي</div>
+          <div class="rh-stat-count">{{reportData.insideOrdersCount}}</div>
+          <div class="rh-stat-total">{{currency reportData.insideTotal}}</div>
+        </div>
+        <div class="rh-stat">
+          <div class="rh-label">إجمالي الطلبيات</div>
+          <div class="rh-stat-count">{{add
+              reportData.baghdadOrdersCount
+              reportData.governoratesOrdersCount
+            }}</div>
+          <div class="rh-stat-total">{{currency reportData.total}}</div>
+        </div>
+        {{#if (eq reportData.clientReport.secondaryType)}}
+          <div class="rh-stat rh-due">
+            <div class="rh-label">إجمالي المبلغ المستحق</div>
+            <div class="rh-due-value">{{currency reportData.clientNet}}</div>
+            {{#if reportData.loansDeduction}}
+              <div class="rh-due-row">
+                <span>خصم السلف</span>
+                <span>- {{currency reportData.loansDeduction}}</span>
+              </div>
+              <div class="rh-due-row rh-due-final">
+                <span>الصافي بعد الخصم</span>
+                <span>{{currency reportData.clientDue}}</span>
+              </div>
+            {{/if}}
+          </div>
+        {{/if}}
+      </div>
     </header>
     <main>
       <table>

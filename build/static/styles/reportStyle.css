@@ -193,3 +193,32 @@ footer {
 .green {
     color: rgb(0, 165, 0);
 }
+
+
+/* ---------------------------------------------------------------------------
+ * Report header (.rh): title bar, info strip and number cards.
+ * Colour comes from the modifier: rh--green / rh--red / rh--blue.
+ * ------------------------------------------------------------------------- */
+.rh { --rh-color: #15803d; --rh-soft: #ecfdf3; text-align: right; font-weight: normal; padding: 0; margin-bottom: 14px; }
+.rh--red { --rh-color: #b91c1c; --rh-soft: #fef2f2; }
+.rh-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 10px; border-bottom: 3px solid var(--rh-color); }
+.rh-brand { display: flex; align-items: center; gap: 10px; min-width: 200px; }
+.rh-brand img { width: 64px; height: 64px; object-fit: contain; border-radius: 12px; }
+.rh-company { font-size: 15px; font-weight: 800; }
+.rh-title { flex: 1; text-align: center; font-size: 22px; font-weight: 800; color: var(--rh-color); }
+.rh-number { min-width: 200px; text-align: left; }
+.rh-number-value { font-size: 22px; font-weight: 800; color: var(--rh-color); line-height: 1.2; }
+.rh-label { font-size: 11px; color: #6b7280; }
+.rh-value { font-size: 13px; font-weight: 700; color: #111827; }
+.rh-info { display: flex; gap: 10px; margin-top: 10px; }
+.rh-info-item { flex: 1; display: flex; align-items: baseline; gap: 8px; padding: 6px 12px; background: #f3f4f6; border-radius: 8px; }
+.rh-stats { display: flex; gap: 10px; margin-top: 10px; align-items: stretch; }
+.rh-stat { flex: 1; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 10px; text-align: center; }
+.rh-stat-count { font-size: 20px; font-weight: 800; line-height: 1.3; color: #111827; }
+.rh-stat-total { font-size: 12px; font-weight: 700; color: var(--rh-color); }
+.rh-due { flex: 1.6; background: var(--rh-soft); border-color: var(--rh-color); text-align: right; }
+.rh-due-value { font-size: 20px; font-weight: 800; color: var(--rh-color); line-height: 1.3; }
+.rh-due-row { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #374151; }
+.rh-due-final { margin-top: 2px; padding-top: 2px; border-top: 1px dashed var(--rh-color); color: var(--rh-color); }
+.rh--blue { --rh-color: #1d4ed8; --rh-soft: #eff6ff; }
+.rh-tag { display: inline-block; margin-inline-start: 6px; padding: 0 10px; border-radius: 999px; font-size: 13px; background: var(--rh-soft); color: var(--rh-color); vertical-align: middle; }

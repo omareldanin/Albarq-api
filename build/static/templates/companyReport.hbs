@@ -7,46 +7,58 @@
   </head>
 
   <body class="px-20">
-    <header>
-      <table>
-        <tr>
-          <td style="width: 25%">رقم الكشف: <span>{{reportData.id}}</span></td>
-          <td
-            style="width: 25%"
-            class="title
-              {{colorizeTitle reportData.companyReport.secondaryType}}"
-          >كشف شركة
-          </td>
-          <td style="width: 25%">عدد الطلبيات:
-            <span>{{add
-                reportData.baghdadOrdersCount
-                reportData.governoratesOrdersCount
-              }}</span></td>
-          <td style="width: 25%" rowspan="3"><img
-              src="{{reportData.company.logo}}"
-            /></td>
-        </tr>
-        <tr>
-          <td style="width: 25%">التاريخ:
-            <span>{{date reportData.createdAt}}</span></td>
-          <td style="width: 25%">الشركة:
-            <span>{{reportData.companyReport.company.name}}</span></td>
-          <td style="width: 25%">عدد طلبيات بغداد:
-            <span>{{reportData.baghdadOrdersCount}}</span></td>
-          <td style="width: 25%"></td>
-        </tr>
-        <tr>
-          {{!-- <td style="width: 25%">صافي العميل:
-            <span>{{currency reportData.clientNet}}</span></td> --}}
-          <td style="width: 25%">صافي الشركة:
-            <span>{{currency reportData.companyNet}}</span></td>
-          <td style="width: 25%"></td>
-          <td style="width: 25%">عدد طلبيات المحافظات:
-            <span>{{reportData.governoratesOrdersCount}}</span></td>
-          <td style="width: 25%"></td>
-
-        </tr>
-      </table>
+    <header class="rh rh--{{colorizeTitle reportData.companyReport.secondaryType}}">
+      <div class="rh-top">
+        <div class="rh-brand">
+          <img src="{{reportData.company.logo}}" />
+          <div class="rh-company">{{reportData.company.name}}</div>
+        </div>
+        <div class="rh-title">كشف شركة<span class="rh-tag">{{#if (eq reportData.companyReport.secondaryType)}}واصل{{else}}راجع{{/if}}</span></div>
+        <div class="rh-number">
+          <div class="rh-label">رقم الكشف</div>
+          <div class="rh-number-value">{{reportData.id}}</div>
+          <div class="rh-label">{{date reportData.createdAt}}</div>
+        </div>
+      </div>
+      <div class="rh-info">
+        <div class="rh-info-item">
+          <span class="rh-label">الشركة</span>
+          <span class="rh-value">{{reportData.companyReport.company.name}}</span>
+        </div>
+        <div class="rh-info-item">
+          <span class="rh-label">ساحب الكشف</span>
+          <span class="rh-value">{{reportData.createdBy.name}}</span>
+        </div>
+      </div>
+      <div class="rh-stats">
+        <div class="rh-stat">
+          <div class="rh-label">طلبيات بغداد</div>
+          <div class="rh-stat-count">{{reportData.baghdadOrdersCount}}</div>
+        </div>
+        <div class="rh-stat">
+          <div class="rh-label">طلبيات المحافظات</div>
+          <div class="rh-stat-count">{{reportData.governoratesOrdersCount}}</div>
+        </div>
+        <div class="rh-stat">
+          <div class="rh-label">إجمالي الطلبيات</div>
+          <div class="rh-stat-count">{{add
+              reportData.baghdadOrdersCount
+              reportData.governoratesOrdersCount
+            }}</div>
+        </div>
+        <div class="rh-stat rh-due">
+          <div class="rh-label">إجمالي المبلغ المستحق</div>
+          <div class="rh-due-value">{{currency reportData.companyNet}}</div>
+          <div class="rh-due-row">
+            <span>مبلغ الوصل</span>
+            <span>{{currency reportData.totalCost}}</span>
+          </div>
+          <div class="rh-due-row">
+            <span>المبلغ المدفوع</span>
+            <span>{{currency reportData.paidAmount}}</span>
+          </div>
+        </div>
+      </div>
     </header>
     <main>
       <table>
