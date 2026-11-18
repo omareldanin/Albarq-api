@@ -37,6 +37,7 @@ const receivingReports_routes_1 = __importDefault(require("../app/receivingRepor
 const appVersions_routes_1 = __importDefault(require("../app/appVersions/appVersions.routes"));
 const clientProcessing_routes_1 = __importDefault(require("../app/clientProcessing/clientProcessing.routes"));
 const clientLoans_routes_1 = __importDefault(require("../app/clientLoans/clientLoans.routes"));
+const clientReportRequests_routes_1 = __importDefault(require("../app/clientReportRequests/clientReportRequests.routes"));
 const catchAsync_1 = require("../lib/catchAsync");
 const upload_1 = require("../middlewares/upload");
 const router = (0, express_1.Router)();
@@ -73,6 +74,7 @@ router.use("/", receivingReports_routes_1.default);
 router.use("/", appVersions_routes_1.default);
 router.use("/", clientProcessing_routes_1.default);
 router.use("/", clientLoans_routes_1.default);
+router.use("/", clientReportRequests_routes_1.default);
 /*******************************************************************************
  * TEST ROUTES
  * TODO: Remove these routes
