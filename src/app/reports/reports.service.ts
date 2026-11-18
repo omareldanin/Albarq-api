@@ -1112,10 +1112,23 @@ export class ReportsService {
       throw new AppError("يمكن للعميل تأكيد استلام الكشف فقط", 403);
     }
 
-    // Include ownership in the UPDATE itself, not just a prior read.
-    const scope = isClient
-      ? {...reportReceiptScope(data.loggedInUser), deleted: false}
-      : undefined;
+    // Check ownership with a normal query (same filters as the client's reports list).
+    // A relation filter (clientReport.clientId) inside update's unique `where` did not
+    // match for clients, so the update itself only keeps the scalar `deleted` check.
+    if (isClient) {
+      const owned = await prisma.report.findFirst({
+        where: {
+          id: data.params.reportID,
+          deleted: false,
+          ...reportReceiptScope(data.loggedInUser),
+        },
+        select: {id: true},
+      });
+      if (!owned) {
+        throw new AppError("الكشف غير موجود أو لا يخص حسابك", 404);
+      }
+    }
+    const scope = isClient ? {deleted: false} : undefined;
     try {
       return await reportsRepository.updateReport({
         reportID: data.params.reportID,
