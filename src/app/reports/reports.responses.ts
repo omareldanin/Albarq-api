@@ -44,6 +44,7 @@ export const reportSelect = {
   paidAmount: true,
   deliveryCost: true,
   clientNet: true,
+  loansDeduction: true,
   deliveryAgentNet: true,
   branchNet: true,
   companyNet: true,
@@ -257,6 +258,7 @@ export const AllreportSelect = {
   paidAmount: true,
   deliveryCost: true,
   clientNet: true,
+  loansDeduction: true,
   deliveryAgentNet: true,
   branchNet: true,
   companyNet: true,
@@ -422,6 +424,7 @@ export const reportReform = (
   }
   const reportData = {
     ...report,
+    clientDue: report.clientNet - report.loansDeduction,
     createdBy: report.createdBy.user,
     insideOrdersCount: 0,
     total: 0,
@@ -512,6 +515,7 @@ export const AllreportReform = (
   }
   const reportData = {
     ...report,
+    clientDue: report.clientNet - report.loansDeduction,
     createdBy: report.createdBy.user,
     insideOrdersCount: 0,
     total: 0,

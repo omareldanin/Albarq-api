@@ -38,6 +38,7 @@ model User {
   transactions     Transaction[]
   loginHistory     UsersLoginHistory[]
   employeeWallets  EmployeeWallet[]
+  clientLoans      ClientLoan[]
 
   @@index([name])
   @@index([phone])
@@ -154,6 +155,7 @@ model Client {
   tickets                   Ticket[]
   targetTransactions        Transaction[]             @relation("TransactionTargetClient")
   receivingReports          ReceivingReport[]
+  loans                     ClientLoan[]
 
   @@index([companyId])
   @@index([branchId])
@@ -401,6 +403,7 @@ model Company {
   dailyProfits              DailyProfit[]
   employeeWallets           EmployeeWallet[]
   receivingReports          ReceivingReport[]
+  clientLoans               ClientLoan[]
 }
 
 model InquiryEmployeesCompanies {
@@ -719,6 +722,8 @@ model Report {
   branchNet               Float                @default(0)
   url                     String?
   activeProfit            Boolean              @default(false)
+  /// Client loans deducted from this delivered client report.
+  loansDeduction          Float                @default(0)
   branchReport            BranchReport?
   clientReport            ClientReport?
   companyReport           CompanyReport?
@@ -731,6 +736,8 @@ model Report {
   createdBy               Employee             @relation(fields: [employeeId], references: [id])
   repositoryReport        RepositoryReport?
   transaction             Transaction?
+  settledLoans            ClientLoan[]         @relation("ClientLoanReport")
+  releasedLoans           ClientLoan[]         @relation("ClientLoanReleasedReport")
 
   @@index([type])
   @@index([employeeId])
@@ -1043,6 +1050,7 @@ model Transaction {
   employee       Employee?       @relation(fields: [employeeId], references: [id])
   report         Report?         @relation(fields: [reportId], references: [id])
   employeeWallet EmployeeWallet? @relation(fields: [employeeWalletId], references: [id], onDelete: Restrict)
+  clientLoan     ClientLoan?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1163,6 +1171,34 @@ model AppVersion {
   releaseNotes  String      @default("")
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+}
+
+/// سلفة: cash paid to a client in advance through the treasury (transaction), deducted
+/// from the client's next delivered report. Open = no report; cancelled = transaction deleted.
+model ClientLoan {
+  id               Int         @id @default(autoincrement())
+  companyId        Int
+  clientId         Int
+  amount           Float
+  note             String      @default("")
+  transactionId    Int         @unique
+  /// Delivered client report that deducted this loan.
+  reportId         Int?
+  /// Report that deducted it before that report was deleted; used to restore it.
+  releasedReportId Int?
+  settledAt        DateTime?
+  createdById      Int?
+  createdAt        DateTime    @default(now())
+  company          Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  client           Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  transaction      Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  report           Report?     @relation("ClientLoanReport", fields: [reportId], references: [id], onDelete: SetNull)
+  releasedReport   Report?     @relation("ClientLoanReleasedReport", fields: [releasedReportId], references: [id], onDelete: SetNull)
+  createdBy        User?       @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([companyId, clientId, reportId])
+  @@index([reportId])
+  @@index([releasedReportId])
 }
 
 enum AdminRole {

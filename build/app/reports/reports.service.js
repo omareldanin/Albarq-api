@@ -21,11 +21,13 @@ const db_1 = require("../../database/db");
 const axios_1 = __importDefault(require("axios"));
 const generateBranchClientsReport_1 = require("./helpers/generateBranchClientsReport");
 const transaction_repository_1 = require("../transactions/transaction.repository");
+const clientLoans_repository_1 = require("../clientLoans/clientLoans.repository");
 const reportReceiptScope_1 = require("./helpers/reportReceiptScope");
 const reportsRepository = new reports_repository_1.ReportsRepository();
 const ordersRepository = new orders_repository_1.OrdersRepository();
 const employeesRepository = new employees_repository_1.EmployeesRepository();
 const transactionsRepository = new transaction_repository_1.TransactionsRepository();
+const clientLoansRepository = new clientLoans_repository_1.ClientLoansRepository();
 const receiptCollator = new Intl.Collator("en", {
     numeric: true,
     sensitivity: "base",
@@ -260,6 +262,14 @@ class ReportsService {
         if (data.reportData.type === client_1.ReportType.CLIENT) {
             clientID = orders[0]?.client.id;
         }
+        // A delivered client report deducts all of the client's open loans (سلف),
+        // and cannot be made while they are more than its net.
+        const isDeliveredClientReport = data.reportData.type === client_1.ReportType.CLIENT &&
+            data.reportData.secondaryType === "DELIVERED";
+        const openLoans = isDeliveredClientReport && clientID
+            ? await clientLoansRepository.getOpenLoans(clientID)
+            : { ids: [], total: 0 };
+        clientLoansRepository.assertLoansCovered(openLoans.total, reportMetaData.clientNet);
         const report = await reportsRepository.createReport({
             loggedInUser: data.loggedInUser,
             reportData: data.reportData.type === client_1.ReportType.CLIENT
@@ -271,6 +281,7 @@ class ReportsService {
         if (!report) {
             throw new AppError_1.AppError("حدث خطأ اثناء عمل الكشف", 500);
         }
+        const loansDeduction = await clientLoansRepository.settleLoans(openLoans.ids, report.id);
         const reportData = await reportsRepository.getReport({
             reportID: report.id,
         });
@@ -281,16 +292,19 @@ class ReportsService {
                 createdByID: reportData?.createdBy.id,
                 data: {
                     type: "WITHDRAW",
-                    for: `سحب كشف عميل رقم ${report.id}`,
+                    for: loansDeduction
+                        ? `سحب كشف عميل رقم ${report.id} (بعد خصم سلف ${loansDeduction})`
+                        : `سحب كشف عميل رقم ${report.id}`,
                     reportID: report.id,
                     branchID: reportData?.clientReport?.branch?.id,
-                    paidAmount: reportData?.clientNet || 0,
+                    // Loans were already paid out of the treasury when they were given.
+                    paidAmount: (reportData?.clientNet || 0) - loansDeduction,
                     deliveryAgentNet: 0,
                     forwardedBranchNet: 0,
                     receivingBranchNet: 0,
                     insideBranchNet: reportMetaData.insideBranchNet,
                     branchNet: 0,
-                    totalPaidAmount: reportData?.clientNet || 0,
+                    totalPaidAmount: (reportData?.clientNet || 0) - loansDeduction,
                     approved: false,
                     clientNet: reportData?.clientNet || 0,
                 },

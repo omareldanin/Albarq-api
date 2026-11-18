@@ -2050,6 +2050,16 @@ class TransactionsRepository {
     };
     updateTransaction = async ({ transactionID, data, }) => {
         const { employeeID, reportID, branchID, ...rest } = data;
+        // A client loan's amount lives on the loan too; changing it here would split them.
+        const loan = await db_1.prisma.clientLoan.findUnique({
+            where: { transactionId: transactionID },
+            select: { amount: true },
+        });
+        if (loan &&
+            ((data.paidAmount !== undefined && data.paidAmount !== loan.amount) ||
+                data.type !== undefined)) {
+            throw new AppError_1.AppError("هذه العملية سلفة عميل ولا يمكن تعديل مبلغها أو نوعها، احذفها وأضف سلفة جديدة", 400);
+        }
         return db_1.prisma.transaction.update({
             where: { id: transactionID },
             data: {
@@ -2069,6 +2079,14 @@ class TransactionsRepository {
         });
     };
     deleteTransaction = async ({ transactionID }) => {
+        // Deleting an open loan's transaction cancels the loan; a deducted one must stay.
+        const loan = await db_1.prisma.clientLoan.findUnique({
+            where: { transactionId: transactionID },
+            select: { reportId: true },
+        });
+        if (loan?.reportId) {
+            throw new AppError_1.AppError(`لا يمكن حذف سلفة خُصمت من كشف رقم ${loan.reportId}، احذف الكشف أولاً`, 400);
+        }
         return db_1.prisma.transaction.update({
             where: { id: transactionID },
             data: { deleted: true },

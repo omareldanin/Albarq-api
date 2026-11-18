@@ -799,6 +799,15 @@ class ReportsRepository {
                 where: { reportId: updated.id },
                 data: { deleted: true },
             });
+            // Reopen the client loans this report deducted; restoring it takes them back.
+            await tx.clientLoan.updateMany({
+                where: { reportId: updated.id },
+                data: {
+                    reportId: null,
+                    settledAt: null,
+                    releasedReportId: updated.id,
+                },
+            });
             // recompute flags AFTER deleted=true so EXISTS sees the new state
             if (needsFlagSync) {
                 const joinTable = report?.type === "CLIENT"
@@ -819,6 +828,25 @@ class ReportsRepository {
         });
         const needsFlagSync = report?.type === "CLIENT" || report?.type === "BRANCH";
         const restoredReport = await db_1.prisma.$transaction(async (tx) => {
+            // Take back the loans this report deducted before it was deleted, unless
+            // another report deducted them meanwhile or they were cancelled.
+            const releasedLoans = await tx.clientLoan.findMany({
+                where: { releasedReportId: data.reportID },
+                select: { reportId: true, transaction: { select: { deleted: true } } },
+            });
+            if (releasedLoans.some((loan) => loan.reportId !== null || loan.transaction.deleted)) {
+                throw new AppError_1.AppError("لا يمكن استعادة الكشف: سلف العميل التي خُصمت منه خُصمت من كشف آخر أو حُذفت", 400);
+            }
+            if (releasedLoans.length > 0) {
+                await tx.clientLoan.updateMany({
+                    where: { releasedReportId: data.reportID },
+                    data: {
+                        reportId: data.reportID,
+                        settledAt: new Date(),
+                        releasedReportId: null,
+                    },
+                });
+            }
             const updated = await tx.report.update({
                 where: { id: data.reportID },
                 data: { deleted: false },

@@ -33,12 +33,14 @@ import axios from "axios";
 import {generateBranchClientsReport} from "./helpers/generateBranchClientsReport";
 import {reportsOrderReform} from "../orders/reportsOrders.response";
 import {TransactionsRepository} from "../transactions/transaction.repository";
+import {ClientLoansRepository} from "../clientLoans/clientLoans.repository";
 import {reportReceiptScope} from "./helpers/reportReceiptScope";
 
 const reportsRepository = new ReportsRepository();
 const ordersRepository = new OrdersRepository();
 const employeesRepository = new EmployeesRepository();
 const transactionsRepository = new TransactionsRepository();
+const clientLoansRepository = new ClientLoansRepository();
 
 const receiptCollator = new Intl.Collator("en", {
   numeric: true,
@@ -361,6 +363,20 @@ export class ReportsService {
       clientID = orders[0]?.client.id;
     }
 
+    // A delivered client report deducts all of the client's open loans (سلف),
+    // and cannot be made while they are more than its net.
+    const isDeliveredClientReport =
+      data.reportData.type === ReportType.CLIENT &&
+      data.reportData.secondaryType === "DELIVERED";
+    const openLoans =
+      isDeliveredClientReport && clientID
+        ? await clientLoansRepository.getOpenLoans(clientID)
+        : {ids: [] as number[], total: 0};
+    clientLoansRepository.assertLoansCovered(
+      openLoans.total,
+      reportMetaData.clientNet,
+    );
+
     const report = await reportsRepository.createReport({
       loggedInUser: data.loggedInUser,
       reportData:
@@ -375,6 +391,11 @@ export class ReportsService {
       throw new AppError("حدث خطأ اثناء عمل الكشف", 500);
     }
 
+    const loansDeduction = await clientLoansRepository.settleLoans(
+      openLoans.ids,
+      report.id,
+    );
+
     const reportData = await reportsRepository.getReport({
       reportID: report.id,
     });
@@ -388,16 +409,19 @@ export class ReportsService {
         createdByID: reportData?.createdBy.id!!,
         data: {
           type: "WITHDRAW",
-          for: `سحب كشف عميل رقم ${report.id}`,
+          for: loansDeduction
+            ? `سحب كشف عميل رقم ${report.id} (بعد خصم سلف ${loansDeduction})`
+            : `سحب كشف عميل رقم ${report.id}`,
           reportID: report.id,
           branchID: reportData?.clientReport?.branch?.id,
-          paidAmount: reportData?.clientNet || 0,
+          // Loans were already paid out of the treasury when they were given.
+          paidAmount: (reportData?.clientNet || 0) - loansDeduction,
           deliveryAgentNet: 0,
           forwardedBranchNet: 0,
           receivingBranchNet: 0,
           insideBranchNet: reportMetaData.insideBranchNet,
           branchNet: 0,
-          totalPaidAmount: reportData?.clientNet || 0,
+          totalPaidAmount: (reportData?.clientNet || 0) - loansDeduction,
           approved: false,
           clientNet: reportData?.clientNet || 0,
         },

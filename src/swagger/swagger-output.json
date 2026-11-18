@@ -7326,6 +7326,116 @@
         }
       }
     },
+    "/api/v1/client-loans": {
+      "get": {
+        "tags": [
+          "Client Loans"
+        ],
+        "description": "Loans of the company (branch managers: their branch clients). openTotal/openCount sum open loans for the same client filter.",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "client_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "enum": [
+              "open",
+              "settled",
+              "all"
+            ],
+            "default": "all",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "default": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "default": 10,
+            "maximum": 100,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Client Loans"
+        ],
+        "summary": "Pay a loan (سلفة) to a client",
+        "description": "Creates a WITHDRAW treasury transaction for the amount and an open loan. Open loans are deducted from the client\\'s next delivered client report; creating that report is refused while open loans exceed its net. Deleting the transaction cancels an open loan.",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "clientID",
+                  "amount"
+                ],
+                "properties": {
+                  "clientID": {
+                    "type": "integer"
+                  },
+                  "amount": {
+                    "type": "number"
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 300
+                  },
+                  "approved": {
+                    "type": "boolean",
+                    "description": "true from the main treasury"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v2/company/forward-orders": {
       "post": {
         "description": "",

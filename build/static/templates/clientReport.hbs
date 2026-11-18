@@ -53,7 +53,14 @@
         <tr>
           {{#if (eq reportData.clientReport.secondaryType)}}
             <td style="width: 25%">إجمالي المبلغ المستحق :
-              <span>{{currency reportData.clientNet}}</span></td>
+              <span>{{currency reportData.clientNet}}</span>
+              {{#if reportData.loansDeduction}}
+                <span style="display: block">خصم السلف:
+                  {{currency reportData.loansDeduction}}</span>
+                <span style="display: block">الصافي بعد الخصم:
+                  {{currency reportData.clientDue}}</span>
+              {{/if}}
+            </td>
           {{else}}
             <td style="width: 25%"></td>
           {{/if}}
@@ -143,6 +150,22 @@
                 }}</td>
             {{/if}}
           </tr>
+          {{#if reportData.loansDeduction}}
+            <tr>
+              <td colspan="7" style="font-weight: bold;width:50%">خصم السلف</td>
+              <td style="font-weight: bold">{{currency
+                  reportData.loansDeduction
+                }}</td>
+            </tr>
+            <tr>
+              <td colspan="7" style="font-weight: bold;width:50%">صافي المبلغ
+                المستحق بعد خصم السلف
+              </td>
+              <td style="font-weight: bold">{{currency
+                  reportData.clientDue
+                }}</td>
+            </tr>
+          {{/if}}
         </table>
       </div>
     </main>

@@ -31,6 +31,7 @@ import employeeWallets from "../app/employeeWallets/employeeWallets.routes";
 import receivingReports from "../app/receivingReports/receivingReports.routes";
 import appVersions from "../app/appVersions/appVersions.routes";
 import clientProcessing from "../app/clientProcessing/clientProcessing.routes";
+import clientLoans from "../app/clientLoans/clientLoans.routes";
 
 import {catchAsync} from "../lib/catchAsync";
 import {upload} from "../middlewares/upload";
@@ -69,6 +70,7 @@ router.use("/", employeeWallets);
 router.use("/", receivingReports);
 router.use("/", appVersions);
 router.use("/", clientProcessing);
+router.use("/", clientLoans);
 
 /*******************************************************************************
  * TEST ROUTES
