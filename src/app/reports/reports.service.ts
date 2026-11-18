@@ -1115,6 +1115,8 @@ export class ReportsService {
     // Check ownership with a normal query (same filters as the client's reports list).
     // A relation filter (clientReport.clientId) inside update's unique `where` did not
     // match for clients, so the update itself only keeps the scalar `deleted` check.
+    console.log(data);
+
     if (isClient) {
       const owned = await prisma.report.findFirst({
         where: {
@@ -1124,6 +1126,12 @@ export class ReportsService {
         },
         select: {id: true},
       });
+      console.log({
+        id: data.params.reportID,
+        deleted: false,
+        ...reportReceiptScope(data.loggedInUser),
+      });
+
       if (!owned) {
         throw new AppError("الكشف غير موجود أو لا يخص حسابك", 404);
       }
