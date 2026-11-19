@@ -276,6 +276,7 @@ model Store {
 
   @@index([companyId])
   @@index([clientId])
+  clientReportRequests ClientReportRequest[]
 }
 
 model InquiryEmployeesStores {
@@ -1223,11 +1224,14 @@ model ClientReportRequest {
   /// Delivered client reports created when it was approved (one per store).
   reportIds     Int[]               @default([])
   orderIds      String[]            @default([])
+  /// The store asked for (required when the client has more than one store).
+  storeId       Int?
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
   company       Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
   client        Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
   reviewedBy    User?               @relation(fields: [reviewedById], references: [id], onDelete: SetNull)
+  store         Store?              @relation(fields: [storeId], references: [id], onDelete: SetNull)
 
   @@index([companyId, status, createdAt(sort: Desc)])
   @@index([clientId, status])

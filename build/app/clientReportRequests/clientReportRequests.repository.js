@@ -20,8 +20,10 @@ const REPORT_STATUSES = [
     "PARTIALLY_RETURNED",
     "REPLACED",
 ];
-const eligibleOrders = (clientId) => ({
+/** Pass storeId to limit to one store (undefined = all the client's stores). */
+const eligibleOrders = (clientId, storeId) => ({
     clientId,
+    storeId,
     deleted: false,
     confirmed: true,
     status: { in: [...REPORT_STATUSES] },
@@ -29,11 +31,11 @@ const eligibleOrders = (clientId) => ({
 });
 /**
  * The request's orders that can still go in its report. Requests sent before the
- * snapshot existed (no orderIds) fall back to all eligible orders.
+ * snapshot existed (no orderIds) fall back to all eligible orders of their store.
  */
 const requestOrders = (request) => request.orderIds.length
     ? { id: { in: request.orderIds }, ...eligibleOrders(request.clientId) }
-    : eligibleOrders(request.clientId);
+    : eligibleOrders(request.clientId, request.storeId ?? undefined);
 const requestSelect = {
     id: true,
     status: true,
@@ -46,6 +48,7 @@ const requestSelect = {
     rejectReason: true,
     reportIds: true,
     createdAt: true,
+    store: { select: { id: true, name: true } },
     client: {
         select: {
             id: true,
@@ -87,14 +90,35 @@ class ClientReportRequestsRepository {
             throw new AppError_1.AppError("انت غير مرتبط بفرع", 403);
         return { companyId: user.companyID, client: { branchId: user.branchId } };
     }
-    /** What the client would get now, and anything that stops a request. */
-    getPreview = async (user) => {
+    /**
+     * What the client would get now, and anything that stops a request.
+     * A client with more than one store asks per store: without storeID the figures
+     * cover all stores and the request is blocked until a store is chosen.
+     */
+    getPreview = async (user, storeID) => {
         const clientId = this.clientID(user);
-        const [orders, loans, unconfirmedReports, pending] = await Promise.all([
+        const stores = await db_1.prisma.store.findMany({
+            where: { clientId, deleted: false },
+            select: { id: true, name: true },
+            orderBy: { id: "asc" },
+        });
+        if (storeID !== undefined && !stores.some((store) => store.id === storeID)) {
+            throw new AppError_1.AppError("المتجر غير موجود", 404);
+        }
+        const storeRequired = stores.length > 1;
+        // One store: the request is always for it.
+        const storeId = storeID ?? (stores.length === 1 ? stores[0].id : undefined);
+        const [orders, perStore, loans, unconfirmedReports, pendings] = await Promise.all([
             db_1.prisma.order.aggregate({
-                where: eligibleOrders(clientId),
+                where: eligibleOrders(clientId, storeId),
                 _count: { id: true },
                 _sum: { clientNet: true, totalCost: true },
+            }),
+            db_1.prisma.order.groupBy({
+                by: ["storeId"],
+                where: eligibleOrders(clientId),
+                _count: { id: true },
+                _sum: { clientNet: true },
             }),
             clientLoansRepository.getOpenLoans(clientId),
             // Only delivered (واصل) reports must be confirmed first; returned ones don't block.
@@ -106,7 +130,7 @@ class ClientReportRequestsRepository {
                     clientReport: { clientId, secondaryType: "DELIVERED" },
                 },
             }),
-            db_1.prisma.clientReportRequest.findFirst({
+            db_1.prisma.clientReportRequest.findMany({
                 where: { clientId, status: "PENDING" },
                 select: requestSelect,
                 orderBy: { id: "desc" },
@@ -115,17 +139,40 @@ class ClientReportRequestsRepository {
         const ordersCount = orders._count.id;
         const clientNet = orders._sum.clientNet ?? 0;
         const loansTotal = loans.total;
+        // A request without a store (sent before stores were asked) covers all of them.
+        const pendingFor = (id) => pendings.find((request) => !request.store || request.store.id === id);
+        const pending = storeId !== undefined
+            ? pendingFor(storeId)
+            : storeRequired
+                ? undefined
+                : pendings[0];
         // The first reason that blocks a new request, if any.
-        const blockReason = pending
-            ? "لديك طلب حساب قيد المراجعة"
-            : unconfirmedReports > 0
-                ? `يجب تأكيد استلام كشوفات الواصل السابقة أولاً (${unconfirmedReports})`
-                : ordersCount === 0
-                    ? "لا توجد طلبات واصلة لعمل كشف حساب"
-                    : loansTotal > clientNet
-                        ? `سلفك المفتوحة (${formatAmount(loansTotal)}) أكبر من صافي حسابك (${formatAmount(clientNet)})`
-                        : null;
+        const blockReason = storeRequired && storeId === undefined
+            ? "اختر المتجر الذي تريد طلب حسابه"
+            : pending
+                ? storeRequired
+                    ? "لديك طلب حساب قيد المراجعة لهذا المتجر"
+                    : "لديك طلب حساب قيد المراجعة"
+                : unconfirmedReports > 0
+                    ? `يجب تأكيد استلام كشوفات الواصل السابقة أولاً (${unconfirmedReports})`
+                    : ordersCount === 0
+                        ? "لا توجد طلبات واصلة لعمل كشف حساب"
+                        : loansTotal > clientNet
+                            ? `سلفك المفتوحة (${formatAmount(loansTotal)}) أكبر من صافي حسابك (${formatAmount(clientNet)})`
+                            : null;
         return {
+            storeRequired,
+            storeId: storeId ?? null,
+            stores: stores.map((store) => {
+                const row = perStore.find((item) => item.storeId === store.id);
+                return {
+                    id: store.id,
+                    name: store.name,
+                    ordersCount: row?._count.id ?? 0,
+                    clientNet: row?._sum.clientNet ?? 0,
+                    pendingRequestId: pendingFor(store.id)?.id ?? null,
+                };
+            }),
             ordersCount,
             totalCost: orders._sum.totalCost ?? 0,
             clientNet,
@@ -133,13 +180,14 @@ class ClientReportRequestsRepository {
             due: clientNet - loansTotal,
             unconfirmedReports,
             pendingRequest: pending ? requestReform(pending) : null,
+            pendingRequests: pendings.map(requestReform),
             canRequest: blockReason === null,
             blockReason,
         };
     };
     createRequest = async (user, data) => {
         const clientId = this.clientID(user);
-        const preview = await this.getPreview(user);
+        const preview = await this.getPreview(user, data.storeID);
         if (!preview.canRequest)
             throw new AppError_1.AppError(preview.blockReason ?? "لا يمكن طلب حساب الآن", 400);
         const client = await db_1.prisma.client.findFirst({
@@ -149,8 +197,9 @@ class ClientReportRequestsRepository {
         if (!client)
             throw new AppError_1.AppError("العميل غير موجود", 404);
         // Keep the exact orders asked for: the PDF and the approved report use these.
+        const storeId = preview.storeId ?? undefined;
         const orders = await db_1.prisma.order.findMany({
-            where: eligibleOrders(clientId),
+            where: eligibleOrders(clientId, storeId),
             select: { id: true, clientNet: true },
         });
         if (orders.length === 0)
@@ -160,6 +209,7 @@ class ClientReportRequestsRepository {
             data: {
                 companyId: client.companyId,
                 clientId,
+                storeId,
                 receiveMethod: data.receiveMethod,
                 note: data.note ?? "",
                 ordersCount: orders.length,
@@ -169,7 +219,7 @@ class ClientReportRequestsRepository {
             },
             select: requestSelect,
         });
-        void this.notifyReviewers(client, request.id, orders.length);
+        void this.notifyReviewers(client, request.id, orders.length, request.store?.name);
         return requestReform(request);
     };
     getMyRequests = async (user) => {
@@ -234,6 +284,7 @@ class ClientReportRequestsRepository {
                 reportIds: true,
                 orderIds: true,
                 clientId: true,
+                storeId: true,
                 company: { select: { name: true, logo: true } },
                 client: { select: { branchId: true, user: { select: { name: true } } } },
             },
@@ -283,6 +334,7 @@ class ClientReportRequestsRepository {
                 clientId: true,
                 receiveMethod: true,
                 orderIds: true,
+                storeId: true,
             },
         });
         if (!request)
@@ -397,7 +449,7 @@ class ClientReportRequestsRepository {
         });
         return agents.length === 1 ? agents[0].agentId : undefined;
     }
-    async notifyReviewers(client, requestID, ordersCount) {
+    async notifyReviewers(client, requestID, ordersCount, storeName) {
         try {
             const reviewers = await db_1.prisma.employee.findMany({
                 where: {
@@ -415,7 +467,7 @@ class ClientReportRequestsRepository {
             await Promise.all(reviewers.map((reviewer) => (0, sendNotification_1.sendNotification)({
                 userID: reviewer.id,
                 title: "طلب حساب جديد",
-                content: `طلب العميل ${client.user.name} كشف حساب (${ordersCount} طلب) - طلب رقم ${requestID}`,
+                content: `طلب العميل ${client.user.name} كشف حساب${storeName ? ` لمتجر ${storeName}` : ""} (${ordersCount} طلب) - طلب رقم ${requestID}`,
             })));
         }
         catch (error) {

@@ -526,9 +526,7 @@ export class MessagesController {
                       orderType: null,
                       inquiryBranches: {
                         some: {
-                          branchId: {
-                            in: [order.client.branchId],
-                          },
+                          branchId: order.client.branchId,
                         },
                       },
                     }
@@ -562,9 +560,7 @@ export class MessagesController {
                       orderType: "forwarded",
                       inquiryBranches: {
                         some: {
-                          branchId: {
-                            in: [order.client.branchId!!],
-                          },
+                          branchId: order.client.branchId!!,
                         },
                       },
                     }
@@ -680,15 +676,15 @@ export class MessagesController {
       },
     });
 
-    const companyManagers = await prisma.employee.findMany({
-      where: {
-        role: "COMPANY_MANAGER",
-        companyId: order?.companyId,
-      },
-      select: {
-        id: true,
-      },
-    });
+    // const companyManagers = await prisma.employee.findMany({
+    //   where: {
+    //     role: "COMPANY_MANAGER",
+    //     companyId: order?.companyId,
+    //   },
+    //   select: {
+    //     id: true,
+    //   },
+    // });
 
     const branchManagers = await prisma.employee.findMany({
       where: {
@@ -733,9 +729,9 @@ export class MessagesController {
     inquiryEmployees.forEach((e) => {
       chatMembers.push(e.id);
     });
-    companyManagers.forEach((e) => {
-      chatMembers.push(e.id);
-    });
+    // companyManagers.forEach((e) => {
+    //   chatMembers.push(e.id);
+    // });
     branchManagers.forEach((e) => {
       chatMembers.push(e.id);
     });

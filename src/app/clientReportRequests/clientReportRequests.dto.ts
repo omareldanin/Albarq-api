@@ -7,9 +7,13 @@ const idSchema = numericInput.pipe(z.coerce.number().int().positive().max(214748
 export const ReportRequestCreateSchema = z
     .object({
         receiveMethod: z.nativeEnum(ReportReceiveMethod),
-        note: z.string().trim().max(300).optional()
+        note: z.string().trim().max(300).optional(),
+        /** Required when the client has more than one store. */
+        storeID: idSchema.optional()
     })
     .strict();
+
+export const ReportRequestPreviewSchema = z.object({ store_id: idSchema.optional() });
 
 export const ReportRequestParamsSchema = z.object({ requestID: idSchema });
 

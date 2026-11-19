@@ -21,7 +21,8 @@ router.get(
     client,
     controller.getPreview
     /* #swagger.tags = ['Client Report Requests']
-       #swagger.description = 'Delivered orders without a delivered client report (count, totals), open loans, amount due, and blockReason when a request is not allowed (pending request, unconfirmed reports, no orders, loans above net).' */
+       #swagger.description = 'Delivered orders without a delivered client report (count, totals), open loans, amount due, and blockReason when a request is not allowed (no store chosen, pending request, unconfirmed delivered reports, no orders, loans above net). Clients with more than one store (storeRequired) pass store_id; stores lists the orders and net of each store.'
+       #swagger.parameters['store_id'] = {in: 'query', type: 'integer', description: 'Required to request when the client has more than one store' */
 );
 router.get(
     "/client-report-requests/mine",
@@ -37,7 +38,7 @@ router.post(
     upload.none(),
     controller.createRequest
     /* #swagger.tags = ['Client Report Requests']
-       #swagger.requestBody = {required: true, content: {"application/json": {schema: {type: 'object', required: ['receiveMethod'], properties: {receiveMethod: {type: 'string', enum: ['RECEIVING_AGENT', 'COMPANY_OFFICE']}, note: {type: 'string', maxLength: 300}}}}}} */
+       #swagger.requestBody = {required: true, content: {"application/json": {schema: {type: 'object', required: ['receiveMethod'], properties: {receiveMethod: {type: 'string', enum: ['RECEIVING_AGENT', 'COMPANY_OFFICE']}, note: {type: 'string', maxLength: 300}, storeID: {type: 'integer', description: 'Required when the client has more than one store'}}}}}} */
 );
 router.patch(
     "/client-report-requests/:requestID/cancel",

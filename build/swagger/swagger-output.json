@@ -7441,7 +7441,7 @@
                 "tags": [
                     "Client Report Requests"
                 ],
-                "description": "Delivered orders without a delivered client report (count, totals), open loans, amount due, and blockReason when a request is not allowed (pending request, unconfirmed reports, no orders, loans above net).",
+                "description": "Delivered orders without a delivered client report (count, totals), open loans, amount due, and blockReason when a request is not allowed (no store chosen, pending request, unconfirmed delivered reports, no orders, loans above net). Clients with more than one store (storeRequired) pass store_id; stores lists the orders and net of each store.",
                 "parameters": [
                     {
                         "name": "authorization",
@@ -7520,6 +7520,10 @@
                                     "note": {
                                         "type": "string",
                                         "maxLength": 300
+                                    },
+                                    "storeID": {
+                                        "type": "integer",
+                                        "description": "Required when the client has more than one store"
                                     }
                                 }
                             }

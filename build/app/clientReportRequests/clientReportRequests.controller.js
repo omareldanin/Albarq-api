@@ -7,8 +7,9 @@ const clientReportRequests_repository_1 = require("./clientReportRequests.reposi
 const repository = new clientReportRequests_repository_1.ClientReportRequestsRepository();
 const user = (res) => res.locals.user;
 class ClientReportRequestsController {
-    getPreview = (0, catchAsync_1.catchAsync)(async (_req, res) => {
-        const data = await repository.getPreview(user(res));
+    getPreview = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const { store_id } = clientReportRequests_dto_1.ReportRequestPreviewSchema.parse(req.query);
+        const data = await repository.getPreview(user(res), store_id);
         res.status(200).json({ status: "success", data });
     });
     createRequest = (0, catchAsync_1.catchAsync)(async (req, res) => {

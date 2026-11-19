@@ -394,9 +394,7 @@ class MessagesController {
                                     orderType: null,
                                     inquiryBranches: {
                                         some: {
-                                            branchId: {
-                                                in: [order.client.branchId],
-                                            },
+                                            branchId: order.client.branchId,
                                         },
                                     },
                                 }
@@ -430,9 +428,7 @@ class MessagesController {
                                     orderType: "forwarded",
                                     inquiryBranches: {
                                         some: {
-                                            branchId: {
-                                                in: [order.client.branchId],
-                                            },
+                                            branchId: order.client.branchId,
                                         },
                                     },
                                 }
@@ -529,15 +525,15 @@ class MessagesController {
                 companyId: true,
             },
         });
-        const companyManagers = await db_1.prisma.employee.findMany({
-            where: {
-                role: "COMPANY_MANAGER",
-                companyId: order?.companyId,
-            },
-            select: {
-                id: true,
-            },
-        });
+        // const companyManagers = await prisma.employee.findMany({
+        //   where: {
+        //     role: "COMPANY_MANAGER",
+        //     companyId: order?.companyId,
+        //   },
+        //   select: {
+        //     id: true,
+        //   },
+        // });
         const branchManagers = await db_1.prisma.employee.findMany({
             where: {
                 role: "BRANCH_MANAGER",
@@ -578,9 +574,9 @@ class MessagesController {
         inquiryEmployees.forEach((e) => {
             chatMembers.push(e.id);
         });
-        companyManagers.forEach((e) => {
-            chatMembers.push(e.id);
-        });
+        // companyManagers.forEach((e) => {
+        //   chatMembers.push(e.id);
+        // });
         branchManagers.forEach((e) => {
             chatMembers.push(e.id);
         });

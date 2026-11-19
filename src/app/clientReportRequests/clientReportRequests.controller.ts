@@ -3,6 +3,7 @@ import type { loggedInUserType } from "../../types/user";
 import {
     ReportRequestCreateSchema,
     ReportRequestParamsSchema,
+    ReportRequestPreviewSchema,
     ReportRequestRejectSchema,
     ReportRequestsListSchema
 } from "./clientReportRequests.dto";
@@ -12,8 +13,9 @@ const repository = new ClientReportRequestsRepository();
 const user = (res: { locals: Record<string, unknown> }) => res.locals.user as loggedInUserType;
 
 export class ClientReportRequestsController {
-    getPreview = catchAsync(async (_req, res) => {
-        const data = await repository.getPreview(user(res));
+    getPreview = catchAsync(async (req, res) => {
+        const { store_id } = ReportRequestPreviewSchema.parse(req.query);
+        const data = await repository.getPreview(user(res), store_id);
         res.status(200).json({ status: "success", data });
     });
 
