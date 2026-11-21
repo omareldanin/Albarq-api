@@ -7,7 +7,16 @@ import type {loggedInUserType} from "../../types/user";
 // import { BranchesRepository } from "../branches/branches.repository";
 import {EmployeesRepository} from "../employees/employees.repository";
 import {sendNotification} from "../notifications/helpers/sendNotification";
-import {ClientCreateSchema, ClientUpdateSchema} from "./clients.dto";
+import {
+  ClientCreateSchema,
+  ClientUpdateSchema,
+  ClientWebhookSettingsSchema,
+} from "./clients.dto";
+import {
+  checkWebhookUrl,
+  postClientWebhook,
+  type StatusMapping,
+} from "../../lib/clientWebhook";
 import {ClientsRepository} from "./clients.repository";
 import {ClientListFilterSchema} from "./clients.filters";
 import crypto from "crypto";
@@ -17,6 +26,17 @@ import {z} from "zod";
 const clientsRepository = new ClientsRepository();
 const employeesRepository = new EmployeesRepository();
 // const branchesRepository = new BranchesRepository();
+
+/** Creates a new raw API key, stores only its hash, and returns the raw key once. */
+const issueClientApiKey = async (clientId: number) => {
+  const rawApiKey = `albarq_live_${crypto.randomBytes(32).toString("hex")}`;
+  const apiKeyHash = crypto.createHash("sha256").update(rawApiKey).digest("hex");
+  await prisma.client.update({
+    where: {id: clientId},
+    data: {apiKeyHash},
+  });
+  return rawApiKey;
+};
 
 export class ClientsController {
   createClient = catchAsync(async (req, res) => {
@@ -89,6 +109,7 @@ export class ClientsController {
 
   generateApikey = catchAsync(async (req, res) => {
     const {id} = req.body;
+    const loggedInUser = res.locals.user as loggedInUserType;
 
     if (!id) {
       throw new AppError("Client name and permissions are required", 400);
@@ -102,26 +123,169 @@ export class ClientsController {
       throw new AppError("Client not found", 404);
     }
 
-    const rawApiKey = `albarq_live_${crypto.randomBytes(32).toString("hex")}`;
+    // Company managers may only issue keys for their own company's clients.
+    const isAdmin =
+      loggedInUser.role === AdminRole.ADMIN ||
+      loggedInUser.role === AdminRole.ADMIN_ASSISTANT;
+    if (!isAdmin && client.company?.id !== loggedInUser.companyID) {
+      throw new AppError("Client not found", 404);
+    }
 
-    const apiKeyHash = crypto
-      .createHash("sha256")
-      .update(rawApiKey)
-      .digest("hex");
-
-    await prisma.client.update({
-      where: {
-        id: client.id,
-      },
-      data: {
-        apiKeyHash,
-      },
-    });
+    const rawApiKey = await issueClientApiKey(client.id);
 
     res.status(200).json({
       status: "success",
       apiKey: rawApiKey,
     });
+  });
+
+  // ---- Self-service API key for the logged-in client (developers page) ----
+
+  getMyApiKeyStatus = catchAsync(async (_req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+    const client = await prisma.client.findFirst({
+      where: {id: loggedInUser.id, deleted: false},
+      select: {apiKeyHash: true},
+    });
+    if (!client) {
+      throw new AppError("Client not found", 404);
+    }
+    res.status(200).json({
+      status: "success",
+      data: {hasKey: !!client.apiKeyHash},
+    });
+  });
+
+  generateMyApiKey = catchAsync(async (_req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+    const client = await prisma.client.findFirst({
+      where: {id: loggedInUser.id, deleted: false},
+      select: {id: true},
+    });
+    if (!client) {
+      throw new AppError("Client not found", 404);
+    }
+    // Replaces any previous key: the old one stops working immediately.
+    const rawApiKey = await issueClientApiKey(client.id);
+    res.status(200).json({
+      status: "success",
+      apiKey: rawApiKey,
+    });
+  });
+
+  revokeMyApiKey = catchAsync(async (_req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+    const client = await prisma.client.findFirst({
+      where: {id: loggedInUser.id, deleted: false},
+      select: {id: true},
+    });
+    if (!client) {
+      throw new AppError("Client not found", 404);
+    }
+    await prisma.client.update({
+      where: {id: client.id},
+      data: {apiKeyHash: null},
+    });
+    res.status(200).json({status: "success"});
+  });
+
+  // ---- Webhook settings of the logged-in client (developers page) ----
+
+  getMyWebhook = catchAsync(async (_req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+    const client = await prisma.client.findFirst({
+      where: {id: loggedInUser.id, deleted: false},
+      select: {webhookUrl: true, token: true, status: true},
+    });
+    if (!client) {
+      throw new AppError("Client not found", 404);
+    }
+    res.status(200).json({
+      status: "success",
+      data: {
+        webhookUrl: client.webhookUrl,
+        // The secret itself is never sent back, only whether one is saved.
+        hasSecret: !!client.token,
+        statuses: (client.status as unknown as StatusMapping[]) ?? [],
+      },
+    });
+  });
+
+  updateMyWebhook = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+    const settings = ClientWebhookSettingsSchema.parse(req.body);
+
+    const client = await prisma.client.findFirst({
+      where: {id: loggedInUser.id, deleted: false},
+      select: {id: true},
+    });
+    if (!client) {
+      throw new AppError("Client not found", 404);
+    }
+
+    const webhookUrl = settings.webhookUrl ? settings.webhookUrl : null;
+    if (webhookUrl) {
+      const check = await checkWebhookUrl(webhookUrl);
+      if (!check.ok) {
+        throw new AppError(check.reason, 400);
+      }
+    }
+
+    // One value per status; the last one wins.
+    const statuses = Object.values(
+      Object.fromEntries(settings.statuses.map((item) => [item.internal, item])),
+    );
+
+    await prisma.client.update({
+      where: {id: client.id},
+      data: {
+        webhookUrl,
+        status: statuses,
+        ...(settings.secret !== undefined && {token: settings.secret || ""}),
+      },
+    });
+
+    const updated = await prisma.client.findUnique({
+      where: {id: client.id},
+      select: {webhookUrl: true, token: true, status: true},
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        webhookUrl: updated?.webhookUrl ?? null,
+        hasSecret: !!updated?.token,
+        statuses: (updated?.status as unknown as StatusMapping[]) ?? [],
+      },
+    });
+  });
+
+  testMyWebhook = catchAsync(async (_req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+    const client = await prisma.client.findFirst({
+      where: {id: loggedInUser.id, deleted: false},
+      select: {webhookUrl: true, token: true, status: true},
+    });
+    if (!client) {
+      throw new AppError("Client not found", 404);
+    }
+    if (!client.webhookUrl) {
+      throw new AppError("احفظ رابط الـ Webhook أولاً", 400);
+    }
+
+    const mappings = (client.status as unknown as StatusMapping[]) ?? [];
+    const result = await postClientWebhook({
+      url: client.webhookUrl,
+      token: client.token,
+      payload: {
+        receiptNumber: "TEST-0001",
+        status: mappings[0]?.external ?? "TEST",
+        note: "رسالة تجريبية من البرق",
+        test: true,
+      },
+    });
+
+    res.status(200).json({status: "success", data: result});
   });
 
   getAllClients = catchAsync(async (req, res) => {

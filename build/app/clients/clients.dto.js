@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ClientUpdateOpenAPISchema = exports.ClientUpdateSchema = exports.ClientCreateSchemaWithUserID = exports.ClientCreateOpenAPISchema = exports.ClientCreateSchema = void 0;
+exports.ClientWebhookSettingsSchema = exports.ClientUpdateOpenAPISchema = exports.ClientUpdateSchema = exports.ClientCreateSchemaWithUserID = exports.ClientCreateOpenAPISchema = exports.ClientCreateSchema = void 0;
 // // import { generateMock } from "@anatine/zod-mock";
 const zod_openapi_1 = require("@anatine/zod-openapi");
 const client_1 = require("@prisma/client");
@@ -65,4 +65,17 @@ exports.ClientCreateSchemaWithUserID = exports.ClientCreateSchema.extend({
 exports.ClientUpdateSchema = exports.ClientCreateSchema.partial();
 exports.ClientUpdateOpenAPISchema = (0, zod_openapi_1.generateSchema)(exports.ClientUpdateSchema);
 // export const ClientUpdateMock = generateMock(ClientUpdateSchema);
+// Webhook settings a client manages from the developers page.
+exports.ClientWebhookSettingsSchema = zod_1.z.object({
+    // null or "" turns the webhook off.
+    webhookUrl: zod_1.z.string().trim().max(500).nullable(),
+    // undefined keeps the saved secret, null or "" removes it.
+    secret: zod_1.z.string().trim().max(500).nullable().optional(),
+    statuses: zod_1.z
+        .array(zod_1.z.object({
+        internal: zod_1.z.nativeEnum(client_1.OrderStatus),
+        external: zod_1.z.string().trim().min(1).max(60),
+    }))
+        .max(50),
+});
 //# sourceMappingURL=clients.dto.js.map

@@ -2731,8 +2731,10 @@ export class OrdersController {
       orderID: req.params.orderID,
     };
 
+    const loggedInUser = res.locals.user as loggedInUserType;
     const orderTimeline = await ordersService.getOrderTimelineApiKey({
       params: params,
+      clientId: loggedInUser.id,
     });
 
     res.status(200).json({

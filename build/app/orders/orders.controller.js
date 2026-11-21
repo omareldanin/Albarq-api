@@ -2384,8 +2384,10 @@ class OrdersController {
         const params = {
             orderID: req.params.orderID,
         };
+        const loggedInUser = res.locals.user;
         const orderTimeline = await ordersService.getOrderTimelineApiKey({
             params: params,
+            clientId: loggedInUser.id,
         });
         res.status(200).json({
             status: "success",

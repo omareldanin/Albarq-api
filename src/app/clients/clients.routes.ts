@@ -6,6 +6,7 @@ import {isAutherized} from "../../middlewares/isAutherized";
 // import { Role } from "@prisma/client";
 // import { isAutherized } from "../../middlewares/isAutherized.middleware";
 import {isLoggedIn} from "../../middlewares/isLoggedIn";
+import {preventDuplicateRequests} from "../../middlewares/preventDuplicateRequests";
 import {upload} from "../../middlewares/upload";
 import {ClientsController} from "./clients.controller";
 
@@ -41,6 +42,48 @@ router
     ]),
     upload.none(),
     clientsController.generateApikey,
+  );
+
+// A logged-in client manages their own API key (developers page).
+router
+  .route("/clients/me/api-key")
+  .get(
+    isLoggedIn,
+    isAutherized([ClientRole.CLIENT]),
+    clientsController.getMyApiKeyStatus,
+  )
+  .post(
+    isLoggedIn,
+    isAutherized([ClientRole.CLIENT]),
+    clientsController.generateMyApiKey,
+  )
+  .delete(
+    isLoggedIn,
+    isAutherized([ClientRole.CLIENT]),
+    clientsController.revokeMyApiKey,
+  );
+
+// A logged-in client manages their own order-status webhook.
+router
+  .route("/clients/me/webhook")
+  .get(
+    isLoggedIn,
+    isAutherized([ClientRole.CLIENT]),
+    clientsController.getMyWebhook,
+  )
+  .put(
+    isLoggedIn,
+    isAutherized([ClientRole.CLIENT]),
+    clientsController.updateMyWebhook,
+  );
+
+router
+  .route("/clients/me/webhook/test")
+  .post(
+    isLoggedIn,
+    isAutherized([ClientRole.CLIENT]),
+    preventDuplicateRequests,
+    clientsController.testMyWebhook,
   );
 
 router.route("/clients").get(

@@ -1401,6 +1401,11 @@ export class OrdersService {
       }
     }
 
+    // A client may only edit their own orders.
+    if (oldOrderData.client?.id !== data.loggedInUser.id) {
+      throw new AppError("الطلب غير موجود", 404);
+    }
+
     if (
       oldOrderData.status !== "REGISTERED" &&
       oldOrderData.status !== "READY_TO_SEND"
@@ -1835,14 +1840,25 @@ export class OrdersService {
 
       return pdf;
     } else {
-      const orders = await ordersRepository.getOrdersByIDs(data.ordersIDs);
+      let orders = await ordersRepository.getOrdersByIDs(data.ordersIDs);
       if (
         data.loggedInUser.role === "CLIENT" ||
         data.loggedInUser.role === "CLIENT_ASSISTANT"
       ) {
+        const ownerId =
+          data.loggedInUser.role === "CLIENT"
+            ? data.loggedInUser.id
+            : data.loggedInUser.clientId;
+        // Ignore IDs that belong to other clients.
+        orders = orders.filter((order) => order?.client?.id === ownerId);
+        if (orders.length === 0) {
+          throw new AppError("الطلبات غير موجودة", 404);
+        }
+        const ownOrderIDs = orders.map((order) => order?.id as string);
+
         const createdPdf = await prisma.savedPdf.create({
           data: {
-            ordersCount: data.ordersIDs.ordersIDs.length,
+            ordersCount: ownOrderIDs.length,
             clientId:
               data.loggedInUser.role === "CLIENT"
                 ? data.loggedInUser.id
@@ -1853,7 +1869,7 @@ export class OrdersService {
         await prisma.order.updateMany({
           where: {
             id: {
-              in: data.ordersIDs.ordersIDs,
+              in: ownOrderIDs,
             },
           },
           data: {
@@ -3006,8 +3022,10 @@ export class OrdersService {
     params: {
       orderID: string;
     };
+    clientId: number;
   }) => {
     const orderTimeline = await ordersRepository.getOrderTimelineApiKey({
+      clientId: data.clientId,
       params: data.params,
     });
     return orderTimeline;
@@ -3049,6 +3067,17 @@ export class OrdersService {
     const order = await ordersRepository.getOrderById({
       orderID: data.params.orderID,
     });
+
+    if (
+      (data.loggedInUser.role === "CLIENT" ||
+        data.loggedInUser.role === "CLIENT_ASSISTANT") &&
+      order?.client?.id !==
+        (data.loggedInUser.role === "CLIENT"
+          ? data.loggedInUser.id
+          : data.loggedInUser.clientId)
+    ) {
+      throw new AppError("الطلب غير موجود", 404);
+    }
 
     if (order?.hasDeliveredClientReport) {
       throw new AppError("لا يمكن حذف الطلب بعد إنشاء كشف عميل", 403);

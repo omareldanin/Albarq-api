@@ -1,6 +1,6 @@
 // // import { generateMock } from "@anatine/zod-mock";
 import {generateSchema} from "@anatine/zod-openapi";
-import {ClientRole, Governorate} from "@prisma/client";
+import {ClientRole, Governorate, OrderStatus} from "@prisma/client";
 import {z} from "zod";
 
 export const ClientCreateSchema = z.object({
@@ -75,3 +75,21 @@ export type ClientUpdateType = z.infer<typeof ClientUpdateSchema>;
 export const ClientUpdateOpenAPISchema = generateSchema(ClientUpdateSchema);
 
 // export const ClientUpdateMock = generateMock(ClientUpdateSchema);
+
+// Webhook settings a client manages from the developers page.
+export const ClientWebhookSettingsSchema = z.object({
+  // null or "" turns the webhook off.
+  webhookUrl: z.string().trim().max(500).nullable(),
+  // undefined keeps the saved secret, null or "" removes it.
+  secret: z.string().trim().max(500).nullable().optional(),
+  statuses: z
+    .array(
+      z.object({
+        internal: z.nativeEnum(OrderStatus),
+        external: z.string().trim().min(1).max(60),
+      }),
+    )
+    .max(50),
+});
+
+export type ClientWebhookSettingsType = z.infer<typeof ClientWebhookSettingsSchema>;

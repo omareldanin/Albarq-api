@@ -7,6 +7,7 @@ const isAutherized_1 = require("../../middlewares/isAutherized");
 // import { Role } from "@prisma/client";
 // import { isAutherized } from "../../middlewares/isAutherized.middleware";
 const isLoggedIn_1 = require("../../middlewares/isLoggedIn");
+const preventDuplicateRequests_1 = require("../../middlewares/preventDuplicateRequests");
 const upload_1 = require("../../middlewares/upload");
 const clients_controller_1 = require("./clients.controller");
 const router = (0, express_1.Router)();
@@ -28,6 +29,20 @@ router
     client_1.AdminRole.ADMIN,
     client_1.AdminRole.ADMIN_ASSISTANT,
 ]), upload_1.upload.none(), clientsController.generateApikey);
+// A logged-in client manages their own API key (developers page).
+router
+    .route("/clients/me/api-key")
+    .get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.ClientRole.CLIENT]), clientsController.getMyApiKeyStatus)
+    .post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.ClientRole.CLIENT]), clientsController.generateMyApiKey)
+    .delete(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.ClientRole.CLIENT]), clientsController.revokeMyApiKey);
+// A logged-in client manages their own order-status webhook.
+router
+    .route("/clients/me/webhook")
+    .get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.ClientRole.CLIENT]), clientsController.getMyWebhook)
+    .put(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.ClientRole.CLIENT]), clientsController.updateMyWebhook);
+router
+    .route("/clients/me/webhook/test")
+    .post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.ClientRole.CLIENT]), preventDuplicateRequests_1.preventDuplicateRequests, clientsController.testMyWebhook);
 router.route("/clients").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.AdminRole.ADMIN,

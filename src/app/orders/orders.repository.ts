@@ -4654,11 +4654,16 @@ export class OrdersRepository {
     });
   }
 
-  async getOrderTimelineApiKey(data: {params: {orderID: string | undefined}}) {
+  async getOrderTimelineApiKey(data: {
+    params: {orderID: string | undefined};
+    clientId: number;
+  }) {
     const orderTimeline = await prisma.orderTimeline.findMany({
       where: {
         order: {
           id: data.params.orderID,
+          // API keys can only read their own client's orders.
+          clientId: data.clientId,
         },
       },
       select: orderTimelineSelect,

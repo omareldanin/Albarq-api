@@ -3821,6 +3821,8 @@ class OrdersRepository {
             where: {
                 order: {
                     id: data.params.orderID,
+                    // API keys can only read their own client's orders.
+                    clientId: data.clientId,
                 },
             },
             select: orders_responses_1.orderTimelineSelect,
