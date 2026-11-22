@@ -522,7 +522,11 @@ class TransactionsController {
     });
     deleteTransaction = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const transactionID = +req.params.transactionID;
-        await transactionsRepository.deleteTransaction({ transactionID });
+        const loggedInUser = res.locals.user;
+        await transactionsRepository.deleteTransaction({
+            transactionID,
+            deletedByID: loggedInUser.id,
+        });
         res.status(200).json({ status: "success" });
     });
 }

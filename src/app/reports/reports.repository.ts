@@ -982,11 +982,16 @@ export class ReportsRepository {
         // another report deducted them meanwhile or they were cancelled.
         const releasedLoans = await tx.clientLoan.findMany({
           where: {releasedReportId: data.reportID},
-          select: {reportId: true, transaction: {select: {deleted: true}}},
+          select: {
+            reportId: true,
+            deleted: true,
+            transaction: {select: {deleted: true}},
+          },
         });
         if (
           releasedLoans.some(
-            (loan) => loan.reportId !== null || loan.transaction.deleted,
+            (loan) =>
+              loan.reportId !== null || loan.deleted || loan.transaction.deleted,
           )
         ) {
           throw new AppError(

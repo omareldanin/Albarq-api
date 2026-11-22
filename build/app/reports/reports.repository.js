@@ -832,9 +832,13 @@ class ReportsRepository {
             // another report deducted them meanwhile or they were cancelled.
             const releasedLoans = await tx.clientLoan.findMany({
                 where: { releasedReportId: data.reportID },
-                select: { reportId: true, transaction: { select: { deleted: true } } },
+                select: {
+                    reportId: true,
+                    deleted: true,
+                    transaction: { select: { deleted: true } },
+                },
             });
-            if (releasedLoans.some((loan) => loan.reportId !== null || loan.transaction.deleted)) {
+            if (releasedLoans.some((loan) => loan.reportId !== null || loan.deleted || loan.transaction.deleted)) {
                 throw new AppError_1.AppError("لا يمكن استعادة الكشف: سلف العميل التي خُصمت منه خُصمت من كشف آخر أو حُذفت", 400);
             }
             if (releasedLoans.length > 0) {

@@ -38,7 +38,8 @@ model User {
   transactions           Transaction[]
   loginHistory           UsersLoginHistory[]
   employeeWallets        EmployeeWallet[]
-  clientLoans            ClientLoan[]
+  clientLoans            ClientLoan[] @relation("ClientLoanCreatedBy")
+  deletedClientLoans ClientLoan[] @relation("ClientLoanDeletedBy")
   reviewedReportRequests ClientReportRequest[]
 
   @@index([name])
@@ -1193,12 +1194,17 @@ model ClientLoan {
   settledAt        DateTime?
   createdById      Int?
   createdAt        DateTime    @default(now())
+  /// Deleted open loan (its treasury withdrawal is deleted too); listed in deleted items.
+  deleted          Boolean     @default(false)
+  deletedAt        DateTime?
+  deletedById      Int?
   company          Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
   client           Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
   transaction      Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
   report           Report?     @relation("ClientLoanReport", fields: [reportId], references: [id], onDelete: SetNull)
   releasedReport   Report?     @relation("ClientLoanReleasedReport", fields: [releasedReportId], references: [id], onDelete: SetNull)
-  createdBy        User?       @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy        User?       @relation("ClientLoanCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  deletedBy        User?       @relation("ClientLoanDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
 
   @@index([companyId, clientId, reportId])
   @@index([reportId])

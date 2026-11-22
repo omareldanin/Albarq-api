@@ -11,6 +11,17 @@ class ClientLoansController {
         const loan = await repository.createLoan(res.locals.user, data);
         res.status(201).json({ status: "success", data: loan });
     });
+    updateLoan = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const { loanID } = clientLoans_dto_1.ClientLoanParamsSchema.parse(req.params);
+        const data = clientLoans_dto_1.ClientLoanUpdateSchema.parse(req.body);
+        const loan = await repository.updateLoan(res.locals.user, loanID, data);
+        res.status(200).json({ status: "success", data: loan });
+    });
+    deleteLoan = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const { loanID } = clientLoans_dto_1.ClientLoanParamsSchema.parse(req.params);
+        await repository.deleteLoan(res.locals.user, loanID);
+        res.status(200).json({ status: "success" });
+    });
     getLoans = (0, catchAsync_1.catchAsync)(async (req, res) => {
         const filters = clientLoans_dto_1.ClientLoansListSchema.parse(req.query);
         const result = await repository.getLoans(res.locals.user, filters);

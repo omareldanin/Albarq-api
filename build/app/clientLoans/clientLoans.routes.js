@@ -25,8 +25,26 @@ router
   #swagger.description = 'Loans of the company (branch managers: their branch clients). openTotal/openCount sum open loans for the same client filter.'
   #swagger.parameters['client_id'] = {in: 'query', type: 'integer'}
   #swagger.parameters['status'] = {in: 'query', type: 'string', enum: ['open', 'settled', 'all'], default: 'all'}
+  #swagger.parameters['deleted'] = {in: 'query', type: 'boolean', default: false, description: 'true: deleted loans (with deletedAt and deletedBy)'}
   #swagger.parameters['page'] = {in: 'query', type: 'integer', default: 1}
   #swagger.parameters['size'] = {in: 'query', type: 'integer', default: 10, maximum: 100}
+*/
+);
+router
+    .route("/client-loans/:loanID")
+    .patch(isLoggedIn_1.isLoggedIn, managers, upload_1.upload.none(), controller.updateLoan
+/*
+  #swagger.tags = ['Client Loans']
+  #swagger.summary = 'Edit an open loan'
+  #swagger.description = 'Only loans not deducted in a report. Updates the loan and its treasury withdrawal (amount and description). A loan released by a deleted report: note only.'
+  #swagger.requestBody = {required: true, content: {"application/json": {schema: {type: 'object', properties: {clientID: {type: 'integer'}, amount: {type: 'number'}, note: {type: 'string', maxLength: 300}}}}}}
+*/
+)
+    .delete(isLoggedIn_1.isLoggedIn, managers, controller.deleteLoan
+/*
+  #swagger.tags = ['Client Loans']
+  #swagger.summary = 'Delete an open loan'
+  #swagger.description = 'Only loans not deducted in a report. Deletes its treasury withdrawal; the loan is kept with deletedAt/deletedBy for deleted items (GET /client-loans?deleted=true).'
 */
 );
 exports.default = router;

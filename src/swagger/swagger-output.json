@@ -7469,6 +7469,15 @@
             }
           },
           {
+            "name": "deleted",
+            "in": "query",
+            "default": false,
+            "description": "true: deleted loans (with deletedAt and deletedBy)",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "default": 1,
@@ -7536,6 +7545,88 @@
                   "approved": {
                     "type": "boolean",
                     "description": "true from the main treasury"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/client-loans/{loanID}": {
+      "delete": {
+        "tags": [
+          "Client Loans"
+        ],
+        "summary": "Delete an open loan",
+        "description": "Only loans not deducted in a report. Deletes its treasury withdrawal; the loan is kept with deletedAt/deletedBy for deleted items (GET /client-loans?deleted=true).",
+        "parameters": [
+          {
+            "name": "loanID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Client Loans"
+        ],
+        "summary": "Edit an open loan",
+        "description": "Only loans not deducted in a report. Updates the loan and its treasury withdrawal (amount and description). A loan released by a deleted report: note only.",
+        "parameters": [
+          {
+            "name": "loanID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "clientID": {
+                    "type": "integer"
+                  },
+                  "amount": {
+                    "type": "number"
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 300
                   }
                 }
               }

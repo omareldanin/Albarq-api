@@ -2078,14 +2078,31 @@ class TransactionsRepository {
             select: transactionSelect,
         });
     };
-    deleteTransaction = async ({ transactionID }) => {
-        // Deleting an open loan's transaction cancels the loan; a deducted one must stay.
+    deleteTransaction = async ({ transactionID, deletedByID, }) => {
+        // Deleting an open loan's transaction deletes the loan; a deducted one must stay.
         const loan = await db_1.prisma.clientLoan.findUnique({
             where: { transactionId: transactionID },
-            select: { reportId: true },
+            select: { id: true, reportId: true, deleted: true },
         });
         if (loan?.reportId) {
             throw new AppError_1.AppError(`لا يمكن حذف سلفة خُصمت من كشف رقم ${loan.reportId}، احذف الكشف أولاً`, 400);
+        }
+        if (loan && !loan.deleted) {
+            return db_1.prisma.$transaction(async (tx) => {
+                await tx.clientLoan.update({
+                    where: { id: loan.id },
+                    data: {
+                        deleted: true,
+                        deletedAt: new Date(),
+                        deletedById: deletedByID ?? null,
+                    },
+                });
+                return tx.transaction.update({
+                    where: { id: transactionID },
+                    data: { deleted: true },
+                    select: { id: true },
+                });
+            });
         }
         return db_1.prisma.transaction.update({
             where: { id: transactionID },
