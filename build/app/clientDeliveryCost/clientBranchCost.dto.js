@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ClientBranchCostUpsertSchema = void 0;
+exports.StoreActiveProfitSchema = exports.ClientBranchCostUpsertSchema = void 0;
 const zod_1 = require("zod");
 exports.ClientBranchCostUpsertSchema = zod_1.z.object({
     branchID: zod_1.z.number().int().positive(),
@@ -9,5 +9,8 @@ exports.ClientBranchCostUpsertSchema = zod_1.z.object({
     forwardedBranchProfit: zod_1.z.number().int().min(0).optional().default(0),
     receivingBranchProfit: zod_1.z.number().int().min(0).optional().default(0),
     activeProfit: zod_1.z.boolean().optional().default(false),
+});
+exports.StoreActiveProfitSchema = zod_1.z.object({
+    activeProfit: zod_1.z.boolean(),
 });
 //# sourceMappingURL=clientBranchCost.dto.js.map

@@ -83,6 +83,49 @@ class ClientBranchCostRepository {
             activeProfit: override.activeProfit,
         };
     };
+    // ---------- STORE ----------
+    getStoreBranchCosts = async ({ storeID }) => {
+        const store = await db_1.prisma.store.findUnique({
+            where: { id: storeID },
+            select: {
+                activeProfit: true,
+                branchCosts: {
+                    include: { branch: { select: { id: true, name: true } } },
+                    orderBy: { branchId: "asc" },
+                },
+            },
+        });
+        if (!store)
+            return null;
+        return { activeProfit: store.activeProfit, costs: store.branchCosts };
+    };
+    upsertStoreBranchCost = async ({ storeID, data, }) => {
+        const { branchID, ...profits } = data;
+        return db_1.prisma.clientBranchCost.upsert({
+            where: { storeId_branchId: { storeId: storeID, branchId: branchID } },
+            update: profits,
+            create: { storeId: storeID, branchId: branchID, ...profits },
+        });
+    };
+    deleteStoreBranchCost = async ({ storeID, branchID, }) => {
+        return db_1.prisma.clientBranchCost.delete({
+            where: { storeId_branchId: { storeId: storeID, branchId: branchID } },
+        });
+    };
+    setStoreActiveProfit = async ({ storeID, activeProfit, }) => {
+        return db_1.prisma.store.update({
+            where: { id: storeID },
+            data: { activeProfit },
+            select: { id: true, activeProfit: true },
+        });
+    };
+    getStoreCompanyId = async ({ storeID }) => {
+        const store = await db_1.prisma.store.findUnique({
+            where: { id: storeID },
+            select: { companyId: true },
+        });
+        return store?.companyId ?? null;
+    };
 }
 exports.ClientBranchCostRepository = ClientBranchCostRepository;
 //# sourceMappingURL=clientBranchCost.repository.js.map

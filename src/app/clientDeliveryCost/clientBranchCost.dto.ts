@@ -12,3 +12,7 @@ export const ClientBranchCostUpsertSchema = z.object({
 export type ClientBranchCostUpsertType = z.infer<
   typeof ClientBranchCostUpsertSchema
 >;
+
+export const StoreActiveProfitSchema = z.object({
+  activeProfit: z.boolean(),
+});

@@ -99,6 +99,16 @@ exports.reportsOrderSelect = {
         select: {
             id: true,
             name: true,
+            activeProfit: true,
+            branchCosts: {
+                select: {
+                    branchId: true,
+                    deliveryAgentProfit: true,
+                    mainBranchProfit: true,
+                    forwardedBranchProfit: true,
+                    receivingBranchProfit: true,
+                },
+            },
         },
     },
     clientReport: {

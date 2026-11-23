@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrdersRepository = void 0;
+const branchCostResolver_1 = require("../clientDeliveryCost/branchCostResolver");
 const client_1 = require("@prisma/client");
 const db_1 = require("../../database/db");
 const AppError_1 = require("../../lib/AppError");
@@ -145,7 +146,7 @@ class OrdersRepository {
                 return id;
         }
     }
-    async getDeliverCost(clientId, governorate, branchId) {
+    async getDeliverCost(clientId, governorate, branchId, storeId) {
         let deliveryCost = 0;
         const client = await db_1.prisma.client.findUnique({
             where: {
@@ -159,6 +160,11 @@ class OrdersRepository {
         });
         if (!client) {
             throw new AppError_1.AppError("العميل غير موجود", 400);
+        }
+        // A store with its own active branch cost overrides the client's settings.
+        const storeBranchCost = await (0, branchCostResolver_1.findActiveStoreBranchCost)(storeId, branchId);
+        if (storeBranchCost) {
+            return (0, branchCostResolver_1.totalBranchCost)(storeBranchCost);
         }
         // When profit is active, cost = sum of the branch-cost profits for this branch
         if (client.activeProfit) {
@@ -242,14 +248,16 @@ class OrdersRepository {
                     },
                 },
             });
-            if (client?.activeProfit && client.branchCosts[0]) {
+            const storeBranchCost = await (0, branchCostResolver_1.findActiveStoreBranchCost)(order?.store?.id, order?.branch?.id);
+            const branchCost = storeBranchCost ??
+                (client?.activeProfit ? client.branchCosts[0] : undefined);
+            if (branchCost) {
                 forwardedProfit =
-                    client.branchCosts[0].deliveryAgentProfit +
-                        client.branchCosts[0].mainBranchProfit +
-                        client.branchCosts[0].receivingBranchProfit;
+                    branchCost.deliveryAgentProfit +
+                        branchCost.mainBranchProfit +
+                        branchCost.receivingBranchProfit;
                 receivingBranchNet =
-                    client.branchCosts[0].deliveryAgentProfit +
-                        client.branchCosts[0].receivingBranchProfit;
+                    branchCost.deliveryAgentProfit + branchCost.receivingBranchProfit;
             }
             else {
                 const branchIds = [order?.branch?.id, order?.client.branchId].filter((id) => id != null);
@@ -371,9 +379,16 @@ class OrdersRepository {
             }
         }
         // Calculate delivery cost
-        let deliveryCost = await this.getDeliverCost(data.clientID, data.orderData.governorate, branch?.isChild ? branch.parentBranchId : data.orderData.branchID);
+        const costBranchId = branch?.isChild
+            ? branch.parentBranchId
+            : data.orderData.branchID;
+        // A store with its own active branch cost overrides the client's settings.
+        const storeBranchCost = await (0, branchCostResolver_1.findActiveStoreBranchCost)(data.orderData.storeID, costBranchId);
+        let deliveryCost = storeBranchCost
+            ? (0, branchCostResolver_1.totalBranchCost)(storeBranchCost)
+            : await this.getDeliverCost(data.clientID, data.orderData.governorate, costBranchId);
         const governoratesDeliveryCosts = client.governoratesDeliveryCosts;
-        if (governoratesDeliveryCosts && !client.activeProfit) {
+        if (governoratesDeliveryCosts && !client.activeProfit && !storeBranchCost) {
             deliveryCost =
                 governoratesDeliveryCosts.find((governorateDeliveryCost) => {
                     return (governorateDeliveryCost.governorate === data.orderData.governorate);
@@ -2555,10 +2570,15 @@ class OrdersRepository {
                 let deliveryCost = order?.governorate === client_1.Governorate.BAGHDAD
                     ? (data.costs.baghdadDeliveryCost ?? order.deliveryCost)
                     : (data.costs.governoratesDeliveryCost ?? order?.deliveryCost);
-                const cost = order?.branch?.isChild
-                    ? order?.client.branchCosts.find((c) => c.branchId === order.branch?.parentBranchId)
-                    : order?.client.branchCosts.find((c) => c.branchId === order.branch?.id);
-                if (order?.client.activeProfit && cost) {
+                // Store costs override the client's when the store's active profit is on.
+                const { activeProfit, cost } = (0, branchCostResolver_1.resolveBranchCost)({
+                    store: order?.store,
+                    client: order?.client,
+                    branchId: order?.branch?.isChild
+                        ? order.branch?.parentBranchId
+                        : order?.branch?.id,
+                });
+                if (activeProfit && cost) {
                     deliveryCost =
                         cost?.deliveryAgentProfit +
                             cost?.forwardedBranchProfit +
@@ -2618,17 +2638,22 @@ class OrdersRepository {
                 let cost = order?.governorate === client_1.Governorate.BAGHDAD
                     ? (data.costs.baghdadDeliveryCost ?? 0)
                     : (data.costs.governoratesDeliveryCost ?? 0);
-                const branchProfit = order?.branch?.isChild
-                    ? order?.client.branchCosts.find((c) => c.branchId === order.branch?.parentBranchId)
-                    : order?.client.branchCosts.find((c) => c.branchId === order.branch?.id);
-                if (order?.client.activeProfit &&
+                // Store costs override the client's when the store's active profit is on.
+                const { activeProfit: profitActive, cost: branchProfit } = (0, branchCostResolver_1.resolveBranchCost)({
+                    store: order?.store,
+                    client: order?.client,
+                    branchId: order?.branch?.isChild
+                        ? order.branch?.parentBranchId
+                        : order?.branch?.id,
+                });
+                if (profitActive &&
                     data.branchReportType === "received" &&
                     branchProfit) {
                     cost =
                         branchProfit.receivingBranchProfit +
                             branchProfit.deliveryAgentProfit;
                 }
-                else if (order?.client.activeProfit &&
+                else if (profitActive &&
                     data.branchReportType === "forwarded" &&
                     branchProfit) {
                     cost =
@@ -2721,9 +2746,14 @@ class OrdersRepository {
                                 : deliveryAgentNet - 250;
                     }
                 }
-                else if (order?.client.activeProfit) {
-                    const cost = order.client.branchCosts.find((c) => c.branchId === order.branch?.id);
-                    if (cost) {
+                else {
+                    // Store costs override the client's when the store's active profit is on.
+                    const { activeProfit, cost } = (0, branchCostResolver_1.resolveBranchCost)({
+                        store: order?.store,
+                        client: order?.client,
+                        branchId: order?.branch?.id,
+                    });
+                    if (activeProfit && cost) {
                         deliveryAgentNet =
                             deliveryAgentNet > cost.receivingBranchProfit
                                 ? cost.receivingBranchProfit - 250
@@ -2798,7 +2828,7 @@ class OrdersRepository {
             data.orderData.status === "DELIVERED" ||
             data.orderData.status === "REPLACED" ||
             data.orderData.status === "PARTIALLY_RETURNED") {
-            newDeliveryCost = await this.getDeliverCost(orderData?.client.id, data.orderData.governorate || orderData.governorate, data.orderData.branchID ? data.orderData.branchID : orderData.branch.id);
+            newDeliveryCost = await this.getDeliverCost(orderData?.client.id, data.orderData.governorate || orderData.governorate, data.orderData.branchID ? data.orderData.branchID : orderData.branch.id, data.orderData.storeID ?? orderData?.store?.id);
             profits = await this.getProfits(orderData);
         }
         if (data.orderData.paidAmount) {
@@ -2995,7 +3025,7 @@ class OrdersRepository {
             ? orderData?.deliveryCost
             : orderData?.oldDeliveryCost;
         if (data.orderData.governorate) {
-            newDeliveryCost = await this.getDeliverCost(orderData?.client.id, data.orderData.governorate || orderData.governorate, data.orderData.branchID ? data.orderData.branchID : orderData.branch.id);
+            newDeliveryCost = await this.getDeliverCost(orderData?.client.id, data.orderData.governorate || orderData.governorate, data.orderData.branchID ? data.orderData.branchID : orderData.branch.id, data.orderData.storeID ?? orderData?.store?.id);
             profits = await this.getProfits(orderData);
         }
         const deliveryCost = newDeliveryCost

@@ -5,6 +5,7 @@ export const storeSelect = {
     name: true,
     notes: true,
     logo: true,
+    activeProfit: true,
     client: {
         select: {
             user: {
@@ -54,6 +55,7 @@ export const storeSelectReform = (
         name: store.name,
         notes: store.notes,
         logo: store.logo,
+        activeProfit: store.activeProfit,
         client: store.client.user
             ? {
                   id: store.client.user.id,

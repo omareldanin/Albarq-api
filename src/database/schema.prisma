@@ -240,14 +240,19 @@ model ClientBranchCost {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
   companyId             Int?
+  // Store-level costs override the client's for that store's orders.
+  storeId               Int?
   branch                Branch   @relation(fields: [branchId], references: [id])
   client                Client?  @relation(fields: [clientId], references: [id])
   company               Company? @relation(fields: [companyId], references: [id])
+  store                 Store?   @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   @@unique([clientId, branchId])
   @@unique([companyId, branchId])
+  @@unique([storeId, branchId])
   @@index([clientId])
   @@index([companyId])
+  @@index([storeId])
   @@index([branchId])
 }
 
@@ -259,6 +264,8 @@ model Store {
   clientAssistantId   Int?
   clientId            Int
   companyId           Int
+  // When on, this store's branch costs are used instead of the client's.
+  activeProfit        Boolean                  @default(false)
   deleted             Boolean                  @default(false)
   deletedById         Int?
   deletedAt           DateTime?
@@ -266,6 +273,7 @@ model Store {
   updatedAt           DateTime                 @updatedAt
   clientOrderReceipts ClientOrderReceipt[]
   clientReports       ClientReport[]
+  branchCosts         ClientBranchCost[]
   CustomerOutput      CustomerOutput[]
   inquiryEmployees    InquiryEmployeesStores[]
   orders              Order[]

@@ -30,5 +30,17 @@ router
 router
     .route("/companies/:companyID/branch-costs/:branchID/resolve")
     .get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.AdminRole.ADMIN]), clientBranchCostController.getCompanyResolvedCost);
+// ---------- STORE ----------
+// A store's own branch costs; they override the client's while the store's active profit is on.
+router
+    .route("/stores/:storeID/branch-costs")
+    .get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.AdminRole.ADMIN]), clientBranchCostController.getStoreBranchCosts)
+    .post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.AdminRole.ADMIN]), upload_1.upload.none(), clientBranchCostController.upsertStoreBranchCost);
+router
+    .route("/stores/:storeID/branch-costs/:branchID")
+    .delete(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.AdminRole.ADMIN]), upload_1.upload.none(), clientBranchCostController.deleteStoreBranchCost);
+router
+    .route("/stores/:storeID/active-profit")
+    .patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.AdminRole.ADMIN]), clientBranchCostController.setStoreActiveProfit);
 exports.default = router;
 //# sourceMappingURL=clientBranchCost.routes.js.map

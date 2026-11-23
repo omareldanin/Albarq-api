@@ -137,4 +137,69 @@ export class ClientBranchCostRepository {
       activeProfit: override.activeProfit,
     };
   };
+
+  // ---------- STORE ----------
+  getStoreBranchCosts = async ({storeID}: {storeID: number}) => {
+    const store = await prisma.store.findUnique({
+      where: {id: storeID},
+      select: {
+        activeProfit: true,
+        branchCosts: {
+          include: {branch: {select: {id: true, name: true}}},
+          orderBy: {branchId: "asc"},
+        },
+      },
+    });
+    if (!store) return null;
+    return {activeProfit: store.activeProfit, costs: store.branchCosts};
+  };
+
+  upsertStoreBranchCost = async ({
+    storeID,
+    data,
+  }: {
+    storeID: number;
+    data: ClientBranchCostUpsertType;
+  }) => {
+    const {branchID, ...profits} = data;
+    return prisma.clientBranchCost.upsert({
+      where: {storeId_branchId: {storeId: storeID, branchId: branchID}},
+      update: profits,
+      create: {storeId: storeID, branchId: branchID, ...profits},
+    });
+  };
+
+  deleteStoreBranchCost = async ({
+    storeID,
+    branchID,
+  }: {
+    storeID: number;
+    branchID: number;
+  }) => {
+    return prisma.clientBranchCost.delete({
+      where: {storeId_branchId: {storeId: storeID, branchId: branchID}},
+    });
+  };
+
+  setStoreActiveProfit = async ({
+    storeID,
+    activeProfit,
+  }: {
+    storeID: number;
+    activeProfit: boolean;
+  }) => {
+    return prisma.store.update({
+      where: {id: storeID},
+      data: {activeProfit},
+      select: {id: true, activeProfit: true},
+    });
+  };
+
+  getStoreCompanyId = async ({storeID}: {storeID: number}) => {
+    const store = await prisma.store.findUnique({
+      where: {id: storeID},
+      select: {companyId: true},
+    });
+    return store?.companyId ?? null;
+  };
 }
