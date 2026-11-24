@@ -17,6 +17,9 @@ router
     .route("/transactions/statistics")
     .get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.EmployeeRole.BRANCH_MANAGER]), transactionsController.getStatistics);
 router
+    .route("/transactions/statistics/breakdown")
+    .get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.EmployeeRole.BRANCH_MANAGER]), transactionsController.getStatisticsBreakdown);
+router
     .route("/transactions/daily-statistics")
     .get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER, client_1.EmployeeRole.BRANCH_MANAGER]), transactionsController.getDailyStatistics);
 router

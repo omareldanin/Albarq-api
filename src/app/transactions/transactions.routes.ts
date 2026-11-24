@@ -33,6 +33,20 @@ router
   );
 
 router
+  .route("/transactions/statistics/breakdown")
+  .get(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER, EmployeeRole.BRANCH_MANAGER]),
+    transactionsController.getStatisticsBreakdown,
+    /*
+      #swagger.tags = ['Transactions']
+      #swagger.description = 'Treasury boxes split per person: type=forClients (مبالغ مستحقة لعملاء, per client) or notReceived (فلوس مع المناديب, per delivery agent). Same orders and amounts as /transactions/statistics.'
+      #swagger.parameters['type'] = {in: 'query', required: true, type: 'string', enum: ['forClients', 'notReceived']}
+      #swagger.parameters['targetBranch'] = {in: 'query', type: 'integer'}
+    */
+  );
+
+router
   .route("/transactions/daily-statistics")
   .get(
     isLoggedIn,

@@ -5490,6 +5490,47 @@
                 }
             }
         },
+        "/api/v1/transactions/statistics/breakdown": {
+            "get": {
+                "tags": [
+                    "Transactions"
+                ],
+                "description": "Treasury boxes split per person: type=forClients (مبالغ مستحقة لعملاء, per client) or notReceived (فلوس مع المناديب, per delivery agent). Same orders and amounts as /transactions/statistics.",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": true,
+                        "enum": [
+                            "forClients",
+                            "notReceived"
+                        ],
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "targetBranch",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/transactions/daily-statistics": {
             "get": {
                 "description": "",

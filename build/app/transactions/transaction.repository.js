@@ -26,6 +26,34 @@ const transactionSelect = {
     createdBy: { select: { id: true, name: true } },
     report: { select: { id: true, type: true } },
 };
+const DELIVERED_STATUSES = ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"];
+/** فلوس مع المناديب: delivered orders of the branch that no agent report collected. */
+const notReceivedOrdersWhere = (filters) => ({
+    companyId: filters.companyId,
+    deleted: false,
+    confirmed: true,
+    status: { in: [...DELIVERED_STATUSES] },
+    branchId: filters.myBranchId,
+    deliveryAgentId: filters.deliveryAgentId,
+    deliveryAgent: {
+        branchId: filters.myBranchId,
+    },
+    ...(filters.createdAt && { createdAt: filters.createdAt }),
+    OR: [
+        { deliveryAgentReport: { is: null } },
+        { deliveryAgentReport: { report: { deleted: true } } },
+    ],
+});
+/** مبالغ مستحقة لعملاء: delivered orders of the branch's clients without a delivered client report. */
+const forClientsOrdersWhere = (filters) => ({
+    companyId: filters.companyId,
+    deleted: false,
+    confirmed: true,
+    status: { in: [...DELIVERED_STATUSES] },
+    clientId: filters.clientId,
+    client: { branchId: filters.myBranchId },
+    hasDeliveredClientReport: false,
+});
 class TransactionsRepository {
     computeProfit = async (params) => {
         const { companyId, myBranchId, applyBranchScope, dateFilter } = params;
@@ -876,8 +904,11 @@ class TransactionsRepository {
         });
         return { results };
     };
-    async getStatistics(filters) {
-        let childBranchs = [];
+    /**
+     * Branch the treasury statistics are for, and whether the main-branch view applies.
+     * Shared by getStatistics and getStatisticsBreakdown so both count the same orders.
+     */
+    async statisticsScope(filters) {
         let applyBranchScope = filters.loggedInUser?.role === "COMPANY_MANAGER" ||
             filters.loggedInUser?.mainRepository;
         if (applyBranchScope &&
@@ -904,6 +935,88 @@ class TransactionsRepository {
             myBranchId = filters.targetBranch;
             applyBranchScope = false;
         }
+        return { myBranchId, applyBranchScope };
+    }
+    /**
+     * The treasury boxes "مبالغ مستحقة لعملاء" (per client) and "فلوس مع المناديب"
+     * (per delivery agent), with the same orders and amounts as getStatistics.
+     */
+    async getStatisticsBreakdown(filters) {
+        const { myBranchId } = await this.statisticsScope(filters);
+        if (filters.type === "forClients") {
+            const groups = await db_1.prisma.order.groupBy({
+                by: ["clientId"],
+                where: forClientsOrdersWhere({
+                    companyId: filters.loggedInUser?.companyID || undefined,
+                    myBranchId,
+                }),
+                _sum: { paidAmount: true, deliveryCost: true },
+                _count: { id: true },
+            });
+            return this.breakdownRows(groups.map((group) => ({
+                id: group.clientId,
+                count: group._count.id,
+                total: (group._sum.paidAmount ?? 0) - (group._sum.deliveryCost ?? 0),
+            })));
+        }
+        let createdAt;
+        if (filters.start_date || filters.end_date) {
+            createdAt = {};
+            if (filters.start_date) {
+                const startDate = new Date(filters.start_date);
+                startDate.setHours(0, 0, 0, 0);
+                createdAt.gt = startDate;
+            }
+            if (filters.end_date) {
+                const endDate = new Date(filters.end_date);
+                endDate.setHours(23, 59, 59, 59);
+                createdAt.lte = endDate;
+            }
+        }
+        const groups = await db_1.prisma.order.groupBy({
+            by: ["deliveryAgentId"],
+            where: notReceivedOrdersWhere({
+                companyId: filters.companyId,
+                myBranchId,
+                createdAt,
+            }),
+            _sum: { paidAmount: true },
+            _count: { id: true },
+        });
+        return this.breakdownRows(groups.map((group) => ({
+            id: group.deliveryAgentId,
+            count: group._count.id,
+            total: group._sum.paidAmount ?? 0,
+        })));
+    }
+    /** Adds names and phones, biggest amount first, plus the grand totals. */
+    async breakdownRows(groups) {
+        const ids = groups
+            .map((group) => group.id)
+            .filter((id) => id !== null);
+        const users = await db_1.prisma.user.findMany({
+            where: { id: { in: ids } },
+            select: { id: true, name: true, phone: true },
+        });
+        const byId = new Map(users.map((user) => [user.id, user]));
+        const rows = groups
+            .map((group) => ({
+            id: group.id,
+            name: (group.id !== null && byId.get(group.id)?.name) || "غير محدد",
+            phone: (group.id !== null && byId.get(group.id)?.phone) || "",
+            count: group.count,
+            total: group.total,
+        }))
+            .sort((a, b) => b.total - a.total);
+        return {
+            rows,
+            total: rows.reduce((sum, row) => sum + row.total, 0),
+            count: rows.reduce((sum, row) => sum + row.count, 0),
+        };
+    }
+    async getStatistics(filters) {
+        let childBranchs = [];
+        const { myBranchId, applyBranchScope } = await this.statisticsScope(filters);
         const branchs = await db_1.prisma.branch.findMany({
             where: {
                 parentBranchId: myBranchId,
@@ -1018,34 +1131,20 @@ class TransactionsRepository {
             db_1.prisma.order.aggregate({
                 _sum: { paidAmount: true },
                 _count: { id: true },
-                where: {
+                where: notReceivedOrdersWhere({
                     companyId: filters.companyId,
-                    deleted: false,
-                    confirmed: true,
-                    status: { in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"] },
-                    branchId: myBranchId,
-                    deliveryAgent: {
-                        branchId: myBranchId,
-                    },
-                    ...(createdAtFilter && { createdAt: createdAtFilter }),
-                    OR: [
-                        { deliveryAgentReport: { is: null } },
-                        { deliveryAgentReport: { report: { deleted: true } } },
-                    ],
-                },
+                    myBranchId,
+                    createdAt: createdAtFilter,
+                }),
             }),
             db_1.prisma.order.aggregate({
                 _sum: { paidAmount: true, deliveryCost: true },
                 _count: { id: true },
-                where: {
+                where: forClientsOrdersWhere({
                     companyId: filters.loggedInUser?.companyID || undefined,
-                    deleted: false,
-                    confirmed: true,
-                    status: { in: ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"] },
+                    myBranchId,
                     clientId: filters.clientId,
-                    client: { branchId: myBranchId },
-                    hasDeliveredClientReport: false,
-                },
+                }),
             }),
             db_1.prisma.report.aggregate({
                 _sum: {

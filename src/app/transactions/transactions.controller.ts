@@ -354,6 +354,37 @@ export class TransactionsController {
     });
   });
 
+  /** Per client (forClients) or per delivery agent (notReceived) totals of the treasury boxes. */
+  getStatisticsBreakdown = catchAsync(async (req, res) => {
+    const loggedInUser = res.locals.user as loggedInUserType;
+
+    let companyId: number | undefined;
+    if (Object.keys(AdminRole).includes(loggedInUser.role)) {
+      companyId = req.query.company_id ? +req.query.company_id : undefined;
+    } else {
+      companyId = loggedInUser.companyID as number;
+    }
+
+    const type = req.query.type as "forClients" | "notReceived" | undefined;
+    if (!type || !["forClients", "notReceived"].includes(type)) {
+      throw new AppError("النوع غير صحيح", 400);
+    }
+    const targetBranch = req.query.targetBranch
+      ? +req.query.targetBranch
+      : undefined;
+
+    const data = await transactionsRepository.getStatisticsBreakdown({
+      type,
+      companyId,
+      targetBranch,
+      start_date: req.query.start_date as string | undefined,
+      end_date: req.query.end_date as string | undefined,
+      loggedInUser,
+    });
+
+    res.status(200).json({status: "success", data});
+  });
+
   getStatisticsByBranch = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
 
