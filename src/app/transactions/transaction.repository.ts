@@ -37,7 +37,11 @@ type BranchAggregateRow = {
   count: bigint;
 };
 
-const DELIVERED_STATUSES = ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"] as const;
+const DELIVERED_STATUSES = [
+  "DELIVERED",
+  "PARTIALLY_RETURNED",
+  "REPLACED",
+] as const;
 
 /** فلوس مع المناديب: delivered orders of the branch that no agent report collected. */
 const notReceivedOrdersWhere = (filters: {
@@ -68,12 +72,12 @@ const forClientsOrdersWhere = (filters: {
   myBranchId?: number;
   clientId?: number;
 }): Prisma.OrderWhereInput => ({
-  companyId: filters.companyId,
+  // companyId: filters.companyId,
   deleted: false,
   confirmed: true,
   status: {in: [...DELIVERED_STATUSES]},
   clientId: filters.clientId,
-  client: {branchId: filters.myBranchId},
+  client: {branchId: filters.myBranchId, companyId: filters.companyId},
   hasDeliveredClientReport: false,
 });
 
@@ -1503,12 +1507,11 @@ export class TransactionsRepository {
           governoratesOrdersCount: true,
         },
         where: {
-          companyId: filters.companyId,
           deleted: false,
           ...(createdAtFilter && {createdAt: createdAtFilter}),
           clientReport: {
             clientId: filters.clientId,
-            client: {branchId: myBranchId},
+            client: {branchId: myBranchId, companyId: filters.companyId},
             secondaryType: "DELIVERED",
             report: {
               deleted: false,

@@ -26,7 +26,11 @@ const transactionSelect = {
     createdBy: { select: { id: true, name: true } },
     report: { select: { id: true, type: true } },
 };
-const DELIVERED_STATUSES = ["DELIVERED", "PARTIALLY_RETURNED", "REPLACED"];
+const DELIVERED_STATUSES = [
+    "DELIVERED",
+    "PARTIALLY_RETURNED",
+    "REPLACED",
+];
 /** فلوس مع المناديب: delivered orders of the branch that no agent report collected. */
 const notReceivedOrdersWhere = (filters) => ({
     companyId: filters.companyId,
@@ -46,12 +50,12 @@ const notReceivedOrdersWhere = (filters) => ({
 });
 /** مبالغ مستحقة لعملاء: delivered orders of the branch's clients without a delivered client report. */
 const forClientsOrdersWhere = (filters) => ({
-    companyId: filters.companyId,
+    // companyId: filters.companyId,
     deleted: false,
     confirmed: true,
     status: { in: [...DELIVERED_STATUSES] },
     clientId: filters.clientId,
-    client: { branchId: filters.myBranchId },
+    client: { branchId: filters.myBranchId, companyId: filters.companyId },
     hasDeliveredClientReport: false,
 });
 class TransactionsRepository {
@@ -1153,12 +1157,11 @@ class TransactionsRepository {
                     governoratesOrdersCount: true,
                 },
                 where: {
-                    companyId: filters.companyId,
                     deleted: false,
                     ...(createdAtFilter && { createdAt: createdAtFilter }),
                     clientReport: {
                         clientId: filters.clientId,
-                        client: { branchId: myBranchId },
+                        client: { branchId: myBranchId, companyId: filters.companyId },
                         secondaryType: "DELIVERED",
                         report: {
                             deleted: false,
