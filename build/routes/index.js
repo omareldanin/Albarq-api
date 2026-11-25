@@ -35,6 +35,7 @@ const employeeCommission_routes_1 = __importDefault(require("../app/employeeComm
 const employeeWallets_routes_1 = __importDefault(require("../app/employeeWallets/employeeWallets.routes"));
 const receivingReports_routes_1 = __importDefault(require("../app/receivingReports/receivingReports.routes"));
 const appVersions_routes_1 = __importDefault(require("../app/appVersions/appVersions.routes"));
+const customers_routes_1 = __importDefault(require("../app/customers/customers.routes"));
 const clientProcessing_routes_1 = __importDefault(require("../app/clientProcessing/clientProcessing.routes"));
 const clientLoans_routes_1 = __importDefault(require("../app/clientLoans/clientLoans.routes"));
 const clientReportRequests_routes_1 = __importDefault(require("../app/clientReportRequests/clientReportRequests.routes"));
@@ -72,6 +73,7 @@ router.use("/", employeeCommission_routes_1.default);
 router.use("/", employeeWallets_routes_1.default);
 router.use("/", receivingReports_routes_1.default);
 router.use("/", appVersions_routes_1.default);
+router.use("/", customers_routes_1.default);
 router.use("/", clientProcessing_routes_1.default);
 router.use("/", clientLoans_routes_1.default);
 router.use("/", clientReportRequests_routes_1.default);

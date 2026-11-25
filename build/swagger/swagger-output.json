@@ -7471,6 +7471,39 @@
                 }
             }
         },
+        "/api/v1/customers/lookup": {
+            "get": {
+                "tags": [
+                    "Customers"
+                ],
+                "summary": "Customer history by phone (used while adding an order)",
+                "description": "stats: delivered / returned / in-progress counts and rates over all of the company\\'s orders for this phone (counts only). lastOrder: recipient name and address from the caller\\'s own orders (client: their orders; staff: the company), or null.",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "phone",
+                        "in": "query",
+                        "required": true,
+                        "example": "07721234567",
+                        "description": "Any format: 0772…, +964 772…, 00964…",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/client-processing/orders": {
             "get": {
                 "tags": [

@@ -553,6 +553,8 @@ model Order {
   @@index([updatedAt])
   @@index([companyId, deleted, deliveryAgentId, createdAt])
   @@index([companyId, deleted, receivedAt])
+  /// Customer lookup by phone (hasSome / has use the GIN index)
+  @@index([recipientPhones], type: Gin)
   @@index([deliveryAgentId, deliveryDate])
   @@index([companyId, receiptNumber])
   @@index([receiptNumber, deleted], map: "order_receipt_deleted_idx")

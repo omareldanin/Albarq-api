@@ -30,6 +30,7 @@ import employeeCommissions from "../app/employeeCommissions/employeeCommission.r
 import employeeWallets from "../app/employeeWallets/employeeWallets.routes";
 import receivingReports from "../app/receivingReports/receivingReports.routes";
 import appVersions from "../app/appVersions/appVersions.routes";
+import customers from "../app/customers/customers.routes";
 import clientProcessing from "../app/clientProcessing/clientProcessing.routes";
 import clientLoans from "../app/clientLoans/clientLoans.routes";
 import clientReportRequests from "../app/clientReportRequests/clientReportRequests.routes";
@@ -70,6 +71,7 @@ router.use("/", employeeCommissions);
 router.use("/", employeeWallets);
 router.use("/", receivingReports);
 router.use("/", appVersions);
+router.use("/", customers);
 router.use("/", clientProcessing);
 router.use("/", clientLoans);
 router.use("/", clientReportRequests);
