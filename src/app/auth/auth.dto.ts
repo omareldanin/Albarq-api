@@ -29,3 +29,16 @@ export type RefreshTokenType = z.infer<typeof RefreshTokenSchema>;
 // export const RefreshTokenOpenAPISchema = generateSchema(RefreshTokenSchema);
 
 // export const RefreshTokenMock = generateMock(RefreshTokenSchema);
+
+export const ChangePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "أدخل كلمة المرور الحالية"),
+    newPassword: z
+      .string()
+      .min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل")
+      .max(100),
+  })
+  .refine((d) => d.newPassword !== d.currentPassword, {
+    message: "كلمة المرور الجديدة يجب أن تختلف عن الحالية",
+    path: ["newPassword"],
+  });

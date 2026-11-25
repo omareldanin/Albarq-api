@@ -19,6 +19,14 @@ export class UsersRepository {
         return userSelectReform(user);
     }
 
+    /** Sets fcm to "" only when it still equals `fcm` (no-op otherwise). */
+    async clearFcmIfMatches(userID: number, fcm: string) {
+        await prisma.user.updateMany({
+            where: { id: userID, fcm },
+            data: { fcm: "" }
+        });
+    }
+
     async updateUser(data: {
         userID: number;
         userData: { fcm?: string; refreshToken?: string; refreshTokens?: string[] };

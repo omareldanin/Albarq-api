@@ -133,6 +133,28 @@ class AuthController {
             throw new AppError_1.AppError("الرجاء تسجيل الدخول", 401);
         }
     });
+    // Client changes their own password (needs the current one).
+    changePassword = (0, catchAsync_1.catchAsync)(async (req, res) => {
+        const user = res.locals.user;
+        const parsed = auth_dto_1.ChangePasswordSchema.safeParse(req.body);
+        if (!parsed.success) {
+            throw new AppError_1.AppError(parsed.error.issues[0]?.message ?? "بيانات غير صحيحة", 400);
+        }
+        const { currentPassword, newPassword } = parsed.data;
+        const hash = await authModel.getPasswordHash(user.id);
+        const salt = config_1.env.PASSWORD_SALT;
+        if (!hash || !bcrypt_1.default.compareSync(currentPassword + salt, hash)) {
+            throw new AppError_1.AppError("كلمة المرور الحالية غير صحيحة", 400);
+        }
+        await authModel.setPassword(user.id, bcrypt_1.default.hashSync(newPassword + salt, 12));
+        res.status(200).json({ status: "success" });
+        // Security notice on the account (after responding)
+        await (0, sendNotification_1.sendNotification)({
+            userID: user.id,
+            title: "تم تغيير كلمة المرور",
+            content: "إذا لم تقم بذلك، تواصل مع الشركة فوراً",
+        });
+    });
     signout = (0, catchAsync_1.catchAsync)(async (_req, res) => {
         const user = res.locals.user;
         await authModel.signoutUser(user.id);

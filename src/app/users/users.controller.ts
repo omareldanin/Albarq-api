@@ -21,6 +21,16 @@ export class UsersController {
   updateProfile = catchAsync(async (req, res) => {
     const loggedInUser = res.locals.user as loggedInUserType;
 
+    // Release a device's push token (logout / switching accounts on a phone):
+    // only clear it if the account still has THAT device's token, so the same
+    // account signed in on another phone keeps its notifications.
+    if (req.body.fcm === "" && typeof req.body.ifFcm === "string" && req.body.ifFcm) {
+      await usersRepository.clearFcmIfMatches(loggedInUser.id, req.body.ifFcm);
+      const profile = await usersRepository.getUser({userID: loggedInUser.id});
+      res.status(200).json({status: "success", data: profile});
+      return;
+    }
+
     const profile = await usersRepository.updateUser({
       userID: loggedInUser.id,
       userData: {

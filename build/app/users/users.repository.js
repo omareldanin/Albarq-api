@@ -13,6 +13,13 @@ class UsersRepository {
         });
         return (0, users_responses_1.userSelectReform)(user);
     }
+    /** Sets fcm to "" only when it still equals `fcm` (no-op otherwise). */
+    async clearFcmIfMatches(userID, fcm) {
+        await db_1.prisma.user.updateMany({
+            where: { id: userID, fcm },
+            data: { fcm: "" }
+        });
+    }
     async updateUser(data) {
         const user = await db_1.prisma.user.update({
             where: {

@@ -54,6 +54,52 @@
         }
       }
     },
+    "/api/v1/auth/change-password": {
+      "patch": {
+        "tags": [
+          "Auth Routes"
+        ],
+        "summary": "Client changes their own password",
+        "description": "Clients only. Checks currentPassword, sets newPassword (min 6, must differ) and signs out other sessions (refresh tokens cleared). Staff still reset client passwords from PATCH /clients/:id.",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Wrong current password or invalid new password"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "currentPassword",
+                  "newPassword"
+                ],
+                "properties": {
+                  "currentPassword": {
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "minLength": 6
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/signout": {
       "post": {
         "tags": [

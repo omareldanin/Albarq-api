@@ -6,7 +6,7 @@ import {catchAsync} from "../../lib/catchAsync";
 import type {loggedInUserType} from "../../types/user";
 import {sendNotification} from "../notifications/helpers/sendNotification";
 import {UsersRepository} from "../users/users.repository";
-import {RefreshTokenSchema, UserSigninSchema} from "./auth.dto";
+import {ChangePasswordSchema, RefreshTokenSchema, UserSigninSchema} from "./auth.dto";
 import {AuthRepository} from "./auth.repository";
 
 const authModel = new AuthRepository();
@@ -179,6 +179,33 @@ export class AuthController {
     } catch (err) {
       throw new AppError("الرجاء تسجيل الدخول", 401);
     }
+  });
+
+  // Client changes their own password (needs the current one).
+  changePassword = catchAsync(async (req, res) => {
+    const user = res.locals.user as loggedInUserType;
+    const parsed = ChangePasswordSchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw new AppError(parsed.error.issues[0]?.message ?? "بيانات غير صحيحة", 400);
+    }
+    const {currentPassword, newPassword} = parsed.data;
+
+    const hash = await authModel.getPasswordHash(user.id);
+    const salt = env.PASSWORD_SALT as string;
+    if (!hash || !bcrypt.compareSync(currentPassword + salt, hash)) {
+      throw new AppError("كلمة المرور الحالية غير صحيحة", 400);
+    }
+
+    await authModel.setPassword(user.id, bcrypt.hashSync(newPassword + salt, 12));
+
+    res.status(200).json({status: "success"});
+
+    // Security notice on the account (after responding)
+    await sendNotification({
+      userID: user.id,
+      title: "تم تغيير كلمة المرور",
+      content: "إذا لم تقم بذلك، تواصل مع الشركة فوراً",
+    });
   });
 
   signout = catchAsync(async (_req, res) => {

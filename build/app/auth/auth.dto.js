@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RefreshTokenSchema = exports.UserSigninOpenAPISchema = exports.UserSigninSchema = void 0;
+exports.ChangePasswordSchema = exports.RefreshTokenSchema = exports.UserSigninOpenAPISchema = exports.UserSigninSchema = void 0;
 // import { generateMock } from "@anatine/zod-mock";
 const zod_openapi_1 = require("@anatine/zod-openapi");
 const zod_1 = require("zod");
@@ -22,4 +22,16 @@ exports.RefreshTokenSchema = zod_1.z.object({
 });
 // export const RefreshTokenOpenAPISchema = generateSchema(RefreshTokenSchema);
 // export const RefreshTokenMock = generateMock(RefreshTokenSchema);
+exports.ChangePasswordSchema = zod_1.z
+    .object({
+    currentPassword: zod_1.z.string().min(1, "أدخل كلمة المرور الحالية"),
+    newPassword: zod_1.z
+        .string()
+        .min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل")
+        .max(100),
+})
+    .refine((d) => d.newPassword !== d.currentPassword, {
+    message: "كلمة المرور الجديدة يجب أن تختلف عن الحالية",
+    path: ["newPassword"],
+});
 //# sourceMappingURL=auth.dto.js.map

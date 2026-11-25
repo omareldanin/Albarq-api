@@ -13,6 +13,7 @@ router.route("/auth/validate-token").post(isLoggedIn_1.isLoggedIn, (_req, res) =
     });
 });
 router.route("/auth/refresh-token").post(authController.refreshToken);
+router.route("/auth/change-password").patch(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)(["CLIENT"]), authController.changePassword);
 router.route("/auth/signout").post(isLoggedIn_1.isLoggedIn, authController.signout);
 router.route("/auth/signout/:userID").post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)(["ADMIN", "ADMIN_ASSISTANT", "COMPANY_MANAGER"]), authController.signoutUser);
 exports.default = router;

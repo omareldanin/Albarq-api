@@ -23,6 +23,19 @@ router.route("/auth/refresh-token").post(
     */
 );
 
+router.route("/auth/change-password").patch(
+  isLoggedIn,
+  isAutherized(["CLIENT"]),
+  authController.changePassword,
+  /*
+        #swagger.tags = ['Auth Routes']
+        #swagger.summary = 'Client changes their own password'
+        #swagger.description = 'Clients only. Checks currentPassword, sets newPassword (min 6, must differ) and signs out other sessions (refresh tokens cleared). Staff still reset client passwords from PATCH /clients/:id.'
+        #swagger.requestBody = {required: true, content: {"application/json": {schema: {type: 'object', required: ['currentPassword', 'newPassword'], properties: {currentPassword: {type: 'string'}, newPassword: {type: 'string', minLength: 6}}}}}}
+        #swagger.responses[400] = {description: 'Wrong current password or invalid new password'}
+  */
+);
+
 router.route("/auth/signout").post(
   isLoggedIn,
   authController.signout,

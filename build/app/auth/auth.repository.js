@@ -39,6 +39,20 @@ class AuthRepository {
         });
         return (0, auth_responses_1.userReform)(returnedUser);
     }
+    async getPasswordHash(userID) {
+        const user = await db_1.prisma.user.findUnique({
+            where: { id: userID },
+            select: { password: true },
+        });
+        return user?.password ?? null;
+    }
+    /** New password + end every other session (refresh tokens). */
+    async setPassword(userID, hashedPassword) {
+        await db_1.prisma.user.update({
+            where: { id: userID },
+            data: { password: hashedPassword, refreshTokens: { set: [] } },
+        });
+    }
     async signoutUser(userID) {
         await db_1.prisma.user.update({
             where: {
