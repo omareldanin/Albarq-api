@@ -999,6 +999,7 @@ class OrdersService {
                 if ((oldOrderData.forwardedFromId === 84 ||
                     oldOrderData.forwardedFromId === 89 ||
                     oldOrderData.forwardedFromId === 91 ||
+                    oldOrderData.forwardedFromId === 99 ||
                     oldOrderData.forwardedFromId === 87) &&
                     (newOrder.status === "DELIVERED" ||
                         newOrder.status === "REPLACED" ||
