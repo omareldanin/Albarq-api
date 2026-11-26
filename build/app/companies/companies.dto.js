@@ -41,6 +41,14 @@ exports.CompanyCreateSchema = zod_1.z.preprocess((data) => {
                 return false;
             return val;
         }, zod_1.z.boolean().optional()),
+        // Partner that only uses the API (no dashboard). Needs companyID (the company it sends orders to).
+        apiOnly: zod_1.z.preprocess((val) => {
+            if (val === "true")
+                return true;
+            if (val === "false")
+                return false;
+            return val;
+        }, zod_1.z.boolean().optional()),
         logo: zod_1.z.preprocess((_data) => {
             return "";
         }, zod_1.z.string().optional()),
@@ -87,6 +95,13 @@ exports.CompanyUpdateSchema = zod_1.z
         return val;
     }, zod_1.z.boolean().optional()),
     isExternal: zod_1.z.preprocess((val) => {
+        if (val === "true")
+            return true;
+        if (val === "false")
+            return false;
+        return val;
+    }, zod_1.z.boolean().optional()),
+    apiOnly: zod_1.z.preprocess((val) => {
         if (val === "true")
             return true;
         if (val === "false")

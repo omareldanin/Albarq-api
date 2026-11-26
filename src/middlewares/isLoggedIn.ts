@@ -5,6 +5,12 @@ import {AppError} from "../lib/AppError";
 import type {loggedInUserType} from "../types/user";
 // import {prisma} from "../database/db";
 
+/**
+ * What an API-only partner account may call with its login token: signing in/out and
+ * its own integration settings. Everything else in the dashboard API is refused.
+ */
+const API_ONLY_ALLOWED = /^\/api\/v1\/(auth|companies\/me)(\/|$)/;
+
 export const isLoggedIn = async (
   req: Request,
   res: Response,
@@ -38,6 +44,7 @@ export const isLoggedIn = async (
       repositoryId,
       parentBranchId,
       showTreatury,
+      apiOnly,
     } = jwt.verify(
       token,
       env.ACCESS_TOKEN_SECRET as string,
@@ -78,7 +85,14 @@ export const isLoggedIn = async (
       repositoryId,
       parentBranchId,
       showTreatury,
+      apiOnly,
     } as loggedInUserType;
+
+    if (apiOnly && !API_ONLY_ALLOWED.test(req.originalUrl.split("?")[0])) {
+      return next(
+        new AppError("هذا الحساب مخصص للربط عبر API فقط", 403),
+      );
+    }
 
     // GRANT ACCESS
     return next();

@@ -1317,6 +1317,59 @@
         }
       }
     },
+    "/api/v1/companies/me/api-key": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/v1/companies/{companyID}": {
       "get": {
         "tags": [
@@ -9980,6 +10033,11 @@
                   "boolean"
                 ]
               },
+              "apiOnly": {
+                "type": [
+                  "boolean"
+                ]
+              },
               "logo": {
                 "type": [
                   "string"
@@ -10141,6 +10199,11 @@
             ]
           },
           "isExternal": {
+            "type": [
+              "boolean"
+            ]
+          },
+          "apiOnly": {
             "type": [
               "boolean"
             ]

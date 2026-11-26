@@ -386,6 +386,8 @@ model Company {
   apiKeyHash                String?
   governoratesDeliveryCosts Json                        @default("[]")
   isExternal                Boolean                     @default(false)
+  /// Partner company that only uses the API: its accounts see the integration docs, not the dashboard.
+  apiOnly                   Boolean                     @default(false)
   targetCompanyId           Int?
   webhookUrl                String?
   activeProfit              Boolean                     @default(false)

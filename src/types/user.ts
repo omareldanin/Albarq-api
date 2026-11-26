@@ -40,4 +40,6 @@ export type loggedInUserType = {
   mainRepository: boolean;
   showTreatury: boolean;
   permissions: Permission[];
+  /** Employee of an API-only partner company: may only use the auth and integration endpoints. */
+  apiOnly?: boolean;
 } & (AdminUserType | NonAdminUserType);

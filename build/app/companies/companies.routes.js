@@ -17,6 +17,12 @@ companiesController.createCompany);
 router
     .route("/companies/api-key")
     .post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.AdminRole.ADMIN, client_1.AdminRole.ADMIN_ASSISTANT]), upload_1.upload.none(), companiesController.generateApikey);
+// A partner company's manager manages its own API key from the integration docs page.
+router
+    .route("/companies/me/api-key")
+    .get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER]), companiesController.getMyApiKeyStatus)
+    .post(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER]), companiesController.generateMyApiKey)
+    .delete(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([client_1.EmployeeRole.COMPANY_MANAGER]), companiesController.revokeMyApiKey);
 router.route("/companies").get(isLoggedIn_1.isLoggedIn, (0, isAutherized_1.isAutherized)([
     client_1.EmployeeRole.COMPANY_MANAGER,
     client_1.AdminRole.ADMIN,

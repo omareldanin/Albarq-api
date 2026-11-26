@@ -29,6 +29,25 @@ router
     companiesController.generateApikey,
   );
 
+// A partner company's manager manages its own API key from the integration docs page.
+router
+  .route("/companies/me/api-key")
+  .get(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER]),
+    companiesController.getMyApiKeyStatus,
+  )
+  .post(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER]),
+    companiesController.generateMyApiKey,
+  )
+  .delete(
+    isLoggedIn,
+    isAutherized([EmployeeRole.COMPANY_MANAGER]),
+    companiesController.revokeMyApiKey,
+  );
+
 router.route("/companies").get(
   isLoggedIn,
   isAutherized([

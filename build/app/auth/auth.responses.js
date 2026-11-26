@@ -25,6 +25,7 @@ exports.userSelect = {
                     name: true,
                     logo: true,
                     mainCompany: true,
+                    apiOnly: true,
                 },
             },
             branch: {
@@ -77,6 +78,8 @@ const userReform = (user) => {
         mainCompany: user.employee?.company.mainCompany ??
             user.client?.company.mainCompany ??
             null,
+        // Accounts of an API-only partner company see the integration docs, not the dashboard.
+        apiOnly: user.employee?.company.apiOnly === true,
         branchId: user.employee?.branchId ??
             user.employee?.branchId ??
             user.client?.branchId,

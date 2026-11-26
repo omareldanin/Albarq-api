@@ -35,6 +35,12 @@ export const CompanyCreateSchema = z.preprocess(
         if (val === "false") return false;
         return val;
       }, z.boolean().optional()),
+      // Partner that only uses the API (no dashboard). Needs companyID (the company it sends orders to).
+      apiOnly: z.preprocess((val) => {
+        if (val === "true") return true;
+        if (val === "false") return false;
+        return val;
+      }, z.boolean().optional()),
       logo: z.preprocess((_data) => {
         return "";
       }, z.string().optional()),
@@ -94,6 +100,11 @@ export const CompanyUpdateSchema = z
       return val;
     }, z.boolean().optional()),
     isExternal: z.preprocess((val) => {
+      if (val === "true") return true;
+      if (val === "false") return false;
+      return val;
+    }, z.boolean().optional()),
+    apiOnly: z.preprocess((val) => {
       if (val === "true") return true;
       if (val === "false") return false;
       return val;

@@ -8,6 +8,11 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = require("../config");
 const AppError_1 = require("../lib/AppError");
 // import {prisma} from "../database/db";
+/**
+ * What an API-only partner account may call with its login token: signing in/out and
+ * its own integration settings. Everything else in the dashboard API is refused.
+ */
+const API_ONLY_ALLOWED = /^\/api\/v1\/(auth|companies\/me)(\/|$)/;
 const isLoggedIn = async (req, res, next) => {
     try {
         let token;
@@ -22,7 +27,7 @@ const isLoggedIn = async (req, res, next) => {
             return next(new AppError_1.AppError("الرجاء تسجيل الدخول", 401));
         }
         // IS TOKEN VALID
-        const { id, name, username, role, permissions, companyID, companyName, mainCompany, clientId, branchId, mainRepository, repositoryId, parentBranchId, showTreatury, } = jsonwebtoken_1.default.verify(token, config_1.env.ACCESS_TOKEN_SECRET);
+        const { id, name, username, role, permissions, companyID, companyName, mainCompany, clientId, branchId, mainRepository, repositoryId, parentBranchId, showTreatury, apiOnly, } = jsonwebtoken_1.default.verify(token, config_1.env.ACCESS_TOKEN_SECRET);
         // TODO: Check if user still exists
         // const user = await prisma.user.findUnique({
         //   where: {
@@ -56,7 +61,11 @@ const isLoggedIn = async (req, res, next) => {
             repositoryId,
             parentBranchId,
             showTreatury,
+            apiOnly,
         };
+        if (apiOnly && !API_ONLY_ALLOWED.test(req.originalUrl.split("?")[0])) {
+            return next(new AppError_1.AppError("هذا الحساب مخصص للربط عبر API فقط", 403));
+        }
         // GRANT ACCESS
         return next();
     }

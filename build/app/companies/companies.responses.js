@@ -8,6 +8,7 @@ exports.companySelect = {
     logo: true,
     registrationText: true,
     isExternal: true,
+    apiOnly: true,
     targetCompanyId: true,
     governoratesDeliveryCosts: true,
     activeProfit: true,

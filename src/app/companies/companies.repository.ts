@@ -20,9 +20,11 @@ export class CompaniesRepository {
           data.companyData.companyData.governoratesDeliveryCosts,
         isExternal:
           data.loggedInUser.role === "COMPANY_MANAGER" ||
-          data.companyData.companyData.isExternal
+          data.companyData.companyData.isExternal ||
+          data.companyData.companyData.apiOnly
             ? true
             : false,
+        apiOnly: data.companyData.companyData.apiOnly === true,
         targetCompanyId:
           data.loggedInUser.role === "COMPANY_MANAGER"
             ? data.loggedInUser.companyID
@@ -151,10 +153,15 @@ export class CompaniesRepository {
         governoratesDeliveryCosts: data.companyData.governoratesDeliveryCosts,
         activeProfit: data.companyData.activeProfit,
         showSupportNumbers: data.companyData.showSupportNumbers,
-        isExternal: data.companyData.isExternal ? true : false,
-        targetCompanyId: data.companyData.companyID
-          ? +data.companyData.companyID
-          : undefined,
+        // Only change these when the form sent them: a partial update (delivery costs,
+        // profit toggle) used to reset isExternal to false.
+        isExternal: data.companyData.apiOnly === true ? true : data.companyData.isExternal,
+        apiOnly: data.companyData.apiOnly,
+        // The edit form sent "null"/"undefined" for companies without one.
+        targetCompanyId:
+          data.companyData.companyID && Number(data.companyData.companyID) > 0
+            ? +data.companyData.companyID
+            : undefined,
         employees: {
           update: {
             where: {
