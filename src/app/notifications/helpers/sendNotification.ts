@@ -69,7 +69,17 @@ export const sendNotification = async (data: NotificationCreateType) => {
         },
       }),
     });
-    await response.json();
+    // Expo answers 200 with a ticket; a failed send (e.g. InvalidCredentials when
+    // the Android app has no FCM V1 key on EAS, DeviceNotRegistered) is inside it.
+    const result = (await response.json()) as {
+      data?: {status?: string; message?: string; details?: {error?: string}};
+      errors?: unknown[];
+    };
+    if (!response.ok || result.errors || result.data?.status === "error") {
+      Logger.error(
+        `Expo push failed for user ${data.userID}: ${JSON.stringify(result.errors ?? result.data)}`,
+      );
+    }
   } catch (error) {
     Logger.error("Error sending message to token:", error);
   }
