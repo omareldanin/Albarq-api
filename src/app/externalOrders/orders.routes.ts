@@ -14,7 +14,7 @@ router
 
 router
   .route("/shipments/create")
-  .post(isApiCompany, preventDuplicateRequests, ordersController.createOrderV2);
+  .post(isApiCompany, ordersController.createOrderV2);
 
 router
   .route("/company/forward-orders")

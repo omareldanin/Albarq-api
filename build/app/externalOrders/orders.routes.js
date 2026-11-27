@@ -11,7 +11,7 @@ router
     .post(isApiCompany_1.isApiCompany, preventDuplicateRequests_1.preventDuplicateRequests, ordersController.createOrder);
 router
     .route("/shipments/create")
-    .post(isApiCompany_1.isApiCompany, preventDuplicateRequests_1.preventDuplicateRequests, ordersController.createOrderV2);
+    .post(isApiCompany_1.isApiCompany, ordersController.createOrderV2);
 router
     .route("/company/forward-orders")
     .get(isApiCompany_1.isApiCompany, preventDuplicateRequests_1.preventDuplicateRequests, ordersController.getAllOrdersApiKey);

@@ -5945,9 +5945,6 @@
         "responses": {
           "401": {
             "description": "Unauthorized"
-          },
-          "429": {
-            "description": "Too Many Requests"
           }
         }
       }
@@ -8292,9 +8289,6 @@
         "responses": {
           "401": {
             "description": "Unauthorized"
-          },
-          "429": {
-            "description": "Too Many Requests"
           }
         }
       }
