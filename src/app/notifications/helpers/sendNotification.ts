@@ -76,9 +76,9 @@ export const sendNotification = async (data: NotificationCreateType) => {
       errors?: unknown[];
     };
     if (!response.ok || result.errors || result.data?.status === "error") {
-      Logger.error(
-        `Expo push failed for user ${data.userID}: ${JSON.stringify(result.errors ?? result.data)}`,
-      );
+      // Logger.error(
+      //   `Expo push failed for user ${data.userID}: ${JSON.stringify(result.errors ?? result.data)}`,
+      // );
     }
   } catch (error) {
     Logger.error("Error sending message to token:", error);

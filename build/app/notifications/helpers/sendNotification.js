@@ -61,7 +61,9 @@ const sendNotification = async (data) => {
         // the Android app has no FCM V1 key on EAS, DeviceNotRegistered) is inside it.
         const result = (await response.json());
         if (!response.ok || result.errors || result.data?.status === "error") {
-            logger_1.Logger.error(`Expo push failed for user ${data.userID}: ${JSON.stringify(result.errors ?? result.data)}`);
+            // Logger.error(
+            //   `Expo push failed for user ${data.userID}: ${JSON.stringify(result.errors ?? result.data)}`,
+            // );
         }
     }
     catch (error) {
